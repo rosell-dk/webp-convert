@@ -1,46 +1,45 @@
 <?php
-header('Content-type: image/webp');
 
-// if this file is not placed in the root, you may need this line instead of the next:
-// $filename = $_SERVER['DOCUMENT_ROOT'] . '/' . $_GET['file'];
+
 $filename = $_GET['file'];
+$filename_abs = $_SERVER['DOCUMENT_ROOT'] . '/' . $_GET['absrel'] . $filename;
+
+$dest = $_GET['destination-folder'] . $filename . '.webp';
+//$dest = 'test.webp';
+
 
 $quality = intval($_GET['quality']);
 
 
-function echoTextImage($text) {
-  $image = imagecreatetruecolor(320, 20);
+function cwebp_available() {
+  if (!function_exists( 'exec' )) {
+    return FALSE;
+  }
+  // TODO: Test if it is there and it works
+  return TRUE;
+}
+
+function imagewebp_available() {
+  return function_exists(imagewebp);
+}
+
+
+
+function die_with_msg($text) {
+  header('Content-type: image/gif');
+  $image = imagecreatetruecolor(620, 20);
   imagestring($image, 1, 5, 5,  $text, imagecolorallocate($image, 233, 214, 291));
-  echo imagewebp($image);
+//  echo imagewebp($image);
+  echo imagegif($image);
   imagedestroy($image);
+  die();
 }
 
-if (!file_exists($filename)) {
-  echoTextImage("File not found: " . $filename);
-  return;
+if (!file_exists($filename_abs)) {
+  die_with_msg("File not found: " . $filename_abs);
 }
 
-
-//if (!in_array('save', $_GET)) {
-$ext = array_pop(explode('.', $filename));
-
-switch ($ext) {
-  case 'jpg':
-  case 'jpeg':
-    $image = imagecreatefromjpeg($filename);
-    break;
-  case 'png':
-    $image = imagecreatefrompng($filename);
-    break;
-}
-
-
-if (!$image) {
-  echoTextImage('Failed creating image: ' . $_SERVER['QUERY_STRING']);
-  return;
-}
-
-// Save the file, unless asked not to
+// Prepare destination folder
 if (!isset($_GET['no-save'])) {
   $dest = $_GET['destination-folder'] . $filename . '.webp';
   if (isset($_GET['destination-folder'])) {
@@ -48,48 +47,48 @@ if (!isset($_GET['no-save'])) {
     array_pop($folders);
     $folder = implode($folders, '/');
     if (!file_exists($folder)) {
-      mkdir($folder, 0755, TRUE);
+      if (!mkdir($folder, 0755, TRUE)) {
+        die_with_msg('Failed creating folder:' . $folder);
+      };
     }
   }
+}
 
-/*
-  This may be useful for testing htaccess (.htaccess should make sure not to call
-  webp-convert.php when file already exists)
-
-  if (file_exists($dest)) {
-    echoTextImage('The webp file already exists. I refuse to overwrite');
-    imagedestroy($image);
-    return;
-  }*/
-
-
-  // I have experienced blank PNG images when setting quality
-  if ($ext == 'png') {
-    imagewebp($image, $dest);
-  }
-  else {
-    imagewebp($image, $dest, $quality);
+if (imagewebp_available()) {
+  $ext = array_pop(explode('.', $filename));
+  $image = '';
+  switch ($ext) {
+    case 'jpg':
+    case 'jpeg':
+      $image = imagecreatefromjpeg($filename_abs);
+      break;
+    case 'png':
+      $image = imagecreatefrompng($filename_abs);
+      break;
   }
 
-  if (!file_exists($dest)) {
-    echoTextImage('Failed saving image to path: ' . $dest);
-    imagedestroy($image);
+  if (!$image) {
+    die_with_msg("Failed creating image: " . $filename);
     return;
   }
 
-  // Serve the saved file
-  readfile($dest);
+  imagewebp($image, $dest, $quality);
+  imagedestroy($image);
 }
-else {
-  // Just create image, no saving
-  if ($ext == 'png') {
-    echo imagewebp($image);
-  }
-  else {
-    echo imagewebp($image, NULL, $quality);
-  }
+else if (cwebp_available()) {
+  exec('nice bin/cwebp-linux -q 80 -metadata all ' . $filename_abs . ' -o ' . $dest, $result);
 }
 
-// Free up memory
-imagedestroy($image);
+if (!file_exists($dest)) {
+  die_with_msg('Failed saving image to path: ' . $dest);
+}
+
+// Serve the saved file
+header('Content-type: image/webp');
+readfile($dest);
+
+
+/*  if (file_exists($dest)) {
+    die_with_msg('The webp file already exists. I refuse to overwrite');
+
 ?>
