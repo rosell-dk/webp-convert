@@ -6,10 +6,10 @@ Unfortunately, there is currently no pure PHP method available for converting im
 The script takes the following arguments:
 
 *filename*\
-The filename of target file.
+Either the relative path to the file (relative to document root) or an absolute path. If it starts with "/", it is considered an absolute path.
 
 *destination-folder*\
-Path of destination folder. Relative path is allowed
+Path of destination (relative to target file) or an absolute path. Double-dots are allowed, ie "../../webp-cache/images/2017"
 
 *quality*\
 The quality of the generated WebP image, 0-100.
@@ -20,8 +20,11 @@ Allowed values: "cwebp", "imagewebp"
 Default order is: cwebp, imagewebp
 
 *absrel* (optional)\
+Might be relevant in rare occasions where you 
 $filename_absolute = $_SERVER['DOCUMENT_ROOT'] . '/' . $_GET['absrel'] . $_GET['file'];
 
+*debug* (optional)\
+If set (if "&debug" is appended to the URL), the script will produce text output instead of an image.
 
 ## Tools
 
@@ -31,9 +34,9 @@ Uses the php function [imagewebp](http://php.net/manual/en/function.imagewebp.ph
 ### cwebp
 Calls the cwebp binary with an exec() call. Works on surprisingly many webhosts ([here is a list](https://wordpress.org/plugins/ewww-image-optimizer/#installation)). There is precompiled binaries in the /bin folder, compiled for different OS'es. Thanks to Shane Bishop for letting me copy his precompilations which comes with his plugin, [EWWW Image Optimizer](https://ewww.io/).
 
-Currently though, only linux version is called. Will be fixed soon.
+If your OS isn't supported, you can put a binary called "cwebp-custom" into the "bin" folder
 
 ## SECURITY
-TODO! - The script does not currently sanitize values.
+TODO! - The script does not currently sanitize values. Also exec() does not md5-test cwebp before running it
 
 
