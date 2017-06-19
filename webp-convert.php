@@ -1,28 +1,83 @@
 <?php
 
-
 $filename = $_GET['file'];
 $filename_abs = $_SERVER['DOCUMENT_ROOT'] . '/' . $_GET['absrel'] . $filename;
 
 $dest = $_GET['destination-folder'] . $filename . '.webp';
-//$dest = 'test.webp';
-
 
 $quality = intval($_GET['quality']);
+$preferred_tools = explode(',', $_GET['preferred_tools']); 
+
+// actually comma is "unsafe" in URLs according to RFC.
+// - See speedplanes comment here: https://stackoverflow.com/questions/198606/can-i-use-commas-in-a-url
+
+$tools = array();
+$tools_order = array();
+
+function wepb_convert_add_tool($name, $convert_function) {
+  global $tools;
+  $tools[$name] = $convert_function;
+
+  global $tools_order;
+  $tools_order[] = $name;
+}
 
 
-function cwebp_available() {
-  if (!function_exists( 'exec' )) {
-    return FALSE;
+wepb_convert_add_tool(
+  'cwebp',
+  function($target, $destination, $quality) {
+    if (!function_exists( 'exec' )) {
+      return FALSE;
+    }
+
+    // The appended "2>&1" is in order to get the output.
+    // (thanks for your comment, Simon - http://php.net/manual/en/function.exec.php)
+
+    $cmd = 'bin/cwebp-linux -q ' . $quality . ' -metadata all ' . $target . ' -o ' . $destination . ' 2>&1';
+    exec('nice ' . $cmd, $output, $return_var);
+
+    // if it failed, try without "nice"
+    if ($return_var > 0) {
+      exec($cmd, $output, $return_var);
+    }
+
+    // Return codes:  
+    // 0: everything ok!
+    // 127: binary cannot be found
+    // 255: target not found    
+    return ($return_var == 0);
   }
-  // TODO: Test if it is there and it works
-  return TRUE;
-}
+);
 
-function imagewebp_available() {
-  return function_exists(imagewebp);
-}
+wepb_convert_add_tool(
+  'imagewebp',
+  function($target, $destination, $quality) {
+    if(!function_exists(imagewebp)) {
+      return FALSE;
+    }
+    $ext = array_pop(explode('.', $target));
+    $image = '';
+    switch ($ext) {
+      case 'jpg':
+      case 'jpeg':
+        $image = imagecreatefromjpeg($target);
+        break;
+      case 'png':
+        $image = imagecreatefrompng($target);
+        break;
+    }
 
+    if (!$image) {
+      // Either imagecreatefromjpeg returned FALSE or unsupported extension
+      return FALSE;
+    }
+
+    $success = imagewebp($image, $destination, $quality);
+    imagedestroy($image);
+
+    return $success;
+  }
+);
 
 
 function die_with_msg($text) {
@@ -54,30 +109,30 @@ if (!isset($_GET['no-save'])) {
   }
 }
 
-if (imagewebp_available()) {
-  $ext = array_pop(explode('.', $filename));
-  $image = '';
-  switch ($ext) {
-    case 'jpg':
-    case 'jpeg':
-      $image = imagecreatefromjpeg($filename_abs);
-      break;
-    case 'png':
-      $image = imagecreatefrompng($filename_abs);
-      break;
-  }
+// Remove preffered tools from order (we will add them soon!)
+$tools_order = array_diff($tools_order, $preferred_tools);
 
-  if (!$image) {
-    die_with_msg("Failed creating image: " . $filename);
-    return;
+// Add preffered tools to order
+foreach ($preferred_tools as $pref_tool) {
+  if ($tools[$pref_tool]) {
+    array_unshift($tools_order, $pref_tool);
   }
+}
 
-  imagewebp($image, $dest, $quality);
-  imagedestroy($image);
+$success = FALSE;
+foreach ($tools_order as $tool_name) {
+
+  $convert_function = $tools[$pref_tool];
+  $success = $convert_function($filename_abs, $dest, $quality);
+  if ($success) {
+    break;
+  }
 }
-else if (cwebp_available()) {
-  exec('nice bin/cwebp-linux -q 80 -metadata all ' . $filename_abs . ' -o ' . $dest, $result);
+
+if (!$success) {
+  die_with_msg('No tools could convert file:' . $filename_abs);
 }
+
 
 if (!file_exists($dest)) {
   die_with_msg('Failed saving image to path: ' . $dest);
