@@ -1,7 +1,11 @@
 <?php
 
+// http://test2/webp-convert.php?file=logo.jpg&quality=80&preferred_tools=imagewebp,cwebp&debug
 
 $filename = $_GET['file'];
+
+// TODO: Test if $filename starts with '/'
+
 $filename_abs = $_SERVER['DOCUMENT_ROOT'] . '/' . $_GET['absrel'] . $filename;
 
 $dest = $_GET['destination-folder'] . $filename . '.webp';
@@ -41,65 +45,106 @@ wepb_convert_add_tool(
       return 'exec() is not enabled';
     }
 
+    // System paths to look for cwebp
+    // Supplied bin will be prepended array, but only if it passes some tests...
+    $paths_to_test = array(
+      '/usr/bin/cwebp',
+      '/usr/local/bin/cwebp',
+      '/usr/gnu/bin/cwebp',
+      '/usr/syno/bin/cwebp'
+    );
+    
     // Select binary
-    $bin = array(
-      'WinNT' => 'cwebp.exe',
-      'Darwin' => 'cwebp-mac12',
-      'SunOS' => 'cwebp-sol',
-      'FreeBSD' => 'cwebp-fbsd',
-      'Linux' => 'cwebp-linux'
+    $binary = array(
+      'WinNT' => array( 'cwebp.exe', '49e9cb98db30bfa27936933e6fd94d407e0386802cb192800d9fd824f6476873'),
+      'Darwin' => array( 'cwebp-mac12', 'a06a3ee436e375c89dbc1b0b2e8bd7729a55139ae072ed3f7bd2e07de0ebb379'),
+      'SunOS' => array( 'cwebp-sol', '1febaffbb18e52dc2c524cda9eefd00c6db95bc388732868999c0f48deb73b4f'),
+      'FreeBSD' => array( 'cwebp-fbsd', 'e5cbea11c97fadffe221fdf57c093c19af2737e4bbd2cb3cd5e908de64286573'),
+      'Linux' => array( 'cwebp-linux', '43ca351e8f5d457b898c587151ebe3d8f6cce8dcfb7de44f6cb70148a31a68bc')
     )[PHP_OS];
-    if (!$bin) {
-      // The binary is not included per standard
-      // ...but perhaps the user has put his own custom compilation to the dir?
-      $bin = 'cwebp-custom';
-      if (!file_exists('bin/' . $bin)) {
-        return 'No bin file found for current OS (' . PHP_OS . '), and no custom bin found at ' . __DIR__ . '/' . $bin;
+
+    $supplied_bin_error = '';
+    if (!$binary) {
+      $supplied_bin_error = 'We do not have a supplied bin for your OS (' . PHP_OS . ')';
+    }
+    else {
+      $bin = 'bin/' . $binary[0];
+      if (!file_exists($bin)) {
+        $supplied_bin_error = 'bin file missing ( ' . __DIR__ . '/' . $bin . ')';
+      }
+      else {
+        // Check Checksum
+        $binary_sum = hash_file( 'sha256', $bin );
+        if ($binary_sum != $binary[1]) {
+          $supplied_bin_error = 'sha256 sum of supplied binary is invalid!';
+        }
+
+        // Also check mimetype?
+        //ewww_image_optimizer_mimetype( $binary_path, 'b' )
+
       }
     }
-    $bin = 'bin/' . $bin;
+    if ($supplied_bin_error == '') {
+      array_unshift($paths_to_test, $bin);
+    }
+    else {
+      logmsg('Not able to use supplied bin. ' . $supplied_bin_error);
+    }
 
-    // TODO: md5 check before exec()
+    $options = ' -q ' . $quality . ' -metadata all ' . $target . ' -o ' . $destination . ' 2>&1';
+    $success = FALSE;
+    
+    foreach ($paths_to_test as $i => $bin) {
+      logmsg('trying to execute binary: ' . $bin);
+
+      $cmd = $bin . $options;
+
+      // TODO: escape shell cmd (ewww_image_optimizer_escapeshellcmd)
+
+      // TODO: Run with nice, if available
+
+      exec($cmd, $output, $return_var);
+      // Return codes:  
+      // 0: everything ok!
+      // 127: binary cannot be found
+      // 255: target not found
+
+      if ($return_var == 0) {
+        return TRUE;
+      }
+      else {
+        // If supplied bin failed, log some information
+        if (($i == 0) && ($supplied_bin_error == '')) {
+          $msg = 'Supplied binary found, but it exited with error code ' . $return_var . '. ';
+          switch ($return_var) {
+            case 127:
+              $msg .= 'This probably means that the binary was not found. ';
+              break;
+            case 255:
+              $msg .= 'This probably means that the target was not found. ';
+              break;
+          }
+          $msg .= 'Output was: ' . print_r($output, TRUE);
+          logmsg($msg);
+        }
+      }
+    }
+    // 
+    return 'No working cwebp binary found';
 
     // Check the version
     //   (the appended "2>&1" is in order to get the output - thanks for your comment, Simon
     //    @ http://php.net/manual/en/function.exec.php)
+    /*
 		exec( "$bin -version 2>&1", $version );
     if (empty($version)) {
       return 'Failed getting version';
     }
     if (!preg_match( '/0.\d.\d/', $version[0] ) ) {
 			return 'Unexpected version format';
-		}    
+		}*/
 
-    // Try with nice        
-    $cmd = 'bin/cwebp-linux -q ' . $quality . ' -metadata all ' . $target . ' -o ' . $destination . ' 2>&1';
-    exec('nice ' . $cmd, $output, $return_var);
 
-    // if it failed, try without "nice"
-    if ($return_var > 0) {
-      exec($cmd, $output, $return_var);
-    }
-    if ($return_var > 0) {
-      // Return codes:  
-      // 0: everything ok!
-      // 127: binary cannot be found
-      // 255: target not found
-      $msg = 'binary exited with error code ' . $return_var . '. ';
-      switch ($return_var) {
-        case 127:
-          $msg .= 'This probably means that the binary was not found. ';
-          break;
-        case 255:
-          $msg .= 'This probably means that the target was not found. ';
-          break;
-      }
-      $msg .= 'Output was: ' . print_r($output, TRUE);
-      return $msg;
-    }
-    else {
-      return TRUE;
-    }
   }
 );
 

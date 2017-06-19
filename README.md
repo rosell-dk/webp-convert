@@ -1,5 +1,12 @@
 # webp-convert
-Convert jpeg/png to webp with available tool.
+Convert jpeg/png to webp with PHP (if at all possible)
+
+The state of webp conversion in PHP is currently as such: There are several ways to do it, but they all require *something* of the server-setup. What works on one shared host might not work on another.
+
+This php script aim to provide *ALL* methods. It will try one method after the other until success, or everything failed. You can setup the desired order with the "preferred_tools" option. D
+
+
+/frameworks/tools available, but It is possible 
 
 Unfortunately, there is currently no pure PHP method available for converting images into WebP format, which works on any server setup. This PHP script will try a number of tools in order of your preference.
 
@@ -15,7 +22,9 @@ Path of destination (relative to target file) or an absolute path. Double-dots a
 The quality of the generated WebP image, 0-100.
 
 *preferred_tools* (optional)\
-The order to try the tools in. Comma-separated list.
+Set the priority of the tools, that is, the order to try the tools in. You do not have to specify all tools. The tools you specify will move to the top of the list. The script will always try all tools before giving up.
+
+Comma-separated list.
 Allowed values: "cwebp", "imagewebp"
 Default order is: cwebp, imagewebp
 
@@ -34,9 +43,9 @@ Uses the php function [imagewebp](http://php.net/manual/en/function.imagewebp.ph
 ### cwebp
 Calls the cwebp binary with an exec() call. Works on surprisingly many webhosts ([here is a list](https://wordpress.org/plugins/ewww-image-optimizer/#installation)). There is precompiled binaries in the /bin folder, compiled for different OS'es. Thanks to Shane Bishop for letting me copy his precompilations which comes with his plugin, [EWWW Image Optimizer](https://ewww.io/).
 
-If your OS isn't supported, you can put a binary called "cwebp-custom" into the "bin" folder
+The script tests the checksum of the binary before executing it. This means that you cannot just replace a binary - you will have to edit the script. If you find the need to use another binary than those that comes with this project, please write - chances are that it should be added to the project.
 
 ## SECURITY
-TODO! - The script does not currently sanitize values. Also exec() does not md5-test cwebp before running it
+TODO! - The script does not currently sanitize values.
 
 
