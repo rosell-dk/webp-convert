@@ -16,7 +16,7 @@ The script takes the following arguments:
 Either the relative path to the file (relative to document root) or an absolute path. If it starts with "/", it is considered an absolute path.
 
 *destination-folder*\
-Path of destination (relative to target file) or an absolute path. Double-dots are allowed, ie "../../webp-cache/images/2017"
+Path of destination (relative to script) or an absolute path. Double-dots are allowed, ie "../../webp-cache/images/2017"
 
 *quality*\
 The quality of the generated WebP image, 0-100.
