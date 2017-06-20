@@ -1,6 +1,5 @@
 <?php
 
-// http://test2/webp-convert.php?file=logo.jpg&quality=80&preferred_tools=imagewebp,cwebp&debug
 
 $filename = $_GET['file'];
 
@@ -40,7 +39,7 @@ function wepb_convert_add_tool($name, $convert_function) {
 
 wepb_convert_add_tool(
   'cwebp',
-  function($target, $destination, $quality) {
+  function($target, $destination, $quality, $copy_metadata = TRUE) {
     if (!function_exists( 'exec' )) {
       return 'exec() is not enabled';
     }
@@ -91,9 +90,40 @@ wepb_convert_add_tool(
       logmsg('Not able to use supplied bin. ' . $supplied_bin_error);
     }
 
-    $options = ' -q ' . $quality . ' -metadata all ' . $target . ' -o ' . $destination . ' 2>&1';
+/*
+			case 'image/jpeg':
+				$quality = (int) apply_filters( 'jpeg_quality', 82, 'image/webp' );
+				exec( "$nice " . $tool . " -q $quality -metadata $copy_opt -quiet " . ewww_image_optimizer_escapeshellarg( $file ) . ' -o ' . ewww_image_optimizer_escapeshellarg( $webpfile ) . ' 2>&1', $cli_output );
+				break;
+			case 'image/png':
+				exec( "$nice " . $tool . " -lossless -metadata $copy_opt -quiet " . ewww_image_optimizer_escapeshellarg( $file ) . ' -o ' . ewww_image_optimizer_escapeshellarg( $webpfile ) . ' 2>&1', $cli_output );
+
+*/
+
+    // Build options string
+    $options = ' -q ' . $quality;
+    $options .= ($copy_metadata ? ' -metadata all ' : '-metadata none');
+    $ext = array_pop(explode('.', $filename));
+    if ($ext == 'png') {
+      $options .= ' -lossless';
+    }
+    $options .= ' ' . $target . ' -o ' . $destination . ' 2>&1';
+
+    // Run with "nice", if available
+		exec( "nice 2>&1", $nice_output );
+    if (is_array($nice_output) && isset($nice_output[0]) ) {
+      if (preg_match( '/usage/', $nice_output[0]) || (preg_match( '/^\d+$/', $nice_output[0] ))) {
+        // Nice is available. 
+        // We run with default niceness (+10)
+        // https://www.lifewire.com/uses-of-commands-nice-renice-2201087
+        // https://www.computerhope.com/unix/unice.htm
+        $options = 'nice ' . $options;
+      }
+    }
+    logmsg('parameters:' . $options);
+
+    // Try all paths
     $success = FALSE;
-    
     foreach ($paths_to_test as $i => $bin) {
       logmsg('trying to execute binary: ' . $bin);
 
@@ -150,7 +180,7 @@ wepb_convert_add_tool(
 
 wepb_convert_add_tool(
   'imagewebp',
-  function($target, $destination, $quality) {
+  function($target, $destination, $quality, $copy_metadata = TRUE) {
     if(!function_exists(imagewebp)) {
       return 'imagewebp() is not available';
     }
@@ -197,9 +227,22 @@ function die_with_msg($text) {
   die();
 }
 
+// Test if file extension is valid
+$ext = array_pop(explode('.', $filename));
+switch ($ext) {
+  case 'jpg':
+  case 'jpeg':
+  case 'png':
+    break;
+  default:
+    die_with_msg("Unsupported file extension: " . $ext);
+}
+
+// Test if target file exists
 if (!file_exists($filename_abs)) {
   die_with_msg("File not found: " . $filename_abs);
 }
+
 
 // Prepare destination folder
 if (!isset($_GET['no-save'])) {
