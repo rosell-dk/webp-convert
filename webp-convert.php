@@ -5,15 +5,18 @@
 URL parameters:
 
 source:
-Either the relative path to the source file (relative to document root) or an absolute path. If it starts with "/", it is considered an absolute path.
+Path to source file. Can be absolute or relative (relative to document root). If it starts with "/", it is considered an absolute path.
 
-destination-folder (optional):
+destination (optional): (TODO)
+Path to destination file. Can be absolute or relative (relative to document root). You can choose not to specify destination. In that case, the path will be created based upon source, destination-root and absrel settings. If all these are blank, the destination will be same folder as source, and the filename will have ".webp" appended to it (ie image.jpeg.webp)
+
+destination-root (optional):
 Path of destination (relative to document root) or an absolute path. If not supplied, then the converted file will be placed in same folder as the target. Double-dots are allowed, ie "../../webp-cache/images/2017"
 
 quality:
 The quality of the generated WebP image, 0-100.
 
-preferred_tools* (optional):
+preferred_tools (optional):
 Set the priority of the tools, that is, the order to try the tools in. You do not have to specify all tools. The tools you specify will move to the top of the list. The script will always try all tools before giving up.
 Comma-separated list.
 Allowed values: "cwebp", "imagewebp"

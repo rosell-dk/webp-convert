@@ -12,11 +12,14 @@ Unfortunately, there is currently no pure PHP method available for converting im
 
 The script takes the following arguments:
 
-*filename*\
-Either the relative path to the file (relative to document root) or an absolute path. If it starts with "/", it is considered an absolute path.
+*source*\
+Path to source file. Can be absolute or relative (relative to document root). If it starts with "/", it is considered an absolute path.
 
-*destination-folder*\
-Path of destination (relative to script) or an absolute path. Double-dots are allowed, ie "../../webp-cache/images/2017"
+*destination (optional) (NOT IMPLEMENTED YET)*\
+Path to destination file. Can be absolute or relative (relative to document root). You can choose not to specify destination. In that case, the path will be created based upon source, destination-root and absrel settings. If all these are blank, the destination will be same folder as source, and the filename will have ".webp" appended to it (ie image.jpeg.webp)
+
+*destination-root (optional)*\
+Path of destination (relative to document root) or an absolute path. If not supplied, then the converted file will be placed in same folder as the target. Double-dots are allowed, ie "../../webp-cache/images/2017"
 
 *quality*\
 The quality of the generated WebP image, 0-100.
@@ -29,8 +32,7 @@ Allowed values: "cwebp", "imagewebp"
 Default order is: cwebp, imagewebp
 
 *absrel* (optional)\
-Might be relevant in rare occasions where you 
-$filename_absolute = $_SERVER['DOCUMENT_ROOT'] . '/' . $_GET['absrel'] . $_GET['file'];
+Might be relevant in rare occasions where you want to pass relative source path, but don't have the start of it.
 
 *debug* (optional)\
 If set (if "&debug" is appended to the URL), the script will produce text output instead of an image.
