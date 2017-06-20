@@ -7,7 +7,7 @@ $filename = $_GET['file'];
 
 $filename_abs = $_SERVER['DOCUMENT_ROOT'] . '/' . $_GET['absrel'] . $filename;
 
-$dest = $_GET['destination-folder'] . $filename . '.webp';
+$dest = preg_replace('/\/\//', '/', $_GET['destination-folder'] . '/' . $filename . '.webp');
 
 $quality = intval($_GET['quality']);
 $preferred_tools = explode(',', $_GET['preferred_tools']); 
@@ -100,16 +100,22 @@ wepb_convert_add_tool(
 
 */
 
+    function esc_whitespace($string) {
+    	return ( preg_replace( '/\s/', '\\ ', $string ) );
+    }
+
     // Build options string
-    $options = ' -q ' . $quality;
+    $options = '-q ' . $quality;
     $options .= ($copy_metadata ? ' -metadata all ' : '-metadata none');
     $ext = array_pop(explode('.', $filename));
     if ($ext == 'png') {
       $options .= ' -lossless';
     }
-    $options .= ' ' . $target . ' -o ' . $destination . ' 2>&1';
+    $options .= ' ' . esc_whitespace($target) . ' -o ' . esc_whitespace($destination) . ' 2>&1';
 
-    // Run with "nice", if available
+    // Test if "nice" is available
+    // ($nice will be set to "nice ", if it is)
+    $nice = '';
 		exec( "nice 2>&1", $nice_output );
     if (is_array($nice_output) && isset($nice_output[0]) ) {
       if (preg_match( '/usage/', $nice_output[0]) || (preg_match( '/^\d+$/', $nice_output[0] ))) {
@@ -117,7 +123,7 @@ wepb_convert_add_tool(
         // We run with default niceness (+10)
         // https://www.lifewire.com/uses-of-commands-nice-renice-2201087
         // https://www.computerhope.com/unix/unice.htm
-        $options = 'nice ' . $options;
+        $nice = 'nice ';
       }
     }
     logmsg('parameters:' . $options);
@@ -127,11 +133,10 @@ wepb_convert_add_tool(
     foreach ($paths_to_test as $i => $bin) {
       logmsg('trying to execute binary: ' . $bin);
 
-      $cmd = $bin . $options;
+      $cmd = $nice . $bin . ' ' . $options;
 
       // TODO: escape shell cmd (ewww_image_optimizer_escapeshellcmd)
 
-      // TODO: Run with nice, if available
 
       exec($cmd, $output, $return_var);
       // Return codes:  
@@ -229,13 +234,8 @@ function die_with_msg($text) {
 
 // Test if file extension is valid
 $ext = array_pop(explode('.', $filename));
-switch ($ext) {
-  case 'jpg':
-  case 'jpeg':
-  case 'png':
-    break;
-  default:
-    die_with_msg("Unsupported file extension: " . $ext);
+if (!in_array($ext, array('jpg', 'jpeg', 'png'))) {
+  die_with_msg("Unsupported file extension: " . $ext);
 }
 
 // Test if target file exists
@@ -243,20 +243,22 @@ if (!file_exists($filename_abs)) {
   die_with_msg("File not found: " . $filename_abs);
 }
 
-
 // Prepare destination folder
-if (!isset($_GET['no-save'])) {
-  $dest = $_GET['destination-folder'] . $filename . '.webp';
-  if (isset($_GET['destination-folder'])) {
-    $folders = explode('/', $dest);
-    array_pop($folders);
-    $folder = implode($folders, '/');
-    if (!file_exists($folder)) {
-      if (!mkdir($folder, 0755, TRUE)) {
-        die_with_msg('Failed creating folder:' . $folder);
-      };
-    }
+if (isset($_GET['destination-folder'])) {
+  $folders = explode('/', $dest);
+  array_pop($folders);
+  $folder = implode($folders, '/');
+  logmsg('dest:' . $folder);
+  if (!file_exists($folder)) {
+    if (!mkdir($folder, 0755, TRUE)) {
+      die_with_msg('Failed creating folder:' . $folder);
+    };
   }
+}
+
+// Test if it will be possible to write file
+if (!is_writable($dest)) {
+  die_with_msg('Cannot save file to: ' . $dest  . '. Check the file permissions.');
 }
 
 // Remove preffered tools from order (we will add them soon!)
