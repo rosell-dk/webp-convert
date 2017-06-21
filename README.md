@@ -3,12 +3,39 @@ Convert jpeg/png to webp with PHP (if at all possible)
 
 The state of webp conversion in PHP is currently as such: There are several ways to do it, but they all require *something* of the server-setup. What works on one shared host might not work on another.
 
-This php script aim to provide *ALL* methods. It will try one method after the other until success, or everything failed. You can setup the desired order with the "preferred_tools" option. D
+This php script aim to provide *ALL* known methods. It will try one method after the other until success, or everything failed. You can setup the desired order with the "preferred_tools" option.
+
+## Usage
+
+Basic usage:
+```
+include( __DIR__ . '/WebPConvertClass.php');
+
+$source = $_SERVER['DOCUMENT_ROOT'] . '/images/subfolder/logo.jpg';
+$destination = $_SERVER['DOCUMENT_ROOT'] . '/images/subfolder/logo.jpg.webp';
+
+WebPConvert::$serve_converted_image = TRUE;
+WebPConvert::set_preferred_tools(array('cwebp','imagewebp'));
+WebPConvert::convert($source, $destination, 90);
+```
+
+Using the helper:
+```
+include( __DIR__ . '/WebPConvertClass.php');
+include( __DIR__ . '/WebPConvertPathHelperClass.php');
+
+$source_relative_path = 'images/subfolder/logo.jpg';
+$destination_root = 'webp-cache';
+
+$source = WebPConvertPathHelper::abspath($source_relative_path);
+$destination = WebPConvertPathHelper::get_destination_path($source_relative_path, $destination_root]);
+
+WebPConvert::$serve_converted_image = TRUE;
+WebPConvert::set_preferred_tools(array('cwebp','imagewebp'));
+WebPConvert::convert($source, $destination, 90);
+```
 
 
-/frameworks/tools available, but It is possible 
-
-Unfortunately, there is currently no pure PHP method available for converting images into WebP format, which works on any server setup. This PHP script will try a number of tools in order of your preference.
 
 The script takes the following arguments:
 
@@ -54,8 +81,6 @@ The script tests the checksum of the binary before executing it. This means that
 TODO! - The script does not currently sanitize values.
 
 ## Roadmap
-* Put stuff into a class
-* Return original image when generation fails (and no-cache header)
 * Integrate with EWWW Image Optimizer
 
 
