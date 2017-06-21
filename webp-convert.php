@@ -16,6 +16,10 @@ Path of destination (relative to document root) or an absolute path. If not supp
 quality:
 The quality of the generated WebP image, 0-100.
 
+metadata: (TODO)
+0 or 1. If 0, metadata will be stripped. If 1, metadata will be copied (if tool supports it)
+
+
 preferred_tools (optional):
 Set the priority of the tools, that is, the order to try the tools in. You do not have to specify all tools. The tools you specify will move to the top of the list. The script will always try all tools before giving up.
 Comma-separated list.
@@ -277,16 +281,6 @@ wepb_convert_add_tool(
       logmsg('Not able to use supplied bin. ' . $supplied_bin_error);
     }
 
-/*
-			case 'image/jpeg':
-				$quality = (int) apply_filters( 'jpeg_quality', 82, 'image/webp' );
-				exec( "$nice " . $tool . " -q $quality -metadata $copy_opt -quiet " . ewww_image_optimizer_escapeshellarg( $file ) . ' -o ' . ewww_image_optimizer_escapeshellarg( $webpfile ) . ' 2>&1', $cli_output );
-				break;
-			case 'image/png':
-				exec( "$nice " . $tool . " -lossless -metadata $copy_opt -quiet " . ewww_image_optimizer_escapeshellarg( $file ) . ' -o ' . ewww_image_optimizer_escapeshellarg( $webpfile ) . ' 2>&1', $cli_output );
-
-*/
-
     function esc_whitespace($string) {
     	return ( preg_replace( '/\s/', '\\ ', $string ) );
     }
@@ -298,6 +292,7 @@ wepb_convert_add_tool(
     if ($ext == 'png') {
       $options .= ' -lossless';
     }
+    // $options .= ' -quiet';
     $options .= ' ' . esc_whitespace($target) . ' -o ' . esc_whitespace($destination) . ' 2>&1';
 
     // Test if "nice" is available

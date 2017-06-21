@@ -24,6 +24,9 @@ Path of destination (relative to document root) or an absolute path. If not supp
 *quality*\
 The quality of the generated WebP image, 0-100.
 
+*metadata: (TODO)*\
+0 or 1. If 0, metadata will be stripped. If 1, metadata will be copied (if tool supports it)
+
 *preferred_tools* (optional)\
 Set the priority of the tools, that is, the order to try the tools in. You do not have to specify all tools. The tools you specify will move to the top of the list. The script will always try all tools before giving up.
 
@@ -49,5 +52,12 @@ The script tests the checksum of the binary before executing it. This means that
 
 ## SECURITY
 TODO! - The script does not currently sanitize values.
+
+## Roadmap
+* Put stuff into a class
+* Return original image when generation fails (and no-cache header)
+* Integrate with EWWW Image Optimizer
+
+
 
 
