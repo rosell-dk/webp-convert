@@ -52,8 +52,8 @@ When WebPConvert is told to serve an image, but all tools fails to convert, the 
 ## Methods currently implemented
 
 ### imagewebp
-*Requirements*: PHP > 5.5.0 compiled with WebP support<br>
-*Availability*: Unfortunately, according to [this link](https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php), WebP support on shared hosts is rare.
+```Requirements```: PHP > 5.5.0 compiled with WebP support<br>
+```Availability```: Unfortunately, according to [this link](https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php), WebP support on shared hosts is rare.
 
 [imagewebp](http://php.net/manual/en/function.imagewebp.php) is a function that comes with PHP (>5.5.0) *provided* that PHP has been compiled with WebP support. Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes created corrupted images. That bug can however easily be fixed in PHP (fix was released [here](https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files)). However, I have experienced corrupted images *anyway*. So use this tool with caution. The corrupted images shows as completely transparent images in Google Chrome, but with correct size.
 
@@ -62,8 +62,8 @@ To get WebP support in PHP 5.5, PHP must be configured with the "--with-vpx-dir"
 
 
 ### cwebp
-*Requirements*: exec()<br>
-*Availability*: exec() is available on surprisingly many webhosts, and a PHP solution calling exec() has been reported to work on many [here is a list](https://wordpress.org/plugins/ewww-image-optimizer/#installation)
+```Requirements```: exec()<br>
+```Availability```: exec() is available on surprisingly many webhosts, and a PHP solution calling exec() has been reported to work on many [here is a list](https://wordpress.org/plugins/ewww-image-optimizer/#installation)
 
 [cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP convertion command line tool released by Google. Our implementation simply looks in the /bin folder for a precompiled binary appropriate for the OS, and executes it with [exec()](http://php.net/manual/en/function.exec.php). Thanks to Shane Bishop for letting me copy his precompilations which comes with his plugin, [EWWW Image Optimizer](https://ewww.io/).
 
