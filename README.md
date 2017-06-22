@@ -65,10 +65,20 @@ To get WebP support in PHP 5.5, PHP must be configured with the "--with-vpx-dir"
 ```Requirements```: exec()<br>
 ```Availability```: exec() is available on surprisingly many webhosts, and a PHP solution calling exec() has been reported to work on many [here is a list](https://wordpress.org/plugins/ewww-image-optimizer/#installation)
 
-[cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP convertion command line tool released by Google. Our implementation simply looks in the /bin folder for a precompiled binary appropriate for the OS, and executes it with [exec()](http://php.net/manual/en/function.exec.php). Thanks to Shane Bishop for letting me copy his precompilations which comes with his plugin, [EWWW Image Optimizer](https://ewww.io/).
+[cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP convertion command line tool released by Google. A its core, our implementation looks in the /bin folder for a precompiled binary appropriate for the OS and executes it with [exec()](http://php.net/manual/en/function.exec.php). Thanks to Shane Bishop for letting me copy his precompilations which comes with his plugin, [EWWW Image Optimizer](https://ewww.io/). 
 
-The script tests the checksum of the binary before executing it. This means that you cannot just replace a binary - you will have to edit the script. If you find the need to use another binary than those that comes with this project, please write - chances are that it should be added to the project.
+The script tests the checksum of the binary before executing it. This means that you cannot just replace a binary - you will have to edit the script. If you find the need to use another binary, than those that comes with this project, please write - chances are that it should be added to the project.
 
+In more detail, the implementation does this:
+- Binary is selected form the bin-folder, according to OS
+- If no binary is found, or if execution fails, try common system paths ('/usr/bin/cwebp' etc)
+- Before executing binary, the checksum is tested
+- Options are generated. -lossless is used for png. -metadata is set to "all" or "none"
+- If "nice" command is found on host, then binary is run with low priority in order to save system ressources
+- The permissions of the generated file is set to be the same as parent
+- It is detected whether the command succeeds or not
+
+Credits also goes to Shane regarding the code that revolves around the exec(). Most of it is a refactoring of the code in [EWWW Image Optimizer](https://ewww.io/).
 
 ## SECURITY
 TODO! - The script does not currently sanitize values.
