@@ -121,7 +121,7 @@ class WebPConvert {
       // Find out which permissions to set.
       // We want same permissions as parent folder
       // But which parent? - the parent to the first missing folder
-      // (TODO: what to do if this is out of basedir?)
+      // (TODO: what to do if this is outside open basedir? http://php.net/manual/en/ini.core.php#ini.open-basedir)
       $parent_folders = explode('/', $destination_folder);
       $popped_folders = array();
       while (!(file_exists(implode('/', $parent_folders)))) {
@@ -418,6 +418,15 @@ WebPConvert::addTool(
     }
     else {
       return 'imagewebp() call failed';
+    }
+  }
+);
+
+WebPConvert::addTool(
+  'ewww',
+  function($source, $destination, $quality, $strip_metadata = TRUE) {
+    if(!function_exists('imagewebp')) {
+      return 'imagewebp() is not available';
     }
   }
 );

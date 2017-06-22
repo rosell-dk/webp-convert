@@ -32,8 +32,6 @@ debug (optional):
 When WebPConvert is told to serve an image, but all tools fails to convert, the default action of WebPConvert is to serve the original image. End-users will not notice the fail, which is good on production servers, but not on development servers. With debugging enabled, WebPConvert will generate an image with the error message, when told to serve image, and things go wrong.
 */
 
-echo 'he';
-die();
 $serve_converted_image = (isset($_GET['serve-image']) ? ($_GET['serve-image'] != 'no') : FALSE);
 $debug = (isset($_GET['debug']) ? ($_GET['debug'] != 'no') : FALSE);
 

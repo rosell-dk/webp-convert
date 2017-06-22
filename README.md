@@ -24,7 +24,7 @@ WebPConvert::convert($source, $destination, $quality, $strip_metadata);
 
 ## The script
 
-webp-convert.php can be used to serve converted images. It accepts the following parameters in the URL:
+*webp-convert.php* can be used to serve converted images, or just convert without serving. It accepts the following parameters in the URL:
 
 *source:*\
 Path to source file. Can be absolute or relative (relative to document root). If it starts with "/", it is considered an absolute path.
@@ -74,7 +74,7 @@ The script tests the checksum of the binary before executing it. This means that
 TODO! - The script does not currently sanitize values.
 
 ## Roadmap
-* Method: "EWWW Image Optimizer"
+* Sanitize
 * Method: imagemagick
 
 
