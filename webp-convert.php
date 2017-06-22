@@ -1,5 +1,5 @@
 <?php
-// http://test2/webp-convert.php?source=/var/www/test/images/subfolder/logo.jpg&quality=80&preferred_tools=imagewebp,cwebp&debug&destination-root=cold
+// http://test2/webp-convert.php?source=/var/www/test/images/subfolder/logo.jpg&quality=100&preferred-tools=imagewebp,cwebp&debug&destination-root=cold&serve-image=y
 
 /*
 URL parameters:
@@ -32,6 +32,8 @@ debug (optional):
 When WebPConvert is told to serve an image, but all tools fails to convert, the default action of WebPConvert is to serve the original image. End-users will not notice the fail, which is good on production servers, but not on development servers. With debugging enabled, WebPConvert will generate an image with the error message, when told to serve image, and things go wrong.
 */
 
+echo 'he';
+die();
 $serve_converted_image = (isset($_GET['serve-image']) ? ($_GET['serve-image'] != 'no') : FALSE);
 $debug = (isset($_GET['debug']) ? ($_GET['debug'] != 'no') : FALSE);
 
@@ -53,14 +55,13 @@ $destination = WebPConvertPathHelper::get_destination_path($source, $_GET['desti
 $quality = (isset($_GET['quality']) ? intval($_GET['quality']) : 85);
 $strip_metadata = (isset($_GET['strip-metadata']) ? ($_GET['strip-metadata'] != 'no') : FALSE);
 
-$preferred_tools = (isset($_GET['preferred-tools'])) ? explode(',', $_GET['preferred-tools']) : array()); 
+$preferred_tools = (isset($_GET['preferred-tools']) ? explode(',', $_GET['preferred-tools']) : array()); 
 //$preferred_tools = array('imagewebp', 'cwebp');
-
 
 WebPConvert::$serve_converted_image = $serve_converted_image;
 WebPConvert::$serve_original_image_on_fail = (!$debug);
 WebPConvert::set_preferred_tools($preferred_tools);
 WebPConvert::convert($source, $destination, $quality, $strip_metadata);
 
-?>
 
+?>
