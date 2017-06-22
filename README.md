@@ -54,13 +54,13 @@ When WebPConvert is told to serve an image, but all tools fails to convert, the 
 ### imagewebp
 [imagewebp](http://php.net/manual/en/function.imagewebp.php) is a function that comes with PHP (>5.5.0) *provided* that PHP has been compiled with WebP support. Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes created corrupted images. That bug can however easily be fixed in PHP (fix was released [here](https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files)). However, I have experienced corrupted images *anyway*. So use this tool with caution. The corrupted images shows as completely transparent images in Google Chrome, but with correct size.
 
-#### Requirements
+*Requirements*\
 * PHP > 5.5.0 compiled with WebP support
 
 To get WebP support in PHP 5.5, PHP must be configured with the "--with-vpx-dir" flag. In PHP 7.0, php has to be configured with the "--with-webp-dir" flag [source](http://il1.php.net/manual/en/image.installation.php).
 
-#### Availability
-Unfortunately, according to [this link](https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php)), WebP support on shared hosts is rare.
+*Availability*\
+Unfortunately, according to [this link](https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php), WebP support on shared hosts is rare.
 
 
 ### cwebp
@@ -68,10 +68,10 @@ Unfortunately, according to [this link](https://stackoverflow.com/questions/2524
 
 The script tests the checksum of the binary before executing it. This means that you cannot just replace a binary - you will have to edit the script. If you find the need to use another binary than those that comes with this project, please write - chances are that it should be added to the project.
 
-#### Requirements
+*Requirements*\
 * exec()
 
-#### Availability
+*Availability*\
 exec() is available on surprisingly many webhosts, and a PHP solution calling exec() has been reported to work on many [here is a list](https://wordpress.org/plugins/ewww-image-optimizer/#installation))
 
 ## SECURITY
