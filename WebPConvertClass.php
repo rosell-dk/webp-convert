@@ -12,7 +12,7 @@ class WebPConvert {
   public static $current_conversion_vars;
 
   // Little helper
-  public static function logmsg($msg) {
+  public static function logmsg($msg = '') {
     if (!WebPConvert::$serve_converted_image) {
       echo $msg . '<br>';
     }
@@ -53,7 +53,7 @@ class WebPConvert {
   }
 
   public static function set_preferred_tools($preferred_tools) {
-    // Remove preferred tools from order (we will add them soon!)
+    // Remove preferred tools from order (we will add them again right away!)
     self::$tools_order = array_diff(self::$tools_order, $preferred_tools);
 
     // Add preferred tools to order
@@ -72,10 +72,22 @@ class WebPConvert {
   */
   public static function convert($source, $destination, $quality = 85, $strip_metadata = TRUE) {
 
+    self::logmsg('WebPConvert::convert() called');
+    self::logmsg('- source: ' . $source);
+    self::logmsg('- destination: ' . $destination);
+    self::logmsg('- quality: ' . $quality);
+    self::logmsg('- strip_metadata: ' . ($strip_metadata ? 'true' : 'false'));
+    self::logmsg();
+
     WebPConvert::$current_conversion_vars = array();
     WebPConvert::$current_conversion_vars['source'] =  $source;
     WebPConvert::$current_conversion_vars['destination'] =  $destination;
 
+    if (self::$serve_converted_image) {
+      // If set to serve image, textual content will corrupt the image
+      // Therefore, we prevent PHP from outputting error messages
+      ini_set('display_errors','Off');
+    }
 
     // "dirname", but which doesn't localization
     function strip_filename_from_path($path_with_filename) {
@@ -375,11 +387,6 @@ WebPConvert::addTool(
     switch ($ext) {
       case 'jpg':
       case 'jpeg':
-        // Hm... sometimes I get completely transparent images.
-        // It seems to be happening with jpeg, and the quality parameter seems to have an impact
-        // - for example, quality=100 seems to always result in transparent image
-
-        $quality = 90;
         $image = imagecreatefromjpeg($source);
         break;
       case 'png':
@@ -397,11 +404,13 @@ WebPConvert::addTool(
     $success = imagewebp($image, $destination, $quality);
 
 
-    // This is a hack that solves another bug with imagewebp
+    // This is a hack solves bug with imagewebp
     // - Got it here: https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files
     if (filesize($source) % 2 == 1) {
       file_put_contents($source, "\0", FILE_APPEND);
     }
+
+    // Hm... sometimes I get completely transparent images, even with the hack above. Help, anybody?
 
     imagedestroy($image);
     if ($success) {
