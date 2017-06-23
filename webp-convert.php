@@ -30,6 +30,9 @@ Usually, you will not need to supply anything. Might be relevant in rare occasio
 
 debug (optional):
 When WebPConvert is told to serve an image, but all tools fails to convert, the default action of WebPConvert is to serve the original image. End-users will not notice the fail, which is good on production servers, but not on development servers. With debugging enabled, WebPConvert will generate an image with the error message, when told to serve image, and things go wrong.
+
+ewww-key (optional):
+Key to EWWW Image Converter
 */
 
 $serve_converted_image = (isset($_GET['serve-image']) ? ($_GET['serve-image'] != 'no') : FALSE);
@@ -56,6 +59,9 @@ $strip_metadata = (isset($_GET['strip-metadata']) ? ($_GET['strip-metadata'] != 
 $preferred_tools = (isset($_GET['preferred-tools']) ? explode(',', $_GET['preferred-tools']) : array()); 
 //$preferred_tools = array('imagewebp', 'cwebp');
 
+if (isset($_GET['ewww-key'])) {
+  WebPConvertEWW::setKey($_GET['ewww-key']);
+}
 WebPConvert::$serve_converted_image = $serve_converted_image;
 WebPConvert::$serve_original_image_on_fail = (!$debug);
 WebPConvert::set_preferred_tools($preferred_tools);
