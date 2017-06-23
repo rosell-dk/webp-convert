@@ -67,7 +67,7 @@ To get WebP support in PHP 5.5, PHP must be configured with the "--with-vpx-dir"
 
 ### cwebp
 ```Requirements```: exec()<br>
-```Availability```: exec() is available on surprisingly many webhosts, and a PHP solution calling exec() has been reported to work on many [here is a list](https://wordpress.org/plugins/ewww-image-optimizer/#installation)
+```Availability```: exec() is available on surprisingly many webhosts, and the PHP solution by *EWWW Image Optimizer*, which this code is largely based on has been reported to work on many webhosts - [here is a list](https://wordpress.org/plugins/ewww-image-optimizer/#installation)
 
 [cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP convertion command line tool released by Google. A its core, our implementation looks in the /bin folder for a precompiled binary appropriate for the OS and executes it with [exec()](http://php.net/manual/en/function.exec.php). Thanks to Shane Bishop for letting me copy his precompilations which comes with his plugin, [EWWW Image Optimizer](https://ewww.io/). 
 
