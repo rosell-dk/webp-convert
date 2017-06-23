@@ -55,19 +55,24 @@ Each "method" of converting an image to webp is implemented in a separate plugin
 
 The following plugins are implemented:
 
-### imagewebp
-```Requirements```: PHP > 5.5.0 compiled with WebP support<br>
-```Availability```: Unfortunately, according to [this link](https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php), WebP support on shared hosts is rare.
+### imagewebp - The fastest converter
+```Requirements..```: PHP > 5.5.0 compiled with WebP support<br>
+```Availability..```: Unfortunately, according to [this link](https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php), WebP support on shared hosts is rare.
+```Speed.........```: Around 30 ms to convert a 40kb image
+```Reliability...```: Not sure. I have experienced corrupted images, but cannot reproduce
 
 [imagewebp](http://php.net/manual/en/function.imagewebp.php) is a function that comes with PHP (>5.5.0) *provided* that PHP has been compiled with WebP support. Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes created corrupted images. That bug can however easily be fixed in PHP (fix was released [here](https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files)). However, I have experienced corrupted images *anyway*. So use this tool with caution. The corrupted images shows as completely transparent images in Google Chrome, but with correct size.
 
-
 To get WebP support in PHP 5.5, PHP must be configured with the "--with-vpx-dir" flag. In PHP 7.0, php has to be configured with the "--with-webp-dir" flag [source](http://il1.php.net/manual/en/image.installation.php).
 
+The plugin does not support copying metadata
 
-### cwebp
-```Requirements```: exec()<br>
-```Availability```: exec() is available on surprisingly many webhosts, and the PHP solution by *EWWW Image Optimizer*, which this code is largely based on has been reported to work on many webhosts - [here is a list](https://wordpress.org/plugins/ewww-image-optimizer/#installation)
+
+### cwebp - Reliable and fast
+```Requirements..```: exec()<br>
+```Availability..```: exec() is available on surprisingly many webhosts, and the PHP solution by *EWWW Image Optimizer*, which this code is largely based on has been reported to work on many webhosts - [here is a list](https://wordpress.org/plugins/ewww-image-optimizer/#installation)
+```Speed.........```: Around 140 ms to convert a 40kb image
+```Reliability...```: Great
 
 [cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP convertion command line tool released by Google. A its core, our implementation looks in the /bin folder for a precompiled binary appropriate for the OS and executes it with [exec()](http://php.net/manual/en/function.exec.php). Thanks to Shane Bishop for letting me copy his precompilations which comes with his plugin, [EWWW Image Optimizer](https://ewww.io/). 
 
@@ -84,13 +89,27 @@ In more detail, the implementation does this:
 
 Credits also goes to Shane regarding the code that revolves around the exec(). Most of it is a refactoring of the code in [EWWW Image Optimizer](https://ewww.io/).
 
+### ewww: Cheap and reliable fallback. But slow
+```Requirements..```: A valid key to [EWWW Image Optimizer](https://ewww.io/), curl and PHP >= 5.5<br>
+```Availability..```: Should work on *almost* any webhost. - The curl extension is available on most shared hosts. As PHP 5.3 and PHP 5.4 is no longer supported, the PHP requirement should not be an issue. A key is of course available to anyone with a credit card.
+```Speed.........```: Around 1300 ms to convert a 40kb image
+```Reliability...```: Great
+
+
+EWWW Image Optimizer is a cloud service. You purchase a key and then you can connect. Otherwise, there is not much to say. The key is very cheap, just below one dollar. It should work on *almost* any webhost, making it a cheap and reliable fallback. But not as fast as the other plugins.
+
+The plugin could be improved by using *fsockopen* if *curl* is not available.
+
+The plugin does not currently support metadata option (but the cloud service does)
+
+
 ## SECURITY
 TODO! - The script does not currently sanitize values.
 
 ## Roadmap
 * Sanitize
 * plugin: imagemagick
-* plugin: ewww (EWWW Image Converter)
+
 
 
 
