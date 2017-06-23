@@ -180,7 +180,11 @@ class WebPConvert {
     foreach (self::$tools_order as $tool_name) {
       self::logmsg('<br>trying <b>' . $tool_name . '</b>');
 
+      $time_start = microtime(true);
       $result = call_user_func('webpconvert_' . $tool_name, $source, $destination, $quality, $strip_metadata);
+      $time_end = microtime(true);
+      self::logmsg('execution time: ' . round(($time_end - $time_start) * 1000) . ' ms');
+      
       if ($result === TRUE) {
         self::logmsg('success!');
         $success = TRUE;
