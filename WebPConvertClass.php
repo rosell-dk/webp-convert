@@ -2,7 +2,6 @@
 
 
 class WebPConvert {
-  private static $tools = array();
   private static $tools_order = array();
 
   public static $serve_converted_image = TRUE;
@@ -58,7 +57,7 @@ class WebPConvert {
 
     // Add preferred tools to order
     foreach (array_reverse($preferred_tools) as $pref_tool) {
-      if (isset(self::$tools[$pref_tool])) {
+      if (function_exists('webpconvert_' . $pref_tool)) {
         array_unshift(self::$tools_order, $pref_tool);
       }
     }
@@ -180,8 +179,8 @@ class WebPConvert {
     $success = FALSE;
     foreach (self::$tools_order as $tool_name) {
       self::logmsg('<br>trying <b>' . $tool_name . '</b>');
-      $convert_function = self::$tools[$tool_name];
-      $result = $convert_function($source, $destination, $quality, $strip_metadata);
+
+      $result = call_user_func('webpconvert_' . $tool_name, $source, $destination, $quality, $strip_metadata);
       if ($result === TRUE) {
         self::logmsg('success!');
         $success = TRUE;
@@ -213,8 +212,7 @@ class WebPConvert {
 
   }
 
-  public static function addTool($name, $convert_function) {
-    self::$tools[$name] = $convert_function;
+  public static function addTool($name) {
     self::$tools_order[] = $name;
   }
 }
@@ -227,6 +225,8 @@ foreach (scandir(__DIR__ . '/plugins') as $file) {
 
     // echo 'Added plugin: ' . $file . '<br>';
     include_once('plugins/' . $file . '/' . $file . '.php');
+
+    WebPConvert::addTool($file);
   }
 }
 
