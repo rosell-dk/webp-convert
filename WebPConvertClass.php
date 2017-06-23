@@ -19,19 +19,23 @@ class WebPConvert {
 
   // Critical fail - when we can't even serve the source as fallback
   private static function cfail($msg) {
-//      echo $msg;
-    header('Content-type: image/gif');
+    if (!WebPConvert::$serve_converted_image) {
+      echo $msg;
+    }
+    else {
+      header('Content-type: image/gif');
 
-    // Prevent caching error message
-    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-    header("Cache-Control: post-check=0, pre-check=0", FALSE);
-    header("Pragma: no-cache");
+      // Prevent caching error message
+      header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+      header("Cache-Control: post-check=0, pre-check=0", FALSE);
+      header("Pragma: no-cache");
 
-    $image = imagecreatetruecolor(620, 200);
-    imagestring($image, 1, 5, 5,  $msg, imagecolorallocate($image, 233, 214, 291));
-//      echo imagewebp($image);
-    echo imagegif($image);
-    imagedestroy($image);
+      $image = imagecreatetruecolor(620, 200);
+      imagestring($image, 1, 5, 5,  $msg, imagecolorallocate($image, 233, 214, 291));
+  //      echo imagewebp($image);
+      echo imagegif($image);
+      imagedestroy($image);
+    }
   }
 
   private static function fail($msg) {
