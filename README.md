@@ -57,9 +57,9 @@ The following plugins are implemented:
 
 ### imagewebp - The fastest converter
 ```Requirements..```: PHP > 5.5.0 compiled with WebP support<br>
-```Availability..```: Unfortunately, according to [this link](https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php), WebP support on shared hosts is rare.<br>
 ```Speed.........```: Around 30 ms to convert a 40kb image<br>
 ```Reliability...```: Not sure. I have experienced corrupted images, but cannot reproduce<br>
+```Availability..```: Unfortunately, according to [this link](https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php), WebP support on shared hosts is rare.<br>
 
 [imagewebp](http://php.net/manual/en/function.imagewebp.php) is a function that comes with PHP (>5.5.0) *provided* that PHP has been compiled with WebP support. Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes created corrupted images. That bug can however easily be fixed in PHP (fix was released [here](https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files)). However, I have experienced corrupted images *anyway*. So use this tool with caution. The corrupted images shows as completely transparent images in Google Chrome, but with correct size.
 
@@ -70,9 +70,9 @@ The plugin does not support copying metadata
 
 ### cwebp - Reliable and fast
 ```Requirements..```: exec()<br>
-```Availability..```: exec() is available on surprisingly many webhosts, and the PHP solution by *EWWW Image Optimizer*, which this code is largely based on has been reported to work on many webhosts - [here is a list](https://wordpress.org/plugins/ewww-image-optimizer/#installation)<br>
 ```Speed.........```: Around 140 ms to convert a 40kb image<br>
 ```Reliability...```: Great<br>
+```Availability..```: exec() is available on surprisingly many webhosts, and the PHP solution by *EWWW Image Optimizer*, which this code is largely based on has been reported to work on many webhosts - [here is a list](https://wordpress.org/plugins/ewww-image-optimizer/#installation)<br>
 
 [cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP convertion command line tool released by Google. A its core, our implementation looks in the /bin folder for a precompiled binary appropriate for the OS and executes it with [exec()](http://php.net/manual/en/function.exec.php). Thanks to Shane Bishop for letting me copy his precompilations which comes with his plugin, [EWWW Image Optimizer](https://ewww.io/). 
 
@@ -91,9 +91,9 @@ Credits also goes to Shane regarding the code that revolves around the exec(). M
 
 ### ewww: Cheap and reliable fallback. But slow
 ```Requirements..```: A valid key to [EWWW Image Optimizer](https://ewww.io/), curl and PHP >= 5.5<br>
-```Availability..```: Should work on *almost* any webhost. - The curl extension is available on most shared hosts. As PHP 5.3 and PHP 5.4 is no longer supported, the PHP requirement should not be an issue. A key is of course available to anyone with a credit card.<br>
 ```Speed.........```: Around 1300 ms to convert a 40kb image<br>
 ```Reliability...```: Great<br>
+```Availability..```: Should work on *almost* any webhost. - The curl extension is available on most shared hosts. As PHP 5.3 and PHP 5.4 is no longer supported, the PHP requirement should not be an issue. A key is of course available to anyone with a credit card.<br>
 
 
 EWWW Image Optimizer is a cloud service. You purchase a key and then you can connect. Otherwise, there is not much to say. The key is very cheap, just below one dollar. It should work on *almost* any webhost, making it a cheap and reliable fallback. But not as fast as the other plugins.
