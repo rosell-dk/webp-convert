@@ -49,7 +49,11 @@ When WebPConvert is told to serve an image, but all tools fails to convert, the 
 
 
 
-## Methods currently implemented
+## Plugins
+
+Each "method" of converting an image to webp is implemented in a separate plugin. The plugins reside in the "plugins" folder. WebPConvertClass autodetects the plugins by scanning the directory, so it is easy to add new plugins, and safe to remove existing ones
+
+The following plugins are implemented:
 
 ### imagewebp
 ```Requirements```: PHP > 5.5.0 compiled with WebP support<br>
@@ -85,7 +89,8 @@ TODO! - The script does not currently sanitize values.
 
 ## Roadmap
 * Sanitize
-* Method: imagemagick
+* plugin: imagemagick
+* plugin: ewww (EWWW Image Converter)
 
 
 
