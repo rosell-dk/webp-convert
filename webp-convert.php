@@ -52,7 +52,7 @@ include( __DIR__ . '/WebPConvertClass.php');
 include( __DIR__ . '/WebPConvertPathHelperClass.php');
 
 $source = WebPConvertPathHelper::abspath($_GET['source']);
-$destination = WebPConvertPathHelper::get_destination_path($source, $_GET['destination-root']);
+$destination = WebPConvertPathHelper::get_destination_path($source, isset($_GET['destination-root']) ? $_GET['destination-root'] : '');
 $quality = (isset($_GET['quality']) ? intval($_GET['quality']) : 85);
 $strip_metadata = (isset($_GET['strip-metadata']) ? ($_GET['strip-metadata'] != 'no') : FALSE);
 
