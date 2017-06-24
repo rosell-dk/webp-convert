@@ -49,13 +49,13 @@ When WebPConvert is told to serve an image, but all tools fails to convert, the 
 
 
 
-## Plugins
+## Converters
 
-Each "method" of converting an image to webp is implemented in a separate plugin. The plugins reside in the "plugins" folder. WebPConvertClass autodetects the plugins by scanning the directory, so it is easy to add new plugins, and safe to remove existing ones
+Each "method" of converting an image to webp are implemented as a separate converter. WebPConvertClass autodetects the converters by scanning the "converters" directory, so it is easy to add new converters, and safe to remove existing ones
 
 The following plugins are implemented:
 
-### GD - The fastest converter. But not good for PNG's
+### gd - Fast. But not good for PNG's
 ```Requirements..```: GD extension and PHP > 5.5.0 compiled with WebP support<br>
 ```Speed.........```: Around 30 ms to convert a 40kb image<br>
 ```Reliability...```: Not sure. I have experienced corrupted images, but cannot reproduce<br>
@@ -69,7 +69,7 @@ The converter does not support copying metadata
 
 GD unfortunately does not expose any WebP options. Lacking the option to set lossless encoding results in poor encoding of PNG's. 
 
-### imagick: Great, but rarely supported
+### imagick - Great, but rarely available
 ```Requirements..```: imagick extension compiled with WebP support<br>
 ```Speed.........```: Around 50 ms to convert a 40kb image<br>
 ```Reliability...```: I'm not aware of any problems<br>
@@ -86,7 +86,7 @@ But once installed, it works great and has several WebP options. In this impleme
 - *webp:lossless* = true (for PNG's only, of course)
 
 
-### cwebp - Reliable and fast
+### cwebp - Great, fast enough but requires exec()
 ```Requirements..```: exec()<br>
 ```Speed.........```: Around 140 ms to convert a 40kb image<br>
 ```Reliability...```: Great<br>
