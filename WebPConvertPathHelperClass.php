@@ -163,7 +163,7 @@ class WebPConvertPathHelper {
       // Its already an absolute path. Do nothing
     }
     else {
-      $destination_root = self::replace_backslashes($_GET['destination-root']);
+      $destination_root = self::replace_backslashes($destination_root);
       if ($destination_root == '') {
         $destination_root = '.';
       }
