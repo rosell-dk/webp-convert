@@ -225,14 +225,14 @@ class WebPConvert {
   }
 }
 
-/* Add plugins */
-foreach (scandir(__DIR__ . '/plugins') as $file) {
-  if (is_dir('plugins/' . $file)) {
+/* Add converters */
+foreach (scandir(__DIR__ . '/converters') as $file) {
+  if (is_dir('converters/' . $file)) {
     if ($file == '.') continue;
     if ($file == '..') continue;
 
-    // echo 'Added plugin: ' . $file . '<br>';
-    include_once('plugins/' . $file . '/' . $file . '.php');
+    // echo 'Added converter: ' . $file . '<br>';
+    include_once('converters/' . $file . '/' . $file . '.php');
 
     WebPConvert::addTool($file);
   }

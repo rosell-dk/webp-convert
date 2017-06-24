@@ -55,7 +55,7 @@ Each "method" of converting an image to webp is implemented in a separate plugin
 
 The following plugins are implemented:
 
-### imagewebp - The fastest converter
+### GD - The fastest converter
 ```Requirements..```: PHP > 5.5.0 compiled with WebP support<br>
 ```Speed.........```: Around 30 ms to convert a 40kb image<br>
 ```Reliability...```: Not sure. I have experienced corrupted images, but cannot reproduce<br>

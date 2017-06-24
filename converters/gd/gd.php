@@ -1,6 +1,9 @@
 <?php 
 
-function webpconvert_imagewebp($source, $destination, $quality, $strip_metadata) {
+function webpconvert_gd($source, $destination, $quality, $strip_metadata) {
+  if (!extension_loaded('gd')) {
+    return 'This implementation requires the GD extension, which you do not have';
+  }
   if(!function_exists('imagewebp')) {
     return 'imagewebp() is not available';
   }
