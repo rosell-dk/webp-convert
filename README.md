@@ -55,8 +55,8 @@ Each "method" of converting an image to webp is implemented in a separate plugin
 
 The following plugins are implemented:
 
-### GD - The fastest converter
-```Requirements..```: PHP > 5.5.0 compiled with WebP support<br>
+### GD - The fastest converter. But not good for PNG's
+```Requirements..```: GD extension and PHP > 5.5.0 compiled with WebP support<br>
 ```Speed.........```: Around 30 ms to convert a 40kb image<br>
 ```Reliability...```: Not sure. I have experienced corrupted images, but cannot reproduce<br>
 ```Availability..```: Unfortunately, according to [this link](https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php), WebP support on shared hosts is rare.<br>
@@ -65,7 +65,25 @@ The following plugins are implemented:
 
 To get WebP support in PHP 5.5, PHP must be configured with the "--with-vpx-dir" flag. In PHP 7.0, php has to be configured with the "--with-webp-dir" flag [source](http://il1.php.net/manual/en/image.installation.php).
 
-The plugin does not support copying metadata
+The converter does not support copying metadata
+
+GD unfortunately does not expose any WebP options. Lacking the option to set lossless encoding results in poor encoding of PNG's. 
+
+### imagick: Great, but rarely supported
+```Requirements..```: imagick extension compiled with WebP support<br>
+```Speed.........```: Around 50 ms to convert a 40kb image<br>
+```Reliability...```: I'm not aware of any problems<br>
+```Availability..```: Probably only available on few shared hosts (if any)<br>
+
+The greatest problem here is the availability. The extension, php-imagick does currently not come with WebP support out of the box. And I could find no quick and easy way to add it. To make it work, I had to: 
+1. [Compile libwebp from source](https://developers.google.com/speed/webp/docs/compiling)
+2. [Compile imagemagick from source](https://www.imagemagick.org/script/install-source.php) (```./configure --with-webp=yes```)
+3. Compile php-imagick from source, phpize it and add ```extension=/path/to/imagick.so``` to php.ini
+
+But once installed, it works great and has several WebP options. In this implementation, we have set:
+- *webp:method* = 6 (we prioritize quality over speed)
+- *webp:low-memory* = true (memory can be an issue on some shared hosts)
+- *webp:lossless* = true (for PNG's only, of course)
 
 
 ### cwebp - Reliable and fast
@@ -76,7 +94,7 @@ The plugin does not support copying metadata
 
 [cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP convertion command line tool released by Google. A its core, our implementation looks in the /bin folder for a precompiled binary appropriate for the OS and executes it with [exec()](http://php.net/manual/en/function.exec.php). Thanks to Shane Bishop for letting me copy his precompilations which comes with his plugin, [EWWW Image Optimizer](https://ewww.io/). 
 
-The script tests the checksum of the binary before executing it. This means that you cannot just replace a binary - you will have to edit the script. If you find the need to use another binary, than those that comes with this project, please write - chances are that it should be added to the project.
+Official precompilations are available on [here](https://developers.google.com/speed/webp/docs/precompiled). But note that our script tests the checksum of the binary before executing it. This means that you cannot just replace a binary - you will have to change the checksum hardcoded in *converters/cwebp.php* too. If you find the need to use another binary, than those that comes with this project, please write - chances are that it should be added to the project.
 
 In more detail, the implementation does this:
 - Binary is selected form the bin-folder, according to OS
@@ -103,12 +121,13 @@ The plugin could be improved by using *fsockopen* if *curl* is not available.
 The plugin does not currently support metadata option (but the cloud service does)
 
 
+
 ## SECURITY
 TODO! - The script does not currently sanitize values.
 
 ## Roadmap
 * Sanitize
-* plugin: imagemagick
+
 
 
 
