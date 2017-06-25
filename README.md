@@ -24,8 +24,7 @@ WebPConvert::convert($source, $destination, $quality, $strip_metadata);
 
 ### Using *WebPConvertPathHelperClass* to operate with a "destination root"
 Case 1:
-If you want destinations to be put into the same folder as originals, but with a ".webp" appended
-You can then have the destination path calculated for you like this:
+If you want destinations to be put into the same folder as originals, but with a ".webp" appended, you can then have the destination path calculated for you like this:
 ```php
 include( __DIR__ . '/WebPConvertPathHelperClass.php');
 $destination_root = '.'; 
@@ -52,7 +51,7 @@ $destination = WebPConvertPathHelper::get_destination_path($source, $destination
 - *$quality* (integer) Desired quality of output. Only relevant when source is a jpeg image. If source is a PNG, lossless encoding will be chosen.\
 - *$strip_metadata* (bool) Whether to copy jpeg metadata to WebP (not all converters supports this)\
 
-*WebPConvert::set_preferred_tools*\
+*WebPConvert::set_preferred_tools*\ (array)
 Setting this manipulates the default order in which the tools are tried. If you for example set it to "cwebp", it means that you want "cwebp" to be tried first. You can specify several favourite tools. Setting it to "imagick,cwebp" will put imagick to the top of the list and cwebp will be the next converter to try, if imagick fails. The option will not remove any converters from the list, only change the order.
 
 *WebPConvert::$serve_converted_image* (bool)\
@@ -92,7 +91,7 @@ The following converters are implemented:
 ```Reliability...```: I'm not aware of any problems<br>
 ```Availability..```: Probably only available on few shared hosts (if any)<br>
 
-WebP convertion with imagick is fast and imagick exposes many options. Unfortunately WebP support for the imagick extension is not at all out of the box. At least not on the systems I have tried (Ubuntu 16.04 and Ubuntu 17.04). But if installed, it works great and has several WebP options. In this implementation, we have set:
+WebP convertion with imagick is fast and imagick exposes many WebP options. Unfortunately WebP support for the imagick extension is not at all out of the box. At least not on the systems I have tried (Ubuntu 16.04 and Ubuntu 17.04). But if installed, it works great and has several WebP options. In this implementation, we have set:
 - *webp:method* = 6 (we prioritize quality over speed)
 - *webp:low-memory* = true (memory can be an issue on some shared hosts)
 - *webp:lossless* = true (for PNG's only, of course)
