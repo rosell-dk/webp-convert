@@ -3,7 +3,7 @@ Convert jpeg/png to webp with PHP (if at all possible)
 
 The state of webp conversion in PHP is currently as such: There are several ways to do it, but they all require *something* of the server-setup. What works on one shared host might not work on another.
 
-This php script is able to convert to webp using several methods. It will try one method after the other until success, or every method failed. You can setup the desired order with the "preferred_tools" option.
+This php script is able to convert to webp using several methods. It will try one method after the other until success, or every method failed. You can setup the desired order with the "preferred_converters" option.
 
 ## Usage
 
@@ -18,7 +18,7 @@ $strip_metadata = TRUE;
 
 WebPConvert::$serve_converted_image = TRUE;
 WebPConvert::$serve_original_image_on_fail = TRUE;
-WebPConvert::set_preferred_tools(array('cwebp','imagewebp'));
+WebPConvert::set_preferred_converters(array('cwebp','imagewebp'));
 WebPConvert::convert($source, $destination, $quality, $strip_metadata);
 ```
 
@@ -51,14 +51,14 @@ $destination = WebPConvertPathHelper::get_destination_path($source, $destination
 - *$quality* (integer) Desired quality of output. Only relevant when source is a jpeg image. If source is a PNG, lossless encoding will be chosen.\
 - *$strip_metadata* (bool) Whether to copy jpeg metadata to WebP (not all converters supports this)\
 
-*WebPConvert::set_preferred_tools*\ (array)
-Setting this manipulates the default order in which the tools are tried. If you for example set it to "cwebp", it means that you want "cwebp" to be tried first. You can specify several favourite tools. Setting it to "imagick,cwebp" will put imagick to the top of the list and cwebp will be the next converter to try, if imagick fails. The option will not remove any converters from the list, only change the order.
+*WebPConvert::set_preferred_converters*\ (array)
+Setting this manipulates the default order in which the converters are tried. If you for example set it to "cwebp", it means that you want "cwebp" to be tried first. You can specify several favourite converters. Setting it to "imagick,cwebp" will put imagick to the top of the list and cwebp will be the next converter to try, if imagick fails. The option will not remove any converters from the list, only change the order.
 
 *WebPConvert::$serve_converted_image* (bool)\
 If TRUE, the converted image will be output (served). Otherwise the script will produce text output about the convertion process.
 
 *WebPConvert::$serve_original_image_on_fail* (bool)\
-When WebPConvert is told to serve an image, but all tools fails to convert, WebPConvert looks at this option to decide what to do. If set to TRUE, WebPConvert will serve the original image. If set to FALSE, WebPConvert will generate an image with the error message. TRUE is probably a good choice on production servers while FALSE is probably a good choice on development servers.
+When WebPConvert is told to serve an image, but all converters fails to convert, WebPConvert looks at this option to decide what to do. If set to TRUE, WebPConvert will serve the original image. If set to FALSE, WebPConvert will generate an image with the error message. TRUE is probably a good choice on production servers while FALSE is probably a good choice on development servers.
 
 ### WebPConvertPathHelper
 The most useful are the following functions. It however contains other general functions, that might be useful to you (check the source)
@@ -108,7 +108,7 @@ In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
 ```Reliability...```: Great<br>
 ```Availability..```: exec() is available on surprisingly many webhosts, and the PHP solution by *EWWW Image Optimizer*, which this code is largely based on has been reported to work on many webhosts - [here is a list](https://wordpress.org/plugins/ewww-image-optimizer/#installation)<br>
 
-[cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP convertion command line tool released by Google. A its core, our implementation looks in the /bin folder for a precompiled binary appropriate for the OS and executes it with [exec()](http://php.net/manual/en/function.exec.php). Thanks to Shane Bishop for letting me copy his precompilations which comes with his plugin, [EWWW Image Optimizer](https://ewww.io/). 
+[cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP convertion command line converter released by Google. A its core, our implementation looks in the /bin folder for a precompiled binary appropriate for the OS and executes it with [exec()](http://php.net/manual/en/function.exec.php). Thanks to Shane Bishop for letting me copy his precompilations which comes with his plugin, [EWWW Image Optimizer](https://ewww.io/). 
 
 Official precompilations are available on [here](https://developers.google.com/speed/webp/docs/precompiled). But note that our script tests the checksum of the binary before executing it. This means that you cannot just replace a binary - you will have to change the checksum hardcoded in *converters/cwebp.php* too. If you find the need to use another binary, than those that comes with this project, please write - chances are that it should be added to the project.
 
@@ -129,7 +129,7 @@ Credits also goes to Shane regarding the code that revolves around the exec(). M
 ```Reliability...```: Not sure. I have experienced corrupted images, but cannot reproduce<br>
 ```Availability..```: Unfortunately, according to [this link](https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php), WebP support on shared hosts is rare.<br>
 
-[imagewebp](http://php.net/manual/en/function.imagewebp.php) is a function that comes with PHP (>5.5.0) *provided* that PHP has been compiled with WebP support. Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes created corrupted images. That bug can however easily be fixed in PHP (fix was released [here](https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files)). However, I have experienced corrupted images *anyway*. So use this tool with caution. The corrupted images shows as completely transparent images in Google Chrome, but with correct size.
+[imagewebp](http://php.net/manual/en/function.imagewebp.php) is a function that comes with PHP (>5.5.0) *provided* that PHP has been compiled with WebP support. Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes created corrupted images. That bug can however easily be fixed in PHP (fix was released [here](https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files)). However, I have experienced corrupted images *anyway*. So use this converter with caution. The corrupted images shows as completely transparent images in Google Chrome, but with correct size.
 
 To get WebP support in PHP 5.5, PHP must be configured with the "--with-vpx-dir" flag. In PHP 7.0, php has to be configured with the "--with-webp-dir" flag [source](http://il1.php.net/manual/en/image.installation.php).
 
@@ -166,16 +166,16 @@ The final destination will be calculated like this: [desired destination root] +
 The quality of the generated WebP image, 0-100.
 
 *strip-metadata:*\
-If set (if "&strip-metadata" is appended to the url), metadata will not be copied over in the conversion process. Note however that not all tools supports copying metadata. cwebp supports it, imagewebp does not. You can also assign a value. Any value but "no" counts as yes
+If set (if "&strip-metadata" is appended to the url), metadata will not be copied over in the conversion process. Note however that not all converters supports copying metadata. cwebp supports it, imagewebp does not. You can also assign a value. Any value but "no" counts as yes
 
-*preferred-tools (optional):*\
-Setting this manipulates the default order in which the tools are tried. If you for example set it to "cwebp", it means that you want "cwebp" to be tried first. You can specify several favourite tools. Setting it to "cwebp,imagewebp" will put cwebp to the top of the list and imagewebp will be the next tool to try, if cwebp fails. The option will not remove any tools from the list, only change the order.
+*preferred-converters (optional):*\
+Setting this manipulates the default order in which the converters are tried. If you for example set it to "cwebp", it means that you want "cwebp" to be tried first. You can specify several favourite converters. Setting it to "cwebp,imagewebp" will put cwebp to the top of the list and imagewebp will be the next converter to try, if cwebp fails. The option will not remove any converters from the list, only change the order.
 
 *serve-image (optional):*\
 If set (if "&serve-image" is appended to the URL), the converted image will be served. Otherwise the script will produce text output about the convertion process. You can also assign a value. Any value but "no" counts as yes.
 
 *debug (optional):*\
-When WebPConvert is told to serve an image, but all tools fails to convert, the default action of WebPConvert is to serve the original image. End-users will not notice the fail, which is good on production servers, but not on development servers. With debugging enabled, WebPConvert will generate an image with the error message, when told to serve image, and things go wrong.
+When WebPConvert is told to serve an image, but all converters fails to convert, the default action of WebPConvert is to serve the original image. End-users will not notice the fail, which is good on production servers, but not on development servers. With debugging enabled, WebPConvert will generate an image with the error message, when told to serve image, and things go wrong.
 
 
 

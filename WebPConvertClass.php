@@ -2,11 +2,11 @@
 
 
 class WebPConvert {
-  private static $tools_order = array();
+  private static $converters_order = array();
 
   public static $serve_converted_image = TRUE;
   public static $serve_original_image_on_fail = TRUE;
-  private static $preferred_tools_order = TRUE;
+  private static $preferred_converters_order = TRUE;
 
   public static $current_conversion_vars;
 
@@ -55,14 +55,14 @@ class WebPConvert {
     }
   }
 
-  public static function set_preferred_tools($preferred_tools) {
-    // Remove preferred tools from order (we will add them again right away!)
-    self::$tools_order = array_diff(self::$tools_order, $preferred_tools);
+  public static function set_preferred_converters($preferred_converters) {
+    // Remove preferred converters from order (we will add them again right away!)
+    self::$converters_order = array_diff(self::$converters_order, $preferred_converters);
 
-    // Add preferred tools to order
-    foreach (array_reverse($preferred_tools) as $pref_tool) {
-      if (function_exists('webpconvert_' . $pref_tool)) {
-        array_unshift(self::$tools_order, $pref_tool);
+    // Add preferred converters to order
+    foreach (array_reverse($preferred_converters) as $pref_converter) {
+      if (function_exists('webpconvert_' . $pref_converter)) {
+        array_unshift(self::$converters_order, $pref_converter);
       }
     }
   }
@@ -71,7 +71,7 @@ class WebPConvert {
     @param (string) $source: Absolute path to image to be converted (no backslashes). Image must be jpeg or png
     @param (string) $destination: Absolute path (no backslashes)
     @param (int) $quality (optional):  Quality of converted file (0-100)
-    @param (bool) $strip_metadata (optional):  Whether or not to strip metadata. Default is to strip. Not all tools supports this
+    @param (bool) $strip_metadata (optional):  Whether or not to strip metadata. Default is to strip. Not all converters supports this
   */
   public static function convert($source, $destination, $quality = 85, $strip_metadata = TRUE) {
 
@@ -168,7 +168,7 @@ class WebPConvert {
     }
 
     // If there is already a converted file at destination, remove it
-    // (actually it seems the current tools can handle that, but maybe not future tools)
+    // (actually it seems the current converters can handle that, but maybe not future converters)
     if (file_exists($destination)) {
       if (unlink($destination)) {
         self::logmsg('Destination file already exists... - removed');
@@ -178,14 +178,14 @@ class WebPConvert {
       }
     }
 
-    self::logmsg('Order of tools to be tried: ' . implode(', ', self::$tools_order));
+    self::logmsg('Order of converters to be tried: ' . implode(', ', self::$converters_order));
 
     $success = FALSE;
-    foreach (self::$tools_order as $tool_name) {
-      self::logmsg('<br>trying <b>' . $tool_name . '</b>');
+    foreach (self::$converters_order as $converter_name) {
+      self::logmsg('<br>trying <b>' . $converter_name . '</b>');
 
       $time_start = microtime(true);
-      $result = call_user_func('webpconvert_' . $tool_name, $source, $destination, $quality, $strip_metadata);
+      $result = call_user_func('webpconvert_' . $converter_name, $source, $destination, $quality, $strip_metadata);
       $time_end = microtime(true);
       self::logmsg('execution time: ' . round(($time_end - $time_start) * 1000) . ' ms');
       
@@ -200,7 +200,7 @@ class WebPConvert {
     }
 
     if (!$success) {
-      self::fail('No tools could convert file: ' . $source);
+      self::fail('No converters could convert file: ' . $source);
       return;
     }
 
@@ -221,10 +221,11 @@ class WebPConvert {
   }
 
   public static function addTool($name) {
-    self::$tools_order[] = $name;
+    self::$converters_order[] = $name;
   }
 }
 
+// TODO: Remove the following. The loop and the code in set_preferred_converters can be placed directly in the convert method */
 /* Add converters */
 foreach (scandir(__DIR__ . '/converters') as $file) {
   if (is_dir('converters/' . $file)) {
