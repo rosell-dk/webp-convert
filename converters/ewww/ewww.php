@@ -41,7 +41,8 @@ function webpconvert_ewww($source, $destination, $quality, $strip_metadata) {
       'api_key' => $key,
       'webp' => '1',
       'file' => $cFile,
-      'domain' => $_SERVER['HTTP_HOST']
+      'domain' => $_SERVER['HTTP_HOST'],
+      'quality' => $quality
     ),
     CURLOPT_BINARYTRANSFER => true,
     CURLOPT_RETURNTRANSFER => true,
