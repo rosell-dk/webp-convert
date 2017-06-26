@@ -48,8 +48,8 @@ else {
   }
 }
 
-include( __DIR__ . '/WebPConvertClass.php');
-include( __DIR__ . '/WebPConvertPathHelperClass.php');
+include( __DIR__ . '/WebPConvert.php');
+include( __DIR__ . '/WebPConvertPathHelper.php');
 
 $source = WebPConvertPathHelper::abspath($_GET['source']);
 $destination = WebPConvertPathHelper::get_destination_path($source, isset($_GET['destination-root']) ? $_GET['destination-root'] : '');

@@ -9,7 +9,7 @@ This php script is able to convert to webp using several methods. It will try on
 
 ### Basic usage:
 ```php
-include( __DIR__ . '/WebPConvertClass.php');
+include( __DIR__ . '/WebPConvert.php');
 
 $source = $_SERVER['DOCUMENT_ROOT'] . '/images/subfolder/logo.jpg';
 $destination = $_SERVER['DOCUMENT_ROOT'] . '/images/subfolder/logo.jpg.webp';
@@ -22,11 +22,11 @@ WebPConvert::set_preferred_converters(array('cwebp','imagewebp'));
 WebPConvert::convert($source, $destination, $quality, $strip_metadata);
 ```
 
-### Using *WebPConvertPathHelperClass* to operate with a "destination root"
+### Using *WebPConvertPathHelper* to operate with a "destination root"
 Case 1:
 If you want destinations to be put into the same folder as originals, but with a ".webp" appended, you can then have the destination path calculated for you like this:
 ```php
-include( __DIR__ . '/WebPConvertPathHelperClass.php');
+include( __DIR__ . '/WebPConvertPathHelper.php');
 $destination_root = '.'; 
 $source = WebPConvertPathHelper::abspath('/images/subfolder/logo.jpg');
 $destination = WebPConvertPathHelper::get_destination_path($source, $destination_root);
@@ -35,7 +35,7 @@ $destination = WebPConvertPathHelper::get_destination_path($source, $destination
 Case 2:
 If you want the converted files to reside in their own folder, set the destination-root to point to that folder. The converted files will be stored in a hierarchy that matches the source files. Here we set destination-root to "webp-cache". The convertion of a source file "images/subfolder/logo.jpg" will be stored at "webp-cache/subfolder/logo.jpg.webp". 
 ```php
-include( __DIR__ . '/WebPConvertPathHelperClass.php');
+include( __DIR__ . '/WebPConvertPathHelper.php');
 $destination_root = 'webp-cache'; 
 $source = WebPConvertPathHelper::abspath('/images/subfolder/logo.jpg');
 $destination = WebPConvertPathHelper::get_destination_path($source, $destination_root);
