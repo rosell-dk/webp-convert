@@ -3,7 +3,7 @@ Convert jpeg/png to webp with PHP (if at all possible)
 
 The state of webp conversion in PHP is currently as such: There are several ways to do it, but they all require *something* of the server-setup. What works on one shared host might not work on another.
 
-This php script is able to convert to webp using several methods. It will try one method after the other until success, or every method failed. You can setup the desired order with the "preferred_converters" option.
+This library is able to convert to webp using several methods. It will try one method after the other until success, or every method failed. You can setup the desired order with the "preferred_converters" option.
 
 Currently the following converters are available:
 
