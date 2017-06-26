@@ -73,7 +73,7 @@ Calculates relative path from absolute path, but handles absolute path too. Rela
 Calculates absolute destination path like this: [desired destination root] + [relative path of source file] + ".webp". You can provide absolute path or relative path for destination_root. If the path starts with "/", it is considered an absolute path (also true for source argument). Examples of valid paths "webp-cache", "/var/www/webp-cache", "..", "../images", "."
 
 
-## Converters
+# Converters
 
 Each "method" of converting an image to webp are implemented as a separate converter. *WebPConvert* autodetects the converters by scanning the "converters" directory, so it is easy to add new converters, and safe to remove existing ones.
 
@@ -83,9 +83,15 @@ A converter simply consists of a convert function, which takes same arguments as
 - *WebPConvert* checks that it will be possible to write a file at the destination
 - *WebPConvert* checks whether the converter actually produced a file at the destination
 
-The following converters are implemented:
+Basically there are three types of converters. 
+1. Those that are based on a php extension (for example gd or imagick)
+2. Those that executes a binary directly using an exec() call
+3. Those that connect to a cloud service which does the conversion
 
-### imagick - Best, but rarely available
+## Converters based on a php extension
+These converters should be your first choice. They run faster than the other methods and they don't need the server to allow exec() calls (which increases security risks).
+
+### imagick - Best, but rarely available on shared hosts
 ```Requirements..```: imagick extension compiled with WebP support<br>
 ```Speed.........```: Around 50 ms to convert a 40kb image<br>
 ```Reliability...```: I'm not aware of any problems<br>
@@ -101,6 +107,22 @@ In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
 2. [Compile imagemagick from source](https://www.imagemagick.org/script/install-source.php) (```./configure --with-webp=yes```)
 3. Compile php-imagick from source, phpize it and add ```extension=/path/to/imagick.so``` to php.ini
 
+#### gd - Fast. But not good for PNG's
+```Requirements..```: GD extension and PHP > 5.5.0 compiled with WebP support<br>
+```Speed.........```: Around 30 ms to convert a 40kb image<br>
+```Reliability...```: Not sure. I have experienced corrupted images, but cannot reproduce<br>
+```Availability..```: Unfortunately, according to [this link](https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php), WebP support on shared hosts is rare.<br>
+
+[imagewebp](http://php.net/manual/en/function.imagewebp.php) is a function that comes with PHP (>5.5.0) *provided* that PHP has been compiled with WebP support. Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes created corrupted images. That bug can however easily be fixed in PHP (fix was released [here](https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files)). However, I have experienced corrupted images *anyway*. So use this converter with caution. The corrupted images shows as completely transparent images in Google Chrome, but with correct size.
+
+To get WebP support in PHP 5.5, PHP must be configured with the "--with-vpx-dir" flag. In PHP 7.0, php has to be configured with the "--with-webp-dir" flag [source](http://il1.php.net/manual/en/image.installation.php).
+
+The converter does not support copying metadata
+
+GD unfortunately does not expose any WebP options. Lacking the option to set lossless encoding results in poor encoding of PNG's - the filesize is generally much larger than the original
+
+
+## Converters based on a executing a binary with exec()
 
 ### cwebp - Great, fast enough but requires exec()
 ```Requirements..```: exec()<br>
@@ -109,6 +131,11 @@ In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
 ```Availability..```: exec() is available on surprisingly many webhosts, and the PHP solution by *EWWW Image Optimizer*, which this code is largely based on has been reported to work on many webhosts - [here is a list](https://wordpress.org/plugins/ewww-image-optimizer/#installation)<br>
 
 [cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP convertion command line converter released by Google. A its core, our implementation looks in the /bin folder for a precompiled binary appropriate for the OS and executes it with [exec()](http://php.net/manual/en/function.exec.php). Thanks to Shane Bishop for letting me copy his precompilations which comes with his plugin, [EWWW Image Optimizer](https://ewww.io/). 
+
+The converter supports:
+- lossless encoding of PNG's.
+- quality
+- strip metadata
 
 Official precompilations are available on [here](https://developers.google.com/speed/webp/docs/precompiled). But note that our script tests the checksum of the binary before executing it. This means that you cannot just replace a binary - you will have to change the checksum hardcoded in *converters/cwebp.php* too. If you find the need to use another binary, than those that comes with this project, please write - chances are that it should be added to the project.
 
@@ -123,33 +150,35 @@ In more detail, the implementation does this:
 
 Credits also goes to Shane regarding the code that revolves around the exec(). Most of it is a refactoring of the code in [EWWW Image Optimizer](https://ewww.io/).
 
-### gd - Fast. But not good for PNG's
-```Requirements..```: GD extension and PHP > 5.5.0 compiled with WebP support<br>
-```Speed.........```: Around 30 ms to convert a 40kb image<br>
-```Reliability...```: Not sure. I have experienced corrupted images, but cannot reproduce<br>
-```Availability..```: Unfortunately, according to [this link](https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php), WebP support on shared hosts is rare.<br>
 
-[imagewebp](http://php.net/manual/en/function.imagewebp.php) is a function that comes with PHP (>5.5.0) *provided* that PHP has been compiled with WebP support. Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes created corrupted images. That bug can however easily be fixed in PHP (fix was released [here](https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files)). However, I have experienced corrupted images *anyway*. So use this converter with caution. The corrupted images shows as completely transparent images in Google Chrome, but with correct size.
+## Cloud service converters
+Converters that delegates conversion to a cloud service are characterized by this:
 
-To get WebP support in PHP 5.5, PHP must be configured with the "--with-vpx-dir" flag. In PHP 7.0, php has to be configured with the "--with-webp-dir" flag [source](http://il1.php.net/manual/en/image.installation.php).
-
-The converter does not support copying metadata
-
-GD unfortunately does not expose any WebP options. Lacking the option to set lossless encoding results in poor encoding of PNG's. 
+- They are slower than converters running directly on the server
+- They work on almost any webhost
+- Public cloud services generally requires you to purchace a key. Alternatively, you can host *your own* cloud service and connect to it without a key (or with, if you wish).
 
 
-### ewww: Cheap and reliable fallback. But slow
+### ewww: Cheap cloud service. Should work on *almost* any webhost. But slow.
 ```Requirements..```: A valid key to [EWWW Image Optimizer](https://ewww.io/), curl and PHP >= 5.5<br>
 ```Speed.........```: Around 1300 ms to convert a 40kb image<br>
 ```Reliability...```: Great<br>
-```Availability..```: Should work on *almost* any webhost. - The curl extension is available on most shared hosts. As PHP 5.3 and PHP 5.4 is no longer supported, the PHP requirement should not be an issue. A key is of course available to anyone with a credit card.<br>
+```Availability..```: Should work on *almost* any webhost<br>
+
+EWWW Image Optimizer is a very cheap cloud service for generating WebP images. 
+
+You set up the key by defining the constant "WEBPCONVERT_EWW_KEY". Ie: ```define("WEBPCONVERT_EWW_KEY", "your_key_here")```;
+
+The converter supports:
+- lossless encoding of PNG's.
+- quality
+- metadata
+
+The cloud service supports other options, which can easily be implemented, if there is an interest. View options [here](https://ewww.io/api/)
+
+The converter could be improved by using *fsockopen* if *curl* is not available. This is however low priority as the curl extension is available on most shared hosts. PHP >= 5.5 is also widely available ([PHP 5.4 reached end of life more than a year ago](http://php.net/supported-versions.php)).
 
 
-EWWW Image Optimizer is a cloud service. You purchase a key and then you can connect. Otherwise, there is not much to say. The key is very cheap, just below one dollar. It should work on *almost* any webhost, making it a cheap and reliable fallback. But not as fast as the other plugins.
-
-The plugin could be improved by using *fsockopen* if *curl* is not available.
-
-The plugin does not currently support metadata option (but the cloud service does)
 
 
 ## The script
