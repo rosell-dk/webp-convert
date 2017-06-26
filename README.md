@@ -73,7 +73,7 @@ Calculates relative path from absolute path, but handles absolute path too. Rela
 Calculates absolute destination path like this: [desired destination root] + [relative path of source file] + ".webp". You can provide absolute path or relative path for destination_root. If the path starts with "/", it is considered an absolute path (also true for source argument). Examples of valid paths "webp-cache", "/var/www/webp-cache", "..", "../images", "."
 
 
-# Converters
+## Converters
 
 Each "method" of converting an image to webp are implemented as a separate converter. *WebPConvert* autodetects the converters by scanning the "converters" directory, so it is easy to add new converters, and safe to remove existing ones.
 
@@ -88,10 +88,10 @@ Basically there are three types of converters.
 2. Those that executes a binary directly using an exec() call
 3. Those that connect to a cloud service which does the conversion
 
-## Converters based on a php extension
+### Converters based on a php extension
 These converters should be your first choice. They run faster than the other methods and they don't need the server to allow exec() calls (which increases security risks).
 
-### imagick - Best, but rarely available on shared hosts
+#### imagick - Best, but rarely available on shared hosts
 ```Requirements..```: imagick extension compiled with WebP support<br>
 ```Speed.........```: Around 50 ms to convert a 40kb image<br>
 ```Reliability...```: I'm not aware of any problems<br>
@@ -122,9 +122,9 @@ The converter does not support copying metadata
 GD unfortunately does not expose any WebP options. Lacking the option to set lossless encoding results in poor encoding of PNG's - the filesize is generally much larger than the original
 
 
-## Converters based on a executing a binary with exec()
+### Converters based on a executing a binary with exec()
 
-### cwebp - Great, fast enough but requires exec()
+#### cwebp - Great, fast enough but requires exec()
 ```Requirements..```: exec()<br>
 ```Speed.........```: Around 140 ms to convert a 40kb image<br>
 ```Reliability...```: Great<br>
@@ -151,7 +151,7 @@ In more detail, the implementation does this:
 Credits also goes to Shane regarding the code that revolves around the exec(). Most of it is a refactoring of the code in [EWWW Image Optimizer](https://ewww.io/).
 
 
-## Cloud service converters
+### Cloud service converters
 Converters that delegates conversion to a cloud service are characterized by this:
 
 - They are slower than converters running directly on the server
@@ -159,7 +159,7 @@ Converters that delegates conversion to a cloud service are characterized by thi
 - Public cloud services generally requires you to purchace a key. Alternatively, you can host *your own* cloud service and connect to it without a key (or with, if you wish).
 
 
-### ewww: Cheap cloud service. Should work on *almost* any webhost. But slow.
+#### ewww: Cheap cloud service. Should work on *almost* any webhost. But slow.
 ```Requirements..```: A valid key to [EWWW Image Optimizer](https://ewww.io/), curl and PHP >= 5.5<br>
 ```Speed.........```: Around 1300 ms to convert a 40kb image<br>
 ```Reliability...```: Great<br>
