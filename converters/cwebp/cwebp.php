@@ -66,6 +66,21 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata) {
   if ($ext == 'png') {
     $options .= ' -lossless';
   }
+
+  if (defined("WEBPCONVERT_CWEBP_METHOD")) {
+    $options .= ' -m ' . WEBPCONVERT_CWEBP_METHOD;
+  }
+  else {
+    $options .= ' -m 6';
+  }
+
+  if (defined("WEBPCONVERT_CWEBP_LOW_MEMORY")) {
+    $options .= (WEBPCONVERT_CWEBP_LOW_MEMORY ? ' -low_memory' : '');
+  }
+  else {
+    $options .= ' -low_memory';
+  }
+
   //$options .= ' -low_memory';
   
   // $options .= ' -quiet';

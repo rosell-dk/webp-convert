@@ -100,7 +100,8 @@ Basically there are three types of converters.
 Converters based on a php extension should be your first choice. They run faster than the other methods and they don't need the server to allow exec() calls (which increases security risks). However, the *gd* converter does not support lossless convertion, so you may want to skip that for PNG's. Converters that executes a binary are also very fast (around than 50ms). Converters that delegates conversion to a cloud service are much slower (around 1 second), but works on most shared hosts (as opposed to the other methods). This makes the cloud converters an ideal last resort. They generally requires *purchacing* a key, but the key for EWWW Image Optimizer is very cheap. 
 
 #### imagick
--- Best, but rarely available on shared hosts\
+*Best, but rarely available on shared hosts*
+
 ```Requirements..```: imagick extension compiled with WebP support<br>
 ```Speed.........```: Around 50 ms to convert a 40kb image<br>
 ```Reliability...```: I'm not aware of any problems<br>
@@ -117,7 +118,8 @@ In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
 3. Compile php-imagick from source, phpize it and add ```extension=/path/to/imagick.so``` to php.ini
 
 #### gd 
--- Fast. But not good for PNG's\
+*Fast. But not good for PNG's*
+
 ```Requirements..```: GD extension and PHP > 5.5.0 compiled with WebP support<br>
 ```Speed.........```: Around 30 ms to convert a 40kb image<br>
 ```Reliability...```: Not sure. I have experienced corrupted images, but cannot reproduce<br>
@@ -133,7 +135,8 @@ GD unfortunately does not expose any WebP options. Lacking the option to set los
 
 
 #### cwebp 
--- Great, fast enough but requires exec()\
+*Great, fast enough but requires exec()*
+
 ```Requirements..```: exec()<br>
 ```Speed.........```: Around 140 ms to convert a 40kb image<br>
 ```Reliability...```: Great<br>
@@ -145,6 +148,17 @@ The converter supports:
 - lossless encoding of PNG's.
 - quality
 - strip metadata
+- prioritize between quality and speed
+- low memory option
+
+You can configure the converter by defining any of the following constants:
+
+*WEBPCONVERT_CWEBP_METHOD*: This parameter controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. When higher values are used, the encoder will spend more time inspecting additional encoding possibilities and decide on the quality gain. Lower value can result in faster processing time at the expense of larger file size and lower compression quality. Default value is 6 (higher than the default value of the cwebp command, which is 4).\
+*WEBPCONVERT_CWEBP_LOW_MEMORY*: The low memory option will make the encoding slower and the output slightly different in size and distortion. This flag is only effective for methods 3 and up. It is *on* by default. To turn it off, set the constant to ```FALSE```
+
+The cwebp command has more options, which can easily be implemented, if there is an interest. View the options [here](https://developers.google.com/speed/webp/docs/cwebp)
+
+
 
 Official precompilations are available on [here](https://developers.google.com/speed/webp/docs/precompiled). But note that our script tests the checksum of the binary before executing it. This means that you cannot just replace a binary - you will have to change the checksum hardcoded in *converters/cwebp.php* too. If you find the need to use another binary, than those that comes with this project, please write - chances are that it should be added to the project.
 
@@ -161,7 +175,8 @@ Credits also goes to Shane regarding the code that revolves around the exec(). M
 
 
 #### ewww
---Cheap cloud service. Should work on *almost* any webhost. But slow.\
+*Cheap cloud service. Should work on *almost* any webhost. But slow.*
+
 ```Requirements..```: A valid key to [EWWW Image Optimizer](https://ewww.io/), curl and PHP >= 5.5<br>
 ```Speed.........```: Around 1300 ms to convert a 40kb image<br>
 ```Reliability...```: Great<br>
