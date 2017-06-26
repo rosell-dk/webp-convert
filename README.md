@@ -7,9 +7,9 @@ This php script is able to convert to webp using several methods. It will try on
 
 Currently the following converters are available:
 - ["imagick"](#imagick) (uses imagick extension)
-- "gd" (uses gd extension)
-- "cwebp" (calls cwebp binary directly)
-- "ewww" (calls the EWWW Image Optimizer cloud service)
+- ["gd"](#gd) (uses gd extension)
+- ["cwebp"](#cwebp) (calls cwebp binary directly)
+- ["ewww"](#ewww) (calls the EWWW Image Optimizer cloud service)
 
 ## Usage
 
@@ -94,11 +94,10 @@ Basically there are three types of converters.
 2. Those that executes a binary directly using an exec() call
 3. Those that connect to a cloud service which does the conversion
 
-### Converters based on a php extension
-These converters should be your first choice. They run faster than the other methods and they don't need the server to allow exec() calls (which increases security risks).
+Converters based on a php extension should be your first choice. They run faster than the other methods and they don't need the server to allow exec() calls (which increases security risks). However, the *gd* converter does not support lossless convertion, so you may want to skip that for PNG's. Converters that executes a binary are also very fast (around than 50ms). Converters that delegates conversion to a cloud service are much slower (around 1 second), but works on most shared hosts (as opposed to the other methods). This makes the cloud converters an ideal last resort. They generally requires *purchacing* a key, but the key for EWWW Image Optimizer is very cheap. 
 
 #### imagick
-- Best, but rarely available on shared hosts
+-- Best, but rarely available on shared hosts\
 ```Requirements..```: imagick extension compiled with WebP support<br>
 ```Speed.........```: Around 50 ms to convert a 40kb image<br>
 ```Reliability...```: I'm not aware of any problems<br>
@@ -114,7 +113,8 @@ In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
 2. [Compile imagemagick from source](https://www.imagemagick.org/script/install-source.php) (```./configure --with-webp=yes```)
 3. Compile php-imagick from source, phpize it and add ```extension=/path/to/imagick.so``` to php.ini
 
-#### gd - Fast. But not good for PNG's
+#### gd 
+-- Fast. But not good for PNG's\
 ```Requirements..```: GD extension and PHP > 5.5.0 compiled with WebP support<br>
 ```Speed.........```: Around 30 ms to convert a 40kb image<br>
 ```Reliability...```: Not sure. I have experienced corrupted images, but cannot reproduce<br>
@@ -129,9 +129,8 @@ The converter does not support copying metadata
 GD unfortunately does not expose any WebP options. Lacking the option to set lossless encoding results in poor encoding of PNG's - the filesize is generally much larger than the original
 
 
-### Converters based on a executing a binary with exec()
-
-#### cwebp - Great, fast enough but requires exec()
+#### cwebp 
+-- Great, fast enough but requires exec()\
 ```Requirements..```: exec()<br>
 ```Speed.........```: Around 140 ms to convert a 40kb image<br>
 ```Reliability...```: Great<br>
@@ -158,15 +157,8 @@ In more detail, the implementation does this:
 Credits also goes to Shane regarding the code that revolves around the exec(). Most of it is a refactoring of the code in [EWWW Image Optimizer](https://ewww.io/).
 
 
-### Cloud service converters
-Converters that delegates conversion to a cloud service are characterized by this:
-
-- They are slower than converters running directly on the server
-- They work on almost any webhost
-- Public cloud services generally requires you to purchace a key. Alternatively, you can host *your own* cloud service and connect to it without a key (or with, if you wish).
-
-
-#### ewww: Cheap cloud service. Should work on *almost* any webhost. But slow.
+#### ewww
+--Cheap cloud service. Should work on *almost* any webhost. But slow.\
 ```Requirements..```: A valid key to [EWWW Image Optimizer](https://ewww.io/), curl and PHP >= 5.5<br>
 ```Speed.........```: Around 1300 ms to convert a 40kb image<br>
 ```Reliability...```: Great<br>
