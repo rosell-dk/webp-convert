@@ -5,6 +5,12 @@ The state of webp conversion in PHP is currently as such: There are several ways
 
 This php script is able to convert to webp using several methods. It will try one method after the other until success, or every method failed. You can setup the desired order with the "preferred_converters" option.
 
+Currently the following converters are available:
+- ["imagick"](#imagick) (uses imagick extension)
+- "gd" (uses gd extension)
+- "cwebp" (calls cwebp binary directly)
+- "ewww" (calls the EWWW Image Optimizer cloud service)
+
 ## Usage
 
 ### Basic usage:
@@ -91,7 +97,8 @@ Basically there are three types of converters.
 ### Converters based on a php extension
 These converters should be your first choice. They run faster than the other methods and they don't need the server to allow exec() calls (which increases security risks).
 
-#### imagick - Best, but rarely available on shared hosts
+#### imagick
+- Best, but rarely available on shared hosts
 ```Requirements..```: imagick extension compiled with WebP support<br>
 ```Speed.........```: Around 50 ms to convert a 40kb image<br>
 ```Reliability...```: I'm not aware of any problems<br>
