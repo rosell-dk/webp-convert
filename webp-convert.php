@@ -60,7 +60,9 @@ $preferred_converters = (isset($_GET['preferred-converters']) ? explode(',', $_G
 //$preferred_converters = array('imagewebp', 'cwebp');
 
 if (isset($_GET['ewww-key'])) {
-  WebPConvertEWW::setKey($_GET['ewww-key']);
+//  WebPConvertEWW::setKey($_GET['ewww-key']);
+//  WebPConvert::
+  define("WEBPCONVERT_EWW_KEY", $_GET['ewww-key']);
 }
 WebPConvert::$serve_converted_image = $serve_converted_image;
 WebPConvert::$serve_original_image_on_fail = (!$debug);

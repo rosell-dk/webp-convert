@@ -2,11 +2,10 @@
 
 
 class WebPConvert {
-  private static $converters_order = array();
+  private static $preferred_converters = array();
 
   public static $serve_converted_image = TRUE;
   public static $serve_original_image_on_fail = TRUE;
-  private static $preferred_converters_order = TRUE;
 
   public static $current_conversion_vars;
 
@@ -56,15 +55,7 @@ class WebPConvert {
   }
 
   public static function set_preferred_converters($preferred_converters) {
-    // Remove preferred converters from order (we will add them again right away!)
-    self::$converters_order = array_diff(self::$converters_order, $preferred_converters);
-
-    // Add preferred converters to order
-    foreach (array_reverse($preferred_converters) as $pref_converter) {
-      if (function_exists('webpconvert_' . $pref_converter)) {
-        array_unshift(self::$converters_order, $pref_converter);
-      }
-    }
+    self::$preferred_converters = $preferred_converters;
   }
 
   /**
@@ -178,14 +169,50 @@ class WebPConvert {
       }
     }
 
-    self::logmsg('Order of converters to be tried: ' . implode(', ', self::$converters_order));
+    // Prepare building up an array of converters
+    $converters = array();
+
+    // Add preferred converters
+    foreach (self::$preferred_converters as $converter) {
+      $filename = 'converters/' . $converter . '/' . $converter . '.php';
+      if (file_exists($filename)) {
+        $converters[] = $converter;
+      }
+      else {
+        self::logmsg('<b>the converter "' . $converter . '" that was set as a preferred converter was not found at: "' . $filename . '".</b>');
+      }
+    }
+
+    // Add converters in the converters dir.
+    // - Convention is that the name of the converter equals the dir name
+    foreach (scandir(__DIR__ . '/converters') as $file) {
+      if (is_dir('converters/' . $file)) {
+        if ($file == '.') continue;
+        if ($file == '..') continue;
+        if (in_array($file, $converters)) continue;
+
+        $converters[] = $file;
+      }
+    }
+
+    self::logmsg('Order of converters to be tried: ' . implode(', ', self::$preferred_converters));
 
     $success = FALSE;
-    foreach (self::$converters_order as $converter_name) {
-      self::logmsg('<br>trying <b>' . $converter_name . '</b>');
+    foreach ($converters as $converter) {
+      self::logmsg('<br>trying <b>' . $converter . '</b>');
+
+      $filename = 'converters/' . $converter . '/' . $converter . '.php';
+      self::logmsg('including converter at: "' . $filename . '"');
+
+      include_once($filename);
+
+      if (!function_exists('webpconvert_' . $converter)) {
+        self::logmsg('converter not useable - it does not define a function " . $converter . "');
+        continue;
+      }
 
       $time_start = microtime(true);
-      $result = call_user_func('webpconvert_' . $converter_name, $source, $destination, $quality, $strip_metadata);
+      $result = call_user_func('webpconvert_' . $converter, $source, $destination, $quality, $strip_metadata);
       $time_end = microtime(true);
       self::logmsg('execution time: ' . round(($time_end - $time_start) * 1000) . ' ms');
       
@@ -220,23 +247,6 @@ class WebPConvert {
 
   }
 
-  public static function addTool($name) {
-    self::$converters_order[] = $name;
-  }
-}
-
-// TODO: Remove the following. The loop and the code in set_preferred_converters can be placed directly in the convert method */
-/* Add converters */
-foreach (scandir(__DIR__ . '/converters') as $file) {
-  if (is_dir('converters/' . $file)) {
-    if ($file == '.') continue;
-    if ($file == '..') continue;
-
-    // echo 'Added converter: ' . $file . '<br>';
-    include_once('converters/' . $file . '/' . $file . '.php');
-
-    WebPConvert::addTool($file);
-  }
 }
 
 

@@ -1,16 +1,5 @@
 <?php
 
-class WebPConvertEWW {
-  private static $key = '';
-  public static function getKey() {
-    return self::$key;
-  }
-  public static function setKey($key) {
-    self::$key = $key;
-  }
-}
-
-
 function webpconvert_ewww($source, $destination, $quality, $strip_metadata) {
   if (!extension_loaded('curl')) {
     return 'This implementation requires the curl extension, which you do not have';
@@ -29,10 +18,10 @@ function webpconvert_ewww($source, $destination, $quality, $strip_metadata) {
     return 'This implementation requires PHP function <i>curl_file_create</i>, but it is not available, sorry. It should be available in PHP > 5.5';
   }
 
-  $key = WebPConvertEWW::getKey();
-  if ($key == '') {
-    return 'Key is missing. To use EWWW Image Converter, you must first purchase a key and then set it up like this: WebPConvertEWW::setKey("yourkey")';
+  if (!defined("WEBPCONVERT_EWW_KEY")) {
+    return 'Key is missing. To use EWWW Image Converter, you must first purchase a key and then set it up by defining a constant "WEBPCONVERT_EWW_KEY". Ie: define("WEBPCONVERT_EWW_KEY", "your_key_here");';
   }
+  $key = WEBPCONVERT_EWW_KEY;
 
   // Ok, lets get to it!
 
