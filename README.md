@@ -3,7 +3,7 @@
 
 The state of webp conversion in PHP is currently as such: There are several ways to do it, but they all require *something* of the server-setup. What works on one shared host might not work on another.
 
-This library is able to convert to webp using several methods. It will try one method after the other until success, or every method failed. You can setup the desired order with the "preferred_converters" option.
+This library is able to convert to webp using several methods. It will try one method after the other until success, or every method failed. You can set the desired order with the "preferred_converters" option.
 
 Currently the following converters are available:
 
@@ -27,7 +27,7 @@ $strip_metadata = TRUE;
 
 WebPConvert::$serve_converted_image = TRUE;
 WebPConvert::$serve_original_image_on_fail = TRUE;
-WebPConvert::set_preferred_converters(array('cwebp','imagewebp'));
+WebPConvert::set_preferred_converters(array('imagick','cwebp'));
 WebPConvert::convert($source, $destination, $quality, $strip_metadata);
 ```
 
@@ -167,7 +167,7 @@ Credits also goes to Shane regarding the code that revolves around the exec(). M
 ```Reliability...```: Great<br>
 ```Availability..```: Should work on *almost* any webhost<br>
 
-EWWW Image Optimizer is a very cheap cloud service for generating WebP images. 
+EWWW Image Optimizer is a very cheap cloud service for optimizing images.
 
 You set up the key by defining the constant "WEBPCONVERT_EWW_KEY". Ie: ```define("WEBPCONVERT_EWW_KEY", "your_key_here")```;
 
