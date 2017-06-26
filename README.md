@@ -202,8 +202,9 @@ If set (if "&serve-image" is appended to the URL), the converted image will be s
 When WebPConvert is told to serve an image, but all converters fails to convert, the default action of WebPConvert is to serve the original image. End-users will not notice the fail, which is good on production servers, but not on development servers. With debugging enabled, WebPConvert will generate an image with the error message, when told to serve image, and things go wrong.
 
 
+## WebPConvertPathHelper
 
-### Using *WebPConvertPathHelper* to operate with a "destination root"
+## Using *WebPConvertPathHelper* to operate with a "destination root"
 Case 1:
 If you want destinations to be put into the same folder as originals, but with a ".webp" appended, you can then have the destination path calculated for you like this:
 ```php
@@ -222,7 +223,7 @@ $source = WebPConvertPathHelper::abspath('/images/subfolder/logo.jpg');
 $destination = WebPConvertPathHelper::get_destination_path($source, $destination_root);
 ```
 
-### WebPConvertPathHelper API
+## WebPConvertPathHelper API
 The most useful are the following functions. It however contains other general functions, that might be useful to you (check the source)
 
 *WebPConvertPathHelper::abspath($rel_path, $root = NULL)*/
