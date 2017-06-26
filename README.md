@@ -31,25 +31,6 @@ WebPConvert::set_preferred_converters(array('imagick','cwebp'));
 WebPConvert::convert($source, $destination, $quality, $strip_metadata);
 ```
 
-### Using *WebPConvertPathHelper* to operate with a "destination root"
-Case 1:
-If you want destinations to be put into the same folder as originals, but with a ".webp" appended, you can then have the destination path calculated for you like this:
-```php
-include( __DIR__ . '/WebPConvertPathHelper.php');
-$destination_root = '.'; 
-$source = WebPConvertPathHelper::abspath('/images/subfolder/logo.jpg');
-$destination = WebPConvertPathHelper::get_destination_path($source, $destination_root);
-```
-
-Case 2:
-If you want the converted files to reside in their own folder, set the destination-root to point to that folder. The converted files will be stored in a hierarchy that matches the source files. Here we set destination-root to "webp-cache". The convertion of a source file "images/subfolder/logo.jpg" will be stored at "webp-cache/subfolder/logo.jpg.webp". 
-```php
-include( __DIR__ . '/WebPConvertPathHelper.php');
-$destination_root = 'webp-cache'; 
-$source = WebPConvertPathHelper::abspath('/images/subfolder/logo.jpg');
-$destination = WebPConvertPathHelper::get_destination_path($source, $destination_root);
-```
-
 
 ## API
 
@@ -68,18 +49,6 @@ If TRUE, the converted image will be output (served). Otherwise the script will 
 
 *WebPConvert::$serve_original_image_on_fail* (bool)\
 When WebPConvert is told to serve an image, but all converters fails to convert, WebPConvert looks at this option to decide what to do. If set to TRUE, WebPConvert will serve the original image. If set to FALSE, WebPConvert will generate an image with the error message. TRUE is probably a good choice on production servers while FALSE is probably a good choice on development servers.
-
-### WebPConvertPathHelper
-The most useful are the following functions. It however contains other general functions, that might be useful to you (check the source)
-
-*WebPConvertPathHelper::abspath($rel_path, $root = NULL)*/
-Calculates absolute path from relative path, but handles absolute path too. Relative path is per default taken to be relative to DOCUMENT_ROOT. This can however be altered by providing another root. If path starts with "/", it is considered an absolute path, and it is just passed through.
-
-*WebPConvertPathHelper::relpath($abs_path, $root = NULL)*\
-Calculates relative path from absolute path, but handles absolute path too. Relative path is per default taken to be relative to DOCUMENT_ROOT. This can however be altered by providing another root. If path starts with "/", it is considered an absolute path, and it is just passed through.
-
-*WebPConvertPathHelper::get_destination_path($source, $destination_root = '', $root = NULL)*\
-Calculates absolute destination path like this: [desired destination root] + [relative path of source file] + ".webp". You can provide absolute path or relative path for destination_root. If the path starts with "/", it is considered an absolute path (also true for source argument). Examples of valid paths "webp-cache", "/var/www/webp-cache", "..", "../images", "."
 
 
 ## Converters
@@ -232,6 +201,38 @@ If set (if "&serve-image" is appended to the URL), the converted image will be s
 *debug (optional):*\
 When WebPConvert is told to serve an image, but all converters fails to convert, the default action of WebPConvert is to serve the original image. End-users will not notice the fail, which is good on production servers, but not on development servers. With debugging enabled, WebPConvert will generate an image with the error message, when told to serve image, and things go wrong.
 
+
+
+### Using *WebPConvertPathHelper* to operate with a "destination root"
+Case 1:
+If you want destinations to be put into the same folder as originals, but with a ".webp" appended, you can then have the destination path calculated for you like this:
+```php
+include( __DIR__ . '/WebPConvertPathHelper.php');
+$destination_root = '.'; 
+$source = WebPConvertPathHelper::abspath('/images/subfolder/logo.jpg');
+$destination = WebPConvertPathHelper::get_destination_path($source, $destination_root);
+```
+
+Case 2:
+If you want the converted files to reside in their own folder, set the destination-root to point to that folder. The converted files will be stored in a hierarchy that matches the source files. Here we set destination-root to "webp-cache". The convertion of a source file "images/subfolder/logo.jpg" will be stored at "webp-cache/subfolder/logo.jpg.webp". 
+```php
+include( __DIR__ . '/WebPConvertPathHelper.php');
+$destination_root = 'webp-cache'; 
+$source = WebPConvertPathHelper::abspath('/images/subfolder/logo.jpg');
+$destination = WebPConvertPathHelper::get_destination_path($source, $destination_root);
+```
+
+### WebPConvertPathHelper API
+The most useful are the following functions. It however contains other general functions, that might be useful to you (check the source)
+
+*WebPConvertPathHelper::abspath($rel_path, $root = NULL)*/
+Calculates absolute path from relative path, but handles absolute path too. Relative path is per default taken to be relative to DOCUMENT_ROOT. This can however be altered by providing another root. If path starts with "/", it is considered an absolute path, and it is just passed through.
+
+*WebPConvertPathHelper::relpath($abs_path, $root = NULL)*\
+Calculates relative path from absolute path, but handles absolute path too. Relative path is per default taken to be relative to DOCUMENT_ROOT. This can however be altered by providing another root. If path starts with "/", it is considered an absolute path, and it is just passed through.
+
+*WebPConvertPathHelper::get_destination_path($source, $destination_root = '', $root = NULL)*\
+Calculates absolute destination path like this: [desired destination root] + [relative path of source file] + ".webp". You can provide absolute path or relative path for destination_root. If the path starts with "/", it is considered an absolute path (also true for source argument). Examples of valid paths "webp-cache", "/var/www/webp-cache", "..", "../images", "."
 
 
 ## SECURITY
