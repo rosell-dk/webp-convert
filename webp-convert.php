@@ -64,6 +64,14 @@ if (isset($_GET['ewww-key'])) {
 //  WebPConvert::
   define("WEBPCONVERT_EWW_KEY", $_GET['ewww-key']);
 }
+
+define("WEBPCONVERT_CWEBP_LOW_MEMORY", TRUE);
+define("WEBPCONVERT_IMAGICK_LOW_MEMORY", WEBPCONVERT_CWEBP_LOW_MEMORY);
+
+define("WEBPCONVERT_CWEBP_METHOD", "6");
+define("WEBPCONVERT_IMAGICK_METHOD", WEBPCONVERT_CWEBP_METHOD);
+
+
 WebPConvert::$serve_converted_image = $serve_converted_image;
 WebPConvert::$serve_original_image_on_fail = (!$debug);
 WebPConvert::set_preferred_converters($preferred_converters);

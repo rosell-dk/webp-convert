@@ -24,7 +24,22 @@ function webpconvert_imagick($source, $destination, $quality, $strip_metadata) {
   // http://www.imagemagick.org/script/webp.php
   // https://stackoverflow.com/questions/37711492/imagemagick-specific-webp-calls-in-php
 
-  $im->setOption('webp:low-memory', 'true');
+
+  if (defined("WEBPCONVERT_IMAGICK_METHOD")) {
+    $im->setOption('webp:method', WEBPCONVERT_IMAGICK_METHOD); 
+  }
+  else {
+    $im->setOption('webp:method', '6'); 
+  }
+
+  if (defined("WEBPCONVERT_IMAGICK_LOW_MEMORY")) {
+    $im->setOption('webp:low-memory', (WEBPCONVERT_IMAGICK_LOW_MEMORY ? 'true' : 'false'));
+  }
+  else {
+    $im->setOption('webp:low-memory', 'true');
+  }
+
+
   $im->setImageCompressionQuality($quality);
 
   $parts = explode('.', $source);
@@ -32,8 +47,6 @@ function webpconvert_imagick($source, $destination, $quality, $strip_metadata) {
   switch ($ext) {
     case 'jpg':
     case 'jpeg':
-      // the compression method to use. It controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. Default value is 4. When higher values are utilized, the encoder spends more time inspecting additional encoding possibilities and decide on the quality gain. Lower value might result in faster processing time at the expense of larger file size and lower compression quality.
-      $im->setOption('webp:method', '6'); 
       break;
     case 'png':
       $im->setOption('webp:lossless', 'true');

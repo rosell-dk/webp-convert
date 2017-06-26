@@ -103,14 +103,24 @@ Converters based on a php extension should be your first choice. They run faster
 *Best, but rarely available on shared hosts*
 
 ```Requirements..```: imagick extension compiled with WebP support<br>
-```Speed.........```: Around 50 ms to convert a 40kb image<br>
+```Speed.........```: Between 20 ms - 320 ms to convert a 40kb image depending on *WEBPCONVERT_IMAGICK_METHOD* setting<br>
 ```Reliability...```: I'm not aware of any problems<br>
 ```Availability..```: Probably only available on few shared hosts (if any)<br>
 
-WebP convertion with imagick is fast and imagick exposes many WebP options. Unfortunately WebP support for the imagick extension is not at all out of the box. At least not on the systems I have tried (Ubuntu 16.04 and Ubuntu 17.04). But if installed, it works great and has several WebP options. In this implementation, we have set:
-- *webp:method* = 6 (we prioritize quality over speed)
-- *webp:low-memory* = true (memory can be an issue on some shared hosts)
-- *webp:lossless* = true (for PNG's only, of course)
+WebP convertion with imagick is fast and imagick exposes many WebP options. Unfortunately WebP support for the imagick extension is not at all out of the box. At least not on the systems I have tried (Ubuntu 16.04 and Ubuntu 17.04). But if installed, it works great and has several WebP options.
+
+The converter supports:
+- lossless encoding of PNG's.
+- quality
+- TODO: strip metadata
+- prioritize between quality and speed
+- low memory option
+
+You can configure the converter by defining any of the following constants:
+
+*WEBPCONVERT_IMAGICK_METHOD*: This parameter controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. When higher values are used, the encoder will spend more time inspecting additional encoding possibilities and decide on the quality gain. Lower value can result in faster processing time at the expense of larger file size and lower compression quality. Default value is 6 (higher than the default value of the cwebp command, which is 4).\
+*WEBPCONVERT_IMAGICK_LOW_MEMORY*: The low memory option will make the encoding slower and the output slightly different in size and distortion. This flag is only effective for methods 3 and up. It is *on* by default. To turn it off, set the constant to ```FALSE```\
+
 
 In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
 1. [Compile libwebp from source](https://developers.google.com/speed/webp/docs/compiling)
@@ -138,7 +148,7 @@ GD unfortunately does not expose any WebP options. Lacking the option to set los
 *Great, fast enough but requires exec()*
 
 ```Requirements..```: exec()<br>
-```Speed.........```: Around 140 ms to convert a 40kb image<br>
+```Speed.........```: Between 40 ms - 120 ms to convert a 40kb image depending on *WEBPCONVERT_CWEBP_METHOD* setting<br>
 ```Reliability...```: Great<br>
 ```Availability..```: exec() is available on surprisingly many webhosts, and the PHP solution by *EWWW Image Optimizer*, which this code is largely based on has been reported to work on many webhosts - [here is a list](https://wordpress.org/plugins/ewww-image-optimizer/#installation)<br>
 
