@@ -7,9 +7,13 @@ This php script is able to convert to webp using several methods. It will try on
 
 Currently the following converters are available:
 - ["imagick"](#imagick) (uses imagick extension)
+  - Best converter, but rarely available on shared hosts
 - ["gd"](#gd) (uses gd extension)
+  - Fast, but not able to do lossless encoding
 - ["cwebp"](#cwebp) (calls cwebp binary directly)
+  - Great, but requires ```exec()```
 - ["ewww"](#ewww) (calls the EWWW Image Optimizer cloud service)
+  - An ideal last resort
 
 ## Usage
 
