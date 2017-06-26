@@ -97,7 +97,7 @@ Basically there are three types of converters.
 2. Those that executes a binary directly using an exec() call
 3. Those that connect to a cloud service which does the conversion
 
-Converters based on a php extension should be your first choice. They run faster than the other methods and they don't need the server to allow exec() calls (which increases security risks). However, the *gd* converter does not support lossless convertion, so you may want to skip that for PNG's. Converters that executes a binary are also very fast (around than 50ms). Converters that delegates conversion to a cloud service are much slower (around 1 second), but works on most shared hosts (as opposed to the other methods). This makes the cloud converters an ideal last resort. They generally requires *purchacing* a key, but the key for EWWW Image Optimizer is very cheap. 
+Converters based on a php extension should be your first choice. They run faster than the other methods and they don't need the server to allow exec() calls (which increases security risks). However, the *gd* converter does not support lossless convertion, so you may want to skip that for PNG's. Converters that executes a binary are also very fast (around than 50ms). Converters that delegates conversion to a cloud service are much slower (convertion takes about 1 second), but works on most shared hosts (as opposed to the other methods). This makes the cloud converters an ideal last resort. They generally requires *purchacing* a key, but the key for EWWW Image Optimizer is very cheap. Also note that there is a risk that a cloud converter has down-time. You can minimize the risk by setting up *two* cloud converters (once I get around adding more cloud converters)
 
 #### imagick
 *Best, but rarely available on shared hosts*
@@ -107,12 +107,11 @@ Converters based on a php extension should be your first choice. They run faster
 ```Reliability...```: I'm not aware of any problems<br>
 ```Availability..```: Probably only available on few shared hosts (if any)<br>
 
-WebP convertion with imagick is fast and imagick exposes many WebP options. Unfortunately WebP support for the imagick extension is not at all out of the box. At least not on the systems I have tried (Ubuntu 16.04 and Ubuntu 17.04). But if installed, it works great and has several WebP options.
+WebP convertion with imagick is fast and [imagick exposes many WebP options](http://www.imagemagick.org/script/webp.php). Unfortunately WebP support for the imagick extension is not at all out of the box. At least not on the systems I have tried (Ubuntu 16.04 and Ubuntu 17.04). But if installed, it works great and has several WebP options.
 
 The converter supports:
 - lossless encoding of PNG's.
 - quality
-- TODO: strip metadata
 - prioritize between quality and speed
 - low memory option
 
@@ -135,11 +134,11 @@ In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
 ```Reliability...```: Not sure. I have experienced corrupted images, but cannot reproduce<br>
 ```Availability..```: Unfortunately, according to [this link](https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php), WebP support on shared hosts is rare.<br>
 
-[imagewebp](http://php.net/manual/en/function.imagewebp.php) is a function that comes with PHP (>5.5.0) *provided* that PHP has been compiled with WebP support. Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes created corrupted images. That bug can however easily be fixed in PHP (fix was released [here](https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files)). However, I have experienced corrupted images *anyway*. So use this converter with caution. The corrupted images shows as completely transparent images in Google Chrome, but with correct size.
+[imagewebp](http://php.net/manual/en/function.imagewebp.php) is a function that comes with PHP (>5.5.0) *provided* that PHP has been compiled with WebP support. Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes created corrupted images. That bug can however easily be fixed in PHP (fix was released [here](https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files)). However, I have experienced corrupted images *anyway* (but cannot reproduce that bug). So use this converter with caution. The corrupted images shows as completely transparent images in Google Chrome, but with correct size.
 
-To get WebP support in PHP 5.5, PHP must be configured with the "--with-vpx-dir" flag. In PHP 7.0, php has to be configured with the "--with-webp-dir" flag [source](http://il1.php.net/manual/en/image.installation.php).
+To get WebP support for *gd* in PHP 5.5, PHP must be configured with the "--with-vpx-dir" flag. In PHP 7.0, php has to be configured with the "--with-webp-dir" flag [source](http://il1.php.net/manual/en/image.installation.php).
 
-The converter does not support copying metadata
+The converter does not support copying metadata.
 
 GD unfortunately does not expose any WebP options. Lacking the option to set lossless encoding results in poor encoding of PNG's - the filesize is generally much larger than the original
 
@@ -189,7 +188,7 @@ Credits also goes to Shane regarding the code that revolves around the exec(). M
 
 ```Requirements..```: A valid key to [EWWW Image Optimizer](https://ewww.io/), curl and PHP >= 5.5<br>
 ```Speed.........```: Around 1300 ms to convert a 40kb image<br>
-```Reliability...```: Great<br>
+```Reliability...```: Great (but, as with any cloud service, there is a risk of downtime)<br>
 ```Availability..```: Should work on *almost* any webhost<br>
 
 EWWW Image Optimizer is a very cheap cloud service for optimizing images.
