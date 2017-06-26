@@ -101,7 +101,7 @@ class WebPConvert {
 
     // Test if source file exists
     if (!file_exists($source)) {
-      self::cfail("File not found: " . $source);
+      self::cfail("Source file not found: " . $source);
       return;
     }
 
