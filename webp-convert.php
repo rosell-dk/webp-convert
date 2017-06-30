@@ -25,7 +25,7 @@ If set (if "&serve-image" is appended to the URL), the converted image will be s
 destination (optional): (TODO)
 Path to destination file. Can be absolute or relative (relative to document root). You can choose not to specify destination. In that case, the path will be created based upon source, destination-root and root-folder settings. If all these are blank, the destination will be same folder as source, and the filename will have ".webp" appended to it (ie image.jpeg.webp)
 
-root-folder (optional): (TODO)
+root-folder (optional):
 Usually, you will not need to supply anything. Might be relevant in rare occasions where the converter that generates the URL cannot pass all of the relative path. For example, an .htaccess located in a subfolder may have trouble passing the parent folders. 
 
 debug (optional):
@@ -51,8 +51,11 @@ else {
 include( __DIR__ . '/WebPConvert.php');
 include( __DIR__ . '/WebPConvertPathHelper.php');
 
-$source = WebPConvertPathHelper::abspath($_GET['source']);
-$destination = WebPConvertPathHelper::get_destination_path($source, isset($_GET['destination-root']) ? $_GET['destination-root'] : '');
+$root = (isset($_GET['root-folder']) ? WebPConvertPathHelper::remove_double_slash($_SERVER['DOCUMENT_ROOT'] . '/' . $_GET['root-folder']) : NULL);;
+
+$source = WebPConvertPathHelper::abspath($_GET['source'], $root);
+$destination = WebPConvertPathHelper::get_destination_path($source, isset($_GET['destination-root']) ? $_GET['destination-root'] : '.', $root);
+
 $quality = (isset($_GET['quality']) ? intval($_GET['quality']) : 85);
 $strip_metadata = (isset($_GET['strip-metadata']) ? ($_GET['strip-metadata'] != 'no') : FALSE);
 
