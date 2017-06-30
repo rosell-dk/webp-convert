@@ -19,7 +19,12 @@ function webpconvert_gd($source, $destination, $quality, $strip_metadata) {
       $image = imagecreatefromjpeg($source);
       break;
     case 'png':
-      $image = imagecreatefrompng($source);
+      if (defined("WEBPCONVERT_GD_PNG") && WEBPCONVERT_GD_PNG) {
+        $image = imagecreatefrompng($source);
+      }
+      else {
+        return 'This converter has poor handling of PNG images and therefore refuses to convert the image. You can however force it to convert PNGs as well like this:  define("WEBPCONVERT_GD_PNG", TRUE);';
+      }
       break;
     default:
       return 'Unsupported file extension';

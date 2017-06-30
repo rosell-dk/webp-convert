@@ -103,13 +103,19 @@ In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
 ```Reliability...```: Not sure. I have experienced corrupted images, but cannot reproduce<br>
 ```Availability..```: Unfortunately, according to [this link](https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php), WebP support on shared hosts is rare.<br>
 
+The converter does not support copying metadata.
+
+*GD* unfortunately does not expose any WebP options. Lacking the option to set lossless encoding results in poor encoding of PNG's - the filesize is generally much larger than the original. For this reason, PNG conversion is *disabled* per default. The converter however lets you override this default by defining the *WEBPCONVERT_GD_PNG* constant.
+
+Converter options:
+
+*WEBPCONVERT_GD_PNG*: If set to TRUE, the converter will convert PNG's even though the result will be bad.
+
+
 [imagewebp](http://php.net/manual/en/function.imagewebp.php) is a function that comes with PHP (>5.5.0) *provided* that PHP has been compiled with WebP support. Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes created corrupted images. That bug can however easily be fixed in PHP (fix was released [here](https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files)). However, I have experienced corrupted images *anyway* (but cannot reproduce that bug). So use this converter with caution. The corrupted images shows as completely transparent images in Google Chrome, but with correct size.
 
 To get WebP support for *gd* in PHP 5.5, PHP must be configured with the "--with-vpx-dir" flag. In PHP 7.0, php has to be configured with the "--with-webp-dir" flag [source](http://il1.php.net/manual/en/image.installation.php).
 
-The converter does not support copying metadata.
-
-GD unfortunately does not expose any WebP options. Lacking the option to set lossless encoding results in poor encoding of PNG's - the filesize is generally much larger than the original
 
 
 #### cwebp 
@@ -212,6 +218,7 @@ TODO! - The script does not currently sanitize values.
 
 ## Roadmap
 * Sanitize
+* gd should not convert png, unless option set to do so
 
 
 
