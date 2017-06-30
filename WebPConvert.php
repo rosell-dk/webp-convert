@@ -173,6 +173,13 @@ class WebPConvert {
     $converters = array();
 
     // Add preferred converters
+    if (count(self::$preferred_converters) > 0) {
+      self::logmsg('Preferred converters was set to: ' . implode(',', self::$preferred_converters));
+    }
+    else {
+      self::logmsg('No preferred converters was set. Converters will be tried in default order');
+    }
+
     foreach (self::$preferred_converters as $converter) {
       $filename = 'converters/' . $converter . '/' . $converter . '.php';
       if (file_exists($filename)) {
@@ -195,7 +202,7 @@ class WebPConvert {
       }
     }
 
-    self::logmsg('Order of converters to be tried: ' . implode(', ', self::$preferred_converters));
+    self::logmsg('Order of converters to be tried: <i>' . implode('</i>, <i>', $converters) . '</i>');
 
     $success = FALSE;
     foreach ($converters as $converter) {
