@@ -29,7 +29,12 @@ root-folder (optional):
 Usually, you will not need to supply anything. Might be relevant in rare occasions where the converter that generates the URL cannot pass all of the relative path. For example, an .htaccess located in a subfolder may have trouble passing the parent folders. 
 
 debug (optional):
-When WebPConvert is told to serve an image, but all converters fails to convert, the default action of WebPConvert is to serve the original image. End-users will not notice the fail, which is good on production servers, but not on development servers. With debugging enabled, WebPConvert will generate an image with the error message, when told to serve image, and things go wrong.
+Enabling debug has two functions:
+1) It will always return text (serve-image setting is overriden)
+2) PHP error reporting is turned on
+
+serve-original-image-on-fail (optional):
+Default: "yes". Decides what action to take in the situation that (1) all converters fails to convert the image, and (2) WebPConvert is told to serve the converted image. the original image. Default action is to serve the *original* image. End-users will not notice the fail, which is good on production servers, but not on development servers. If set to "no", WebPConvert will instead generate an image containing the error message.
 
 ewww-key (optional):
 Key to EWWW Image Converter
@@ -37,8 +42,8 @@ Key to EWWW Image Converter
 
 $serve_converted_image = (isset($_GET['serve-image']) ? ($_GET['serve-image'] != 'no') : FALSE);
 $debug = (isset($_GET['debug']) ? ($_GET['debug'] != 'no') : FALSE);
-
 if ($debug) {
+  $serve_converted_image = FALSE;
   error_reporting(E_ALL);
   ini_set('display_errors','On');
 }
@@ -76,7 +81,7 @@ define("WEBPCONVERT_IMAGICK_METHOD", WEBPCONVERT_CWEBP_METHOD);
 
 
 WebPConvert::$serve_converted_image = $serve_converted_image;
-WebPConvert::$serve_original_image_on_fail = (!$debug);
+WebPConvert::$serve_original_image_on_fail = (isset($_GET['serve-original-image-on-fail']) ? ($_GET['serve-original-image-on-fail'] != 'no') : TRUE);
 WebPConvert::set_preferred_converters($preferred_converters);
 WebPConvert::convert($source, $destination, $quality, $strip_metadata);
 
