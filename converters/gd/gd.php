@@ -12,8 +12,7 @@ function webpconvert_gd($source, $destination, $quality, $strip_metadata) {
   $ext = array_pop($parts);
   $image = '';
 
-
-  switch ($ext) {
+  switch (strtolower($ext)) {
     case 'jpg':
     case 'jpeg':
       $image = imagecreatefromjpeg($source);

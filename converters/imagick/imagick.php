@@ -44,7 +44,7 @@ function webpconvert_imagick($source, $destination, $quality, $strip_metadata) {
 
   $parts = explode('.', $source);
   $ext = array_pop($parts);
-  switch ($ext) {
+  switch (strtolower($ext)) {
     case 'jpg':
     case 'jpeg':
       break;

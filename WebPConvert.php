@@ -94,7 +94,7 @@ class WebPConvert {
     $parts = explode('.', $source);
     $ext = array_pop($parts);
 
-    if (!in_array($ext, array('jpg', 'jpeg', 'png'))) {
+    if (!in_array(strtolower($ext), array('jpg', 'jpeg', 'png'))) {
       self::cfail("Unsupported file extension: " . $ext);
       return;      
     }
