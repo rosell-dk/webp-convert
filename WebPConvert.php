@@ -11,8 +11,15 @@ class WebPConvert {
 
   // Little helper
   public static function logmsg($msg = '') {
+    // http://php.net/manual/en/filter.filters.sanitize.php
+
     if (!WebPConvert::$serve_converted_image) {
-      echo $msg . '<br>';
+      // First fully encode (safety first)
+      $html_encoded = filter_var($msg, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+      // Then decode the following safe tags: <b>, </b>, <i>, </i>, <br>
+      $html_decoded = preg_replace('/&lt;(\/?)(b|i|br)&gt;/', '<$1$2>', $html_encoded);
+      echo $html_decoded . '<br>';
     }
   }
 
@@ -41,7 +48,7 @@ class WebPConvert {
     self::logmsg($msg);
     if (WebPConvert::$serve_converted_image && WebPConvert::$serve_original_image_on_fail) {
       $ext = array_pop(explode('.', WebPConvert::$current_conversion_vars['source']));
-      switch ($ext) {
+      switch (strtolower($ext)) {
         case 'jpg':
         case 'jpeg':
           header('Content-type: image/jpeg');
@@ -65,6 +72,10 @@ class WebPConvert {
     @param (bool) $strip_metadata (optional):  Whether or not to strip metadata. Default is to strip. Not all converters supports this
   */
   public static function convert($source, $destination, $quality = 85, $strip_metadata = TRUE) {
+
+//    $newstr = filter_var($source, FILTER_SANITIZE_STRING);
+//    $source = filter_var($source, FILTER_SANITIZE_MAGIC_QUOTES);
+
 
     self::logmsg('WebPConvert::convert() called');
     self::logmsg('- source: ' . $source);
