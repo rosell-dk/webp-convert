@@ -1,4 +1,7 @@
 {
   "name": "rosell-dk/webp-convert",
-  "description": "Convert jpeg/png to webp with PHP"
+  "description": "Convert jpeg/png to webp with PHP",
+  "autoload": {
+    "psr-0": { "WebPConvert": "" }
+  }
 }
