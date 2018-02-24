@@ -1,6 +1,5 @@
 <?php
 
-
 class WebPConvert {
   private static $preferred_converters = array();
 
@@ -27,8 +26,7 @@ class WebPConvert {
   private static function cfail($msg) {
     if (!WebPConvert::$serve_converted_image) {
       echo $msg;
-    }
-    else {
+    } else {
       header('Content-type: image/gif');
 
       // Prevent caching error message
@@ -37,8 +35,8 @@ class WebPConvert {
       header("Pragma: no-cache");
 
       $image = imagecreatetruecolor(620, 200);
-      imagestring($image, 1, 5, 5,  $msg, imagecolorallocate($image, 233, 214, 291));
-  //      echo imagewebp($image);
+      imagestring($image, 1, 5, 5, $msg, imagecolorallocate($image, 233, 214, 291));
+      // echo imagewebp($image);
       echo imagegif($image);
       imagedestroy($image);
     }
@@ -68,14 +66,13 @@ class WebPConvert {
   /**
     @param (string) $source: Absolute path to image to be converted (no backslashes). Image must be jpeg or png
     @param (string) $destination: Absolute path (no backslashes)
-    @param (int) $quality (optional):  Quality of converted file (0-100)
-    @param (bool) $strip_metadata (optional):  Whether or not to strip metadata. Default is to strip. Not all converters supports this
+    @param (int) $quality (optional): Quality of converted file (0-100)
+    @param (bool) $strip_metadata (optional): Whether or not to strip metadata. Default is to strip. Not all converters supports this
   */
+  
   public static function convert($source, $destination, $quality = 85, $strip_metadata = TRUE) {
-
-//    $newstr = filter_var($source, FILTER_SANITIZE_STRING);
-//    $source = filter_var($source, FILTER_SANITIZE_MAGIC_QUOTES);
-
+    // $newstr = filter_var($source, FILTER_SANITIZE_STRING);
+    // $source = filter_var($source, FILTER_SANITIZE_MAGIC_QUOTES);
 
     self::logmsg('WebPConvert::convert() called');
     self::logmsg('- source: ' . $source);
@@ -91,7 +88,7 @@ class WebPConvert {
     if (self::$serve_converted_image) {
       // If set to serve image, textual content will corrupt the image
       // Therefore, we prevent PHP from outputting error messages
-      ini_set('display_errors','Off');
+      ini_set('display_errors', 'Off');
     }
 
     // "dirname", but which doesn't localization
@@ -107,7 +104,7 @@ class WebPConvert {
 
     if (!in_array(strtolower($ext), array('jpg', 'jpeg', 'png'))) {
       self::cfail("Unsupported file extension: " . $ext);
-      return;      
+      return;
     }
 
     // Test if source file exists
@@ -154,17 +151,15 @@ class WebPConvert {
 
     }
 
-
     // Test if it will be possible to write file
     if (file_exists($destination)) {
       if (!is_writable($destination)) {
-        self::fail('Cannot overwrite file: ' . $destination  . '. Check the file permissions.');
+        self::fail('Cannot overwrite file: ' . $destination . '. Check the file permissions.');
         return;
       }
-    }
-    else {
+    } else {
       if (!is_writable($destination_folder)) {
-        self::fail('Cannot write file: ' . $destination  . '. Check the folder permissions.');
+        self::fail('Cannot write file: ' . $destination . '. Check the folder permissions.');
         return;
       }
     }
@@ -174,8 +169,7 @@ class WebPConvert {
     if (file_exists($destination)) {
       if (unlink($destination)) {
         self::logmsg('Destination file already exists... - removed');
-      }
-      else {
+      } else {
         self::logmsg('Destination file already exists. Could not remove it');
       }
     }
@@ -185,18 +179,16 @@ class WebPConvert {
 
     // Add preferred converters
     if (count(self::$preferred_converters) > 0) {
-      self::logmsg('Preferred converters was set to: ' . implode(',', self::$preferred_converters));
-    }
-    else {
+      self::logmsg('Preferred converters was set to: ' . implode(', ', self::$preferred_converters));
+    } else {
       self::logmsg('No preferred converters was set. Converters will be tried in default order');
     }
 
     foreach (self::$preferred_converters as $converter) {
-      $filename = __DIR__ . DS . 'converters/' . $converter . '/' . $converter . '.php';
+      $filename = __DIR__ . '/converters/' . $converter . '/' . $converter . '.php';
       if (file_exists($filename)) {
         $converters[] = $converter;
-      }
-      else {
+      } else {
         self::logmsg('<b>the converter "' . $converter . '" that was set as a preferred converter was not found at: "' . $filename . '".</b>');
       }
     }
@@ -233,13 +225,12 @@ class WebPConvert {
       $result = call_user_func('webpconvert_' . $converter, $source, $destination, $quality, $strip_metadata);
       $time_end = microtime(true);
       self::logmsg('execution time: ' . round(($time_end - $time_start) * 1000) . ' ms');
-      
+
       if ($result === TRUE) {
         self::logmsg('success!');
         $success = TRUE;
         break;
-      }
-      else {
+      } else {
         self::logmsg($result);
       }
     }
@@ -249,23 +240,17 @@ class WebPConvert {
       return;
     }
 
-
     if (!file_exists($destination)) {
       self::fail('Failed saving image to path: ' . $destination);
       return;
     }
 
-
     if (self::$serve_converted_image) {
       // Serve the saved file
       header('Content-type: image/webp');
-//    Should we add Content-Length header?  header('Content-Length: ' . filesize($file));
+      // Should we add Content-Length header?
+      // header('Content-Length: ' . filesize($file));
       readfile($destination);
     }
-
   }
-
 }
-
-
-?>
