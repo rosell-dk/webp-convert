@@ -192,7 +192,7 @@ class WebPConvert {
     }
 
     foreach (self::$preferred_converters as $converter) {
-      $filename = 'converters/' . $converter . '/' . $converter . '.php';
+      $filename = __DIR__ . DS . 'converters/' . $converter . '/' . $converter . '.php';
       if (file_exists($filename)) {
         $converters[] = $converter;
       }
@@ -219,7 +219,7 @@ class WebPConvert {
     foreach ($converters as $converter) {
       self::logmsg('<br>trying <b>' . $converter . '</b>');
 
-      $filename = 'converters/' . $converter . '/' . $converter . '.php';
+      $filename = __DIR__ . DS . 'converters/' . $converter . '/' . $converter . '.php';
       self::logmsg('including converter at: "' . $filename . '"');
 
       include_once($filename);
