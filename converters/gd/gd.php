@@ -20,9 +20,8 @@ function webpconvert_gd($source, $destination, $quality, $strip_metadata) {
     case 'png':
       if (defined("WEBPCONVERT_GD_PNG") && WEBPCONVERT_GD_PNG) {
         $image = imagecreatefrompng($source);
-      }
-      else {
-        return 'This converter has poor handling of PNG images and therefore refuses to convert the image. You can however force it to convert PNGs as well like this:  define("WEBPCONVERT_GD_PNG", TRUE);';
+      } else {
+        return 'This converter has poor handling of PNG images and therefore refuses to convert the image. You can however force it to convert PNGs as well like this: define("WEBPCONVERT_GD_PNG", TRUE);';
       }
       break;
     default:
@@ -37,10 +36,14 @@ function webpconvert_gd($source, $destination, $quality, $strip_metadata) {
   $success = imagewebp($image, $destination, $quality);
 
 
-  // This is a hack solves bug with imagewebp
-  // - Got it here: https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files
-  if (filesize($source) % 2 == 1) {
-    file_put_contents($source, "\0", FILE_APPEND);
+  /*
+   * This hack solves an `imagewebp` bug
+   * See https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files
+   *
+   */
+
+  if (filesize($destination) % 2 == 1) {
+    file_put_contents($destination, "\0", FILE_APPEND);
   }
 
   // Hm... sometimes I get completely transparent images, even with the hack above. Help, anybody?
@@ -53,4 +56,3 @@ function webpconvert_gd($source, $destination, $quality, $strip_metadata) {
     return 'imagewebp() call failed';
   }
 }
-
