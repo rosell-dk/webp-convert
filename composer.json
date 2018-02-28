@@ -1,8 +1,20 @@
 {
-  "name": "rosell-dk/webp-convert",
+  "name": "s1syphos/webp-convert",
   "description": "Convert jpeg/png to webp with PHP",
-  "minimum-stability": "dev",
+  "type": "library",
   "autoload": {
     "psr-0": { "WebPConvert": "" }
-  }
+  },
+  "authors": [
+    {
+      "name": "Bjørn Rosell",
+      "homepage": "http://rosell.dk",
+      "role": "Project Author"
+    },
+    {
+      "name": "Martin Folkers",
+      "homepage": "https://twobrain.io",
+      "role": "Fork Maintainer"
+    }
+  ]
 }
