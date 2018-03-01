@@ -1,5 +1,5 @@
 {
-  "name": "s1syphos/webp-convert",
+  "name": "rosell-dk/webp-convert",
   "description": "Convert jpeg/png to webp with PHP",
   "type": "library",
   "autoload": {
@@ -14,7 +14,7 @@
     {
       "name": "Martin Folkers",
       "homepage": "https://twobrain.io",
-      "role": "Fork Maintainer"
+      "role": "Collaborator"
     }
   ]
 }
