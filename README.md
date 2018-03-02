@@ -9,10 +9,10 @@ Currently the following converters are available:
 
 | Converter            | Method                                   | Summary                                              |
 | -------------------- | ---------------------------------------- | ---------------------------------------------------- |
-| [imagick](#imagick)  | Uses imagick extension                   | Best converter, but rarely available on shared hosts |
-| [gd](#gd)            | Uses gd extension                        | Fast, but not able to do lossless encoding           |
+| [imagick](#imagick)  | Uses Imagick extension                   | Best converter, but rarely available on shared hosts |
+| [gd](#gd)            | Uses GD Graphics extension               | Fast, but unable to do lossless encoding             |
 | [cwebp](#cwebp)      | Calls cwebp binary directly              | Great, but requires ```exec()```                     |
-| [ewww](#ewww)        | Calls EWWW Image Optimizer cloud service | Works on *almost* any shared webhost, slow, cheap, requires key |
+| [ewww](#ewww)        | Calls EWWW Image Optimizer cloud service | Works on *almost* any shared host; slow, cheap, requires key |
 
 ## Usage
 
@@ -52,7 +52,6 @@ When WebPConvert is told to serve an image, but all converters fails to convert,
 
 
 ## Converters
-
 Each "method" of converting an image to webp are implemented as a separate converter. *WebPConvert* autodetects the converters by scanning the "converters" directory, so it is easy to add new converters, and safe to remove existing ones.
 
 A converter simply consists of a convert function, which takes same arguments as *WebPConvert::convert*. The job of the converter is to convert *$source* to WebP and save it at *$destination*, preferrably taking *$quality* and *$strip_metadata* into account. It however relies on *WebPConvert* to take care of the following common tasks:
@@ -116,8 +115,6 @@ Converter options:
 
 To get WebP support for *gd* in PHP 5.5, PHP must be configured with the "--with-vpx-dir" flag. In PHP 7.0, php has to be configured with the "--with-webp-dir" flag [source](http://il1.php.net/manual/en/image.installation.php).
 
-
-
 #### cwebp 
 *Great, fast enough but requires exec()*
 
@@ -142,8 +139,6 @@ You can configure the converter by defining any of the following constants:
 
 The cwebp command has more options, which can easily be implemented, if there is an interest. View the options [here](https://developers.google.com/speed/webp/docs/cwebp)
 
-
-
 Official precompilations are available on [here](https://developers.google.com/speed/webp/docs/precompiled). But note that our script tests the checksum of the binary before executing it. This means that you cannot just replace a binary - you will have to change the checksum hardcoded in *converters/cwebp.php* too. If you find the need to use another binary, than those that comes with this project, please write - chances are that it should be added to the project.
 
 In more detail, the implementation does this:
@@ -156,7 +151,6 @@ In more detail, the implementation does this:
 - It is detected whether the command succeeds or not
 
 Credits also goes to Shane regarding the code that revolves around the exec(). Most of it is a refactoring of the code in [EWWW Image Optimizer](https://ewww.io/).
-
 
 #### ewww
 *Cheap cloud service. Should work on *almost* any webhost. But slow.*
@@ -177,13 +171,9 @@ The converter supports:
 
 The cloud service supports other options, which can easily be implemented, if there is an interest. View options [here](https://ewww.io/api/)
 
-The converter could be improved by using *fsockopen* if *curl* is not available. This is however low priority as the curl extension is available on most shared hosts. PHP >= 5.5 is also widely available ([PHP 5.4 reached end of life more than a year ago](http://php.net/supported-versions.php)).
-
-
-
+The converter could be improved by using *fsockopen* if *curl* is not available. This is however low priority as the curl extension is available on most shared hosts. PHP >= 5.5 is also widely available (PHP 5.4 reached end of life [more than a year ago!](http://php.net/supported-versions.php)).
 
 ## The script
-
 *webp-convert.php* can be used to serve converted images, or just convert without serving. It accepts the following parameters in the URL:
 
 *source:*\
@@ -213,9 +203,7 @@ Enabling debug has two functions:\
 Default: "yes". Decides what action to take in the situation that (1) all converters fails to convert the image, and (2) WebPConvert is told to serve the converted image. the original image. Default action is to serve the *original* image. End-users will not notice the fail, which is good on production servers, but not on development servers. If set to "no", WebPConvert will instead generate an image containing the error message.
 
 ## WebPConvertPathHelper
-
 This helper is used by the script in order to make it accept relative urls and to operate with a "destination root". You will probably not need it, but in case you are interested, it is documented [here, on the wiki](https://github.com/rosell-dk/webp-convert/wiki/WebPConvertPathHelper)
-
 
 ## SECURITY
 TODO! - The script does not currently sanitize values.
@@ -223,9 +211,3 @@ TODO! - The script does not currently sanitize values.
 ## Roadmap
 * Sanitize
 * gd should not convert png, unless option set to do so
-
-
-
-
-
-
