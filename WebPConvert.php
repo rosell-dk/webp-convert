@@ -69,7 +69,7 @@ class WebPConvert {
     @param (int) $quality (optional): Quality of converted file (0-100)
     @param (bool) $strip_metadata (optional): Whether or not to strip metadata. Default is to strip. Not all converters supports this
   */
-  
+
   public static function convert($source, $destination, $quality = 85, $strip_metadata = TRUE) {
     // $newstr = filter_var($source, FILTER_SANITIZE_STRING);
     // $source = filter_var($source, FILTER_SANITIZE_MAGIC_QUOTES);
@@ -211,7 +211,7 @@ class WebPConvert {
     foreach ($converters as $converter) {
       self::logmsg('<br>trying <b>' . $converter . '</b>');
 
-      $filename = __DIR__ . DS . 'converters/' . $converter . '/' . $converter . '.php';
+      $filename = __DIR__ . '/converters/' . $converter . '/' . $converter . '.php';
       self::logmsg('including converter at: "' . $filename . '"');
 
       include_once($filename);
