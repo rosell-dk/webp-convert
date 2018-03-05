@@ -10,7 +10,7 @@ function webpconvert_ewww($source, $destination, $quality, $strip_metadata) {
   }
 
   $ch = curl_init();
-  if ($ch === FALSE) {
+  if ($ch === false) {
     return 'Could not init curl';
   }
 
@@ -76,9 +76,8 @@ function webpconvert_ewww($source, $destination, $quality, $strip_metadata) {
 
   if (!file_put_contents($destination, $response)) {
     return 'Failed writing file' . $response;
-    
+
   }
 
-  return TRUE;
+  return true;
 }
-

@@ -13,7 +13,7 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata) {
     '/usr/gnu/bin/cwebp',
     '/usr/syno/bin/cwebp'
   );
-  
+
   // Select binary
   $binary = array(
     'WinNT' => array( 'cwebp.exe', '49e9cb98db30bfa27936933e6fd94d407e0386802cb192800d9fd824f6476873'),
@@ -93,7 +93,7 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata) {
   }
 
   //$options .= ' -low_memory';
-  
+
   // $options .= ' -quiet';
   $options .= ' ' . esc_filename($source) . ' -o ' . esc_filename($destination) . ' 2>&1';
 
@@ -103,7 +103,7 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata) {
 	exec( "nice 2>&1", $nice_output );
   if (is_array($nice_output) && isset($nice_output[0]) ) {
     if (preg_match( '/usage/', $nice_output[0]) || (preg_match( '/^\d+$/', $nice_output[0] ))) {
-      // Nice is available. 
+      // Nice is available.
       // We run with default niceness (+10)
       // https://www.lifewire.com/uses-of-commands-nice-renice-2201087
       // https://www.computerhope.com/unix/unice.htm
@@ -113,14 +113,14 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata) {
   WebPConvert::logmsg('parameters:' . $options);
 
   // Try all paths
-  $success = FALSE;
+  $success = false;
   foreach ($paths_to_test as $i => $bin) {
     WebPConvert::logmsg('trying to execute binary: ' . $bin);
 
     $cmd = $nice . $bin . ' ' . $options;
 
     exec($cmd, $output, $return_var);
-    // Return codes:  
+    // Return codes:
     // 0: everything ok!
     // 127: binary cannot be found
     // 255: target not found
@@ -136,7 +136,7 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata) {
 
       // TODO cwebp also appears to set file owner. We want same owner as parent folder
 
-      return TRUE;
+      return true;
     }
     else {
       // If supplied bin failed, log some information
@@ -150,12 +150,12 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata) {
             $msg .= 'This probably means that the target was not found. ';
             break;
         }
-        $msg .= 'Output was: ' . print_r($output, TRUE);
+        $msg .= 'Output was: ' . print_r($output, true);
         WebPConvert::logmsg($msg);
       }
     }
   }
-  // 
+  //
   return 'No working cwebp binary found';
 
   // Check the version
@@ -170,6 +170,3 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata) {
 		return 'Unexpected version format';
 	}*/
 }
-
-
-

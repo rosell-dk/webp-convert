@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 function webpconvert_gd($source, $destination, $quality, $strip_metadata) {
   if (!extension_loaded('gd')) {
@@ -21,7 +21,7 @@ function webpconvert_gd($source, $destination, $quality, $strip_metadata) {
       if (defined("WEBPCONVERT_GD_PNG") && WEBPCONVERT_GD_PNG) {
         $image = imagecreatefrompng($source);
       } else {
-        return 'This converter has poor handling of PNG images and therefore refuses to convert the image. You can however force it to convert PNGs as well like this: define("WEBPCONVERT_GD_PNG", TRUE);';
+        return 'This converter has poor handling of PNG images and therefore refuses to convert the image. You can however force it to convert PNGs as well like this: define("WEBPCONVERT_GD_PNG", true);';
       }
       break;
     default:
@@ -29,7 +29,7 @@ function webpconvert_gd($source, $destination, $quality, $strip_metadata) {
   }
 
   if (!$image) {
-    // Either imagecreatefromjpeg or imagecreatefrompng returned FALSE
+    // Either imagecreatefromjpeg or imagecreatefrompng returned false
     return 'Either imagecreatefromjpeg or imagecreatefrompng failed';
   }
 
@@ -50,7 +50,7 @@ function webpconvert_gd($source, $destination, $quality, $strip_metadata) {
 
   imagedestroy($image);
   if ($success) {
-    return TRUE;
+    return true;
   }
   else {
     return 'imagewebp() call failed';

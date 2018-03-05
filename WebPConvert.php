@@ -3,8 +3,8 @@
 class WebPConvert {
   private static $preferred_converters = array();
 
-  public static $serve_converted_image = TRUE;
-  public static $serve_original_image_on_fail = TRUE;
+  public static $serve_converted_image = true;
+  public static $serve_original_image_on_fail = true;
 
   public static $current_conversion_vars;
 
@@ -31,7 +31,7 @@ class WebPConvert {
 
       // Prevent caching error message
       header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-      header("Cache-Control: post-check=0, pre-check=0", FALSE);
+      header("Cache-Control: post-check=0, pre-check=0", false);
       header("Pragma: no-cache");
 
       $image = imagecreatetruecolor(620, 200);
@@ -70,7 +70,7 @@ class WebPConvert {
     @param (bool) $strip_metadata (optional): Whether or not to strip metadata. Default is to strip. Not all converters supports this
   */
 
-  public static function convert($source, $destination, $quality = 85, $strip_metadata = TRUE) {
+  public static function convert($source, $destination, $quality = 85, $strip_metadata = true) {
     // $newstr = filter_var($source, FILTER_SANITIZE_STRING);
     // $source = filter_var($source, FILTER_SANITIZE_MAGIC_QUOTES);
 
@@ -135,7 +135,7 @@ class WebPConvert {
       $perms = fileperms($closest_existing_folder) & 000777;
       self::logmsg('Permissions are: 0' . decoct($perms));
 
-      if (!mkdir($destination_folder, $perms, TRUE)) {
+      if (!mkdir($destination_folder, $perms, true)) {
         self::fail('Failed creating folder:' . $folder);
         return;
       };
@@ -207,7 +207,7 @@ class WebPConvert {
 
     self::logmsg('Order of converters to be tried: <i>' . implode('</i>, <i>', $converters) . '</i>');
 
-    $success = FALSE;
+    $success = false;
     foreach ($converters as $converter) {
       self::logmsg('<br>trying <b>' . $converter . '</b>');
 
@@ -226,9 +226,9 @@ class WebPConvert {
       $time_end = microtime(true);
       self::logmsg('execution time: ' . round(($time_end - $time_start) * 1000) . ' ms');
 
-      if ($result === TRUE) {
+      if ($result === true) {
         self::logmsg('success!');
-        $success = TRUE;
+        $success = true;
         break;
       } else {
         self::logmsg($result);
