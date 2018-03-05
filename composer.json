@@ -3,6 +3,7 @@
   "description": "Convert jpeg/png to webp with PHP",
   "type": "library",
   "license": "MIT",
+  "keywords": ["webp", "images", "cwebp", "imagick", "gd", "jpg2webp", "png2webp", "jpg", "png", "image conversion"],
   "autoload": {
     "psr-0": { "WebPConvert": "" }
   },
