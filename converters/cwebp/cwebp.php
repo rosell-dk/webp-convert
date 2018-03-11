@@ -68,7 +68,10 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
 
     // Build options string
     $options = '-q ' . $quality;
-    $options .= ($strip_metadata ? ' -metadata none' : '-metadata all');
+    $options .= ($strip_metadata
+      ? ' -metadata none'
+      : ' -metadata all'
+    );
     // comma separated list of metadata to copy from the input to the output if present.
     // Valid values: all, none (default), exif, icc, xmp
 
@@ -85,7 +88,10 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
     }
 
     if (defined("WEBPCONVERT_CWEBP_LOW_MEMORY")) {
-        $options .= (WEBPCONVERT_CWEBP_LOW_MEMORY ? ' -low_memory' : '');
+        $options .= (WEBPCONVERT_CWEBP_LOW_MEMORY
+          ? ' -low_memory'
+          : ''
+        );
     } else {
         $options .= ' -low_memory';
     }

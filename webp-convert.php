@@ -13,7 +13,8 @@ include __DIR__ . '/WebPConvertPathHelper.php';
 */
 $serve_converted_image = (isset($_GET['serve-image'])
   ? ($_GET['serve-image'] != 'no')
-  : false);
+  : false
+);
 
 /*
  * $debug (optional):
@@ -21,7 +22,10 @@ $serve_converted_image = (isset($_GET['serve-image'])
  * 1) It will always return text (serve-image setting is overriden)
  * 2) PHP error reporting is turned on
 */
-$debug = (isset($_GET['debug']) ? ($_GET['debug'] != 'no') : false);
+$debug = (isset($_GET['debug'])
+  ? ($_GET['debug'] != 'no')
+  : false
+);
 if ($debug) {
     $serve_converted_image = false;
     error_reporting(E_ALL);
@@ -41,7 +45,8 @@ if ($debug) {
 */
 $root = (isset($_GET['root-folder'])
   ? WebPConvertPathHelper::remove_double_slash($_SERVER['DOCUMENT_ROOT'] . '/' . $_GET['root-folder'])
-  : null);
+  : null
+);
 
 /*
  * $source:
@@ -83,7 +88,8 @@ $destination = WebPConvertPathHelper::get_destination_path($source, isset($_GET[
 */
 $quality = (isset($_GET['quality'])
   ? intval($_GET['quality'])
-  : 85);
+  : 85
+);
 
 /*
  * strip-metadata:
@@ -94,7 +100,8 @@ $quality = (isset($_GET['quality'])
 */
 $strip_metadata = (isset($_GET['strip-metadata'])
   ? ($_GET['strip-metadata'] != 'no')
-  : false);
+  : false
+);
 
 /*
  * preferred-converters (optional):
@@ -107,7 +114,8 @@ $strip_metadata = (isset($_GET['strip-metadata'])
 */
 $preferred_converters = (isset($_GET['preferred-converters'])
   ? explode(',', $_GET['preferred-converters'])
-  : array());
+  : array()
+);
 //$preferred_converters = array('imagewebp', 'cwebp');
 
 /*
@@ -137,7 +145,8 @@ define("WEBPCONVERT_IMAGICK_METHOD", WEBPCONVERT_CWEBP_METHOD);
 */
 WebPConvert::$serve_original_image_on_fail = (isset($_GET['serve-original-image-on-fail'])
   ? ($_GET['serve-original-image-on-fail'] != 'no')
-  : true);
+  : true
+);
 WebPConvert::$serve_converted_image = $serve_converted_image;
 WebPConvert::set_preferred_converters($preferred_converters);
 WebPConvert::convert($source, $destination, $quality, $strip_metadata);

@@ -32,7 +32,10 @@ function webpconvert_imagick($source, $destination, $quality, $strip_metadata)
     }
 
     if (defined("WEBPCONVERT_IMAGICK_LOW_MEMORY")) {
-        $im->setOption('webp:low-memory', (WEBPCONVERT_IMAGICK_LOW_MEMORY ? 'true' : 'false'));
+        $im->setOption('webp:low-memory', (WEBPCONVERT_IMAGICK_LOW_MEMORY
+          ? 'true'
+          : 'false'
+        ));
     } else {
         $im->setOption('webp:low-memory', 'true');
     }

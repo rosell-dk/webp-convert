@@ -44,7 +44,10 @@ function webpconvert_ewww($source, $destination, $quality, $strip_metadata)
         'file' => $cFile,
         'domain' => $_SERVER['HTTP_HOST'],
         'quality' => $quality,
-        'metadata' => ($strip_metadata ? '0' : '1'),
+        'metadata' => ($strip_metadata
+          ? '0'
+          : '1'
+        ),
       ),
       CURLOPT_BINARYTRANSFER => true,
       CURLOPT_RETURNTRANSFER => true,
