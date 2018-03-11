@@ -2,7 +2,6 @@
 
 function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
 {
-
     if (!function_exists('exec')) {
         return 'exec() is not enabled';
     }
@@ -68,7 +67,8 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
 
     // Build options string
     $options = '-q ' . $quality;
-    $options .= ($strip_metadata
+    $options .= (
+        $strip_metadata
       ? ' -metadata none'
       : ' -metadata all'
     );
@@ -78,7 +78,7 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
     $parts = explode('.', $source);
     $ext = array_pop($parts);
     if ($ext == 'png') {
-          $options .= ' -lossless';
+        $options .= ' -lossless';
     }
 
     if (defined("WEBPCONVERT_CWEBP_METHOD")) {
@@ -88,7 +88,8 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
     }
 
     if (defined("WEBPCONVERT_CWEBP_LOW_MEMORY")) {
-        $options .= (WEBPCONVERT_CWEBP_LOW_MEMORY
+        $options .= (
+            WEBPCONVERT_CWEBP_LOW_MEMORY
           ? ' -low_memory'
           : ''
         );

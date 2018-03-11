@@ -12,7 +12,7 @@ class WebPConvert
     // Little helper
     public static function logmsg($msg = '')
     {
-      // http://php.net/manual/en/filter.filters.sanitize.php
+        // http://php.net/manual/en/filter.filters.sanitize.php
 
         if (!WebPConvert::$serve_converted_image) {
             // First fully encode (safety first)
@@ -203,9 +203,15 @@ class WebPConvert
         // - Convention is that the name of the converter equals the dir name
         foreach (scandir(__DIR__ . '/converters') as $file) {
             if (is_dir('converters/' . $file)) {
-                if ($file == '.') continue;
-                if ($file == '..') continue;
-                if (in_array($file, $converters)) continue;
+                if ($file == '.') {
+                    continue;
+                }
+                if ($file == '..') {
+                    continue;
+                }
+                if (in_array($file, $converters)) {
+                    continue;
+                }
 
                 $converters[] = $file;
             }

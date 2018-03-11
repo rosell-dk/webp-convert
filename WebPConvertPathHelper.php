@@ -2,7 +2,6 @@
 
 class WebPConvertPathHelper
 {
-
     public static $do_logging = true;
 
     // Little helper
@@ -125,11 +124,11 @@ class WebPConvertPathHelper
         if (!isset($root)) {
             $root = $_SERVER['DOCUMENT_ROOT'];
         }
-    //    self::logmsg('root: "' . $root . '"');
+        //    self::logmsg('root: "' . $root . '"');
         $source_rel = self::getRelativeDirectory($root, $abs_path);
-      //  self::logmsg('Relative path of source (calculated): "' . $source_rel . '"');
+        //  self::logmsg('Relative path of source (calculated): "' . $source_rel . '"');
         if (preg_match('/\.\.\//', $source_rel)) {
-        // self::logmsg('<b>Note</b>: path is outside document root. You are allowed to, but its unusual setup. When used to calculate destination folder, the "../"s will be removed');
+            // self::logmsg('<b>Note</b>: path is outside document root. You are allowed to, but its unusual setup. When used to calculate destination folder, the "../"s will be removed');
         }
         return $source_rel;
     }
@@ -157,7 +156,6 @@ class WebPConvertPathHelper
      */
     public static function get_destination_path($source, $destination_root = '', $root = null)
     {
-
         if (!isset($root)) {
             $root = $_SERVER['DOCUMENT_ROOT'];
         }
@@ -168,7 +166,7 @@ class WebPConvertPathHelper
 
         // Step 2: Get absolute destination root
         if ((substr($destination_root, 0, 1) == '/')) {
-          // Its already an absolute path. Do nothing
+            // Its already an absolute path. Do nothing
         } else {
             $destination_root = self::replaceBackslashes($destination_root);
             if ($destination_root == '') {
@@ -177,7 +175,7 @@ class WebPConvertPathHelper
             $destination_root = self::canonicalize(self::removeDoubleslash($root . '/' . $destination_root));
         }
 
-          // Step 3: Put the two together, and append ".wepb"
-          return self::canonicalize(self::removeDoubleslash($destination_root . '/' . preg_replace('/\.\.\//', '', $source_rel) . '.webp'));
+        // Step 3: Put the two together, and append ".wepb"
+        return self::canonicalize(self::removeDoubleslash($destination_root . '/' . preg_replace('/\.\.\//', '', $source_rel) . '.webp'));
     }
 }

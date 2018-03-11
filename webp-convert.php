@@ -11,9 +11,10 @@ include __DIR__ . '/WebPConvertPathHelper.php';
  * convertion process. You can also assign a value. Any value but "no"
  * counts as yes.
 */
-$serve_converted_image = (isset($_GET['serve-image'])
-  ? ($_GET['serve-image'] != 'no')
-  : false
+$serve_converted_image = (
+    isset($_GET['serve-image'])
+    ? ($_GET['serve-image'] != 'no')
+    : false
 );
 
 /*
@@ -22,9 +23,10 @@ $serve_converted_image = (isset($_GET['serve-image'])
  * 1) It will always return text (serve-image setting is overriden)
  * 2) PHP error reporting is turned on
 */
-$debug = (isset($_GET['debug'])
-  ? ($_GET['debug'] != 'no')
-  : false
+$debug = (
+    isset($_GET['debug'])
+    ? ($_GET['debug'] != 'no')
+    : false
 );
 if ($debug) {
     $serve_converted_image = false;
@@ -43,7 +45,8 @@ if ($debug) {
  * the relative path. For example, an .htaccess located in a subfolder may
  * have trouble passing the parent folders.
 */
-$root = (isset($_GET['root-folder'])
+$root = (
+    isset($_GET['root-folder'])
   ? WebPConvertPathHelper::remove_double_slash($_SERVER['DOCUMENT_ROOT'] . '/' . $_GET['root-folder'])
   : null
 );
@@ -86,9 +89,10 @@ $destination = WebPConvertPathHelper::get_destination_path($source, isset($_GET[
  * $quality:
  * The quality of the generated WebP image, from 0 (lowest) to 100 (highest)
 */
-$quality = (isset($_GET['quality'])
-  ? intval($_GET['quality'])
-  : 85
+$quality = (
+    isset($_GET['quality'])
+    ? intval($_GET['quality'])
+    : 85
 );
 
 /*
@@ -98,9 +102,10 @@ $quality = (isset($_GET['quality'])
  * supports copying metadata. cwebp supports it, imagewebp does not. You can
  * also assign a value. Any value but "no" counts as yes
 */
-$strip_metadata = (isset($_GET['strip-metadata'])
-  ? ($_GET['strip-metadata'] != 'no')
-  : false
+$strip_metadata = (
+    isset($_GET['strip-metadata'])
+    ? ($_GET['strip-metadata'] != 'no')
+    : false
 );
 
 /*
@@ -112,9 +117,10 @@ $strip_metadata = (isset($_GET['strip-metadata'])
  * will be the next converter to try, if cwebp fails. The option will not
  * remove any converters from the list, only change the order.
 */
-$preferred_converters = (isset($_GET['preferred-converters'])
-  ? explode(',', $_GET['preferred-converters'])
-  : array()
+$preferred_converters = (
+    isset($_GET['preferred-converters'])
+    ? explode(',', $_GET['preferred-converters'])
+    : array()
 );
 //$preferred_converters = array('imagewebp', 'cwebp');
 
@@ -143,9 +149,10 @@ define("WEBPCONVERT_IMAGICK_METHOD", WEBPCONVERT_CWEBP_METHOD);
  * production servers, but not on development servers. If set to "no",
  * WebPConvert will instead generate an image containing the error message.
 */
-WebPConvert::$serve_original_image_on_fail = (isset($_GET['serve-original-image-on-fail'])
-  ? ($_GET['serve-original-image-on-fail'] != 'no')
-  : true
+WebPConvert::$serve_original_image_on_fail = (
+    isset($_GET['serve-original-image-on-fail'])
+    ? ($_GET['serve-original-image-on-fail'] != 'no')
+    : true
 );
 WebPConvert::$serve_converted_image = $serve_converted_image;
 WebPConvert::set_preferred_converters($preferred_converters);
