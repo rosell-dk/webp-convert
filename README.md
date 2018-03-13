@@ -173,11 +173,5 @@ The cloud service supports other options, which can easily be implemented, if th
 
 The converter could be improved by using *fsockopen* if *curl* is not available. This is however low priority as the curl extension is available on most shared hosts. PHP >= 5.5 is also widely available (PHP 5.4 reached end of life [more than a year ago!](http://php.net/supported-versions.php)).
 
-
-
-## SECURITY
-TODO! - The script does not currently sanitize values.
-
 ## Roadmap
-* Sanitize
 * gd should not convert png, unless option set to do so
