@@ -60,7 +60,7 @@ A converter simply consists of a convert function, which takes same arguments as
 - *WebPConvert* checks that it will be possible to write a file at the destination
 - *WebPConvert* checks whether the converter actually produced a file at the destination
 
-Basically there are three types of converters. 
+Basically there are three types of converters.
 1. Those that are based on a php extension (for example gd or imagick)
 2. Those that executes a binary directly using an exec() call
 3. Those that connect to a cloud service which does the conversion
@@ -94,7 +94,7 @@ In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
 2. [Compile imagemagick from source](https://www.imagemagick.org/script/install-source.php) (```./configure --with-webp=yes```)
 3. Compile php-imagick from source, phpize it and add ```extension=/path/to/imagick.so``` to php.ini
 
-#### gd 
+#### gd
 *Fast. But not good for PNG's*
 
 ```Requirements..```: GD extension and PHP > 5.5.0 compiled with WebP support<br>
@@ -115,7 +115,7 @@ Converter options:
 
 To get WebP support for *gd* in PHP 5.5, PHP must be configured with the "--with-vpx-dir" flag. In PHP 7.0, php has to be configured with the "--with-webp-dir" flag [source](http://il1.php.net/manual/en/image.installation.php).
 
-#### cwebp 
+#### cwebp
 *Great, fast enough but requires exec()*
 
 ```Requirements..```: exec()<br>
@@ -123,7 +123,7 @@ To get WebP support for *gd* in PHP 5.5, PHP must be configured with the "--with
 ```Reliability...```: Great<br>
 ```Availability..```: exec() is available on surprisingly many webhosts, and the PHP solution by *EWWW Image Optimizer*, which this code is largely based on has been reported to work on many webhosts - [here is a list](https://wordpress.org/plugins/ewww-image-optimizer/#installation)<br>
 
-[cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP convertion command line converter released by Google. A its core, our implementation looks in the /bin folder for a precompiled binary appropriate for the OS and executes it with [exec()](http://php.net/manual/en/function.exec.php). Thanks to Shane Bishop for letting me copy his precompilations which comes with his plugin, [EWWW Image Optimizer](https://ewww.io/). 
+[cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP convertion command line converter released by Google. A its core, our implementation looks in the /bin folder for a precompiled binary appropriate for the OS and executes it with [exec()](http://php.net/manual/en/function.exec.php). Thanks to Shane Bishop for letting me copy his precompilations which comes with his plugin, [EWWW Image Optimizer](https://ewww.io/).
 
 The converter supports:
 - lossless encoding of PNG's.
@@ -173,37 +173,7 @@ The cloud service supports other options, which can easily be implemented, if th
 
 The converter could be improved by using *fsockopen* if *curl* is not available. This is however low priority as the curl extension is available on most shared hosts. PHP >= 5.5 is also widely available (PHP 5.4 reached end of life [more than a year ago!](http://php.net/supported-versions.php)).
 
-## The script
-*webp-convert.php* can be used to serve converted images, or just convert without serving. It accepts the following parameters in the URL:
 
-*source:*\
-Path to source file. Can be absolute or relative (relative to document root). If it starts with "/", it is considered an absolute path.
-
-*destination-root (optional):*\
-The final destination will be calculated like this: [desired destination root] + [relative path of source file] + ".webp". If you want converted files to be put in the same folder as the originals, you can set destination-root to ".", or leave it blank. If you on the other hand want all converted files to reside in their own folder, set the destination-root to point to that folder. The converted files will be stored in a hierarchy that matches the source files. With destination-root set to "webp-cache", the source file "images/2017/cool.jpg" will be stored at "webp-cache/images/2017/cool.jpg.webp". Both absolute paths and relative paths are accepted (if the path starts with "/", it is considered an absolute path). Double-dots in paths are allowed, ie "../webp-cache"
-
-*quality:*\
-The quality of the generated WebP image, 0-100.
-
-*strip-metadata:*\
-If set (if "&strip-metadata" is appended to the url), metadata will not be copied over in the conversion process. Note however that not all converters supports copying metadata. cwebp supports it, imagewebp does not. You can also assign a value. Any value but "no" counts as yes
-
-*preferred-converters (optional):*\
-Setting this manipulates the default order in which the converters are tried. If you for example set it to "cwebp", it means that you want "cwebp" to be tried first. You can specify several favourite converters. Setting it to "cwebp,imagewebp" will put cwebp to the top of the list and imagewebp will be the next converter to try, if cwebp fails. The option will not remove any converters from the list, only change the order.
-
-*serve-image (optional):*\
-If set (if "&serve-image" is appended to the URL), the converted image will be served. Otherwise the script will produce text output about the convertion process. You can also assign a value. Any value but "no" counts as yes. Note: If debug is enabled, text will always be output
-
-*debug (optional):*\
-Enabling debug has two functions:\
-1) It will always return text (serve-image setting is overriden)
-2) PHP error reporting is turned on
-
-*serve-original-image-on-fail (optional):*\
-Default: "yes". Decides what action to take in the situation that (1) all converters fails to convert the image, and (2) WebPConvert is told to serve the converted image. the original image. Default action is to serve the *original* image. End-users will not notice the fail, which is good on production servers, but not on development servers. If set to "no", WebPConvert will instead generate an image containing the error message.
-
-## WebPConvertPathHelper
-This helper is used by the script in order to make it accept relative urls and to operate with a "destination root". You will probably not need it, but in case you are interested, it is documented [here, on the wiki](https://github.com/rosell-dk/webp-convert/wiki/WebPConvertPathHelper)
 
 ## SECURITY
 TODO! - The script does not currently sanitize values.
