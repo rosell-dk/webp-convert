@@ -1,6 +1,6 @@
 {
   "name": "rosell-dk/webp-convert",
-  "description": "Convert jpeg/png to webp with PHP",
+  "description": "Convert JPEG & PNG to WebP with PHP",
   "type": "library",
   "license": "MIT",
   "keywords": ["webp", "images", "cwebp", "imagick", "gd", "jpg2webp", "png2webp", "jpg", "png", "image conversion"],
