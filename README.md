@@ -12,7 +12,7 @@ Currently the following converters are available:
 | [imagick](#imagick)  | Uses Imagick extension                   | Best converter, but rarely available on shared hosts |
 | [gd](#gd)            | Uses GD Graphics extension               | Fast, but unable to do lossless encoding             |
 | [cwebp](#cwebp)      | Calls cwebp binary directly              | Great, but requires ```exec()```                     |
-| [ewww](#ewww)        | Calls EWWW Image Optimizer cloud service | Works on *almost* any shared host; slow, cheap, requires key |
+| [ewww](#ewww)        | Calls EWWW Image Optimizer cloud service | Works on *almost* any shared host; slow, cheap, requires key. SEEMS TO BE OUT OF ORDER |
 
 ## Usage
 
@@ -153,7 +153,7 @@ In more detail, the implementation does this:
 Credits also goes to Shane regarding the code that revolves around the exec(). Most of it is a refactoring of the code in [EWWW Image Optimizer](https://ewww.io/).
 
 #### ewww
-*Cheap cloud service. Should work on *almost* any webhost. But slow.*
+*Cheap cloud service. Should work on *almost* any webhost. But slow. SEEMS TO BE OUT OF ORDER*
 
 ```Requirements..```: A valid key to [EWWW Image Optimizer](https://ewww.io/), curl and PHP >= 5.5<br>
 ```Speed.........```: Around 1300 ms to convert a 40kb image<br>
