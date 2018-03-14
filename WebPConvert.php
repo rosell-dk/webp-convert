@@ -24,7 +24,23 @@ class WebPConvert
         }
     }
 
-    // Critical fail - when we can't even serve the source as fallback
+    /*
+    We distinguish between "Critical fail" and "Normal fails".
+    Both types of fails means that the conversion fails.
+
+    The distinction has to do with whether it will be possible to serve the source as fallback
+    A "critical" fail is when that aren't possible.
+
+    We have two error functions:
+    - cfail() will output an image with the error message, when $serve_converted_image is set. Otherwise, it will output plain text
+      so cfail() never tries to serve the source as fallback
+    - fail() will output the file supplied as source, when $serve_original_image_on_fail is set.
+      (regardless of whether that exists or not).
+      If not set to serve original image, it will output the error either as an image or plain text (it calls cfail)
+
+    So, to sum up, cfail() must be called when we know we cannot serve the source as fallback
+    Otherwise, call fail().
+    */
     private static function cfail($msg)
     {
         if (!WebPConvert::$serve_converted_image) {
@@ -45,21 +61,29 @@ class WebPConvert
         }
     }
 
+    // "Normal fail". Ie, fails
     private static function fail($msg)
     {
-        self::logmsg($msg);
-        if (WebPConvert::$serve_converted_image && WebPConvert::$serve_original_image_on_fail) {
-            $ext = array_pop(explode('.', WebPConvert::$current_conversion_vars['source']));
-            switch (strtolower($ext)) {
-                case 'jpg':
-                case 'jpeg':
-                    header('Content-type: image/jpeg');
-                    break;
-                case 'png':
-                    header('Content-type: image/png');
-                    break;
+        if (WebPConvert::$serve_converted_image) {
+            if (WebPConvert::$serve_original_image_on_fail) {
+              $ext = array_pop(explode('.', WebPConvert::$current_conversion_vars['source']));
+              switch (strtolower($ext)) {
+                  case 'jpg':
+                  case 'jpeg':
+                      header('Content-type: image/jpeg');
+                      break;
+                  case 'png':
+                      header('Content-type: image/png');
+                      break;
+              }
+              readfile(WebPConvert::$current_conversion_vars['source']);
             }
-            readfile(WebPConvert::$current_conversion_vars['source']);
+            else {
+              self::cfail($msg);
+            }
+        }
+        else {
+          self::logmsg($msg);
         }
     }
 
