@@ -66,24 +66,22 @@ class WebPConvert
     {
         if (WebPConvert::$serve_converted_image) {
             if (WebPConvert::$serve_original_image_on_fail) {
-              $ext = array_pop(explode('.', WebPConvert::$current_conversion_vars['source']));
-              switch (strtolower($ext)) {
-                  case 'jpg':
-                  case 'jpeg':
-                      header('Content-type: image/jpeg');
-                      break;
-                  case 'png':
-                      header('Content-type: image/png');
-                      break;
-              }
-              readfile(WebPConvert::$current_conversion_vars['source']);
+                $ext = array_pop(explode('.', WebPConvert::$current_conversion_vars['source']));
+                switch (strtolower($ext)) {
+                    case 'jpg':
+                    case 'jpeg':
+                        header('Content-type: image/jpeg');
+                        break;
+                    case 'png':
+                        header('Content-type: image/png');
+                        break;
+                }
+                readfile(WebPConvert::$current_conversion_vars['source']);
+            } else {
+                self::cfail($msg);
             }
-            else {
-              self::cfail($msg);
-            }
-        }
-        else {
-          self::logmsg($msg);
+        } else {
+            self::logmsg($msg);
         }
     }
 
