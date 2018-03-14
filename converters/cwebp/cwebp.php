@@ -1,5 +1,22 @@
 <?php
 
+/* Helper */
+function webpconvert_cwebp_esc_filename($string)
+{
+    // esc whitespace
+    $string = preg_replace('/\s/', '\\ ', $string);
+
+    // esc quotes (but it fails anyway...)
+    $string = filter_var($string, FILTER_SANITIZE_MAGIC_QUOTES);
+
+    // strip control characters
+    // https://stackoverflow.com/questions/12769462/filter-flag-strip-low-vs-filter-flag-strip-high
+    $string = filter_var($string, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW);
+
+
+    return $string;
+}
+
 function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
 {
     if (!function_exists('exec')) {
@@ -49,22 +66,6 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
         WebPConvert::logmsg('Not able to use supplied bin. ' . $supplied_bin_error);
     }
 
-    function esc_filename($string)
-    {
-        // esc whitespace
-        $string = preg_replace('/\s/', '\\ ', $string);
-
-        // esc quotes (but it fails anyway...)
-        $string = filter_var($string, FILTER_SANITIZE_MAGIC_QUOTES);
-
-        // strip control characters
-        // https://stackoverflow.com/questions/12769462/filter-flag-strip-low-vs-filter-flag-strip-high
-        $string = filter_var($string, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW);
-
-
-        return $string;
-    }
-
     // Build options string
     $options = '-q ' . $quality;
     $options .= (
@@ -100,7 +101,7 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
     //$options .= ' -low_memory';
 
     // $options .= ' -quiet';
-    $options .= ' ' . esc_filename($source) . ' -o ' . esc_filename($destination) . ' 2>&1';
+    $options .= ' ' . webpconvert_cwebp_esc_filename($source) . ' -o ' . webpconvert_cwebp_esc_filename($destination) . ' 2>&1';
 
     // Test if "nice" is available
     // ($nice will be set to "nice ", if it is)

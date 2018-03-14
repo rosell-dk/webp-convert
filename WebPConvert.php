@@ -75,6 +75,14 @@ class WebPConvert
       @param (bool) $strip_metadata (optional): Whether or not to strip metadata. Default is to strip. Not all converters supports this
     */
 
+    // "dirname", but which doesn't localization
+    private static function stripFilenameFromPath($path_with_filename)
+    {
+        $parts = explode('/', $path_with_filename);
+        array_pop($parts);
+        return implode('/', $parts);
+    }
+
     public static function convert($source, $destination, $quality = 85, $strip_metadata = true)
     {
         // $newstr = filter_var($source, FILTER_SANITIZE_STRING);
@@ -97,14 +105,6 @@ class WebPConvert
             ini_set('display_errors', 'Off');
         }
 
-        // "dirname", but which doesn't localization
-        function stripFilenameFromPath($path_with_filename)
-        {
-            $parts = explode('/', $path_with_filename);
-            array_pop($parts);
-            return implode('/', $parts);
-        }
-
         // Test if file extension is valid
         $parts = explode('.', $source);
         $ext = array_pop($parts);
@@ -121,7 +121,7 @@ class WebPConvert
         }
 
         // Prepare destination folder
-        $destination_folder = stripFilenameFromPath($destination);
+        $destination_folder = self::stripFilenameFromPath($destination);
 
         if (!file_exists($destination_folder)) {
             self::logmsg('We need to create destination folder');
