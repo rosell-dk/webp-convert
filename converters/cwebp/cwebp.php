@@ -145,7 +145,7 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
         } else {
             // If supplied bin failed, log some information
             if (($i == 0) && ($supplied_bin_error == '')) {
-                $msg = 'Supplied binary found, but it exited with error code ' . $return_var . '. ';
+                $msg = '<b>Supplied binary found, but it exited with error code ' . $return_var . '. </b>';
                 switch ($return_var) {
                     case 127:
                         $msg .= 'This probably means that the binary was not found. ';
