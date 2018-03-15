@@ -28,7 +28,7 @@ $strip_metadata = true;
 
 WebPConvert::$serve_converted_image = true;
 WebPConvert::$serve_original_image_on_fail = true;
-WebPConvert::set_preferred_converters(array('imagick','cwebp'));
+WebPConvert::setPreferredConverters(array('imagick','cwebp'));
 WebPConvert::convert($source, $destination, $quality, $strip_metadata);
 ```
 
@@ -41,7 +41,7 @@ WebPConvert::convert($source, $destination, $quality, $strip_metadata);
 - *$quality* (integer) Desired quality of output. Only relevant when source is a JPEG image. If source is a PNG, lossless encoding will be chosen.\
 - *$strip_metadata* (bool) Whether to copy JPEG metadata to WebP (not all converters supports this)\
 
-*WebPConvert::set_preferred_converters*\ (array)
+*WebPConvert::setPreferredConverters*\ (array)
 Setting this manipulates the default order in which the converters are tried. If you for example set it to `cwebp`, it means that you want `cwebp` to be tried first. You can specify several favourite converters. Setting it to `imagick, cwebp` will put `imagick` to the top of the list and `cwebp` will be the next converter to try, if `imagick` fails. The option will not remove any converters from the list, only change the order.
 
 *WebPConvert::$serve_converted_image* (bool)\

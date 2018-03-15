@@ -85,7 +85,7 @@ class WebPConvert
         }
     }
 
-    public static function set_preferred_converters($preferred_converters)
+    public static function setPreferredConverters($preferred_converters)
     {
         self::$preferred_converters = $preferred_converters;
     }
