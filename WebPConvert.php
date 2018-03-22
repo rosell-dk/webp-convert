@@ -215,7 +215,7 @@ class WebPConvert
         }
 
         foreach (self::$preferred_converters as $converter) {
-            $filename = __DIR__ . '/converters/' . $converter . '/' . $converter . '.php';
+            $filename = __DIR__ . '/Converters/' . $converter . '/' . $converter . '.php';
             if (file_exists($filename)) {
                 $converters[] = $converter;
             } else {
@@ -225,8 +225,8 @@ class WebPConvert
 
         // Add converters in the converters dir.
         // - Convention is that the name of the converter equals the dir name
-        foreach (scandir(__DIR__ . '/converters') as $file) {
-            if (is_dir('converters/' . $file)) {
+        foreach (scandir(__DIR__ . '/Converters') as $file) {
+            if (is_dir('Converters/' . $file)) {
                 if ($file == '.') {
                     continue;
                 }
@@ -247,7 +247,7 @@ class WebPConvert
         foreach ($converters as $converter) {
             self::logMessage('<br>trying <b>' . $converter . '</b>');
 
-            $filename = __DIR__ . '/converters/' . $converter . '/' . $converter . '.php';
+            $filename = __DIR__ . '/Converters/' . $converter . '/' . $converter . '.php';
             self::logMessage('including converter at: "' . $filename . '"');
 
             include_once($filename);
