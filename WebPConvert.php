@@ -14,7 +14,7 @@ class WebPConvert
     {
         // http://php.net/manual/en/filter.filters.sanitize.php
 
-        if (!WebPConvert::$serve_converted_image) {
+        if (!self::$serve_converted_image) {
             // First fully encode (safety first)
             $html_encoded = filter_var($msg, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
@@ -45,7 +45,7 @@ class WebPConvert
     // Critical errors
     private static function criticalError($msg)
     {
-        if (!WebPConvert::$serve_converted_image) {
+        if (!self::$serve_converted_image) {
             echo $msg;
         } else {
             header('Content-type: image/gif');
@@ -66,9 +66,9 @@ class WebPConvert
     // Normal errors
     private static function normalError($msg)
     {
-        if (WebPConvert::$serve_converted_image) {
-            if (WebPConvert::$serve_original_image_on_fail) {
-                $ext = array_pop(explode('.', WebPConvert::$current_conversion_vars['source']));
+        if (self::$serve_converted_image) {
+            if (self::$serve_original_image_on_fail) {
+                $ext = array_pop(explode('.', self::$current_conversion_vars['source']));
                 switch (strtolower($ext)) {
                     case 'jpg':
                     case 'jpeg':
@@ -78,7 +78,7 @@ class WebPConvert
                         header('Content-type: image/png');
                         break;
                 }
-                readfile(WebPConvert::$current_conversion_vars['source']);
+                readfile(self::$current_conversion_vars['source']);
             } else {
                 self::criticalError($msg);
             }
@@ -112,16 +112,16 @@ class WebPConvert
         // $newstr = filter_var($source, FILTER_SANITIZE_STRING);
         // $source = filter_var($source, FILTER_SANITIZE_MAGIC_QUOTES);
 
-        self::logMessage('WebPConvert::convert() called');
+        self::logMessage('self::convert() called');
         self::logMessage('- source: ' . $source);
         self::logMessage('- destination: ' . $destination);
         self::logMessage('- quality: ' . $quality);
         self::logMessage('- strip_metadata: ' . ($strip_metadata ? 'true' : 'false'));
         self::logMessage();
 
-        WebPConvert::$current_conversion_vars = array();
-        WebPConvert::$current_conversion_vars['source'] =  $source;
-        WebPConvert::$current_conversion_vars['destination'] =  $destination;
+        self::$current_conversion_vars = array();
+        self::$current_conversion_vars['source'] =  $source;
+        self::$current_conversion_vars['destination'] =  $destination;
 
         if (self::$serve_converted_image) {
             // If set to serve image, textual content will corrupt the image
