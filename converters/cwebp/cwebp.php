@@ -1,7 +1,7 @@
 <?php
 
 /* Helper */
-function webpconvert_cwebp_esc_filename($string)
+function escapeFilename($string)
 {
     // esc whitespace
     $string = preg_replace('/\s/', '\\ ', $string);
@@ -63,7 +63,7 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
     if ($supplied_bin_error == '') {
         array_unshift($paths_to_test, $bin);
     } else {
-        WebPConvert::logmsg('Not able to use supplied bin. ' . $supplied_bin_error);
+        WebPConvert::logMessage('Not able to use supplied bin. ' . $supplied_bin_error);
     }
 
     // Build options string
@@ -101,7 +101,7 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
     //$options .= ' -low_memory';
 
     // $options .= ' -quiet';
-    $options .= ' ' . webpconvert_cwebp_esc_filename($source) . ' -o ' . webpconvert_cwebp_esc_filename($destination) . ' 2>&1';
+    $options .= ' ' . escapeFilename($source) . ' -o ' . escapeFilename($destination) . ' 2>&1';
 
     // Test if "nice" is available
     // ($nice will be set to "nice ", if it is)
@@ -116,12 +116,12 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
             $nice = 'nice ';
         }
     }
-    WebPConvert::logmsg('parameters:' . $options);
+    WebPConvert::logMessage('parameters:' . $options);
 
     // Try all paths
     $success = false;
     foreach ($paths_to_test as $i => $bin) {
-        WebPConvert::logmsg('trying to execute binary: ' . $bin);
+        WebPConvert::logMessage('trying to execute binary: ' . $bin);
 
         $cmd = $nice . $bin . ' ' . $options;
 
@@ -156,7 +156,7 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
                         break;
                 }
                 $msg .= 'Output was: ' . print_r($output, true);
-                WebPConvert::logmsg($msg);
+                WebPConvert::logMessage($msg);
             }
         }
     }

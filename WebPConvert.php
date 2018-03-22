@@ -10,7 +10,7 @@ class WebPConvert
     public static $current_conversion_vars;
 
     // Little helper
-    public static function logmsg($msg = '')
+    public static function logMessage($msg = '')
     {
         // http://php.net/manual/en/filter.filters.sanitize.php
 
@@ -25,23 +25,25 @@ class WebPConvert
     }
 
     /*
-    We distinguish between "Critical fail" and "Normal fails".
+    We distinguish between "critical errors" and "normal errors".
     Both types of fails means that the conversion fails.
 
     The distinction has to do with whether it will be possible to serve the source as fallback
     A "critical" fail is when that aren't possible.
 
     We have two error functions:
-    - cfail() will output an image with the error message, when $serve_converted_image is set. Otherwise, it will output plain text
-      so cfail() never tries to serve the source as fallback
-    - fail() will output the file supplied as source, when $serve_original_image_on_fail is set.
+    - criticalError() will output an image with the error message, when $serve_converted_image is set. Otherwise, it will output plain text
+      so criticalError() never tries to serve the source as fallback
+    - normalError() will output the file supplied as source, when $serve_original_image_on_fail is set.
       (regardless of whether that exists or not).
-      If not set to serve original image, it will output the error either as an image or plain text (it calls cfail)
+      If not set to serve original image, it will output the error either as an image or plain text (it calls criticalError())
 
-    So, to sum up, cfail() must be called when we know we cannot serve the source as fallback
-    Otherwise, call fail().
+    So, to sum up, criticalError() must be called when we know we cannot serve the source as fallback
+    Otherwise, call normalError().
     */
-    private static function cfail($msg)
+
+    // Critical errors
+    private static function criticalError($msg)
     {
         if (!WebPConvert::$serve_converted_image) {
             echo $msg;
@@ -61,8 +63,8 @@ class WebPConvert
         }
     }
 
-    // "Normal fail". Ie, fails
-    private static function fail($msg)
+    // Normal errors
+    private static function normalError($msg)
     {
         if (WebPConvert::$serve_converted_image) {
             if (WebPConvert::$serve_original_image_on_fail) {
@@ -78,10 +80,10 @@ class WebPConvert
                 }
                 readfile(WebPConvert::$current_conversion_vars['source']);
             } else {
-                self::cfail($msg);
+                self::criticalError($msg);
             }
         } else {
-            self::logmsg($msg);
+            self::logMessage($msg);
         }
     }
 
@@ -90,7 +92,7 @@ class WebPConvert
         self::$preferred_converters = $preferred_converters;
     }
 
-    /**
+    /*
       @param (string) $source: Absolute path to image to be converted (no backslashes). Image must be jpeg or png
       @param (string) $destination: Absolute path (no backslashes)
       @param (int) $quality (optional): Quality of converted file (0-100)
@@ -110,12 +112,12 @@ class WebPConvert
         // $newstr = filter_var($source, FILTER_SANITIZE_STRING);
         // $source = filter_var($source, FILTER_SANITIZE_MAGIC_QUOTES);
 
-        self::logmsg('WebPConvert::convert() called');
-        self::logmsg('- source: ' . $source);
-        self::logmsg('- destination: ' . $destination);
-        self::logmsg('- quality: ' . $quality);
-        self::logmsg('- strip_metadata: ' . ($strip_metadata ? 'true' : 'false'));
-        self::logmsg();
+        self::logMessage('WebPConvert::convert() called');
+        self::logMessage('- source: ' . $source);
+        self::logMessage('- destination: ' . $destination);
+        self::logMessage('- quality: ' . $quality);
+        self::logMessage('- strip_metadata: ' . ($strip_metadata ? 'true' : 'false'));
+        self::logMessage();
 
         WebPConvert::$current_conversion_vars = array();
         WebPConvert::$current_conversion_vars['source'] =  $source;
@@ -132,13 +134,13 @@ class WebPConvert
         $ext = array_pop($parts);
 
         if (!in_array(strtolower($ext), array('jpg', 'jpeg', 'png'))) {
-            self::cfail("Unsupported file extension: " . $ext);
+            self::criticalError("Unsupported file extension: " . $ext);
             return;
         }
 
         // Test if source file exists
         if (!file_exists($source)) {
-            self::cfail("Source file not found: " . $source);
+            self::criticalError("Source file not found: " . $source);
             return;
         }
 
@@ -146,7 +148,7 @@ class WebPConvert
         $destination_folder = self::stripFilenameFromPath($destination);
 
         if (!file_exists($destination_folder)) {
-            self::logmsg('We need to create destination folder');
+            self::logMessage('We need to create destination folder');
 
             // Find out which permissions to set.
             // We want same permissions as parent folder
@@ -160,21 +162,21 @@ class WebPConvert
             }
             $closest_existing_folder = implode('/', $parent_folders);
 
-            self::logmsg('Using permissions of closest existing folder (' . $closest_existing_folder . ')');
+            self::logMessage('Using permissions of closest existing folder (' . $closest_existing_folder . ')');
             $perms = fileperms($closest_existing_folder) & 000777;
-            self::logmsg('Permissions are: 0' . decoct($perms));
+            self::logMessage('Permissions are: 0' . decoct($perms));
 
             if (!mkdir($destination_folder, $perms, true)) {
-                self::fail('Failed creating folder:' . $folder);
+                self::normalError('Failed creating folder:' . $folder);
                 return;
             };
-            self::logmsg('Folder created successfully');
+            self::logMessage('Folder created successfully');
 
             // alas, mkdir does not respect $perms. We have to chmod each created subfolder
             $path = $closest_existing_folder;
             foreach ($popped_folders as $subfolder) {
                 $path .= '/' . $subfolder;
-                self::logmsg('chmod 0' . decoct($perms) . ' ' . $path);
+                self::logMessage('chmod 0' . decoct($perms) . ' ' . $path);
                 chmod($path, $perms);
             }
         }
@@ -182,12 +184,12 @@ class WebPConvert
         // Test if it will be possible to write file
         if (file_exists($destination)) {
             if (!is_writable($destination)) {
-                self::fail('Cannot overwrite file: ' . $destination . '. Check the file permissions.');
+                self::normalError('Cannot overwrite file: ' . $destination . '. Check the file permissions.');
                 return;
             }
         } else {
             if (!is_writable($destination_folder)) {
-                self::fail('Cannot write file: ' . $destination . '. Check the folder permissions.');
+                self::normalError('Cannot write file: ' . $destination . '. Check the folder permissions.');
                 return;
             }
         }
@@ -196,9 +198,9 @@ class WebPConvert
         // (actually it seems the current converters can handle that, but maybe not future converters)
         if (file_exists($destination)) {
             if (unlink($destination)) {
-                self::logmsg('Destination file already exists... - removed');
+                self::logMessage('Destination file already exists... - removed');
             } else {
-                self::logmsg('Destination file already exists. Could not remove it');
+                self::logMessage('Destination file already exists. Could not remove it');
             }
         }
 
@@ -207,9 +209,9 @@ class WebPConvert
 
         // Add preferred converters
         if (count(self::$preferred_converters) > 0) {
-            self::logmsg('Preferred converters was set to: ' . implode(', ', self::$preferred_converters));
+            self::logMessage('Preferred converters was set to: ' . implode(', ', self::$preferred_converters));
         } else {
-            self::logmsg('No preferred converters was set. Converters will be tried in default order');
+            self::logMessage('No preferred converters was set. Converters will be tried in default order');
         }
 
         foreach (self::$preferred_converters as $converter) {
@@ -217,7 +219,7 @@ class WebPConvert
             if (file_exists($filename)) {
                 $converters[] = $converter;
             } else {
-                self::logmsg('<b>the converter "' . $converter . '" that was set as a preferred converter was not found at: "' . $filename . '".</b>');
+                self::logMessage('<b>the converter "' . $converter . '" that was set as a preferred converter was not found at: "' . $filename . '".</b>');
             }
         }
 
@@ -239,43 +241,43 @@ class WebPConvert
             }
         }
 
-        self::logmsg('Order of converters to be tried: <i>' . implode('</i>, <i>', $converters) . '</i>');
+        self::logMessage('Order of converters to be tried: <i>' . implode('</i>, <i>', $converters) . '</i>');
 
         $success = false;
         foreach ($converters as $converter) {
-            self::logmsg('<br>trying <b>' . $converter . '</b>');
+            self::logMessage('<br>trying <b>' . $converter . '</b>');
 
             $filename = __DIR__ . '/converters/' . $converter . '/' . $converter . '.php';
-            self::logmsg('including converter at: "' . $filename . '"');
+            self::logMessage('including converter at: "' . $filename . '"');
 
             include_once($filename);
 
             if (!function_exists('webpconvert_' . $converter)) {
-                self::logmsg('converter not useable - it does not define a function " . $converter . "');
+                self::logMessage('converter not useable - it does not define a function " . $converter . "');
                 continue;
             }
 
             $time_start = microtime(true);
             $result = call_user_func('webpconvert_' . $converter, $source, $destination, $quality, $strip_metadata);
             $time_end = microtime(true);
-            self::logmsg('execution time: ' . round(($time_end - $time_start) * 1000) . ' ms');
+            self::logMessage('execution time: ' . round(($time_end - $time_start) * 1000) . ' ms');
 
             if ($result === true) {
-                self::logmsg('success!');
+                self::logMessage('success!');
                 $success = true;
                 break;
             } else {
-                self::logmsg($result);
+                self::logMessage($result);
             }
         }
 
         if (!$success) {
-            self::fail('No converters could convert file: ' . $source);
+            self::normalError('No converters could convert file: ' . $source);
             return;
         }
 
         if (!file_exists($destination)) {
-            self::fail('Failed saving image to path: ' . $destination);
+            self::normalError('Failed saving image to path: ' . $destination);
             return;
         }
 
