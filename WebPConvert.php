@@ -223,12 +223,12 @@ class WebPConvert
             }
         }
 
-        // Add converters in the converters dir.
-        // - Convention is that the name of the converter equals the dir name
+        // Save converters in the `Converters` directory to array ..
         $files = array_filter(scandir(__DIR__ . '/Converters'), function ($file) {
             return is_file($file);
         });
 
+        // .. and merge it with the $converters array, keeping the updated order of execution
         foreach ($files as $file) {
             if (is_dir('Converters/' . $file)) {
                 if ($file == '.') {
