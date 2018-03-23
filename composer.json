@@ -5,7 +5,7 @@
   "license": "MIT",
   "keywords": ["webp", "images", "cwebp", "imagick", "gd", "jpg2webp", "png2webp", "jpg", "png", "image conversion"],
   "autoload": {
-    "psr-0": { "WebPConvert": "" }
+    "psr-4": { "WebPConvert\\": "" }
   },
   "authors": [
     {
