@@ -45,7 +45,7 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
     if (!$binary) {
         $supplied_bin_error = 'We do not have a supplied bin for your OS (' . PHP_OS . ')';
     } else {
-        $bin = __DIR__ . '/bin/' . $binary[0];
+        $bin = __DIR__ . '/Binaries/' . $binary[0];
         if (!file_exists($bin)) {
             $supplied_bin_error = 'bin file missing ( ' . $bin . ')';
         } else {

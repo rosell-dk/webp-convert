@@ -1,5 +1,7 @@
 <?php
 
+// namespace WebPConvert\Converters\ewww;
+
 function webpconvert_ewww($source, $destination, $quality, $strip_metadata)
 {
     if (!extension_loaded('curl')) {

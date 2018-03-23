@@ -1,5 +1,7 @@
 <?php
 
+// namespace WebPConvert\Converters\imagick;
+
 function webpconvert_imagick($source, $destination, $quality, $strip_metadata)
 {
     if (!extension_loaded('imagick')) {

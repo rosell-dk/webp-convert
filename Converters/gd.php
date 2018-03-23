@@ -1,5 +1,7 @@
 <?php
 
+// namespace WebPConvert\Converters\gd;
+
 function webpconvert_gd($source, $destination, $quality, $strip_metadata)
 {
     if (!extension_loaded('gd')) {
