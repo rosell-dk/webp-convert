@@ -137,8 +137,8 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
 
             // Set correct file permissions.
             $stat = stat(dirname($destination));
-            $perms = $stat['mode'] & 0000666; // Same permissions as parent folder, strip off the executable bits.
-            chmod($destination, $perms);
+            $permissions = $stat['mode'] & 0000666; // Same permissions as parent folder, strip off the executable bits.
+            chmod($destination, $permissions);
 
             // TODO cwebp also appears to set file owner. We want same owner as parent folder
 

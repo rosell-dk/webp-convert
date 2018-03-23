@@ -163,21 +163,21 @@ class WebPConvert
             $closest_existing_folder = implode('/', $parent_folders);
 
             self::logMessage('Using permissions of closest existing folder (' . $closest_existing_folder . ')');
-            $perms = fileperms($closest_existing_folder) & 000777;
-            self::logMessage('Permissions are: 0' . decoct($perms));
+            $permissions = fileperms($closest_existing_folder) & 000777;
+            self::logMessage('Permissions are: 0' . decoct($permissions));
 
-            if (!mkdir($destination_folder, $perms, true)) {
+            if (!mkdir($destination_folder, $permissions, true)) {
                 self::normalError('Failed creating folder:' . $folder);
                 return;
             };
             self::logMessage('Folder created successfully');
 
-            // alas, mkdir does not respect $perms. We have to chmod each created subfolder
+            // alas, mkdir does not respect $permissions. We have to chmod each created subfolder
             $path = $closest_existing_folder;
             foreach ($popped_folders as $subfolder) {
                 $path .= '/' . $subfolder;
-                self::logMessage('chmod 0' . decoct($perms) . ' ' . $path);
-                chmod($path, $perms);
+                self::logMessage('chmod 0' . decoct($permissions) . ' ' . $path);
+                chmod($path, $permissions);
             }
         }
 
