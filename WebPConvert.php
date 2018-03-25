@@ -224,7 +224,9 @@ class WebPConvert
         }
 
         // Save converters in the `Converters` directory to array ..
-        $files = array_map(function($e) { return basename($e, '.php'); }, glob(__DIR__ . '/Converters/*.php'));
+        $files = array_map(function ($path) {
+            return basename($path, '.php');
+        }, glob(__DIR__ . '/Converters/*.php'));
 
         // .. and merge it with the $converters array, keeping the updated order of execution
         foreach ($files as $file) {
