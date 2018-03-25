@@ -2,6 +2,8 @@
 
 namespace WebPConvert;
 
+use WebPConvert\Converters\Cwebp as cwebp;
+
 class WebPConvert
 {
     private static $preferred_converters = array();
@@ -13,26 +15,6 @@ class WebPConvert
     {
         self::$preferred_converters = $preferred_converters;
     }
-
-
-
-
-    // HELPER
-
-    // Returns folder name
-    private static function stripFilenameFromPath($path_with_filename)
-    {
-        $parts = explode('/', $path_with_filename);
-        array_pop($parts);
-        return implode('/', $parts);
-    }
-
-
-
-
-
-
-
 
     /*
       @param (string) $source: Absolute path to image to be converted (no backslashes). Image must be jpeg or png
@@ -66,8 +48,16 @@ class WebPConvert
         //     return;
         // }
 
+        // Returns folder name
+        function stripFilenameFromPath($path_with_filename)
+        {
+            $parts = explode('/', $path_with_filename);
+            array_pop($parts);
+            return implode('/', $parts);
+        }
+
         // Prepare destination folder
-        $destination_folder = self::stripFilenameFromPath($destination);
+        $destination_folder = stripFilenameFromPath($destination);
 
         if (!file_exists($destination_folder)) {
             // self::logMessage('We need to create destination folder');
@@ -175,7 +165,7 @@ class WebPConvert
             }
 
             // $time_start = microtime(true);
-            $result = call_user_func('WebPConvert\Converters\webpconvert_' . $converter, $source, $destination, $quality, $strip_metadata);
+            $result = call_user_func('cwebp::cwebp', $source, $destination, $quality, $strip_metadata);
             // $time_end = microtime(true);
             // self::logMessage('execution time: ' . round(($time_end - $time_start) * 1000) . ' ms');
 
