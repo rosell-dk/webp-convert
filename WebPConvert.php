@@ -224,25 +224,14 @@ class WebPConvert
         }
 
         // Save converters in the `Converters` directory to array ..
-        $files = array_filter(scandir(__DIR__ . '/Converters'), function ($file) {
-            return is_file($file);
-        });
+        $files = array_map(function($e) { return basename($e, '.php'); }, glob(__DIR__ . '/Converters/*.php'));
 
         // .. and merge it with the $converters array, keeping the updated order of execution
         foreach ($files as $file) {
-            if (is_dir('Converters/' . $file)) {
-                if ($file == '.') {
-                    continue;
-                }
-                if ($file == '..') {
-                    continue;
-                }
-                if (in_array($file, $converters)) {
-                    continue;
-                }
-
-                $converters[] = $file;
+            if (in_array($file, $converters)) {
+                continue;
             }
+            $converters[] = $file;
         }
 
         self::logMessage('Order of converters to be tried: <i>' . implode('</i>, <i>', $converters) . '</i>');
