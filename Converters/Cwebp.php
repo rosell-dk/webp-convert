@@ -4,7 +4,7 @@ namespace WebPConvert\Converters;
 
 class Cwebp
 {
-    public static function cwebp($source, $destination, $quality, $strip_metadata)
+    public static function convert($source, $destination, $quality, $strip_metadata)
     {
         if (!function_exists('exec')) {
             return 'exec() is not enabled';

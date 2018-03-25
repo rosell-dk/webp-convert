@@ -2,7 +2,7 @@
 
 namespace WebPConvert;
 
-use WebPConvert\Converters\Cwebp as cwebp;
+use WebPConvert\Converters\Cwebp;
 
 class WebPConvert
 {
@@ -137,8 +137,11 @@ class WebPConvert
 
         // Save converters in the `Converters` directory to array ..
         $files = array_map(function ($path) {
-            return basename($path, '.php');
+            $fileName = basename($path, '.php');
+            return strtolower($fileName);
         }, glob(__DIR__ . '/Converters/*.php'));
+
+        var_dump($files);
 
         // .. and merge it with the $converters array, keeping the updated order of execution
         foreach ($files as $file) {
@@ -152,20 +155,22 @@ class WebPConvert
 
         $success = false;
         foreach ($converters as $converter) {
+            $converter = ucfirst($converter);
             // self::logMessage('<br>trying <b>' . $converter . '</b>');
 
             $filename = __DIR__ . '/Converters/' . $converter . '.php';
             // self::logMessage('including converter at: "' . $filename . '"');
 
-            include_once($filename);
+            //include_once($filename);
 
-            if (!function_exists('WebPConvert\Converters\webpconvert_' . $converter)) {
-                // self::logMessage('converter not useable - it does not define a function " . $converter . "');
-                continue;
-            }
+            // if (!function_exists('WebPConvert\Converters\webpconvert_' . $converter)) {
+            //     // self::logMessage('converter not useable - it does not define a function " . $converter . "');
+            //     continue;
+            // }
 
             // $time_start = microtime(true);
-            $result = call_user_func('cwebp::cwebp', $source, $destination, $quality, $strip_metadata);
+            $className = 'WebPConvert\\Converters\\' . $converter;
+            $result = call_user_func(array($className, 'convert'), $source, $destination, $quality, $strip_metadata);
             // $time_end = microtime(true);
             // self::logMessage('execution time: ' . round(($time_end - $time_start) * 1000) . ' ms');
 
