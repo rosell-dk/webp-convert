@@ -1,6 +1,6 @@
 <?php
 
-// namespace WebPConvert\Converters\gd;
+namespace WebPConvert\Converters;
 
 function webpconvert_gd($source, $destination, $quality, $strip_metadata)
 {

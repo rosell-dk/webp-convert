@@ -1,6 +1,6 @@
 <?php
 
-// namespace WebPConvert\Converters\ewww;
+namespace WebPConvert\Converters;
 
 function webpconvert_ewww($source, $destination, $quality, $strip_metadata)
 {

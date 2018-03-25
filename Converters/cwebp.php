@@ -1,5 +1,7 @@
 <?php
 
+namespace WebPConvert\Converters;
+
 /* Helper */
 function escapeFilename($string)
 {
@@ -63,7 +65,7 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
     if ($supplied_bin_error == '') {
         array_unshift($paths_to_test, $bin);
     } else {
-        WebPConvert::logMessage('Not able to use supplied bin. ' . $supplied_bin_error);
+        // WebPConvert::logMessage('Not able to use supplied bin. ' . $supplied_bin_error);
     }
 
     // Build options string
@@ -116,12 +118,12 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
             $nice = 'nice ';
         }
     }
-    WebPConvert::logMessage('parameters:' . $options);
+    // WebPConvert::logMessage('parameters:' . $options);
 
     // Try all paths
     $success = false;
     foreach ($paths_to_test as $i => $bin) {
-        WebPConvert::logMessage('trying to execute binary: ' . $bin);
+        // WebPConvert::logMessage('trying to execute binary: ' . $bin);
 
         $cmd = $nice . $bin . ' ' . $options;
 
@@ -156,7 +158,7 @@ function webpconvert_cwebp($source, $destination, $quality, $strip_metadata)
                         break;
                 }
                 $msg .= 'Output was: ' . print_r($output, true);
-                WebPConvert::logMessage($msg);
+                // WebPConvert::logMessage($msg);
             }
         }
     }

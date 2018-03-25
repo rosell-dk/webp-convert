@@ -1,6 +1,6 @@
 <?php
 
-// namespace WebPConvert\Converters\imagick;
+namespace WebPConvert\Converters;
 
 function webpconvert_imagick($source, $destination, $quality, $strip_metadata)
 {
