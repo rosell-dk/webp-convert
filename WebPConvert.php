@@ -43,6 +43,41 @@ class WebPConvert
         return pathinfo($path, PATHINFO_DIRNAME);
     }
 
+    // Creates the provided folder & sets correct permissions
+    public static function createFolder($path)
+    {
+        // TODO: what if this is outside open basedir?
+        // see http://php.net/manual/en/ini.core.php#ini.open-basedir
+
+        // First, we have to figure out which permissions to set.
+        // We want same permissions as parent folder
+        // But which parent? - the parent to the first missing folder
+
+        $parent_folders = explode('/', $path);
+        $popped_folders = array();
+
+        while (!(file_exists(implode('/', $parent_folders)))) {
+            array_unshift($popped_folders, array_pop($parent_folders));
+        }
+
+        $closest_existing_folder = implode('/', $parent_folders);
+
+        // Retrieving permissions of closest existing folder
+        $permissions = fileperms($closest_existing_folder) & 000777;
+
+        // Trying to create the given folder
+         if (!mkdir($path, $permissions, true)) {
+             throw new \Exception('Failed creating folder: ' . $folder);
+         }
+
+        // `mkdir` doesn't respect permissions, so we have to `chmod` each created subfolder
+        foreach ($popped_folders as $subfolder) {
+            $closest_existing_folder .= '/' . $subfolder;
+            // Setting directory permissions
+            chmod($path, $permissions);
+        }
+    }
+
     /*
       @param (string) $source: Absolute path to image to be converted (no backslashes). Image must be jpeg or png
       @param (string) $destination: Absolute path (no backslashes)
@@ -65,40 +100,12 @@ class WebPConvert
         }
 
         // Prepare destination folder
-        $destination_folder = self::stripFilenameFromPath($destination);
+        $destinationFolder = self::stripFilenameFromPath($destination);
 
-        if (!self::isValidTarget($destination_folder)) {
-            // self::logMessage('We need to create destination folder');
-
-            // Find out which permissions to set.
-            // We want same permissions as parent folder
-            // But which parent? - the parent to the first missing folder
-            // (TODO: what to do if this is outside open basedir?
-            // see http://php.net/manual/en/ini.core.php#ini.open-basedir)
-            $parent_folders = explode('/', $destination_folder);
-            $popped_folders = array();
-            while (!(file_exists(implode('/', $parent_folders)))) {
-                array_unshift($popped_folders, array_pop($parent_folders));
-            }
-            $closest_existing_folder = implode('/', $parent_folders);
-
-            // self::logMessage('Using permissions of closest existing folder (' . $closest_existing_folder . ')');
-            $permissions = fileperms($closest_existing_folder) & 000777;
-            // self::logMessage('Permissions are: 0' . decoct($permissions));
-
-            // if (!mkdir($destination_folder, $permissions, true)) {
-            //     self::normalError('Failed creating folder:' . $folder);
-            //     return;
-            // };
-            // self::logMessage('Folder created successfully');
-
-            // alas, mkdir does not respect $permissions. We have to chmod each created subfolder
-            $path = $closest_existing_folder;
-            foreach ($popped_folders as $subfolder) {
-                $path .= '/' . $subfolder;
-                // self::logMessage('chmod 0' . decoct($permissions) . ' ' . $path);
-                chmod($path, $permissions);
-            }
+        // Checks if the provided destination folder exists
+        if (!file_exists($destinationFolder)) {
+            // If it doesn't exist, we have to create it
+            self::createFolder($destinationFolder);
         }
 
         // Test if it will be possible to write file
@@ -108,7 +115,7 @@ class WebPConvert
         //         return;
         //     }
         // } else {
-        //     if (!is_writable($destination_folder)) {
+        //     if (!is_writable($destinationFolder)) {
         //         self::normalError('Cannot write file: ' . $destination . '. Check the folder permissions.');
         //         return;
         //     }
