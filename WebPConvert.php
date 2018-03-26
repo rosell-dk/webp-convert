@@ -15,6 +15,16 @@ class WebPConvert
         self::$preferred_converters = $preferred_converters;
     }
 
+    // Throws an exception if the provided file doesn't exist
+    public static function isValidFile($path)
+    {
+        if (!file_exists($path)) {
+            throw new \Exception('File not found: ' . $path);
+        }
+
+        return true;
+    }
+
     // Throws an exception if the provided file's extension is invalid
     protected static function isAllowedExtension($path)
     {
@@ -22,6 +32,8 @@ class WebPConvert
         if (!in_array(strtolower($ext), self::$allowedExtensions)) {
             throw new \Exception('Unsupported file extension: ' . $ext);
         }
+
+        return true;
     }
 
     /*
@@ -37,18 +49,13 @@ class WebPConvert
         self::$current_conversion_vars['source'] =  $source;
         self::$current_conversion_vars['destination'] =  $destination;
 
-        // Checks if provided file's extension is valid
+        // Checks if source file exists and if its extension is valid
         try {
+            self::isValidFile($source);
             self::isAllowedExtension($source);
         } catch(\Exception $e) {
             echo $e->getMessage();
         }
-
-        // // Test if source file exists
-        // if (!file_exists($source)) {
-        //     self::criticalError("Source file not found: " . $source);
-        //     return;
-        // }
 
         // Returns folder name
         function stripFilenameFromPath($path_with_filename)
@@ -143,8 +150,6 @@ class WebPConvert
             return strtolower($fileName);
         }, glob(__DIR__ . '/Converters/*.php'));
 
-        var_dump($files);
-
         // .. and merge it with the $converters array, keeping the updated order of execution
         foreach ($files as $file) {
             if (in_array($file, $converters)) {
@@ -156,13 +161,14 @@ class WebPConvert
         // self::logMessage('Order of converters to be tried: <i>' . implode('</i>, <i>', $converters) . '</i>');
 
         foreach ($converters as $converter) {
-            // if (!function_exists('WebPConvert\Converters\webpconvert_' . $converter)) {
-            //     // self::logMessage('converter not useable - it does not define a function " . $converter . "');
-            //     continue;
-            // }
-
+            $converter = ucfirst($converter);
             $className = 'WebPConvert\\Converters\\' . $converter;
-            $result = call_user_func(array($className, 'convert'), $source, $destination, $quality, $strip_metadata);
+
+            if (!is_callable(array($className, 'convert'))) {
+                continue;
+            }
+
+            call_user_func(array($className, 'convert'), $source, $destination, $quality, $strip_metadata);
         }
     }
 }
