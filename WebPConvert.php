@@ -108,18 +108,16 @@ class WebPConvert
             self::createFolder($destinationFolder);
         }
 
-        // Test if it will be possible to write file
-        // if (file_exists($destination)) {
-        //     if (!is_writable($destination)) {
-        //         self::normalError('Cannot overwrite file: ' . $destination . '. Check the file permissions.');
-        //         return;
-        //     }
-        // } else {
-        //     if (!is_writable($destinationFolder)) {
-        //         self::normalError('Cannot write file: ' . $destination . '. Check the folder permissions.');
-        //         return;
-        //     }
-        // }
+        // Checks file writing permissions
+         if (file_exists($destination)) {
+             if (!is_writable($destination)) {
+                 throw new \Exception('Cannot overwrite file: ' . basename($destination) . '. Check the file permissions.');
+             }
+         } else {
+             if (!is_writable($destinationFolder)) {
+                 throw new \Exception('Cannot write file: ' . basename($destination) . '. Check the folder permissions.');
+             }
+         }
 
         // If there is already a converted file at destination, remove it
         // (actually it seems the current converters can handle that, but maybe not future converters)
