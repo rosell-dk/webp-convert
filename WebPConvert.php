@@ -10,16 +10,17 @@ class WebPConvert
     private static $allowedExtensions = array('jpg', 'jpeg', 'png');
     public static $current_conversion_vars;
 
+    // Defines the array of preferred converters
     public static function setPreferredConverters($preferred_converters)
     {
         self::$preferred_converters = $preferred_converters;
     }
 
     // Throws an exception if the provided file doesn't exist
-    public static function isValidFile($path)
+    protected static function isValidTarget($path)
     {
         if (!file_exists($path)) {
-            throw new \Exception('File not found: ' . $path);
+            throw new \Exception('File or directory not found: ' . $path);
         }
 
         return true;
@@ -34,6 +35,12 @@ class WebPConvert
         }
 
         return true;
+    }
+
+    // Returns the provided file's folder name
+    protected static function stripFilenameFromPath($path)
+    {
+        return pathinfo($path, PATHINFO_DIRNAME);
     }
 
     /*
@@ -51,24 +58,16 @@ class WebPConvert
 
         // Checks if source file exists and if its extension is valid
         try {
-            self::isValidFile($source);
+            self::isValidTarget($source);
             self::isAllowedExtension($source);
         } catch(\Exception $e) {
             echo $e->getMessage();
         }
 
-        // Returns folder name
-        function stripFilenameFromPath($path_with_filename)
-        {
-            $parts = explode('/', $path_with_filename);
-            array_pop($parts);
-            return implode('/', $parts);
-        }
-
         // Prepare destination folder
-        $destination_folder = stripFilenameFromPath($destination);
+        $destination_folder = self::stripFilenameFromPath($destination);
 
-        if (!file_exists($destination_folder)) {
+        if (!self::isValidTarget($destination_folder)) {
             // self::logMessage('We need to create destination folder');
 
             // Find out which permissions to set.
