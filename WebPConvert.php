@@ -7,13 +7,21 @@ use WebPConvert\Converters\Cwebp;
 class WebPConvert
 {
     private static $preferred_converters = array();
-
-    public static $debug = true;
+    private static $allowedExtensions = array('jpg', 'jpeg', 'png');
     public static $current_conversion_vars;
 
     public static function setPreferredConverters($preferred_converters)
     {
         self::$preferred_converters = $preferred_converters;
+    }
+
+    // Throws an exception if the provided file's extension is invalid
+    protected static function isAllowedExtension($path)
+    {
+        $ext = pathinfo($path, PATHINFO_EXTENSION);
+        if (!in_array(strtolower($ext), self::$allowedExtensions)) {
+            throw new \Exception('Unsupported file extension: ' . $ext);
+        }
     }
 
     /*
@@ -29,19 +37,13 @@ class WebPConvert
         self::$current_conversion_vars['source'] =  $source;
         self::$current_conversion_vars['destination'] =  $destination;
 
-        // if (self::$debug) {
-        //     ini_set('display_errors', 'On');
-        // }
+        // Checks if provided file's extension is valid
+        try {
+            self::isAllowedExtension($source);
+        } catch(\Exception $e) {
+            echo $e->getMessage();
+        }
 
-        // Test if file extension is valid
-        // $parts = explode('.', $source);
-        // $ext = array_pop($parts);
-
-        // if (!in_array(strtolower($ext), array('jpg', 'jpeg', 'png'))) {
-        //     self::criticalError("Unsupported file extension: " . $ext);
-        //     return;
-        // }
-        //
         // // Test if source file exists
         // if (!file_exists($source)) {
         //     self::criticalError("Source file not found: " . $source);
@@ -88,7 +90,7 @@ class WebPConvert
             $path = $closest_existing_folder;
             foreach ($popped_folders as $subfolder) {
                 $path .= '/' . $subfolder;
-                self::logMessage('chmod 0' . decoct($permissions) . ' ' . $path);
+                // self::logMessage('chmod 0' . decoct($permissions) . ' ' . $path);
                 chmod($path, $permissions);
             }
         }
@@ -153,36 +155,14 @@ class WebPConvert
 
         // self::logMessage('Order of converters to be tried: <i>' . implode('</i>, <i>', $converters) . '</i>');
 
-        $success = false;
         foreach ($converters as $converter) {
-            $converter = ucfirst($converter);
-            // self::logMessage('<br>trying <b>' . $converter . '</b>');
-
-            $filename = __DIR__ . '/Converters/' . $converter . '.php';
-            // self::logMessage('including converter at: "' . $filename . '"');
-
-            //include_once($filename);
-
             // if (!function_exists('WebPConvert\Converters\webpconvert_' . $converter)) {
             //     // self::logMessage('converter not useable - it does not define a function " . $converter . "');
             //     continue;
             // }
 
-            // $time_start = microtime(true);
             $className = 'WebPConvert\\Converters\\' . $converter;
             $result = call_user_func(array($className, 'convert'), $source, $destination, $quality, $strip_metadata);
-            // $time_end = microtime(true);
-            // self::logMessage('execution time: ' . round(($time_end - $time_start) * 1000) . ' ms');
-
-            if ($result === true) {
-                // self::logMessage('success!');
-                echo 'Success!';
-                $success = true;
-                break;
-            } else {
-                // self::logMessage($result);
-                echo 'Failure!';
-            }
         }
     }
 }
