@@ -6,14 +6,14 @@ use WebPConvert\Converters\Cwebp;
 
 class WebPConvert
 {
-    private static $preferred_converters = array();
+    public static $conversionParameters = array();
+    private static $preferredConverters = array();
     private static $allowedExtensions = array('jpg', 'jpeg', 'png');
-    public static $current_conversion_vars;
 
     // Defines the array of preferred converters
-    public static function setPreferredConverters($preferred_converters)
+    public static function setPreferredConverters($preferredConverters)
     {
-        self::$preferred_converters = $preferred_converters;
+        self::$preferredConverters = $preferredConverters;
     }
 
     // Throws an exception if the provided file doesn't exist
@@ -66,9 +66,9 @@ class WebPConvert
         $permissions = fileperms($closest_existing_folder) & 000777;
 
         // Trying to create the given folder
-         if (!mkdir($path, $permissions, true)) {
+        if (!mkdir($path, $permissions, true)) {
              throw new \Exception('Failed creating folder: ' . $folder);
-         }
+        }
 
         // `mkdir` doesn't respect permissions, so we have to `chmod` each created subfolder
         foreach ($popped_folders as $subfolder) {
@@ -87,15 +87,14 @@ class WebPConvert
 
     public static function convert($source, $destination, $quality = 85, $strip_metadata = true)
     {
-        self::$current_conversion_vars = array();
-        self::$current_conversion_vars['source'] =  $source;
-        self::$current_conversion_vars['destination'] =  $destination;
+        self::$conversionParameters['source'] = $source;
+        self::$conversionParameters['destination'] = $destination;
 
         // Checks if source file exists and if its extension is valid
         try {
             self::isValidTarget($source);
             self::isAllowedExtension($source);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             echo $e->getMessage();
         }
 
@@ -109,15 +108,15 @@ class WebPConvert
         }
 
         // Checks file writing permissions
-         if (file_exists($destination)) {
-             if (!is_writable($destination)) {
+        if (file_exists($destination)) {
+            if (!is_writable($destination)) {
                  throw new \Exception('Cannot overwrite file: ' . basename($destination) . '. Check the file permissions.');
-             }
-         } else {
-             if (!is_writable($destinationFolder)) {
+            }
+        } else {
+            if (!is_writable($destinationFolder)) {
                  throw new \Exception('Cannot write file: ' . basename($destination) . '. Check the folder permissions.');
-             }
-         }
+            }
+        }
 
         // If there is already a converted file at destination, remove it
         // (actually it seems the current converters can handle that, but maybe not future converters)
@@ -132,37 +131,30 @@ class WebPConvert
         // Prepare building up an array of converters
         $converters = array();
 
-        // Add preferred converters
-        // if (count(self::$preferred_converters) > 0) {
-        //     self::logMessage('Preferred converters was set to: ' . implode(', ', self::$preferred_converters));
-        // } else {
-        //     self::logMessage('No preferred converters was set. Converters will be tried in default order');
-        // }
-
-        foreach (self::$preferred_converters as $converter) {
-            $filename = __DIR__ . '/Converters/' . $converter . '.php';
-            if (file_exists($filename)) {
-                $converters[] = $converter;
-            } else {
-                // self::logMessage('<b>the converter "' . $converter . '" that was set as a preferred converter was not found at: "' . $filename . '".</b>');
-            }
-        }
-
-        // Save converters in the `Converters` directory to array ..
-        $files = array_map(function ($path) {
+        // Saves all available converters inside the `Converters` directory to an array
+        $availableConverters = array_map(function ($path) {
             $fileName = basename($path, '.php');
             return strtolower($fileName);
         }, glob(__DIR__ . '/Converters/*.php'));
 
-        // .. and merge it with the $converters array, keeping the updated order of execution
-        foreach ($files as $file) {
-            if (in_array($file, $converters)) {
-                continue;
+        // Checks if preferred converters match available converters and adds all matches to $converters array
+        foreach (self::$preferredConverters as $preferredConverter) {
+            if (in_array($preferredConverter, $availableConverters)) {
+                $converters[] = $preferredConverter;
             }
-            $converters[] = $file;
         }
 
-        // self::logMessage('Order of converters to be tried: <i>' . implode('</i>, <i>', $converters) . '</i>');
+        // Fills $converters array with the remaining available converters, keeping the updated order of execution
+        foreach ($availableConverters as $availableConverter) {
+            if (in_array($availableConverter, $converters)) {
+                continue;
+            }
+            $converters[] = $availableConverter;
+        }
+
+        // self::$conversionParameters['converters'] = count(self::$preferredConverters) > 0
+        //     ? implode(', ', $converters)
+        //     : implode(', ', $availableConverters);
 
         foreach ($converters as $converter) {
             $converter = ucfirst($converter);
