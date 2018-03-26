@@ -78,6 +78,15 @@ class WebPConvert
         }
     }
 
+    protected static function deleteFile($file)
+    {
+        if (!unlink($file)) {
+            throw new Exception('File already exists and cannot be removed: ' . $file);
+        }
+
+        return true;
+    }
+
     /*
       @param (string) $source: Absolute path to image to be converted (no backslashes). Image must be jpeg or png
       @param (string) $destination: Absolute path (no backslashes)
@@ -98,7 +107,7 @@ class WebPConvert
             echo $e->getMessage();
         }
 
-        // Prepare destination folder
+        // Prepares destination folder
         $destinationFolder = self::stripFilenameFromPath($destination);
 
         // Checks if the provided destination folder exists
@@ -118,15 +127,10 @@ class WebPConvert
             }
         }
 
-        // If there is already a converted file at destination, remove it
-        // (actually it seems the current converters can handle that, but maybe not future converters)
-        // if (file_exists($destination)) {
-        //     if (unlink($destination)) {
-        //         self::logMessage('Destination file already exists... - removed');
-        //     } else {
-        //         self::logMessage('Destination file already exists. Could not remove it');
-        //     }
-        // }
+        // Checks if there's already a converted file at destination & removes it if necessary
+        if (file_exists($destination)) {
+            self::deleteFile($destination);
+        }
 
         // Prepare building up an array of converters
         $converters = array();
