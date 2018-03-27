@@ -6,7 +6,6 @@ use WebPConvert\Converters\Cwebp;
 
 class WebPConvert
 {
-    public static $conversionParameters = array();
     private static $preferredConverters = array();
     private static $allowedExtensions = array('jpg', 'jpeg', 'png');
 
@@ -22,7 +21,6 @@ class WebPConvert
         if (!file_exists($path)) {
             throw new \Exception('File or directory not found: ' . $path);
         }
-
         return true;
     }
 
@@ -33,12 +31,11 @@ class WebPConvert
         if (!in_array(strtolower($ext), self::$allowedExtensions)) {
             throw new \Exception('Unsupported file extension: ' . $ext);
         }
-
         return true;
     }
 
     // Returns the provided file's folder name
-    protected static function stripFilenameFromPath($path)
+    protected static function getFilePath($path)
     {
         return pathinfo($path, PATHINFO_DIRNAME);
     }
@@ -53,26 +50,25 @@ class WebPConvert
         // We want same permissions as parent folder
         // But which parent? - the parent to the first missing folder
 
-        $parent_folders = explode('/', $path);
-        $popped_folders = array();
+        $parentFolders = explode('/', $path);
+        $poppedFolders = array();
 
-        while (!(file_exists(implode('/', $parent_folders)))) {
-            array_unshift($popped_folders, array_pop($parent_folders));
+        while (!(file_exists(implode('/', $parentFolders)))) {
+            array_unshift($poppedFolders, array_pop($parentFolders));
         }
 
-        $closest_existing_folder = implode('/', $parent_folders);
-
         // Retrieving permissions of closest existing folder
-        $permissions = fileperms($closest_existing_folder) & 000777;
+        $closestExistingFolder = implode('/', $parentFolders);
+        $permissions = fileperms($closestExistingFolder) & 000777;
 
         // Trying to create the given folder
         if (!mkdir($path, $permissions, true)) {
-             throw new \Exception('Failed creating folder: ' . $folder);
+             throw new \Exception('Failed creating folder: ' . $path);
         }
 
         // `mkdir` doesn't respect permissions, so we have to `chmod` each created subfolder
-        foreach ($popped_folders as $subfolder) {
-            $closest_existing_folder .= '/' . $subfolder;
+        foreach ($poppedFolders as $subfolder) {
+            $closestExistingFolder .= '/' . $subfolder;
             // Setting directory permissions
             chmod($path, $permissions);
         }
@@ -81,57 +77,13 @@ class WebPConvert
     protected static function deleteFile($file)
     {
         if (!unlink($file)) {
-            throw new Exception('File already exists and cannot be removed: ' . $file);
+            throw new \Exception('File already exists and cannot be removed: ' . $file);
         }
-
         return true;
     }
 
-    /*
-      @param (string) $source: Absolute path to image to be converted (no backslashes). Image must be jpeg or png
-      @param (string) $destination: Absolute path (no backslashes)
-      @param (int) $quality (optional): Quality of converted file (0-100)
-      @param (bool) $strip_metadata (optional): Whether or not to strip metadata. Default is to strip. Not all converters supports this
-    */
-
-    public static function convert($source, $destination, $quality = 85, $strip_metadata = true)
+    protected static function getConverters()
     {
-        self::$conversionParameters['source'] = $source;
-        self::$conversionParameters['destination'] = $destination;
-
-        // Checks if source file exists and if its extension is valid
-        try {
-            self::isValidTarget($source);
-            self::isAllowedExtension($source);
-        } catch (\Exception $e) {
-            echo $e->getMessage();
-        }
-
-        // Prepares destination folder
-        $destinationFolder = self::stripFilenameFromPath($destination);
-
-        // Checks if the provided destination folder exists
-        if (!file_exists($destinationFolder)) {
-            // If it doesn't exist, we have to create it
-            self::createFolder($destinationFolder);
-        }
-
-        // Checks file writing permissions
-        if (file_exists($destination)) {
-            if (!is_writable($destination)) {
-                 throw new \Exception('Cannot overwrite file: ' . basename($destination) . '. Check the file permissions.');
-            }
-        } else {
-            if (!is_writable($destinationFolder)) {
-                 throw new \Exception('Cannot write file: ' . basename($destination) . '. Check the folder permissions.');
-            }
-        }
-
-        // Checks if there's already a converted file at destination & removes it if necessary
-        if (file_exists($destination)) {
-            self::deleteFile($destination);
-        }
-
         // Prepare building up an array of converters
         $converters = array();
 
@@ -156,19 +108,72 @@ class WebPConvert
             $converters[] = $availableConverter;
         }
 
-        // self::$conversionParameters['converters'] = count(self::$preferredConverters) > 0
-        //     ? implode(', ', $converters)
-        //     : implode(', ', $availableConverters);
+        return $converters;
+    }
 
-        foreach ($converters as $converter) {
-            $converter = ucfirst($converter);
-            $className = 'WebPConvert\\Converters\\' . $converter;
+    /*
+      @param (string) $source: Absolute path to image to be converted (no backslashes). Image must be jpeg or png
+      @param (string) $destination: Absolute path (no backslashes)
+      @param (int) $quality (optional): Quality of converted file (0-100)
+      @param (bool) $stripMetadata (optional): Whether or not to strip metadata. Default is to strip. Not all converters supports this
+    */
 
-            if (!is_callable(array($className, 'convert'))) {
-                continue;
+    public static function convert($source, $destination, $quality = 85, $stripMetadata = true)
+    {
+        try {
+            self::isValidTarget($source);
+            self::isAllowedExtension($source);
+
+            // Prepares destination folder
+            $destinationFolder = self::getFilePath($destination);
+
+            // Checks if the provided destination folder exists
+            if (!file_exists($destinationFolder)) {
+                // If not, attempt to create it
+                self::createFolder($destinationFolder);
             }
 
-            call_user_func(array($className, 'convert'), $source, $destination, $quality, $strip_metadata);
+            // Checks file & folder writing permissions if provided $destination doesn't exist
+            if (file_exists($destination)) {
+                if (!is_writable($destination)) {
+                     throw new \Exception('Cannot overwrite ' . basename($destination) . ' - check file permissions.');
+                }
+            } else {
+                if (!is_writable($destinationFolder)) {
+                     throw new \Exception('Cannot write ' . basename($destination) . ' - check folder permissions.');
+                }
+            }
+
+            // Checks if there's already a converted file at $destination
+            if (file_exists($destination)) {
+                // If so, attempt to remove it
+                self::deleteFile($destination);
+            }
+
+            foreach (self::getConverters() as $converter) {
+                $converter = ucfirst($converter);
+                $className = 'WebPConvert\\Converters\\' . $converter;
+
+                if (!is_callable(array($className, 'convert'))) {
+                    continue;
+                }
+
+                $conversion = call_user_func(
+                    array($className, 'convert'),
+                    $source,
+                    $destination,
+                    $quality,
+                    $stripMetadata
+                );
+
+                if (!$conversion) {
+                    throw new \Exception('You have converted .. poorly!');
+                }
+
+                return true;
+            }
+        } catch (\Exception $e) {
+            echo $e->getMessage();
         }
     }
 }
