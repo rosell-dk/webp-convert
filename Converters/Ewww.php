@@ -35,7 +35,7 @@ class Ewww
 
         $cFile = curl_file_create($source);
 
-        $url = 'https://optimize.exactlywww.com';
+        $url = 'https://optimize.exactlywww.com/v2/';
         curl_setopt_array($ch, array(
             CURLOPT_URL => $url,
             CURLOPT_HTTPHEADER => array(
