@@ -10,34 +10,34 @@ class WebPConvert
     private static $allowedExtensions = array('jpg', 'jpeg', 'png');
 
     // Defines the array of preferred converters
-    public static function setPreferredConverters($preferredConverters)
+    public static function setPreferredConverters($preferredConvertersArray)
     {
-        self::$preferredConverters = $preferredConverters;
+        self::$preferredConverters = $preferredConvertersArray;
     }
 
     // Throws an exception if the provided file doesn't exist
-    protected static function isValidTarget($path)
+    protected static function isValidTarget($filePath)
     {
-        if (!file_exists($path)) {
-            throw new \Exception('File or directory not found: ' . $path);
+        if (!file_exists($filePath)) {
+            throw new \Exception('File or directory not found: ' . $filePath);
         }
         return true;
     }
 
     // Throws an exception if the provided file's extension is invalid
-    protected static function isAllowedExtension($path)
+    protected static function isAllowedExtension($filePath)
     {
-        $ext = pathinfo($path, PATHINFO_EXTENSION);
-        if (!in_array(strtolower($ext), self::$allowedExtensions)) {
-            throw new \Exception('Unsupported file extension: ' . $ext);
+        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
+        if (!in_array(strtolower($fileExtension), self::$allowedExtensions)) {
+            throw new \Exception('Unsupported file extension: ' . $fileExtension);
         }
         return true;
     }
 
     // Returns the provided file's folder name
-    protected static function getFilePath($path)
+    protected static function getFilePath($filePath)
     {
-        return pathinfo($path, PATHINFO_DIRNAME);
+        return pathinfo($filePath, PATHINFO_DIRNAME);
     }
 
     // Creates the provided folder & sets correct permissions
@@ -88,8 +88,8 @@ class WebPConvert
         $converters = array();
 
         // Saves all available converters inside the `Converters` directory to an array
-        $availableConverters = array_map(function ($path) {
-            $fileName = basename($path, '.php');
+        $availableConverters = array_map(function ($filePath) {
+            $fileName = basename($filePath, '.php');
             return strtolower($fileName);
         }, glob(__DIR__ . '/Converters/*.php'));
 
@@ -166,14 +166,18 @@ class WebPConvert
                     $stripMetadata
                 );
 
-                if (!$conversion) {
-                    throw new \Exception('You have converted .. poorly!');
+                if ($conversion) {
+                    $success = true;
+                    echo 'Used converter: ' . $converter;
+                    break;
                 }
 
-                return true;
+                $success = false;
             }
+
+            return $success;
         } catch (\Exception $e) {
-            echo $e->getMessage();
+            echo 'Error: ' . $e->getMessage();
         }
     }
 }
