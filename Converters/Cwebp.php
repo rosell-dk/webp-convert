@@ -4,21 +4,24 @@ namespace WebPConvert\Converters;
 
 class Cwebp
 {
+    private static $defaultCwebpPaths = array( // System paths to look for cwebp binary
+        '/usr/bin/cwebp',
+        '/usr/local/bin/cwebp',
+        '/usr/gnu/bin/cwebp',
+        '/usr/syno/bin/cwebp'
+    );
+
     public static function convert($source, $destination, $quality, $strip_metadata)
     {
-        if (!function_exists('exec')) {
-            return 'exec() is not enabled';
+        try {
+            if (!function_exists('exec')) {
+                throw new \Exception('exec() is not enabled.');
+            }
+        } catch (\Exception $e) {
+            throw $e;
         }
 
-        // System paths to look for cwebp
-        // Supplied bin will be prepended array, but only if it passes some tests...
-        $paths_to_test = array(
-          '/usr/bin/cwebp',
-          '/usr/local/bin/cwebp',
-          '/usr/gnu/bin/cwebp',
-          '/usr/syno/bin/cwebp'
-        );
-
+        // OS-specific binary will be prepended to an array, but only if it passes some tests ..
         // Select binary
         $binary = array(
           'WinNT' => array( 'cwebp.exe', '49e9cb98db30bfa27936933e6fd94d407e0386802cb192800d9fd824f6476873'),
@@ -48,7 +51,7 @@ class Cwebp
         }
 
         if ($supplied_bin_error == '') {
-            array_unshift($paths_to_test, $bin);
+            array_unshift(self::$defaultCwebpPaths, $bin);
         } else {
             // WebPConvert::logMessage('Not able to use supplied bin. ' . $supplied_bin_error);
         }
@@ -123,7 +126,7 @@ class Cwebp
 
         // Try all paths
         $success = false;
-        foreach ($paths_to_test as $i => $bin) {
+        foreach (self::$defaultCwebpPaths as $i => $bin) {
             // WebPConvert::logMessage('trying to execute binary: ' . $bin);
 
             $cmd = $nice . $bin . ' ' . $options;
