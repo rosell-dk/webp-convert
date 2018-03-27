@@ -4,6 +4,28 @@ namespace WebPConvert\Converters;
 
 class Gd
 {
+    protected static function isValidExtension($filePath)
+    {
+        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
+        $fileExtension = strtolower($fileExtension);
+
+        switch ($fileExtension) {
+            case 'jpg':
+            case 'jpeg':
+                return imagecreatefromjpeg($filePath);
+            case 'png':
+                if (defined('WEBPCONVERT_GD_PNG') && WEBPCONVERT_GD_PNG) {
+                    return imagecreatefrompng($filePath);
+                } else {
+                    throw new \Exception('PNG file conversion failed. Try forcing it with: define("WEBPCONVERT_GD_PNG", true);');
+                }
+                break;
+            default:
+                throw new \Exception('Unsupported file extension: ' . $fileExtension);
+        }
+        return true;
+    }
+
     public static function convert($source, $destination, $quality, $stripMetadata)
     {
         try {
@@ -14,34 +36,15 @@ class Gd
             if (!function_exists('imagewebp')) {
                 throw new \Exception('Required imagewebp() function is not available.');
             }
+            
+            $image = self::isValidExtension($source);
+
+            // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
+            if (!$image) {
+                throw new \Exception('Either imagecreatefromjpeg or imagecreatefrompng failed');
+            }
         } catch (\Exception $e) {
             return false; // TODO: `throw` custom \Exception $e & handle it smoothly on top-level.
-        }
-
-        // TODO: Extracting this part to independent function, eg `isValidExtension` (see Imagick.php)
-        $parts = explode('.', $source);
-        $ext = array_pop($parts);
-        $image = '';
-
-        switch (strtolower($ext)) {
-            case 'jpg':
-            case 'jpeg':
-                $image = imagecreatefromjpeg($source);
-                break;
-            case 'png':
-                if (defined("WEBPCONVERT_GD_PNG") && WEBPCONVERT_GD_PNG) {
-                    $image = imagecreatefrompng($source);
-                } else {
-                    return 'This converter has poor handling of PNG images and therefore refuses to convert the image. You can however force it to convert PNGs as well like this: define("WEBPCONVERT_GD_PNG", true);';
-                }
-                break;
-            default:
-                return 'Unsupported file extension';
-        }
-
-        if (!$image) {
-            // Either imagecreatefromjpeg or imagecreatefrompng returned false
-            return 'Either imagecreatefromjpeg or imagecreatefrompng failed';
         }
 
         $success = imagewebp($image, $destination, $quality);
