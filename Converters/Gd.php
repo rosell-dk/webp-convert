@@ -18,6 +18,7 @@ class Gd
             return false; // TODO: `throw` custom \Exception $e & handle it smoothly on top-level.
         }
 
+        // TODO: Extracting this part to independent function, eg `isValidExtension` (see Imagick.php)
         $parts = explode('.', $source);
         $ext = array_pop($parts);
         $image = '';
