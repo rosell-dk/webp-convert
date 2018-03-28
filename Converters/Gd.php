@@ -59,13 +59,12 @@ class Gd
             file_put_contents($destination, "\0", FILE_APPEND);
         }
 
-        // Hm... sometimes I get completely transparent images, even with the hack above. Help, anybody?
-
         imagedestroy($image);
-        if ($success) {
-            return true;
-        } else {
-            return 'imagewebp() call failed';
+
+        if (!$success) {
+            return false;
         }
+
+        return true;
     }
 }
