@@ -75,11 +75,13 @@ class Ewww
         curl_close($ch);
 
         if (!empty($curlError)) {
-            return 'curl error' . $curlError;
+//            return 'curl error' . $curlError;
+            return false;
         }
 
         if (!file_put_contents($destination, $response)) {
-            return 'Failed writing file' . $response;
+//            return 'Failed writing file' . $response;
+            return error;
         }
 
         return true;
