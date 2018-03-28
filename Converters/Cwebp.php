@@ -58,13 +58,13 @@ class Cwebp
         return strtolower($fileExtension);
     }
 
-    protected static function setParentFolderPermissions($filePath)
+    protected static function cloneFolderPermissionsToFile($folder, $file)
     {
-        $fileStatistics = stat(dirname($filePath));
+        $fileStatistics = stat($folder);
 
         // Same permissions as parent folder plus stripping off the executable bits
         $permissions = $fileStatistics['mode'] & 0000666;
-        chmod($filePath, $permissions);
+        chmod($file, $permissions);
     }
 
     public static function convert($source, $destination, $quality, $stripMetadata)
@@ -130,21 +130,18 @@ class Cwebp
                 $nice = 'nice ';
             }
         }
-        // WebPConvert::logMessage('parameters:' . $options);
 
         // Try all paths
-        $success = false;
         foreach ($binaries as $index => $binary) {
             $command = $nice . $binary . ' ' . $options;
             exec($command, $output, $returnCode);
 
             if ($returnCode == 0) { // Everything okay!
-                // cwebp however sets file permissions to 664 - but we want same as parent folder (except executable bits)
+                // cwebp sets file permissions to 664 ..
+                // .. instead, $destination's parent folder's permissions should be used (except executable bits)
+                $destinationParent = dirname($destination);
+                self::cloneFolderPermissionsToFile($destinationParent, $destination);
 
-                // Setting correct file permissions
-                self::setParentFolderPermissions($destination);
-
-                // TODO: cwebp also appears to set file owner - but we want same as parent folder
                 $success = true;
                 break;
             }
