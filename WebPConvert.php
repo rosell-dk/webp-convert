@@ -21,6 +21,7 @@ class WebPConvert
         if (!file_exists($filePath)) {
             throw new \Exception('File or directory not found: ' . $filePath);
         }
+
         return true;
     }
 
@@ -31,11 +32,12 @@ class WebPConvert
         if (!in_array(strtolower($fileExtension), self::$allowedExtensions)) {
             throw new \Exception('Unsupported file extension: ' . $fileExtension);
         }
+
         return true;
     }
 
-    // Creates the provided folder & sets correct permissions
-    public static function createFolder($filePath)
+    // Creates folder in provided path & sets correct permissions
+    public static function createWritableFolder($filePath)
     {
         $folder = pathinfo($filePath, PATHINFO_DIRNAME);
 
@@ -71,20 +73,17 @@ class WebPConvert
             }
         }
 
-        // Checks file & folder writing permissions and deletes file in provided $filePath if already present
-        if (file_exists($filePath)) {
-            if (!is_writable($filePath)) {
-                 throw new \Exception('Cannot overwrite ' . basename($filePath) . ' - check file permissions.');
-            }
-
-            if (!unlink($filePath)) {
-                throw new \Exception('File already exists and cannot be removed: ' . $file);
-            }
-        } else {
-            if (!is_writable($folder)) {
-                 throw new \Exception('Cannot write ' . basename($filePath) . ' - check folder permissions.');
-            }
+        // Checks if there's a file in $filePath & if writing permissions are correct
+        if (file_exists($filePath) && !is_writable($filePath)) {
+            throw new \Exception('Cannot overwrite ' . basename($filePath) . ' - check file permissions.');
         }
+
+        // There's either a rewritable file in $filePath or none at all.
+        // If there is, simply attempt to delete it
+        if (file_exists($filePath) && !unlink($filePath)) {
+            throw new \Exception('Existing file cannot be removed: ' . basename($filePath));
+        }
+
         return true;
     }
 
@@ -129,7 +128,7 @@ class WebPConvert
         try {
             self::isValidTarget($source);
             self::isAllowedExtension($source);
-            self::createFolder($destination);
+            self::createWritableFolder($destination);
 
             foreach (self::getConverters() as $converter) {
                 $converter = ucfirst($converter);
