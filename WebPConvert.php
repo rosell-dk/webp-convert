@@ -168,7 +168,6 @@ class WebPConvert
 
                 if ($conversion) {
                     $success = true;
-                    echo 'Used converter: ' . $converter;
                     break;
                 }
 
