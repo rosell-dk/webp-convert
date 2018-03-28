@@ -63,14 +63,14 @@ class Imagick
             $im->setOption('webp:method', '6');
         }
 
-        if (defined('WEBPCONVERT_IMAGICK_LOW_MEMORY')) {
+        if (!defined('WEBPCONVERT_IMAGICK_LOW_MEMORY')) {
+            $im->setOption('webp:low-memory', 'true');
+        } else {
             $im->setOption('webp:low-memory', (
                 WEBPCONVERT_IMAGICK_LOW_MEMORY
                 ? 'true'
                 : 'false'
             ));
-        } else {
-            $im->setOption('webp:low-memory', 'true');
         }
 
         $im->setImageCompressionQuality($quality);
