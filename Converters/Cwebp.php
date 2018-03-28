@@ -58,6 +58,15 @@ class Cwebp
         return strtolower($fileExtension);
     }
 
+    protected static function setParentFolderPermissions($filePath)
+    {
+        $fileStatistics = stat(dirname($filePath));
+
+        // Same permissions as parent folder plus stripping off the executable bits
+        $permissions = $fileStatistics['mode'] & 0000666;
+        chmod($filePath, $permissions);
+    }
+
     public static function convert($source, $destination, $quality, $stripMetadata)
     {
         try {
@@ -126,52 +135,27 @@ class Cwebp
         // Try all paths
         $success = false;
         foreach ($binaries as $index => $binary) {
-            $cmd = $nice . $binary . ' ' . $options;
-            exec($cmd, $output, $returnCode);
-            // Return codes:
-            // 0: everything ok!
-            // 127: binary cannot be found
-            // 255: target not found
-            if ($returnCode == 0) {
-                // Success!
-                // cwebp however sets file permissions to 664. We want same as parent folder (but no executable bits)
-                // Set correct file permissions.
-                $stat = stat(dirname($destination));
-                $permissions = $stat['mode'] & 0000666; // Same permissions as parent folder, strip off the executable bits.
-                chmod($destination, $permissions);
-                // TODO cwebp also appears to set file owner. We want same owner as parent folder
-                return true;
-            } else {
-                // If supplied bin failed, log some information
-                if (($index == 0) && ($supplied_bin_error == '')) {
-                    $msg = '<b>Supplied binary found, but it exited with error code ' . $returnCode . '. </b>';
-                    switch ($returnCode) {
-                        case 127:
-                            $msg .= 'This probably means that the binary was not found. ';
-                            break;
-                        case 255:
-                            $msg .= 'This probably means that the target was not found. ';
-                            break;
-                    }
-                    $msg .= 'Output was: ' . print_r($output, true);
-                    // WebPConvert::logMessage($msg);
-                }
+            $command = $nice . $binary . ' ' . $options;
+            exec($command, $output, $returnCode);
+
+            if ($returnCode == 0) { // Everything okay!
+                // cwebp however sets file permissions to 664 - but we want same as parent folder (except executable bits)
+
+                // Setting correct file permissions
+                self::setParentFolderPermissions($destination);
+
+                // TODO: cwebp also appears to set file owner - but we want same as parent folder
+                $success = true;
+                break;
             }
+
+            $success = false;
         }
 
-        return false;
+        if (!$success) {
+            return false;
+        }
 
-        // Check the version
-        //   (the appended "2>&1" is in order to get the output - thanks for your comment, Simon
-        //    @ http://php.net/manual/en/function.exec.php)
-        /*
-        exec( "$bin -version 2>&1", $version );
-        if (empty($version)) {
-            return 'Failed getting version';
-        }
-        if (!preg_match( '/0.\d.\d/', $version[0] ) ) {
-            return 'Unexpected version format';
-        }
-        */
+        return true;
     }
 }
