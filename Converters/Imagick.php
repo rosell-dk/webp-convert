@@ -80,10 +80,10 @@ class Imagick
         // 2. $im->writeImage($destination)
         $success = $im->writeImageFile(fopen($destination, 'wb'));
 
-        if ($success) {
-            return true;
-        } else {
-            return 'writeImage("' . $destination . '") failed';
+        if (!$success) {
+            return false;
         }
+
+        return true;
     }
 }
