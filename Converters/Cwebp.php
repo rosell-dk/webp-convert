@@ -52,12 +52,6 @@ class Cwebp
         return $string;
     }
 
-    protected static function getExtension($filePath)
-    {
-        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
-        return strtolower($fileExtension);
-    }
-
     protected static function cloneFolderPermissionsToFile($folder, $file)
     {
         $fileStatistics = stat($folder);
@@ -67,6 +61,26 @@ class Cwebp
         chmod($file, $permissions);
     }
 
+    // Checks if 'Nice' is available
+    protected static function hasNiceSupport()
+    {
+        exec("nice 2>&1", $niceOutput);
+
+        if (is_array($niceOutput) && isset($niceOutput[0])) {
+            if (preg_match('/usage/', $niceOutput[0]) || (preg_match('/^\d+$/', $niceOutput[0]))) {
+
+                /* Nice is available - default niceness (+10)
+                 * https://www.lifewire.com/uses-of-commands-nice-renice-2201087
+                 * https://www.computerhope.com/unix/unice.htm
+                 */
+
+                return true;
+            }
+
+            return false;
+        }
+    }
+
     public static function convert($source, $destination, $quality, $stripMetadata)
     {
         try {
@@ -74,6 +88,7 @@ class Cwebp
                 throw new \Exception('exec() is not enabled.');
             }
 
+            // Checks if provided binary file & its hash match with deposited version & updates cwebp binary array
             $binaries = self::updateBinaries(
                 self::$binaryInfo[0],
                 self::$binaryInfo[1],
@@ -83,53 +98,63 @@ class Cwebp
             return false; // TODO: `throw` custom \Exception $e & handle it smoothly on top-level.
         }
 
-        // Build options string
-        $options = '-q ' . $quality;
-        $options .= (
+        /*
+         * Preparing options
+         */
+
+        // Metadata (all, exif, icc, xmp or none (default))
+        // Comma-separated list of existing metadata to copy from input to output
+        $metadata = (
             $stripMetadata
-            ? ' -metadata none'
-            : ' -metadata all'
+            ? '-metadata none'
+            : '-metadata all'
         );
-        // comma separated list of metadata to copy from the input to the output if present.
-        // Valid values: all, none (default), exif, icc, xmp
 
-        if (self::getExtension($source) == 'png') {
-            $options .= ' -lossless';
-        }
+        // Image quality
+        $quality = '-q ' . $quality;
 
-        if (defined('WEBPCONVERT_CWEBP_METHOD')) {
-            $options .= ' -m ' . WEBPCONVERT_CWEBP_METHOD;
+        // Losless PNG conversion
+        $fileExtension = pathinfo($source, PATHINFO_EXTENSION);
+        $losless = (
+            strtolower($fileExtension) == 'png'
+            ? '-lossless'
+            : ''
+        );
+
+        // Built-in method option
+        $method = (
+            defined('WEBPCONVERT_CWEBP_METHOD')
+            ? ' -m ' . WEBPCONVERT_CWEBP_METHOD
+            : ' -m 6'
+        );
+
+        // Built-in low memory option
+        if (!defined('WEBPCONVERT_CWEBP_LOW_MEMORY')) {
+            $lowMemory= '-low_memory';
         } else {
-            $options .= ' -m 6';
-        }
-
-        if (defined('WEBPCONVERT_CWEBP_LOW_MEMORY')) {
-            $options .= (
+            $lowMemory = (
                 WEBPCONVERT_CWEBP_LOW_MEMORY
-                ? ' -low_memory'
+                ? '-low_memory'
                 : ''
             );
-        } else {
-            $options .= ' -low_memory';
         }
-        //$options .= ' -low_memory';
 
-        // $options .= ' -quiet';
-        $options .= ' ' . self::escapeFilename($source) . ' -o ' . self::escapeFilename($destination) . ' 2>&1';
+        $optionsArray = array(
+            $metadata = $metadata,
+            $quality = $quality,
+            $losless = $losless,
+            $method = $method,
+            $lowMemory = $lowMemory,
+            $input = self::escapeFilename($source),
+            $output = '-o ' . self::escapeFilename($destination),
+            $stderrRedirect = '2>&1'
+        );
 
-        // Test if "nice" is available
-        // ($nice will be set to "nice ", if it is)
-        $nice = '';
-        exec("nice 2>&1", $nice_output);
-        if (is_array($nice_output) && isset($nice_output[0])) {
-            if (preg_match('/usage/', $nice_output[0]) || (preg_match('/^\d+$/', $nice_output[0]))) {
-                // Nice is available.
-                // We run with default niceness (+10)
-                // https://www.lifewire.com/uses-of-commands-nice-renice-2201087
-                // https://www.computerhope.com/unix/unice.htm
-                $nice = 'nice ';
-            }
-        }
+        $options = implode(' ', $optionsArray);
+        $nice = (self::hasNiceSupport()
+            ? 'nice '
+            : ''
+        );
 
         // Try all paths
         foreach ($binaries as $index => $binary) {
