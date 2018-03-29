@@ -68,8 +68,8 @@ class Cwebp
 
         if (is_array($niceOutput) && isset($niceOutput[0])) {
             if (preg_match('/usage/', $niceOutput[0]) || (preg_match('/^\d+$/', $niceOutput[0]))) {
-
-                /* Nice is available - default niceness (+10)
+                /*
+                 * Nice is available - default niceness (+10)
                  * https://www.lifewire.com/uses-of-commands-nice-renice-2201087
                  * https://www.computerhope.com/unix/unice.htm
                  */

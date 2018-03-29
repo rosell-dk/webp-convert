@@ -27,7 +27,6 @@ class Ewww
 
     public static function convert($source, $destination, $quality, $stripMetadata)
     {
-
         try {
             if (!extension_loaded('curl')) {
                 throw new \Exception('Required cURL extension is not available.');
