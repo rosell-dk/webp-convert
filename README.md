@@ -19,53 +19,46 @@ Currently the following converters are available:
 ### Basic usage:
 
 ```php
-include( __DIR__ . '/WebPConvert.php');
+<?php
+
+include( __DIR__ . '/vendor/autoload.php');
 
 $source = $_SERVER['DOCUMENT_ROOT'] . '/images/subfolder/logo.jpg';
 $destination = $_SERVER['DOCUMENT_ROOT'] . '/images/subfolder/logo.jpg.webp';
 $quality = 90;
-$strip_metadata = true;
+$stripMetadata = true;
 
-WebPConvert::$serve_converted_image = true;
-WebPConvert::$serve_original_image_on_fail = true;
 WebPConvert::setPreferredConverters(array('imagick','cwebp'));
-WebPConvert::convert($source, $destination, $quality, $strip_metadata);
+WebPConvert::convert($source, $destination, $quality, $stripMetadata);
 ```
 
 ## API
 
 ### WebPConvert
-*WebPConvert::convert($source, $destination, $quality, $strip_metadata)*\
+*WebPConvert::convert($source, $destination, $quality, $stripMetadata)*\
 - *$source:* (string) Absolute path to source image. Only forward slashes are allowed.\
 - *$destination:* (string) Absolute path of the converted image. WebPConvert will take care of creating folders that does not exist. If there is already a file at the destination, it will be removed. Of course, it is required that the webserver has write permissions to the folder. Created folders will get the same permissions as the closest existing parent folder.\
 - *$quality* (integer) Desired quality of output. Only relevant when source is a JPEG image. If source is a PNG, lossless encoding will be chosen.\
-- *$strip_metadata* (bool) Whether to copy JPEG metadata to WebP (not all converters supports this)\
+- *$stripMetadata* (bool) Whether to copy JPEG metadata to WebP (not all converters supports this)\
 
-*WebPConvert::setPreferredConverters*\ (array)
+*WebPConvert::setPreferredConverters* (array)
 Setting this manipulates the default order in which the converters are tried. If you for example set it to `cwebp`, it means that you want `cwebp` to be tried first. You can specify several favourite converters. Setting it to `imagick, cwebp` will put `imagick` to the top of the list and `cwebp` will be the next converter to try, if `imagick` fails. The option will not remove any converters from the list, only change the order.
-
-*WebPConvert::$serve_converted_image* (bool)\
-If `true`, the converted image will be output (served). Otherwise the script will produce text output about the conversion process.
-
-*WebPConvert::$serve_original_image_on_fail* (bool)\
-When WebPConvert is told to serve an image, but all converters fails to convert, WebPConvert looks at this option to decide what to do. If set to `true`, WebPConvert will serve the original image. If set to `false`, WebPConvert will generate an image with the error message. `true` is probably a good choice on production servers while `false` is probably a good choice on development servers.
-
 
 ## Converters
 Each "method" of converting an image to WebP are implemented as a separate converter. *WebPConvert* autodetects the converters by scanning the "converters" directory, so it is easy to add new converters, and safe to remove existing ones.
 
-A converter simply consists of a convert function, which takes same arguments as *WebPConvert::convert*. The job of the converter is to convert *$source* to WebP and save it at *$destination*, preferrably taking *$quality* and *$strip_metadata* into account. It however relies on *WebPConvert* to take care of the following common tasks:
+A converter simply consists of a convert function, which takes same arguments as *WebPConvert::convert*. The job of the converter is to convert `$source` to WebP and save it at `$destination`, preferrably taking `$quality` and `$stripMetadata` into account. It however relies on *WebPConvert* to take care of the following common tasks:
 - *WebPConvert* checks that source file exists
 - *WebPConvert* prepares a directory for the destination if it doesn't exist already
 - *WebPConvert* checks that it will be possible to write a file at the destination
 - *WebPConvert* checks whether the converter actually produced a file at the destination
 
-Basically there are three types of converters.
-1. Those that are based on a php extension (for example gd or imagick)
-2. Those that executes a binary directly using an exec() call
-3. Those that connect to a cloud service which does the conversion
+Basically, there are three ways for image conversion:
+- Using a PHP extension (eg `gd` or `imagick`)
+- Executing a binary directly using an `exec()` call (eg `cwebp`)
+- Connecting to a cloud service which does the conversion (eg `EWWW`)
 
-Converters based on a php extension should be your first choice. They run faster than the other methods and they don't need the server to allow exec() calls (which increases security risks). However, the *gd* converter does not support lossless conversion, so you may want to skip that for PNGs. Converters that executes a binary are also very fast (around than 50ms). Converters that delegates conversion to a cloud service are much slower (conversion takes about 1 second), but works on most shared hosts (as opposed to the other methods). This makes the cloud converters an ideal last resort. They generally requires *purchacing* a key, but the key for EWWW Image Optimizer is very cheap. Also note that there is a risk that a cloud converter has down-time. You can minimize the risk by setting up *two* cloud converters (once I get around adding more cloud converters)
+Converters based on a PHP extension should be your first choice. They are faster than other methods and they don't rely on server-side `exec()` calls (which may cause security risks). However, the `gd` converter doesn't support lossless conversion, so you may want to skip it when converting PNG images. Converters that execute a binary are also very fast (~ 50ms). Converters that delegate the conversion process to a cloud service are much slower (~ one second), but work on *almost* any shared hosts (as opposed to the other methods). This makes the cloud-based converters an ideal last resort. They generally require you to *purchase* a paid plan, but the API key for [EWWW Image Optimizer](https://ewww.io) is very cheap. Beware though that you may encounter down-time whenever the cloud service is unavailable.
 
 #### imagick
 *Best, but rarely available on shared hosts*
