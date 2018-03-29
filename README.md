@@ -7,8 +7,13 @@ In summary, the current state of WebP conversion in PHP is this: There are sever
 - [1. Introduction](#introduction)
 - [2. Installation](#installation)
 - [3. Usage](#usage)
-- [4. Methods](#methods)
-- [5. Converters](#converters)
+  - [Methods](#methods)
+  - [Basic example](#basic-usage-example)
+- [4. Converters](#converters)
+  - [`imagick`](#imagemagick)
+  - [`gd`](#gd-graphics-draw)
+  - [`cwebp`](#cwebp-binary)
+  - [`ewww`](#ewww-cloud-service)
 
 ## Introduction
 Basically, there are three ways for JPEG & PNG to WebP conversion:
@@ -36,6 +41,25 @@ composer require rosell-dk/webp-convert
 
 ## Usage
 
+### Methods
+
+**WebPConvert::convert($source, $destination, $quality, $stripMetadata)**
+
+<table>
+  <tr><th>$source</th><td><code>String</code></td><td>Absolute path to source image<strong>*</strong></td></tr>
+  <tr><th>$destination</th><td><code>String</code></td><td>Absolute path to converted image<strong>*</strong></td></tr>
+  <tr><th>$quality</th><td><code>Integer</code></td><td>Lossy quality of converted image (JPEG only - PNGs are created loslessly by default)</td></tr>
+  <tr><th>$stripMetadata</th><td><code>Boolean</code></td><td>Whether or not to copy JPEG metadata to converted image (not all converters supports this)</td></tr>
+</table>
+
+**\* only forward slashes allowed**
+
+**WebPConvert::setPreferredConverters($array)**
+This option may be used to manipulate the default order in which the converters are tried. If you for example set it to `cwebp`, it means that you want `cwebp` to be tried first. You can specify several favourite converters. Setting it to `imagick, cwebp` will put `imagick` to the top of the list and `cwebp` will be the next converter to try, if `imagick` fails. The option will not remove any converters from the list, only change the order.
+
+TODO:
+**Verify EWWW API key**
+
 ### Basic usage example
 
 ```php
@@ -53,18 +77,6 @@ $stripMetadata = true;
 WebPConvert::setPreferredConverters(array('imagick','cwebp'));
 WebPConvert::convert($source, $destination, $quality, $stripMetadata);
 ```
-
-## Methods
-
-### WebPConvert
-*WebPConvert::convert($source, $destination, $quality, $stripMetadata)*\
-- *$source:* (string) Absolute path to source image. Only forward slashes are allowed.\
-- *$destination:* (string) Absolute path of the converted image. WebPConvert will take care of creating folders that does not exist. If there is already a file at the destination, it will be removed. Of course, it is required that the webserver has write permissions to the folder. Created folders will get the same permissions as the closest existing parent folder.\
-- *$quality* (integer) Desired quality of output. Only relevant when source is a JPEG image. If source is a PNG, lossless encoding will be chosen.\
-- *$stripMetadata* (bool) Whether to copy JPEG metadata to WebP (not all converters supports this)\
-
-*WebPConvert::setPreferredConverters* (array)
-Setting this manipulates the default order in which the converters are tried. If you for example set it to `cwebp`, it means that you want `cwebp` to be tried first. You can specify several favourite converters. Setting it to `imagick, cwebp` will put `imagick` to the top of the list and `cwebp` will be the next converter to try, if `imagick` fails. The option will not remove any converters from the list, only change the order.
 
 ## Converters
 Each "method" of converting an image to WebP are implemented as a separate converter. *WebPConvert* autodetects the converters by scanning the "converters" directory, so it is easy to add new converters, and safe to remove existing ones.
