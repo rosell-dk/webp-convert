@@ -4,84 +4,86 @@ namespace WebPConvert\Converters;
 
 class Ewww
 {
+    // Throws an exception if the provided API key is invalid
+    public static function isValidKey($key)
+    {
+        $curlInit = curl_init();
+        curl_setopt($curlInit, CURLOPT_URL, 'https://optimize.exactlywww.com/verify/');
+        curl_setopt($curlInit, CURLOPT_POSTFIELDS, array('api_key' => $key));
+        $response = curl_exec($curlInit);
+
+        /*
+         * There are three possible responses:
+         * 'great' = verification successful
+         * 'exceeded' = indicates a valid key with no remaining image credits
+         * '' = an empty response indicates that the key is not valid
+        */
+
+        $result[] = 'Verify returned "' . $response . '"';
+        curl_close($curlInit);
+
+        return implode($result, '<br>');
+    }
+
     public static function convert($source, $destination, $quality, $stripMetadata)
     {
-        if (!extension_loaded('curl')) {
-            return 'This implementation requires the curl extension, which you do not have';
+
+        try {
+            if (!extension_loaded('curl')) {
+                throw new \Exception('Required cURL extension is not available.');
+            }
+
+            if (!function_exists('url_init')) {
+                throw new \Exception('Required url_init() function is not available.');
+            }
+
+            $curlInit = curl_init();
+            if (!$curlInit) {
+                throw new \Exception('Could not initialise cURL.');
+            }
+
+            if (!function_exists('curl_file_create')) {
+                throw new \Exception('Required curl_file_create() function is not available (requires PHP > 5.5).');
+            }
+
+            if (!defined('WEBPCONVERT_EWWW_KEY')) {
+                throw new \Exception('Missing API key.');
+            }
+        } catch (\Exception $e) {
+            return false; // TODO: `throw` custom \Exception $e & handle it smoothly on top-level.
         }
 
-        if (!function_exists('curl_init')) {
-            return 'curl is loaded, but <i>curl_init</i> is unavailable';
-        }
+        $curlOptions = array(
+            'api_key' => WEBPCONVERT_EWWW_KEY,
+            'webp' => '1',
+            'file' => curl_file_create($source),
+            'domain' => $_SERVER['HTTP_HOST'],
+            'quality' => $quality,
+            'metadata' => ($stripMetadata ? '0' : '1'),
+        );
 
-        $ch = curl_init();
-        if ($ch === false) {
-            return 'Could not init curl';
-        }
-
-        if (!function_exists('curl_file_create')) {
-            return 'This implementation requires PHP function <i>curl_file_create</i>, but it is not available, sorry. It should be available in PHP > 5.5';
-        }
-
-        if (!defined("WEBPCONVERT_EWW_KEY")) {
-            return 'Key is missing. To use EWWW Image Converter, you must first purchase a key and then set it up by defining a constant "WEBPCONVERT_EWW_KEY". Ie: define("WEBPCONVERT_EWW_KEY", "your_key_here");';
-        }
-        $key = WEBPCONVERT_EWW_KEY;
-
-        // Ok, lets get to it!
-
-        $msgs = array();
-        $msgs[] = 'Requesting image from EWWW Image Converter service, using curl';
-
-        $cFile = curl_file_create($source);
-
-        $url = 'https://optimize.exactlywww.com/v2/';
-        curl_setopt_array($ch, array(
-            CURLOPT_URL => $url,
+        curl_setopt_array($curlInit, array(
+            CURLOPT_URL => 'https://optimize.exactlywww.com/v2/',
             CURLOPT_HTTPHEADER => array(
                 'User-Agent: WebPConvert',
                 'Accept: image/*'
             ),
-            CURLOPT_POSTFIELDS => array(
-                'api_key' => $key,
-                'webp' => '1',
-                'file' => $cFile,
-                'domain' => $_SERVER['HTTP_HOST'],
-                'quality' => $quality,
-                'metadata' => ($stripMetadata ? '0' : '1'),
-            ),
+            CURLOPT_POSTFIELDS => $curlOptions,
             CURLOPT_BINARYTRANSFER => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER => false,
             CURLOPT_SSL_VERIFYPEER => false
         ));
 
-        $response = curl_exec($ch);
+        $response = curl_exec($curlInit);
+        $error = curl_error($curlInit);
 
-        if (empty($response)) {
-            $msgs[] = 'We got nothing back. Perhaps key is invalid. Testing key with curl call to "verify"';
-            $msgs[] = 'If it returns "great", then it means that the key should be ok (but something else went wrong). If it does not return "great", then its probably the key that is invalid, or has expired';
+        curl_close($curlInit);
 
-            // We got nothing back, so perhaps API key is invalid - let's check it!
-            curl_setopt($ch, CURLOPT_URL, 'https://optimize.exactlywww.com/verify/');
-            curl_setopt($ch, CURLOPT_POSTFIELDS, array('api_key' => $key));
+        $success = file_put_contents($destination, $response);
 
-            $response = curl_exec($ch);
-            $msgs[] = 'Verify returned "' . $response . '"';
-            curl_close($ch);
-            return implode($msgs, '<br>');
-        }
-        $curlError = curl_error($ch);
-        curl_close($ch);
-
-        if (!empty($curlError)) {
-//            return 'curl error' . $curlError;
+        if (!$success || !empty($error)) {
             return false;
-        }
-
-        if (!file_put_contents($destination, $response)) {
-//            return 'Failed writing file' . $response;
-            return error;
         }
 
         return true;
