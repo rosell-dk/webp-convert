@@ -1,33 +1,54 @@
-# webp-convert
-*Convert JPEG & PNG to WebP with PHP (if at all possible)*
+# WebPConvert
+*Convert JPEG & PNG to WebP with PHP*
 
-In summary, the current state of WebP conversion in PHP is this: There are several ways to do it, but they all require *something* of the server setup. What works on one shared host might not work on another.
+In summary, the current state of WebP conversion in PHP is this: There are several ways to do it, but they all require *something* of the server setup. What works on one shared host might not work on another. `WebPConvert` combines these methods by iterating over them (optionally in the desired order) until one of them is successful - or all of them fail.
 
-This library converts JPEG & PNG images to WebP using several methods. It iterates over all given methods, until one of them is successful, or all of them fail. You can set the desired order with the `preferred_converters` option.
+**Table of contents**
+- [1. Introduction](#introduction)
+- [2. Installation](#installation)
+- [3. Usage](#usage)
+- [4. API](#api)
 
-Currently the following converters are available:
+## Introduction
+Basically, there are three ways for JPEG & PNG to WebP conversion:
+- Using a PHP extension (eg `gd` or `imagick`)
+- Executing a binary directly using an `exec()` call (eg `cwebp`)
+- Connecting to a cloud service which does the conversion (eg `EWWW`)
+
+Converters **based on PHP extensions** should be your first choice. They are faster than other methods and they don't rely on server-side `exec()` calls (which may cause security risks). However, the `gd` converter doesn't support lossless conversion, so you may want to skip it when converting PNG images. Converters that **execute a binary** are also very fast (~ 50ms). Converters delegating the conversion process to a **cloud service** are much slower (~ one second), but work on *almost* any shared hosts (as opposed to the other methods). This makes the cloud-based converters an ideal last resort. They generally require you to *purchase* a paid plan, but the API key for [EWWW Image Optimizer](https://ewww.io) is very cheap. Beware though that you may encounter down-time whenever the cloud service is unavailable.
+
+`WebPConvert` currently supports the following converters:
 
 | Converter            | Method                                   | Summary                                              |
 | -------------------- | ---------------------------------------- | ---------------------------------------------------- |
 | [imagick](#imagick)  | Uses Imagick extension                   | Best converter, but rarely available on shared hosts |
 | [gd](#gd)            | Uses GD Graphics extension               | Fast, but unable to do lossless encoding             |
-| [cwebp](#cwebp)      | Calls cwebp binary directly              | Great, but requires ```exec()```                     |
-| [ewww](#ewww)        | Calls EWWW Image Optimizer cloud service | Works on *almost* any shared host; slow, cheap, requires key. SEEMS TO BE OUT OF ORDER |
+| [cwebp](#cwebp)      | Calls cwebp binary directly              | Great, but requires `exec()` function                |
+| [ewww](#ewww)        | Calls EWWW Image Optimizer cloud service | Works *almost* anywhere; slow, cheap, requires key.  |
+
+## Installation
+Simply require `WebPConvert` from the command line via [Composer](https://getcomposer.org):
+
+```text
+composer require rosell-dk/webp-convert
+```
 
 ## Usage
 
-### Basic usage:
+### Basic usage example
 
 ```php
 <?php
+// Initialise your autoloader (this example is using composer)
+require 'vendor/autoload.php';
 
-include( __DIR__ . '/vendor/autoload.php');
-
+// Define basic conversion options
 $source = $_SERVER['DOCUMENT_ROOT'] . '/images/subfolder/logo.jpg';
 $destination = $_SERVER['DOCUMENT_ROOT'] . '/images/subfolder/logo.jpg.webp';
 $quality = 90;
 $stripMetadata = true;
 
+// Change order of converters (optional) & fire up WebP conversion
 WebPConvert::setPreferredConverters(array('imagick','cwebp'));
 WebPConvert::convert($source, $destination, $quality, $stripMetadata);
 ```
@@ -53,13 +74,6 @@ A converter simply consists of a convert function, which takes same arguments as
 - *WebPConvert* checks that it will be possible to write a file at the destination
 - *WebPConvert* checks whether the converter actually produced a file at the destination
 
-Basically, there are three ways for image conversion:
-- Using a PHP extension (eg `gd` or `imagick`)
-- Executing a binary directly using an `exec()` call (eg `cwebp`)
-- Connecting to a cloud service which does the conversion (eg `EWWW`)
-
-Converters based on a PHP extension should be your first choice. They are faster than other methods and they don't rely on server-side `exec()` calls (which may cause security risks). However, the `gd` converter doesn't support lossless conversion, so you may want to skip it when converting PNG images. Converters that execute a binary are also very fast (~ 50ms). Converters that delegate the conversion process to a cloud service are much slower (~ one second), but work on *almost* any shared hosts (as opposed to the other methods). This makes the cloud-based converters an ideal last resort. They generally require you to *purchase* a paid plan, but the API key for [EWWW Image Optimizer](https://ewww.io) is very cheap. Beware though that you may encounter down-time whenever the cloud service is unavailable.
-
 #### imagick
 *Best, but rarely available on shared hosts*
 
@@ -81,7 +95,6 @@ You can configure the converter by defining any of the following constants:
 *WEBPCONVERT_IMAGICK_METHOD*: This parameter controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. When higher values are used, the encoder will spend more time inspecting additional encoding possibilities and decide on the quality gain. Lower value can result in faster processing time at the expense of larger file size and lower compression quality. Default value is 6 (higher than the default value of the cwebp command, which is 4).\
 *WEBPCONVERT_IMAGICK_LOW_MEMORY*: The low memory option will make the encoding slower and the output slightly different in size and distortion. This flag is only effective for methods 3 and up. It is *on* by default. To turn it off, set the constant to `false`\
 
-
 In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
 1. [Compile libwebp from source](https://developers.google.com/speed/webp/docs/compiling)
 2. [Compile imagemagick from source](https://www.imagemagick.org/script/install-source.php) (```./configure --with-webp=yes```)
@@ -102,7 +115,6 @@ The converter does not support copying metadata.
 Converter options:
 
 *WEBPCONVERT_GD_PNG*: If set to `true`, the converter will convert PNGs even though the result will be bad.
-
 
 [imagewebp](http://php.net/manual/en/function.imagewebp.php) is a function that comes with PHP (>5.5.0) *provided* that PHP has been compiled with WebP support. Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes created corrupted images. That bug can however easily be fixed in PHP (fix was released [here](https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files)). However, I have experienced corrupted images *anyway* (but cannot reproduce that bug). So use this converter with caution. The corrupted images shows as completely transparent images in Google Chrome, but with correct size.
 
@@ -162,6 +174,6 @@ The converter supports:
 - quality
 - metadata
 
-The cloud service supports other options, which can easily be implemented, if there is an interest. View options [here](https://ewww.io/api/)
+The cloud service supports other options, which can easily be implemented, if there is an interest. View options [here](https://ewww.io/api)
 
 The converter could be improved by using *fsockopen* if *curl* is not available. This is however low priority as the curl extension is available on most shared hosts. PHP >= 5.5 is also widely available (PHP 5.4 reached end of life [more than a year ago!](http://php.net/supported-versions.php)).
