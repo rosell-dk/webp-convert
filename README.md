@@ -35,7 +35,7 @@ Converters **based on PHP extensions** should be your first choice. They are fas
 ## Getting started
 
 ### Installation
-Simply require `WebPConvert` from the command line via [Composer](https://getcomposer.org):
+Simply require this plugin from the command line via [Composer](https://getcomposer.org):
 
 ```text
 composer require rosell-dk/webp-convert
@@ -46,18 +46,22 @@ composer require rosell-dk/webp-convert
 ```php
 <?php
 
-// Initialise your autoloader (this example is using composer)
+// Initialise your autoloader (this example is using Composer)
 require 'vendor/autoload.php';
 
+use WebPConvert\WebPConvert;
+
 // Define basic conversion options
-$source = $_SERVER['DOCUMENT_ROOT'] . '/images/subfolder/logo.jpg';
-$destination = $_SERVER['DOCUMENT_ROOT'] . '/images/subfolder/logo.jpg.webp';
+$source = $_SERVER['DOCUMENT_ROOT'] . '/images/logo.jpg';
+$destination = $_SERVER['DOCUMENT_ROOT'] . '/images/logo.webp';
 $quality = 90;
 $stripMetadata = true;
 
-// Change order of converters (optional) & fire up WebP conversion
-WebPConvert\WebPConvert::setPreferredConverters(array('imagick','cwebp'));
-WebPConvert\WebPConvert::convert($source, $destination, $quality, $stripMetadata);
+// Change order of converters (optional) ..
+WebPConvert::setPreferredConverters(array('imagick','cwebp'));
+
+// .. fire up WebP conversion
+WebPConvert::convert($source, $destination, $quality, $stripMetadata);
 ```
 
 ## Methods
