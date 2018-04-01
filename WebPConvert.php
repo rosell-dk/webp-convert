@@ -6,8 +6,8 @@ use WebPConvert\Converters\Cwebp;
 
 class WebPConvert
 {
-    private static $preferredConverters = array();
-    private static $allowedExtensions = array('jpg', 'jpeg', 'png');
+    private static $preferredConverters = [];
+    private static $allowedExtensions = ['jpg', 'jpeg', 'png'];
 
     // Defines the array of preferred converters
     public static function setPreferredConverters($preferredConvertersArray)
@@ -50,7 +50,7 @@ class WebPConvert
             // But which parent? - the parent to the first missing folder
 
             $parentFolders = explode('/', $folder);
-            $poppedFolders = array();
+            $poppedFolders = [];
 
             while (!(file_exists(implode('/', $parentFolders)))) {
                 array_unshift($poppedFolders, array_pop($parentFolders));
@@ -90,7 +90,7 @@ class WebPConvert
     public static function getConverters()
     {
         // Prepare building up an array of converters
-        $converters = array();
+        $converters = [];
 
         // Saves all available converters inside the `Converters` directory to an array
         $availableConverters = array_map(function ($filePath) {
@@ -134,12 +134,12 @@ class WebPConvert
                 $converter = ucfirst($converter);
                 $className = 'WebPConvert\\Converters\\' . $converter;
 
-                if (!is_callable(array($className, 'convert'))) {
+                if (!is_callable([$className, 'convert'])) {
                     continue;
                 }
 
                 $conversion = call_user_func(
-                    array($className, 'convert'),
+                    [$className, 'convert'],
                     $source,
                     $destination,
                     $quality,

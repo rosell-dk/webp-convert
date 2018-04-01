@@ -4,20 +4,20 @@ namespace WebPConvert\Converters;
 
 class Cwebp
 {
-    protected static $cwebpDefaultPaths = array( // System paths to look for cwebp binary
+    protected static $cwebpDefaultPaths = [ // System paths to look for cwebp binary
         '/usr/bin/cwebp',
         '/usr/local/bin/cwebp',
         '/usr/gnu/bin/cwebp',
         '/usr/syno/bin/cwebp'
-    );
+    ];
 
-    protected static $binaryInfo = array(  // OS-specific binaries included in this library
-        'WinNT' => array( 'cwebp.exe', '49e9cb98db30bfa27936933e6fd94d407e0386802cb192800d9fd824f6476873'),
-        'Darwin' => array( 'cwebp-mac12', 'a06a3ee436e375c89dbc1b0b2e8bd7729a55139ae072ed3f7bd2e07de0ebb379'),
-        'SunOS' => array( 'cwebp-sol', '1febaffbb18e52dc2c524cda9eefd00c6db95bc388732868999c0f48deb73b4f'),
-        'FreeBSD' => array( 'cwebp-fbsd', 'e5cbea11c97fadffe221fdf57c093c19af2737e4bbd2cb3cd5e908de64286573'),
-        'Linux' => array( 'cwebp-linux', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568')
-    )[PHP_OS];
+    protected static $binaryInfo = [  // OS-specific binaries included in this library
+        'WinNT' => [ 'cwebp.exe', '49e9cb98db30bfa27936933e6fd94d407e0386802cb192800d9fd824f6476873'],
+        'Darwin' => [ 'cwebp-mac12', 'a06a3ee436e375c89dbc1b0b2e8bd7729a55139ae072ed3f7bd2e07de0ebb379'],
+        'SunOS' => [ 'cwebp-sol', '1febaffbb18e52dc2c524cda9eefd00c6db95bc388732868999c0f48deb73b4f'],
+        'FreeBSD' => [ 'cwebp-fbsd', 'e5cbea11c97fadffe221fdf57c093c19af2737e4bbd2cb3cd5e908de64286573'],
+        'Linux' => [ 'cwebp-linux', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568']
+    ][PHP_OS];
 
     protected static function updateBinaries($file, $hash, $array)
     {
@@ -139,7 +139,7 @@ class Cwebp
             );
         }
 
-        $optionsArray = array(
+        $optionsArray = [
             $metadata = $metadata,
             $quality = $quality,
             $losless = $losless,
@@ -148,7 +148,7 @@ class Cwebp
             $input = self::escapeFilename($source),
             $output = '-o ' . self::escapeFilename($destination),
             $stderrRedirect = '2>&1'
-        );
+        ];
 
         $options = implode(' ', $optionsArray);
         $nice = (

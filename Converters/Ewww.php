@@ -37,7 +37,7 @@ class Ewww
                 throw new \Exception('Could not initialise cURL.');
             }
 
-            $headers = array();
+            $headers = [];
             $headers[] = "Content-Type: application/x-www-form-urlencoded";
 
             curl_setopt($ch, CURLOPT_URL, "https://optimize.exactlywww.com/quota/");
@@ -78,27 +78,27 @@ class Ewww
                 throw new \Exception('Could not initialise cURL.');
             }
 
-            $curlOptions = array(
+            $curlOptions = [
                 'api_key' => WEBPCONVERT_EWWW_KEY,
                 'webp' => '1',
                 'file' => curl_file_create($source),
                 'domain' => $_SERVER['HTTP_HOST'],
                 'quality' => $quality,
                 'metadata' => ($stripMetadata ? '0' : '1')
-            );
+            ];
 
-            curl_setopt_array($ch, array(
+            curl_setopt_array($ch, [
                 CURLOPT_URL => "https://optimize.exactlywww.com/v2/",
-                CURLOPT_HTTPHEADER => array(
+                CURLOPT_HTTPHEADER => [
                     'User-Agent: WebPConvert',
                     'Accept: image/*'
-                ),
+                ],
                 CURLOPT_POSTFIELDS => $curlOptions,
                 CURLOPT_BINARYTRANSFER => true,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_HEADER => false,
                 CURLOPT_SSL_VERIFYPEER => false
-            ));
+            ]);
 
             $response = curl_exec($ch);
 
