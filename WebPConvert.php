@@ -16,7 +16,7 @@ class WebPConvert
     }
 
     // Throws an exception if the provided file doesn't exist
-    protected static function isValidTarget($filePath)
+    public static function isValidTarget($filePath)
     {
         if (!file_exists($filePath)) {
             throw new \Exception('File or directory not found: ' . $filePath);
@@ -26,7 +26,7 @@ class WebPConvert
     }
 
     // Throws an exception if the provided file's extension is invalid
-    protected static function isAllowedExtension($filePath)
+    public static function isAllowedExtension($filePath)
     {
         $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
         if (!in_array(strtolower($fileExtension), self::$allowedExtensions)) {
@@ -87,7 +87,7 @@ class WebPConvert
         return true;
     }
 
-    protected static function getConverters()
+    public static function getConverters()
     {
         // Prepare building up an array of converters
         $converters = array();
