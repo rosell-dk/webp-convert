@@ -151,7 +151,8 @@ class Cwebp
         );
 
         $options = implode(' ', $optionsArray);
-        $nice = (self::hasNiceSupport()
+        $nice = (
+            self::hasNiceSupport()
             ? 'nice '
             : ''
         );

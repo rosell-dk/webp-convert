@@ -62,7 +62,7 @@ class WebPConvert
 
             // Trying to create the given folder
             if (!mkdir($folder, $permissions, true)) {
-                 throw new \Exception('Failed creating folder: ' . $folder);
+                throw new \Exception('Failed creating folder: ' . $folder);
             }
 
             // `mkdir` doesn't respect permissions, so we have to `chmod` each created subfolder

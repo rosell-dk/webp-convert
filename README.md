@@ -224,4 +224,14 @@ The cloud service supports other options, which can easily be implemented, if th
 <summary><strong>Roadmap</strong> 👁</summary>
 
 The converter could be improved by using `fsockopen` when `cURL` is not available - which is extremely rare. PHP >= 5.5.0 is also widely available (PHP 5.4.0 reached end of life [more than two years ago!](http://php.net/supported-versions.php)).
+
+Also, this package uses the [PHP-CS-FIXER](https://github.com/FriendsOfPHP/PHP-CS-Fixer) library (based on squizlabs' [PHP_CodeSniffer](https://github.com/squizlabs/PHP_CodeSniffer)) so all PHP files automagically comply with the [PSR-2](https://www.php-fig.org/psr/psr-2/) coding standard.
+
+```php
+<?php
+
+// Using PHP-CS-Fixer
+vendor/bin/php-cs-fixer fix .
+```
+
 </details>
