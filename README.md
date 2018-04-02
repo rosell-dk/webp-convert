@@ -142,7 +142,7 @@ In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
   <tr><th>Requirements</th><td>GD PHP extension and PHP >= 5.5.0 (compiled with WebP support)</td></tr>
   <tr><th>Performance</th><td>~30ms to convert a 40kb image</td></tr>
   <tr><th>Reliability</th><td>Not sure - I have experienced corrupted images, but cannot reproduce</td></tr>
-  <tr><th>Availability</th><td>Unfortunately, according to <a href="https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php" target="_blank">this link</a>, WebP support on shared hosts is rare.</td></tr>
+  <tr><th>Availability</th><td>Unfortunately, according to <a href="https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php">this link</a>, WebP support on shared hosts is rare.</td></tr>
 </table>
 
 `gd` neither supports copying metadata nor exposes any WebP options. Lacking the option to set lossless encoding results in poor encoding of PNGs - the filesize is generally much larger than the original. For this reason, PNG conversion is *disabled* by default. The converter however lets you override this default by defining the `WEBPCONVERT_GD_PNG` constant:
@@ -165,7 +165,7 @@ To get WebP support for `gd` in PHP 5.5.0, PHP must be configured with the `--wi
   <tr><th>Requirements</th><td><code>exec()</code> function</td></tr>
   <tr><th>Performance</th><td>~40-120ms to convert a 40kb image (depending on <code>WEBPCONVERT_CWEBP_METHOD</code>)</td></tr>
   <tr><th>Reliability</th><td>No problems detected so far!</td></tr>
-  <tr><th>Availability</th><td><code>exec()</code> is available on surprisingly many webhosts (a selection of which can be found <a href="https://docs.ewww.io/article/43-supported-web-hosts" target="_blank">here</a></td></tr>
+  <tr><th>Availability</th><td><code>exec()</code> is available on surprisingly many webhosts (a selection of which can be found <a href="https://docs.ewww.io/article/43-supported-web-hosts">here</a></td></tr>
 </table>
 
 [cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP conversion command line converter released by Google. A its core, our implementation looks in the /bin folder for a precompiled binary appropriate for the OS and executes it with [exec()](http://php.net/manual/en/function.exec.php). Thanks to Shane Bishop for letting me copy the precompiled binaries that come with his plugin, [EWWW Image Optimizer](https://ewww.io).
@@ -201,7 +201,7 @@ In more detail, the implementation does this:
 ### EWWW cloud service
 
 <table>
-  <tr><th>Requirements</th><td>Valid EWWW Image Optimizer <a href="https://ewww.io" target="_blank">API key</a>, <code>cURL</code> and PHP >= 5.5.0</td></tr>
+  <tr><th>Requirements</th><td>Valid EWWW Image Optimizer <a href="https://ewww.io">API key</a>, <code>cURL</code> and PHP >= 5.5.0</td></tr>
   <tr><th>Performance</th><td>~1300ms to convert a 40kb image</td></tr>
   <tr><th>Reliability</th><td>Great (but, as with any cloud service, there is a risk of downtime)</td></tr>
   <tr><th>Availability</th><td>Should work on <em>almost</em> any webhost</td></tr>
@@ -231,12 +231,15 @@ The converter could be improved by using `fsockopen` when `cURL` is not availabl
 `WebPConvert` uses the [PHP-CS-FIXER](https://github.com/FriendsOfPHP/PHP-CS-Fixer) library (based on squizlabs' [PHP_CodeSniffer](https://github.com/squizlabs/PHP_CodeSniffer)) so all PHP files automagically comply with the [PSR-2](https://www.php-fig.org/psr/psr-2/) coding standard.
 
 ```text
-vendor/bin/php-cs-fixer fix .
+// Dry run - without making changes to any files
+composer cs-dry
+
+// Production mode
+composer cs-fix
 ```
 
 Furthermore, testing is done with Sebastian Bergmann's excellent testing framework [PHPUnit](https://github.com/sebastianbergmann/phpunit), like this:
 
 ```text
-vendor/bin/phpunit
+composer test
 ```
-
