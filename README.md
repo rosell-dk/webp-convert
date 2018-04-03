@@ -15,8 +15,8 @@ In summary, the current state of WebP conversion in PHP is this: There are sever
 
 ## Introduction
 Basically, there are three ways for JPEG & PNG to WebP conversion:
+- Executing the `cwebp` binary directly via `exec()`
 - Using a PHP extension (eg `gd` or `imagick`)
-- Executing a binary directly using an `exec()` call (eg `cwebp`)
 - Connecting to a cloud service which does the conversion (eg `EWWW`)
 
 Converters **based on PHP extensions** should be your first choice. They are faster than other methods and they don't rely on server-side `exec()` calls (which may cause security risks). However, the `gd` converter doesn't support lossless conversion, so you may want to skip it when converting PNG images. Converters that **execute a binary** are also very fast (~ 50ms). Converters delegating the conversion process to a **cloud service** are much slower (~ one second), but work on *almost* any shared hosts (as opposed to the other methods). This makes the cloud-based converters an ideal last resort. They generally require you to *purchase* a paid plan, but the API key for [EWWW Image Optimizer](https://ewww.io) is very cheap. Beware though that you may encounter down-time whenever the cloud service is unavailable.
