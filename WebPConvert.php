@@ -6,8 +6,8 @@ use WebPConvert\Converters\Cwebp;
 
 class WebPConvert
 {
-    private static $preferredConverters = [];
-    private static $allowedExtensions = ['jpg', 'jpeg', 'png'];
+    public static $preferredConverters = [];
+    public static $allowedExtensions = ['jpg', 'jpeg', 'png'];
 
     // Defines the array of preferred converters
     public static function setPreferredConverters($preferredConvertersArray)
