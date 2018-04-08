@@ -28,6 +28,14 @@ class WebPConvertTest extends TestCase
         }
     }
 
+    public function testSetPreferredConverters()
+    {
+        $preferred = ['gd', 'cwebp'];
+        WebPConvert::setPreferredConverters($preferred);
+
+        $this->assertEquals($preferred, WebPConvert::$preferredConverters);
+    }
+
     /**
      * @expectedException \Exception
      */
@@ -49,7 +57,7 @@ class WebPConvertTest extends TestCase
         $allowed = ['jpg', 'jpeg', 'png'];
 
         foreach ($allowed as $key) {
-            $this->assertTrue(WebPConvert::isAllowedExtension(__FILE__));
+            WebPConvert::isAllowedExtension(__FILE__);
         }
     }
 
@@ -75,5 +83,13 @@ class WebPConvertTest extends TestCase
         $custom = ['gd', 'cwebp', 'ewww', 'imagick'];
 
         $this->assertEquals($custom, WebPConvert::getConverters());
+    }
+
+    public function testConvert()
+    {
+        $source = (__DIR__ . '/test.jpg');
+        $destination = (__DIR__ . '/test.webp');
+
+        $this->assertTrue(WebPConvert::convert($source, $destination));
     }
 }

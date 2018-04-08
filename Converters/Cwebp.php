@@ -4,14 +4,14 @@ namespace WebPConvert\Converters;
 
 class Cwebp
 {
-    protected static $cwebpDefaultPaths = [ // System paths to look for cwebp binary
+    public static $cwebpDefaultPaths = [ // System paths to look for cwebp binary
         '/usr/bin/cwebp',
         '/usr/local/bin/cwebp',
         '/usr/gnu/bin/cwebp',
         '/usr/syno/bin/cwebp'
     ];
 
-    protected static $binaryInfo = [  // OS-specific binaries included in this library
+    public static $binaryInfo = [  // OS-specific binaries included in this library
         'WinNT' => [ 'cwebp.exe', '49e9cb98db30bfa27936933e6fd94d407e0386802cb192800d9fd824f6476873'],
         'Darwin' => [ 'cwebp-mac12', 'a06a3ee436e375c89dbc1b0b2e8bd7729a55139ae072ed3f7bd2e07de0ebb379'],
         'SunOS' => [ 'cwebp-sol', '1febaffbb18e52dc2c524cda9eefd00c6db95bc388732868999c0f48deb73b4f'],
@@ -19,15 +19,17 @@ class Cwebp
         'Linux' => [ 'cwebp-linux', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568']
     ][PHP_OS];
 
-    protected static function updateBinaries($file, $hash, $array)
+    public static function updateBinaries($file, $hash, $array)
     {
         $binaryFile = __DIR__ . '/Binaries/' . $file;
-        $binaryHash = hash_file('sha256', $binaryFile);
 
         // Throws an exception if binary file does not exist
         if (!file_exists($binaryFile)) {
             throw new \Exception('Operating system is currently not supported: ' . PHP_OS);
         }
+
+        // File exists, now generate its hash
+        $binaryHash = hash_file('sha256', $binaryFile);
 
         // Throws an exception if binary file checksum & deposited checksum do not match
         if ($binaryHash != $hash) {
@@ -39,7 +41,7 @@ class Cwebp
         return $array;
     }
 
-    protected static function escapeFilename($string)
+    public static function escapeFilename($string)
     {
         // Escaping whitespaces & quotes
         $string = preg_replace('/\s/', '\\ ', $string);
@@ -52,7 +54,7 @@ class Cwebp
         return $string;
     }
 
-    protected static function cloneFolderPermissionsToFile($folder, $file)
+    public static function cloneFolderPermissionsToFile($folder, $file)
     {
         $fileStatistics = stat($folder);
 
@@ -62,7 +64,7 @@ class Cwebp
     }
 
     // Checks if 'Nice' is available
-    protected static function hasNiceSupport()
+    public static function hasNiceSupport()
     {
         exec("nice 2>&1", $niceOutput);
 
