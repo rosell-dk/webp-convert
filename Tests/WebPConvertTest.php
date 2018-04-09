@@ -19,6 +19,11 @@ class WebPConvertTest extends TestCase
         $this->assertEmpty(WebPConvert::$preferredConverters);
     }
 
+    public function testExcludeDefaultBinaries()
+    {
+        $this->assertFalse(WebPConvert::$excludeDefaultBinaries);
+    }
+    
     public function testAllowedExtensions()
     {
         $allowed = ['jpg', 'jpeg', 'png'];
@@ -28,10 +33,10 @@ class WebPConvertTest extends TestCase
         }
     }
 
-    public function testSetPreferredConverters()
+    public function testSetConverters()
     {
         $preferred = ['gd', 'cwebp'];
-        WebPConvert::setPreferredConverters($preferred);
+        WebPConvert::setConverters($preferred);
 
         $this->assertEquals($preferred, WebPConvert::$preferredConverters);
     }
@@ -83,6 +88,14 @@ class WebPConvertTest extends TestCase
         $custom = ['gd', 'cwebp', 'ewww', 'imagick'];
 
         $this->assertEquals($custom, WebPConvert::getConverters());
+    }
+
+    public function testSetGetConverters()
+    {
+        $preferred = ['gd', 'cwebp'];
+        WebPConvert::setConverters($preferred, true);
+
+        $this->assertEquals($preferred, WebPConvert::getConverters());
     }
 
     public function testConvert()
