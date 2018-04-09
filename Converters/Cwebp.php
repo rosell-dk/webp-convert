@@ -54,15 +54,6 @@ class Cwebp
         return $string;
     }
 
-    public static function cloneFolderPermissionsToFile($folder, $file)
-    {
-        $fileStatistics = stat($folder);
-
-        // Same permissions as parent folder plus stripping off the executable bits
-        $permissions = $fileStatistics['mode'] & 0000666;
-        chmod($file, $permissions);
-    }
-
     // Checks if 'Nice' is available
     public static function hasNiceSupport()
     {
@@ -165,10 +156,14 @@ class Cwebp
             exec($command, $output, $returnCode);
 
             if ($returnCode == 0) { // Everything okay!
-                // cwebp sets file permissions to 664 ..
-                // .. instead, $destination's parent folder's permissions should be used (except executable bits)
+                // cwebp sets file permissions to 664 but instead ..
+                // .. $destination's parent folder's permissions should be used (except executable bits)
                 $destinationParent = dirname($destination);
-                self::cloneFolderPermissionsToFile($destinationParent, $destination);
+                $fileStatistics = stat($destinationParent);
+
+                // Apply same permissions as parent folder but strip off the executable bits
+                $permissions = $fileStatistics['mode'] & 0000666;
+                chmod($destination, $permissions);
 
                 $success = true;
                 break;
