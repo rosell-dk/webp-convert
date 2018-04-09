@@ -57,4 +57,27 @@ class CwebpTest extends TestCase
 
         $this->assertContains($filePath, Cwebp::updateBinaries($file, $hash, $array));
     }
+
+    public function testEscapeFilename()
+    {
+        $wrong = '/path/to/file Na<>me."ext"';
+        $right = '/path/to/file\\\ Name.\&#34;ext\&#34;';
+
+        $this->assertEquals($right, Cwebp::escapeFilename($wrong));
+    }
+
+    public function testHasNiceSupport()
+    {
+        $this->assertNotNull(Cwebp::hasNiceSupport());
+    }
+
+    public function testConvert()
+    {
+        $source = realpath(__DIR__ . '/../test.jpg');
+        $destination = realpath(__DIR__ . '/../test.webp');
+        $quality = 85;
+        $stripMetadata = true;
+
+        $this->assertTrue(Cwebp::convert($source, $destination, $quality, $stripMetadata));
+    }
 }
