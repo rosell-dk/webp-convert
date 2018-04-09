@@ -7,12 +7,17 @@ use WebPConvert\Converters\Cwebp;
 class WebPConvert
 {
     public static $preferredConverters = [];
+    public static $excludeDefaultBinaries = false;
     public static $allowedExtensions = ['jpg', 'jpeg', 'png'];
 
     // Defines the array of preferred converters
-    public static function setPreferredConverters($preferredConvertersArray)
+    public static function setConverters($array, $exclude = false)
     {
-        self::$preferredConverters = $preferredConvertersArray;
+        self::$preferredConverters = $array;
+
+        if ($exclude) {
+            self::$excludeDefaultBinaries = true;
+        }
     }
 
     // Throws an exception if the provided file doesn't exist
@@ -103,6 +108,10 @@ class WebPConvert
             if (in_array($preferredConverter, $availableConverters)) {
                 $converters[] = $preferredConverter;
             }
+        }
+
+        if (self::$excludeDefaultBinaries) {
+            return $converters;
         }
 
         // Fills $converters array with the remaining available converters, keeping the updated order of execution
