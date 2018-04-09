@@ -57,9 +57,6 @@ $destination = $_SERVER['DOCUMENT_ROOT'] . '/images/logo.webp';
 $quality = 90;
 $stripMetadata = true;
 
-// Change order of converters (optional) ..
-WebPConvert::setPreferredConverters(array('imagick','cwebp'));
-
 // .. fire up WebP conversion
 WebPConvert::convert($source, $destination, $quality, $stripMetadata);
 ```
@@ -78,13 +75,14 @@ The following methods are available:
 
 ----
 
-**WebPConvert::setPreferredConverters($converters)**
+**WebPConvert::setConverters($converters, $exlude)**
 
-| Parameter        | Type    | Description                                                                           |
-| ---------------- | ------- | ------------------------------------------------------------------------------------- |
-| `$converters`    | Array   | Desired order in which the converters are tried (eg `cwebp`, `gd`, `imagick`, `ewww`) |
+| Parameter     | Type    | Description                                                                           |
+| ------------- | ------- | ------------------------------------------------------------------------------------- |
+| `$converters` | Array   | Desired order in which the converters are tried (eg `cwebp`, `gd`, `imagick`, `ewww`) |
+| `$exclude`    | Boolean | Whether or not to exclude converters not selected by `$converter`                     |
 
-**Example:** Changing it to `imagick, cwebp` would lead to `imagick` being tried first, and `cwebp` right after that. This option will not remove any converters from the list.
+**Example:** Changing it to `imagick, cwebp` would lead to `imagick` being tried first, and `cwebp` right after that. This option will not remove any converters from the list, but rather put the selected converters at the top (unless `true` is passed as second parameter).
 
 ----
 
