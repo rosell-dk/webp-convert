@@ -4,15 +4,7 @@ namespace WebPConvert\Converters;
 
 class Imagick
 {
-    // Throws an exception if iMagick does not support WebP conversion
-    protected static function hasWebpSupport($object)
-    {
-        if (!in_array('WEBP', $object->queryFormats())) {
-            throw new \Exception('iMagick was compiled without WebP support.');
-        }
-        $object->setImageFormat('WEBP');
-    }
-
+    // TODO: WebPConvert already does this - replace it with simple extension check
     // Throws an exception if the provided file's extension is unsupported
     protected static function isValidExtension($filePath, $object)
     {
@@ -45,7 +37,12 @@ class Imagick
 
             $im = new \Imagick($source);
 
-            self::hasWebpSupport($im);
+            // Throws an exception if iMagick does not support WebP conversion
+            if (!in_array('WEBP', $im->queryFormats())) {
+                throw new \Exception('iMagick was compiled without WebP support.');
+            }
+            $im->setImageFormat('WEBP');
+
             self::isValidExtension($source, $im);
         } catch (\Exception $e) {
             return false; // TODO: `throw` custom \Exception $e & handle it smoothly on top-level.
