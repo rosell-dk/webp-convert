@@ -66,21 +66,21 @@ The following methods are available:
 
 **WebPConvert::convert($source, $destination, $quality, $stripMetadata)**
 
-| Parameter        | Type    | Description                                                                                |
-| ---------------- | ------- | ------------------------------------------------------------------------------------------ |
-| `$source`        | String  | Absolute path to source image (only forward slashes allowed)                               |
-| `$destination`   | String  | Absolute path to converted image (only forward slashes allowed)                            |
-| `$quality`       | Integer | Lossy quality of converted image (JPEG only - PNGs are created loslessly by default)       |
-| `$stripMetadata` | Boolean | Whether or not to copy JPEG metadata to converted image (not all converters supports this) |
+| Parameter        | Type    | Default | Description                                                                                |
+| ---------------- | ------- | ------- | ------------------------------------------------------------------------------------------ |
+| `$source`        | String  | `''`    | Absolute path to source image (only forward slashes allowed)                               |
+| `$destination`   | String  | `''`    | Absolute path to converted image (only forward slashes allowed)                            |
+| `$quality`       | Integer | `85`    | Lossy quality of converted image (JPEG only - PNGs are created loslessly by default)       |
+| `$stripMetadata` | Boolean | `false` | Whether or not to copy JPEG metadata to converted image (not all converters supports this) |
 
 ----
 
-**WebPConvert::setConverters($converters, $exlude)**
+**WebPConvert::setConverters($converters, $exclude)**
 
-| Parameter     | Type    | Description                                                                           |
-| ------------- | ------- | ------------------------------------------------------------------------------------- |
-| `$converters` | Array   | Desired order in which the converters are tried (eg `cwebp`, `gd`, `imagick`, `ewww`) |
-| `$exclude`    | Boolean | Whether or not to exclude converters not selected by `$converter`                     |
+| Parameter     | Type    | Default                              | Description                                                       |
+| ------------- | ------- | ------------------------------------ | ----------------------------------------------------------------- |
+| `$converters` | Array   | `['cwebp', 'ewww', 'gd', 'imagick']` | Desired order in which the converters are tried                   |
+| `$exclude`    | Boolean | `false`                              | Whether or not to exclude converters not selected by `$converter` |
 
 **Example:** Changing it to `imagick, cwebp` would lead to `imagick` being tried first, and `cwebp` right after that. This option will not remove any converters from the list, but rather put the selected converters at the top (unless `true` is passed as second parameter).
 
@@ -88,9 +88,9 @@ The following methods are available:
 
 **WebPConvert\Converters\Ewww::isValidKey($key)**
 
-| Parameter | Type   | Description                  |
-| --------- | ------ | ---------------------------- |
-| `$key`    | String | EWWW Image Optimizer API key |
+| Parameter | Type   | Default | Description                  |
+| --------- | ------ | ------- | ---------------------------- |
+| `$key`    | String | `''`    | EWWW Image Optimizer API key |
 
 If you quickly need to verify your API key, or want to build upon `WebPConvert`, this might be helpful. Passing it as an argument returns one of three possible states: 'great' (successful verification), 'exceeded' (valid API key, but not enough image credits) & '' (invalid API key).
 
