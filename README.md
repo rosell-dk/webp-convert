@@ -193,7 +193,7 @@ In more detail, the implementation does this:
 - If there's no matching binary or execution fails, try common system paths (eg `/usr/bin/cwebp`, ..)
 - Before executing binary, the checksum is tested
 - Options are generated. `-lossless` is used for PNG. `-metadata` is set to `all` or `none`
-- If `[nice](https://en.wikipedia.org/wiki/Nice_(Unix))` command is found on host, binary is executed with low priority in order to save system ressources
+- If [`nice`]( https://en.wikipedia.org/wiki/Nice_(Unix)) command is found on host, binary is executed with low priority in order to save system ressources
 - Permissions of the generated file are set to be the same as parent
 
 ----
