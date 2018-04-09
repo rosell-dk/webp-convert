@@ -4,24 +4,10 @@ namespace WebPConvert\Converters;
 
 class Imagick
 {
-    // TODO: WebPConvert already does this - replace it with simple extension check
-    // Throws an exception if the provided file's extension is unsupported
-    protected static function isValidExtension($filePath, $object)
+    public static function getExtension($filePath)
     {
         $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
-        $fileExtension = strtolower($fileExtension);
-
-        switch ($fileExtension) {
-            case 'jpg':
-            case 'jpeg':
-                break;
-            case 'png':
-                $object->setOption('webp:lossless', 'true');
-                break;
-            default:
-                throw new \Exception('Unsupported file extension: ' . $fileExtension);
-        }
-        return true;
+        return strtolower($fileExtension);
     }
 
     public static function convert($source, $destination, $quality, $stripMetadata)
@@ -46,6 +32,15 @@ class Imagick
             self::isValidExtension($source, $im);
         } catch (\Exception $e) {
             return false; // TODO: `throw` custom \Exception $e & handle it smoothly on top-level.
+        }
+
+        // Apply losless compression for PNG images
+        switch (self::getExtension($source)) {
+            case 'png':
+                $im->setOption('webp:lossless', 'true');
+                break;
+            default:
+                break;
         }
 
         /*
