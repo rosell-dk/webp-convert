@@ -4,6 +4,7 @@ namespace WebPConvert\Converters;
 
 class Imagick
 {
+    // TODO: Move to WebPConvert or helper classes file (redundant, see Gd.php)
     public static function getExtension($filePath)
     {
         $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
@@ -27,9 +28,8 @@ class Imagick
             if (!in_array('WEBP', $im->queryFormats())) {
                 throw new \Exception('iMagick was compiled without WebP support.');
             }
-            $im->setImageFormat('WEBP');
 
-            self::isValidExtension($source, $im);
+            $im->setImageFormat('WEBP');
         } catch (\Exception $e) {
             return false; // TODO: `throw` custom \Exception $e & handle it smoothly on top-level.
         }

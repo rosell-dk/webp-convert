@@ -4,26 +4,11 @@ namespace WebPConvert\Converters;
 
 class Gd
 {
-    protected static function isValidExtension($filePath)
+    // TODO: Move to WebPConvert or helper classes file (redundant, see Imagick.php)
+    public static function getExtension($filePath)
     {
         $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
-        $fileExtension = strtolower($fileExtension);
-
-        switch ($fileExtension) {
-            case 'jpg':
-            case 'jpeg':
-                return imagecreatefromjpeg($filePath);
-            case 'png':
-                if (defined('WEBPCONVERT_GD_PNG') && WEBPCONVERT_GD_PNG) {
-                    return imagecreatefrompng($filePath);
-                } else {
-                    throw new \Exception('PNG file conversion failed. Try forcing it with: define("WEBPCONVERT_GD_PNG", true);');
-                }
-                break;
-            default:
-                throw new \Exception('Unsupported file extension: ' . $fileExtension);
-        }
-        return true;
+        return strtolower($fileExtension);
     }
 
     public static function convert($source, $destination, $quality, $stripMetadata)
@@ -36,8 +21,18 @@ class Gd
             if (!function_exists('imagewebp')) {
                 throw new \Exception('Required imagewebp() function is not available.');
             }
-            
-            $image = self::isValidExtension($source);
+
+            switch (self::getExtension($source)) {
+                case 'png':
+                    if (defined('WEBPCONVERT_GD_PNG') && WEBPCONVERT_GD_PNG) {
+                        return imagecreatefrompng($filePath);
+                    } else {
+                        throw new \Exception('PNG file conversion failed. Try forcing it with: define("WEBPCONVERT_GD_PNG", true);');
+                    }
+                    break;
+                default:
+                    $image = imagecreatefromjpeg($source);
+            }
 
             // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
             if (!$image) {
