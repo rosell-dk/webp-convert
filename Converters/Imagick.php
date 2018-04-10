@@ -13,26 +13,22 @@ class Imagick
 
     public static function convert($source, $destination, $quality, $stripMetadata)
     {
-        try {
-            if (!extension_loaded('imagick')) {
-                throw new \Exception('Required iMagick extension is not available.');
-            }
-
-            if (!class_exists('Imagick')) {
-                throw new \Exception('iMagick is installed but cannot handle source file.');
-            }
-
-            $im = new \Imagick($source);
-
-            // Throws an exception if iMagick does not support WebP conversion
-            if (!in_array('WEBP', $im->queryFormats())) {
-                throw new \Exception('iMagick was compiled without WebP support.');
-            }
-
-            $im->setImageFormat('WEBP');
-        } catch (\Exception $e) {
-            return false; // TODO: `throw` custom \Exception $e & handle it smoothly on top-level.
+        if (!extension_loaded('imagick')) {
+            throw new \Exception('Required iMagick extension is not available.');
         }
+
+        if (!class_exists('Imagick')) {
+            throw new \Exception('iMagick is installed but cannot handle source file.');
+        }
+
+        $im = new \Imagick($source);
+
+        // Throws an exception if iMagick does not support WebP conversion
+        if (!in_array('WEBP', $im->queryFormats())) {
+            throw new \Exception('iMagick was compiled without WebP support.');
+        }
+
+        $im->setImageFormat('WEBP');
 
         // Apply losless compression for PNG images
         switch (self::getExtension($source)) {
@@ -73,9 +69,7 @@ class Imagick
         $success = $im->writeImageFile(fopen($destination, 'wb'));
 
         if (!$success) {
-            return false;
+            throw new \Exception('Failed writing file');
         }
-
-        return true;
     }
 }

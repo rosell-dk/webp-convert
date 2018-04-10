@@ -4,27 +4,6 @@ namespace WebPConvert\Converters;
 
 class Ewww
 {
-    // Checks if all requirements of cURL are met
-    private static function checkRequirements($curl_file_create = true)
-    {
-        if (!extension_loaded('curl')) {
-            throw new \Exception('Required cURL extension is not available.');
-        }
-
-        if (!function_exists('curl_init')) {
-            throw new \Exception('Required url_init() function is not available.');
-        }
-
-        if (!$curl_file_create && !function_exists('curl_file_create')) {
-            throw new \Exception('Required curl_file_create() function is not available (requires PHP > 5.5).');
-        }
-
-        if (!defined("WEBPCONVERT_EWWW_KEY")) {
-            throw new \Exception('Missing API key.');
-        }
-
-        return true;
-    }
 
 /*
     public static function getQuota($key) {
@@ -95,44 +74,53 @@ class Ewww
 
     public static function convert($source, $destination, $quality, $stripMetadata)
     {
-        try {
-            self::checkRequirements();
+        if (!extension_loaded('curl')) {
+            throw new \Exception('Required cURL extension is not available.');
+        }
 
-            $ch = curl_init();
-            if (!$ch) {
-                throw new \Exception('Could not initialise cURL.');
-            }
+        if (!function_exists('curl_init')) {
+            throw new \Exception('Required url_init() function is not available.');
+        }
 
-            $curlOptions = [
-                'api_key' => WEBPCONVERT_EWWW_KEY,
-                'webp' => '1',
-                'file' => curl_file_create($source),
-                'domain' => $_SERVER['HTTP_HOST'],
-                'quality' => $quality,
-                'metadata' => ($stripMetadata ? '0' : '1')
-            ];
+        if (!function_exists('curl_file_create')) {
+            throw new \Exception('Required curl_file_create() function is not available (requires PHP > 5.5).');
+        }
 
-            curl_setopt_array($ch, [
-                CURLOPT_URL => "https://optimize.exactlywww.com/v2/",
-                CURLOPT_HTTPHEADER => [
-                    'User-Agent: WebPConvert',
-                    'Accept: image/*'
-                ],
-                CURLOPT_POSTFIELDS => $curlOptions,
-                CURLOPT_BINARYTRANSFER => true,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HEADER => false,
-                CURLOPT_SSL_VERIFYPEER => false
-            ]);
+        if (!defined("WEBPCONVERT_EWWW_KEY")) {
+            throw new \Exception('Missing API key.');
+        }
 
-            $response = curl_exec($ch);
+        $ch = curl_init();
+        if (!$ch) {
+            throw new \Exception('Could not initialise cURL.');
+        }
 
-            if (curl_errno($ch)) {
-                throw new \Exception(curl_error($ch));
-            }
-        } catch (\Exception $e) {
-            //echo $e->getMessage();
-            return false; // TODO: `throw` custom \Exception $e & handle it smoothly on top-level.
+        $curlOptions = [
+            'api_key' => WEBPCONVERT_EWWW_KEY,
+            'webp' => '1',
+            'file' => curl_file_create($source),
+            'domain' => $_SERVER['HTTP_HOST'],
+            'quality' => $quality,
+            'metadata' => ($stripMetadata ? '0' : '1')
+        ];
+
+        curl_setopt_array($ch, [
+            CURLOPT_URL => "https://optimize.exactlywww.com/v2/",
+            CURLOPT_HTTPHEADER => [
+                'User-Agent: WebPConvert',
+                'Accept: image/*'
+            ],
+            CURLOPT_POSTFIELDS => $curlOptions,
+            CURLOPT_BINARYTRANSFER => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HEADER => false,
+            CURLOPT_SSL_VERIFYPEER => false
+        ]);
+
+        $response = curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            throw new \Exception(curl_error($ch));
         }
 
         // The API does not always return images.
@@ -142,20 +130,18 @@ class Ewww
         // So verify that we got an image back.
         if (curl_getinfo($ch, CURLINFO_CONTENT_TYPE) != 'application/octet-stream') {
             curl_close($ch);
-            return false;
+            throw new \Exception('ewww api did not return an image. It could be that the key is invalid');
         }
 
         // Not sure this can happen. So just in case
         if ($response == '') {
-            return false;
+            throw new \Exception('ewww api did not return anything');
         }
 
         $success = file_put_contents($destination, $response);
 
         if (!$success) {
-            return false;
+            throw new \Exception('Error saving file');
         }
-
-        return true;
     }
 }

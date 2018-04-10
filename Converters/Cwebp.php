@@ -76,20 +76,16 @@ class Cwebp
 
     public static function convert($source, $destination, $quality, $stripMetadata)
     {
-        try {
-            if (!function_exists('exec')) {
-                throw new \Exception('exec() is not enabled.');
-            }
-
-            // Checks if provided binary file & its hash match with deposited version & updates cwebp binary array
-            $binaries = self::updateBinaries(
-                self::$binaryInfo[0],
-                self::$binaryInfo[1],
-                self::$cwebpDefaultPaths
-            );
-        } catch (\Exception $e) {
-            return false; // TODO: `throw` custom \Exception $e & handle it smoothly on top-level.
+        if (!function_exists('exec')) {
+            throw new \Exception('exec() is not enabled.');
         }
+
+        // Checks if provided binary file & its hash match with deposited version & updates cwebp binary array
+        $binaries = self::updateBinaries(
+            self::$binaryInfo[0],
+            self::$binaryInfo[1],
+            self::$cwebpDefaultPaths
+        );
 
         /*
          * Preparing options
@@ -173,9 +169,7 @@ class Cwebp
         }
 
         if (!$success) {
-            return false;
+            throw new \Exception('No working binaries were found');
         }
-
-        return true;
     }
 }

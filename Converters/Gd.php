@@ -13,36 +13,37 @@ class Gd
 
     public static function convert($source, $destination, $quality, $stripMetadata)
     {
-        try {
-            if (!extension_loaded('gd')) {
-                throw new \Exception('Required GD extension is not available.');
-            }
+        if (!extension_loaded('gd')) {
+            throw new \Exception('Required GD extension is not available.');
+        }
 
-            if (!function_exists('imagewebp')) {
-                throw new \Exception('Required imagewebp() function is not available.');
-            }
+        if (!function_exists('imagewebp')) {
+            throw new \Exception('Required imagewebp() function is not available.');
+        }
 
-            switch (self::getExtension($source)) {
-                case 'png':
-                    if (defined('WEBPCONVERT_GD_PNG') && WEBPCONVERT_GD_PNG) {
-                        $image = imagecreatefrompng($source);
-                    } else {
-                        throw new \Exception('PNG file conversion failed. Try forcing it with: define("WEBPCONVERT_GD_PNG", true);');
-                    }
-                    break;
-                default:
-                    $image = imagecreatefromjpeg($source);
-            }
+        switch (self::getExtension($source)) {
+            case 'png':
+                if (defined('WEBPCONVERT_GD_PNG') && WEBPCONVERT_GD_PNG) {
+                    $image = imagecreatefrompng($source);
+                } else {
+                    throw new \Exception('PNG file skipped. GD is configured not to convert PNGs');
+                }
+                break;
+            default:
+                $image = imagecreatefromjpeg($source);
+        }
 
-            // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
-            if (!$image) {
-                throw new \Exception('Either imagecreatefromjpeg or imagecreatefrompng failed');
-            }
-        } catch (\Exception $e) {
-            return false; // TODO: `throw` custom \Exception $e & handle it smoothly on top-level.
+        // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
+        if (!$image) {
+            throw new \Exception('Either imagecreatefromjpeg or imagecreatefrompng failed');
         }
 
         $success = imagewebp($image, $destination, $quality);
+
+        if (!$success) {
+            throw new \Exception('Failed writing file');
+        }
+
         /*
          * This hack solves an `imagewebp` bug
          * See https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files
@@ -54,11 +55,5 @@ class Gd
         }
 
         imagedestroy($image);
-
-        if (!$success) {
-            return false;
-        }
-
-        return true;
     }
 }

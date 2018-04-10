@@ -200,20 +200,23 @@ class WebPConvert
                 continue;
             }
 
-            $conversion = call_user_func(
-                [$className, 'convert'],
-                $source,
-                $destination,
-                $quality,
-                $stripMetadata
-            );
+            try {
+                $conversion = call_user_func(
+                    [$className, 'convert'],
+                    $source,
+                    $destination,
+                    $quality,
+                    $stripMetadata
+                );
 
-            if ($conversion) {
                 if (file_exists($destination)) {
                     $success = true;
                     break;
                 }
+            } catch (\Exception $e) {
+                $success = false;
             }
+
 
             $success = false;
         }
