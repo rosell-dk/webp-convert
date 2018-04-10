@@ -5,7 +5,7 @@ namespace WebPConvert\Converters;
 class Ewww
 {
     // Checks if all requirements of cURL are met
-    protected static function checkRequirements($curl_file_create = true)
+    private static function checkRequirements($curl_file_create = true)
     {
         if (!extension_loaded('curl')) {
             throw new \Exception('Required cURL extension is not available.');

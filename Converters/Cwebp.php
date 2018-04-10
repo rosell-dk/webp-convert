@@ -4,14 +4,14 @@ namespace WebPConvert\Converters;
 
 class Cwebp
 {
-    public static $cwebpDefaultPaths = [ // System paths to look for cwebp binary
+    private static $cwebpDefaultPaths = [ // System paths to look for cwebp binary
         '/usr/bin/cwebp',
         '/usr/local/bin/cwebp',
         '/usr/gnu/bin/cwebp',
         '/usr/syno/bin/cwebp'
     ];
 
-    public static $binaryInfo = [  // OS-specific binaries included in this library
+    private static $binaryInfo = [  // OS-specific binaries included in this library
         'WinNT' => [ 'cwebp.exe', '49e9cb98db30bfa27936933e6fd94d407e0386802cb192800d9fd824f6476873'],
         'Darwin' => [ 'cwebp-mac12', 'a06a3ee436e375c89dbc1b0b2e8bd7729a55139ae072ed3f7bd2e07de0ebb379'],
         'SunOS' => [ 'cwebp-sol', '1febaffbb18e52dc2c524cda9eefd00c6db95bc388732868999c0f48deb73b4f'],
@@ -19,7 +19,7 @@ class Cwebp
         'Linux' => [ 'cwebp-linux', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568']
     ][PHP_OS];
 
-    public static function updateBinaries($file, $hash, $array)
+    private static function updateBinaries($file, $hash, $array)
     {
         $binaryFile = __DIR__ . '/Binaries/' . $file;
 
@@ -41,7 +41,7 @@ class Cwebp
         return $array;
     }
 
-    public static function escapeFilename($string)
+    private static function escapeFilename($string)
     {
         // Escaping whitespaces & quotes
         $string = preg_replace('/\s/', '\\ ', $string);
@@ -55,7 +55,7 @@ class Cwebp
     }
 
     // Checks if 'Nice' is available
-    public static function hasNiceSupport()
+    private static function hasNiceSupport()
     {
         exec("nice 2>&1", $niceOutput);
 

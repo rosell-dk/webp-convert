@@ -5,7 +5,7 @@ namespace WebPConvert\Converters;
 class Gd
 {
     // TODO: Move to WebPConvert or helper classes file (redundant, see Imagick.php)
-    public static function getExtension($filePath)
+    private static function getExtension($filePath)
     {
         $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
         return strtolower($fileExtension);
