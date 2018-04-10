@@ -22,7 +22,7 @@ class Ewww
         if (!defined("WEBPCONVERT_EWWW_KEY")) {
             throw new \Exception('Missing API key.');
         }
-        
+
         return true;
     }
 
@@ -31,7 +31,6 @@ class Ewww
     {
         try {
             self::checkRequirements(false);
-
             $ch = curl_init();
             if (!$ch) {
                 throw new \Exception('Could not initialise cURL.');
@@ -106,10 +105,24 @@ class Ewww
                 throw new \Exception(curl_error($ch));
             }
         } catch (\Exception $e) {
+            //echo $e->getMessage();
             return false; // TODO: `throw` custom \Exception $e & handle it smoothly on top-level.
         }
 
-        curl_close($ch);
+        // The API does not always return images.
+        // For example, it may return a message such as '{"error":"invalid","t":"exceeded"}
+        // Messages has a http content type of ie 'text/html; charset=UTF-8
+        // Images has application/octet-stream.
+        // So verify that we got an image back.
+        if (curl_getinfo($ch, CURLINFO_CONTENT_TYPE) != 'application/octet-stream') {
+            curl_close($ch);
+            return false;
+        }
+
+        // Not sure this can happen. So just in case
+        if ($response == '') {
+            return false;
+        }
 
         $success = file_put_contents($destination, $response);
 
