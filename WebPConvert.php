@@ -171,7 +171,5 @@ class WebPConvert
             throw new \Exception('No operational converters are available');
             return;
         }
-
-        return $success;
     }
 }
