@@ -14,6 +14,7 @@ use PHPUnit\Framework\TestCase;
 
 class WebPConvertTest extends TestCase
 {
+  /*
     public function testPreferredConverters()
     {
         $this->assertEmpty(WebPConvert::$preferredConverters);
@@ -23,7 +24,7 @@ class WebPConvertTest extends TestCase
     {
         $this->assertFalse(WebPConvert::$excludeDefaultBinaries);
     }
-    
+
     public function testAllowedExtensions()
     {
         $allowed = ['jpg', 'jpeg', 'png'];
@@ -40,10 +41,11 @@ class WebPConvertTest extends TestCase
 
         $this->assertEquals($preferred, WebPConvert::$preferredConverters);
     }
-
+*/
     /**
      * @expectedException \Exception
      */
+     /*
     public function testIsValidTargetInvalid()
     {
         WebPConvert::isValidTarget('Invalid');
@@ -53,10 +55,11 @@ class WebPConvertTest extends TestCase
     {
         $this->assertTrue(WebPConvert::isValidTarget(__FILE__));
     }
-
+*/
     /**
      * @expectedException \Exception
      */
+     /*
     public function testIsAllowedExtensionInvalid()
     {
         $allowed = ['jpg', 'jpeg', 'png'];
@@ -97,7 +100,7 @@ class WebPConvertTest extends TestCase
 
         $this->assertEquals($preferred, WebPConvert::getConverters());
     }
-
+*/
     public function testConvert()
     {
         $source = (__DIR__ . '/test.jpg');

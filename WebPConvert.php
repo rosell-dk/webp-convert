@@ -6,12 +6,12 @@ use WebPConvert\Converters\Cwebp;
 
 class WebPConvert
 {
-    public static $preferredConverters = [];
-    public static $excludeDefaultBinaries = false;
-    public static $allowedExtensions = ['jpg', 'jpeg', 'png'];
+    private static $preferredConverters = [];
+    private static $excludeDefaultBinaries = false;
+    private static $allowedExtensions = ['jpg', 'jpeg', 'png'];
 
     // Defines the array of preferred converters
-    public static function setConverters($array, $exclude = false)
+    public static function setConverterOrder($array, $exclude = false)
     {
         self::$preferredConverters = $array;
 
@@ -21,7 +21,7 @@ class WebPConvert
     }
 
     // Throws an exception if the provided file doesn't exist
-    public static function isValidTarget($filePath)
+    private static function isValidTarget($filePath)
     {
         if (!file_exists($filePath)) {
             throw new \Exception('File or directory not found: ' . $filePath);
@@ -31,7 +31,7 @@ class WebPConvert
     }
 
     // Throws an exception if the provided file's extension is invalid
-    public static function isAllowedExtension($filePath)
+    private static function isAllowedExtension($filePath)
     {
         $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
         if (!in_array(strtolower($fileExtension), self::$allowedExtensions)) {
@@ -42,7 +42,7 @@ class WebPConvert
     }
 
     // Creates folder in provided path & sets correct permissions
-    public static function createWritableFolder($filePath)
+    private static function createWritableFolder($filePath)
     {
         $folder = pathinfo($filePath, PATHINFO_DIRNAME);
 
@@ -92,7 +92,7 @@ class WebPConvert
         return true;
     }
 
-    public static function getConverters()
+    private static function getConverters()
     {
         // Prepare building up an array of converters
         $converters = [];

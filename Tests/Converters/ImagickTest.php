@@ -14,10 +14,11 @@ use PHPUnit\Framework\TestCase;
 
 class ImagickTest extends TestCase
 {
+  /*
     public function testGetExtension()
     {
         $this->assertEquals('php', Imagick::getExtension(__FILE__));
-    }
+    }*/
 
     public function testConvert()
     {
