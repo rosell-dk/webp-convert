@@ -136,38 +136,42 @@ class WebPConvert
     {
         $success = false;
 
-        try {
-            self::isValidTarget($source);
-            self::isAllowedExtension($source);
-            self::createWritableFolder($destination);
+        self::isValidTarget($source);
+        self::isAllowedExtension($source);
+        self::createWritableFolder($destination);
 
-            foreach (self::getConverters() as $converter) {
-                $converter = ucfirst($converter);
-                $className = 'WebPConvert\\Converters\\' . $converter;
+        foreach (self::getConverters() as $converter) {
+            $converter = ucfirst($converter);
+            $className = 'WebPConvert\\Converters\\' . $converter;
 
-                if (!is_callable([$className, 'convert'])) {
-                    continue;
-                }
+            if (!is_callable([$className, 'convert'])) {
+                continue;
+            }
 
-                $conversion = call_user_func(
-                    [$className, 'convert'],
-                    $source,
-                    $destination,
-                    $quality,
-                    $stripMetadata
-                );
+            $conversion = call_user_func(
+                [$className, 'convert'],
+                $source,
+                $destination,
+                $quality,
+                $stripMetadata
+            );
 
-                if ($conversion) {
+            if ($conversion) {
+                if (file_exists($destination)) {
                     $success = true;
                     break;
                 }
-
-                $success = false;
             }
 
-            return $success;
-        } catch (\Exception $e) {
-            echo 'Error: ' . $e->getMessage();
+            $success = false;
         }
+
+
+        if (!$success) {
+            throw new \Exception('No operational converters are available');
+            return;
+        }
+
+        return $success;
     }
 }

@@ -58,7 +58,15 @@ $quality = 90;
 $stripMetadata = true;
 
 // .. fire up WebP conversion
-WebPConvert::convert($source, $destination, $quality, $stripMetadata);
+try {
+    WebPConvert::convert($source, $destination, $quality, $stripMetadata);
+}
+catch(Exception $e) {
+    echo 'Error: ';
+    echo $e->getMessage();
+  //print_r($e);
+}
+
 ```
 
 ## Methods
@@ -75,7 +83,7 @@ The following methods are available:
 
 ----
 
-**WebPConvert::setConverters($converters, $exclude)**
+**WebPConvert::setConverterOrder($converters, $exclude)**
 
 | Parameter     | Type    | Default                              | Description                                                       |
 | ------------- | ------- | ------------------------------------ | ----------------------------------------------------------------- |
