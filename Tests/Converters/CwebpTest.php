@@ -73,7 +73,7 @@ class CwebpTest extends TestCase
     {
         $this->assertNotNull(Cwebp::hasNiceSupport());
     }*/
-
+/*
     public function testConvert()
     {
         $source = realpath(__DIR__ . '/../test.jpg');
@@ -82,5 +82,5 @@ class CwebpTest extends TestCase
         $stripMetadata = true;
 
         $this->assertTrue(Cwebp::convert($source, $destination, $quality, $stripMetadata));
-    }
+    }*/
 }
