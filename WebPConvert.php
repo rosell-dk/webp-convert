@@ -38,6 +38,18 @@ class WebPConvert
                 define("WEBPCONVERT_GD_PNG", $optionValue);
             }
         }
+        if ($converter == 'imagick') {
+            if ($optionName == 'webp:method') {
+                if (!defined("WEBPCONVERT_IMAGICK_METHOD")) {
+                    define("WEBPCONVERT_IMAGICK_METHOD", $optionValue);
+                }
+            }
+            if ($optionName == 'webp:low-memory') {
+                if (!defined("WEBPCONVERT_IMAGICK_LOW_MEMORY")) {
+                    define("WEBPCONVERT_IMAGICK_LOW_MEMORY", $optionValue);
+                }
+            }
+        }
     }
 
     // Defines the array of preferred converters
@@ -169,7 +181,6 @@ class WebPConvert
       @param (int) $quality (optional): Quality of converted file (0-100)
       @param (bool) $stripMetadata (optional): Whether or not to strip metadata. Default is to strip. Not all converters supports this
     */
-
     public static function convert($source, $destination, $quality = 85, $stripMetadata = true)
     {
         $success = false;
