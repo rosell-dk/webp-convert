@@ -4,8 +4,13 @@
   "type": "library",
   "license": "MIT",
   "keywords": ["webp", "images", "cwebp", "imagick", "gd", "jpg2webp", "png2webp", "jpg", "png", "image conversion"],
+  "scripts": {
+    "cs-fix": "php-cs-fixer fix",
+    "cs-dry": "php-cs-fixer fix --dry-run --diff",
+    "test": "phpunit"
+  },
   "autoload": {
-    "psr-0": { "WebPConvert": "" }
+    "psr-4": { "WebPConvert\\": "" }
   },
   "authors": [
     {
@@ -18,5 +23,9 @@
       "homepage": "https://twobrain.io",
       "role": "Collaborator"
     }
-  ]
+  ],
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "^2.11",
+    "phpunit/phpunit": "5.7.27"
+  }
 }
