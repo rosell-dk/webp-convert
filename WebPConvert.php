@@ -19,7 +19,7 @@ class WebPConvert
           'gd' => array(
             'convert_pngs' => true
       )*/
-    public static function setConverterOptions($options)
+    public static function setConverterOption($converter, $optionName, $optionValue)
     {
         /*
         The old way of setting converter options is depreciated
@@ -28,14 +28,14 @@ class WebPConvert
         As we still support the functionality, we can use it here, as a quick way
         of supporting the new API */
 
-        if (isset($options['ewww']['key'])) {
+        if (($converter == 'ewww') && ($optionName == 'key')) {
             if (!defined("WEBPCONVERT_EWW_KEY")) {
-                define("WEBPCONVERT_EWW_KEY", $options['ewww']['key']);
+                define("WEBPCONVERT_EWW_KEY", $optionValue);
             }
         }
-        if (isset($options['gd']['convert_pngs'])) {
+        if (($converter == 'gd') && ($optionName == 'convert_pngs')) {
             if (!defined("WEBPCONVERT_GD_PNG")) {
-                define("WEBPCONVERT_GD_PNG", $options['gd']['convert_pngs']);
+                define("WEBPCONVERT_GD_PNG", $optionValue);
             }
         }
     }

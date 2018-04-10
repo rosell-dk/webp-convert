@@ -172,7 +172,11 @@ In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
   <tr><th>Availability</th><td>Unfortunately, according to <a href="https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php">this link</a>, WebP support on shared hosts is rare.</td></tr>
 </table>
 
-`gd` neither supports copying metadata nor exposes any WebP options. Lacking the option to set lossless encoding results in poor encoding of PNGs - the filesize is generally much larger than the original. For this reason, PNG conversion is *disabled* by default. The converter however lets you override this default by defining the `WEBPCONVERT_GD_PNG` constant:
+`gd` neither supports copying metadata nor exposes any WebP options. Lacking the option to set lossless encoding results in poor encoding of PNGs - the filesize is generally much larger than the original. For this reason, PNG conversion is *disabled* by default. To make the converter to encode PNGs, set the `convert_pngs` option to `true`:
+
+```php
+WebPConvert::setConverterOption('gd', 'convert_pngs', true);
+```
 
 - `WEBPCONVERT_GD_PNG`: If set to `true`, the converter will convert PNGs even though the result will be bad.
 
@@ -237,17 +241,7 @@ In more detail, the implementation does this:
 EWWW Image Optimizer is a very cheap cloud service for optimizing images. After purchasing an API key, simply set it up like this:
 
 ```php
-WebPConvert::setConverterOptions('ewww', array(
-  'ewww' => array(
-    'key' => 'YOUR-KEY-HERE'
-  ),
-  'gd' => array(
-    'convert_pngs' => true
-  )
-));
-
-
-
+WebPConvert::setConverterOption('ewww', 'key', 'YOUR-KEY-HERE');
 ```
 
 The converter supports:
