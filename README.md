@@ -87,10 +87,10 @@ The following methods are available:
 
 | Parameter     | Type    | Default                              | Description                                                       |
 | ------------- | ------- | ------------------------------------ | ----------------------------------------------------------------- |
-| `$converters` | Array   | `['cwebp', 'ewww', 'gd', 'imagick']` | Desired order in which the converters are tried                   |
+| `$converters` | Array   | `['imagick', 'cwebp', 'gd', 'ewww']` | Desired order in which the converters are tried                   |
 | `$exclude`    | Boolean | `false`                              | Whether or not to exclude converters not selected by `$converter` |
 
-**Example:** Changing it to `imagick, cwebp` would lead to `imagick` being tried first, and `cwebp` right after that. This option will not remove any converters from the list, but rather put the selected converters at the top (unless `true` is passed as second parameter).
+**Example:** Changing it to `gd, ewww` would lead to `gd` being tried first, and `ewww` right after that and then `imagick`. This option will not remove any converters from the list, but rather put the selected converters at the top (unless `true` is passed as second parameter).
 
 ----
 

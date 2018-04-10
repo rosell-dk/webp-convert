@@ -133,6 +133,14 @@ class WebPConvert
             return strtolower($fileName);
         }, glob(__DIR__ . '/Converters/*.php'));
 
+        // Order the available converters so imagick comes first, then cwebp, then gd
+        $availableConverters = array_unique(
+            array_merge(
+                array('imagick', 'cwebp', 'gd'),
+                $availableConverters
+            )
+        );
+
         // Checks if preferred converters match available converters and adds all matches to $converters array
         foreach (self::$preferredConverters as $preferredConverter) {
             if (in_array($preferredConverter, $availableConverters)) {
