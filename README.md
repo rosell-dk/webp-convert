@@ -177,9 +177,6 @@ In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
 ```php
 WebPConvert::setConverterOption('gd', 'convert_pngs', true);
 ```
-
-- `WEBPCONVERT_GD_PNG`: If set to `true`, the converter will convert PNGs even though the result will be bad.
-
 <details>
 <summary><strong>Known bugs</strong> 👁</summary>
 
