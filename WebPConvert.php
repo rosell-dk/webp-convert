@@ -134,6 +134,8 @@ class WebPConvert
 
     public static function convert($source, $destination, $quality = 85, $stripMetadata = true)
     {
+        $success = false;
+
         try {
             self::isValidTarget($source);
             self::isAllowedExtension($source);
