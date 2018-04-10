@@ -94,6 +94,27 @@ The following methods are available:
 
 ----
 
+**WebPConvert::setConverterOptions($options)**
+
+| Parameter     | Type    | Default                              | Description                                                       |
+| ------------- | ------- | ------------------------------------ | ----------------------------------------------------------------- |
+| `$options   ` | Array   | null                                 | Options for specific converters                                   |
+
+**Example:**
+
+```php
+WebPConvert::setConverterOptions(array(
+  'ewww' => array(
+    'key' => 'xxx897aoefu'
+  ),
+  'gd' => array(
+    'convert_pngs' => true
+  )
+));
+```
+
+----
+
 **WebPConvert\Converters\Ewww::isValidKey($key)**
 
 | Parameter | Type   | Default | Description                  |
@@ -215,8 +236,18 @@ In more detail, the implementation does this:
 
 EWWW Image Optimizer is a very cheap cloud service for optimizing images. After purchasing an API key, simply set it up like this:
 
-```text
-define("WEBPCONVERT_EWWW_KEY", "YOUR-KEY-HERE");
+```php
+WebPConvert::setConverterOptions('ewww', array(
+  'ewww' => array(
+    'key' => 'YOUR-KEY-HERE'
+  ),
+  'gd' => array(
+    'convert_pngs' => true
+  )
+));
+
+
+
 ```
 
 The converter supports:

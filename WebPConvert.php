@@ -10,6 +10,36 @@ class WebPConvert
     private static $excludeDefaultBinaries = false;
     private static $allowedExtensions = ['jpg', 'jpeg', 'png'];
 
+    // set converter options
+    /* ie:
+        array(
+          'ewww' => array(
+            'key' => 'xxx897aoefu'
+          ),
+          'gd' => array(
+            'convert_pngs' => true
+      )*/
+    public static function setConverterOptions($options)
+    {
+        /*
+        The old way of setting converter options is depreciated
+        It will be removed in 2.0.0.
+
+        As we still support the functionality, we can use it here, as a quick way
+        of supporting the new API */
+
+        if (isset($options['ewww']['key'])) {
+            if (!defined("WEBPCONVERT_EWW_KEY")) {
+                define("WEBPCONVERT_EWW_KEY", $options['ewww']['key']);
+            }
+        }
+        if (isset($options['gd']['convert_pngs'])) {
+            if (!defined("WEBPCONVERT_GD_PNG")) {
+                define("WEBPCONVERT_GD_PNG", $options['gd']['convert_pngs']);
+            }
+        }
+    }
+
     // Defines the array of preferred converters
     public static function setConverterOrder($array, $exclude = false)
     {
