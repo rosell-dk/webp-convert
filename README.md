@@ -94,23 +94,19 @@ The following methods are available:
 
 ----
 
-**WebPConvert::setConverterOptions($options)**
+**WebPConvert::setConverterOption($converter, $optionName, $optionValue)**
 
-| Parameter     | Type    | Default                              | Description                                                       |
-| ------------- | ------- | ------------------------------------ | ----------------------------------------------------------------- |
-| `$options   ` | Array   | null                                 | Options for specific converters                                   |
+| Parameter      | Type    | Default                              | Description                                                       |
+| -------------- | ------- | ------------------------------------ | ----------------------------------------------------------------- |
+| `$converter`   | String  | null                                 | The converter to assign an option. Ie 'gd'                        |
+| `$optionName`  | String  | null                                 | The name of the option to set                                     |
+| `$optionValue` | Any     | null                                 | The value of the option                                           |
 
-**Example:**
+**Examples:**
 
 ```php
-WebPConvert::setConverterOptions(array(
-  'ewww' => array(
-    'key' => 'xxx897aoefu'
-  ),
-  'gd' => array(
-    'convert_pngs' => true
-  )
-));
+WebPConvert::setConverterOption('ewww', 'key', 'YOUR-KEY-HERE');
+WebPConvert::setConverterOption('gd', 'convert_pngs', true);
 ```
 
 ----
