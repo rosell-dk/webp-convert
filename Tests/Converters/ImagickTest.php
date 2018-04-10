@@ -1,5 +1,4 @@
 <?php
-
 /**
  * WebPConvert - Convert JPEG & PNG to WebP with PHP
  *

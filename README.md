@@ -107,6 +107,8 @@ The following methods are available:
 ```php
 WebPConvert::setConverterOption('ewww', 'key', 'YOUR-KEY-HERE');
 WebPConvert::setConverterOption('gd', 'convert_pngs', true);
+WebPConvert::setConverterOption('cwebp', 'webp:method', '6');
+WebPConvert::setConverterOption('imagick', 'webp:method', '6');
 ```
 
 
