@@ -7,18 +7,9 @@ use WebPConvert\Converters\Cwebp;
 class WebPConvert
 {
     private static $preferredConverters = [];
-    private static $excludeDefaultBinaries = false;
+    private static $excludeConverters = false;
     private static $allowedExtensions = ['jpg', 'jpeg', 'png'];
 
-    // set converter options
-    /* ie:
-        array(
-          'ewww' => array(
-            'key' => 'xxx897aoefu'
-          ),
-          'gd' => array(
-            'convert_pngs' => true
-      )*/
     public static function setConverterOption($converter, $optionName, $optionValue)
     {
         /*
@@ -52,13 +43,25 @@ class WebPConvert
         }
     }
 
+    /* As there are many options available for imagick, it will be convenient to be able to set them in one go.
+       So we will probably create a new public method setConverterOption($converter, $options)
+       Example:
+
+       setConverterOptions('imagick', array(
+           'webp:low-memory' => 'true',
+           'webp:method' => '6',
+           'webp:lossless' => 'true',
+       ));
+       */
+
+
     // Defines the array of preferred converters
     public static function setConverterOrder($array, $exclude = false)
     {
         self::$preferredConverters = $array;
 
         if ($exclude) {
-            self::$excludeDefaultBinaries = true;
+            self::$excludeConverters = true;
         }
     }
 
@@ -160,7 +163,7 @@ class WebPConvert
             }
         }
 
-        if (self::$excludeDefaultBinaries) {
+        if (self::$excludeConverters) {
             return $converters;
         }
 
