@@ -109,15 +109,6 @@ WebPConvert::setConverterOption('ewww', 'key', 'YOUR-KEY-HERE');
 WebPConvert::setConverterOption('gd', 'convert_pngs', true);
 ```
 
-----
-
-**WebPConvert\Converters\Ewww::isValidKey($key)**
-
-| Parameter | Type   | Default | Description                  |
-| --------- | ------ | ------- | ---------------------------- |
-| `$key`    | String | `''`    | EWWW Image Optimizer API key |
-
-If you quickly need to verify your API key, or want to build upon `WebPConvert`, this might be helpful. Passing it as an argument returns one of three possible states: 'great' (successful verification), 'exceeded' (valid API key, but not enough image credits) & '' (invalid API key).
 
 ## Converters
 Each "method" of converting an image to WebP is implemented through a separate converter `.php` file, containing a class of the same name. `WebPConvert` autodetects converters by scanning the `Converters` directory, so it's easy to add new converters and safe to remove existing ones.

@@ -26,46 +26,72 @@ class Ewww
         return true;
     }
 
+/*
+    public static function getQuota($key) {
+        curl_setopt($ch, CURLOPT_URL, "https://optimize.exactlywww.com/quota/");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, "api_key=' . $key . '");
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+
+    }*/
+
     // Throws an exception if the provided API key is invalid
-    public static function isValidKey($key = WEBPCONVERT_EWWW_KEY)
+    /*
+    public static function isValidKey($key)
     {
-        try {
-            self::checkRequirements(false);
-            $ch = curl_init();
-            if (!$ch) {
-                throw new \Exception('Could not initialise cURL.');
-            }
-
-            $headers = [];
-            $headers[] = "Content-Type: application/x-www-form-urlencoded";
-
-            curl_setopt($ch, CURLOPT_URL, "https://optimize.exactlywww.com/quota/");
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, "api_key=' . $key . '");
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-            $response = curl_exec($ch);
-
-            if (curl_errno($ch)) {
-                throw new \Exception(curl_error($ch));
-            }
-        } catch (\Exception $e) {
-            echo 'Error: ' . $e->getMessage();
+        if (!extension_loaded('curl')) {
+            throw new \Exception('Required cURL extension is not available.');
         }
+
+        if (!function_exists('curl_init')) {
+            throw new \Exception('Required url_init() function is not available.');
+        }
+
+        $ch = curl_init();
+        if (!$ch) {
+            throw new \Exception('Could not initialise cURL.');
+        }
+
+
+        $headers = [];
+        $headers[] = "Content-Type: application/x-www-form-urlencoded";
+
+        curl_setopt($ch, CURLOPT_URL, "https://optimize.exactlywww.com/verify/");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, "api_key=' . $key . '");
+        //curl_setopt($ch, CURLOPT_POSTFIELDS, array('api_key' => $key));
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+
+        // The 403 forbidden is avoided with this line.
+        // but still, we just get empty answer
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)');
+
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        //curl_setopt($ch, CURLOPT_POST, 1);
+
+        $response = curl_exec($ch);
+
+        //$result[] = $response;
+        //echo implode($result, '<br>');
+
+        if (curl_errno($ch)) {
+            throw new \Exception(curl_error($ch));
+        }
+        curl_close($ch);
 
         /*
          * There are three possible responses:
          * 'great' = verification successful
          * 'exceeded' = indicates a valid key with no remaining image credits
          * '' = an empty response indicates that the key is not valid
-        */
-
-        $result[] = $response;
-        curl_close($ch);
-
-        return implode($result, '<br>');
-    }
+        */ /*
+//echo 'response: ' . $response . '...';
+        return ($response == 'great');
+    }*/
 
     public static function convert($source, $destination, $quality, $stripMetadata)
     {
