@@ -25,7 +25,7 @@ class Gd
             switch (self::getExtension($source)) {
                 case 'png':
                     if (defined('WEBPCONVERT_GD_PNG') && WEBPCONVERT_GD_PNG) {
-                        return imagecreatefrompng($filePath);
+                        $image = imagecreatefrompng($source);
                     } else {
                         throw new \Exception('PNG file conversion failed. Try forcing it with: define("WEBPCONVERT_GD_PNG", true);');
                     }
@@ -43,7 +43,6 @@ class Gd
         }
 
         $success = imagewebp($image, $destination, $quality);
-
         /*
          * This hack solves an `imagewebp` bug
          * See https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files
