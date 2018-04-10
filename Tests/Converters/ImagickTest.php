@@ -19,7 +19,7 @@ class ImagickTest extends TestCase
     {
         $this->assertEquals('php', Imagick::getExtension(__FILE__));
     }*/
-
+/*
     public function testConvert()
     {
         $source = realpath(__DIR__ . '/../test.jpg');
@@ -28,5 +28,5 @@ class ImagickTest extends TestCase
         $stripMetadata = true;
 
         $this->assertTrue(Imagick::convert($source, $destination, $quality, $stripMetadata));
-    }
+    }*/
 }

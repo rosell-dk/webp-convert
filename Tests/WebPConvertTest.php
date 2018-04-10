@@ -101,11 +101,12 @@ class WebPConvertTest extends TestCase
         $this->assertEquals($preferred, WebPConvert::getConverters());
     }
 */
+/*
     public function testConvert()
     {
         $source = (__DIR__ . '/test.jpg');
         $destination = (__DIR__ . '/test.webp');
 
         $this->assertTrue(WebPConvert::convert($source, $destination));
-    }
+    }*/
 }
