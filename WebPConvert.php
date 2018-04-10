@@ -41,6 +41,19 @@ class WebPConvert
                 }
             }
         }
+        if ($converter == 'cwebp') {
+            if ($optionName == 'webp:method') {
+                if (!defined("WEBPCONVERT_CWEBP_METHOD")) {
+                    define("WEBPCONVERT_CWEBP_METHOD", $optionValue);
+                }
+            }
+            if ($optionName == 'webp:low-memory') {
+                if (!defined("WEBPCONVERT_CWEBP_LOW_MEMORY")) {
+                    define("WEBPCONVERT_CWEBP_LOW_MEMORY", $optionValue);
+                }
+            }
+        }
+
     }
 
     /* As there are many options available for imagick, it will be convenient to be able to set them in one go.

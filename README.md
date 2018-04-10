@@ -192,10 +192,10 @@ The converter supports:
 - prioritize between quality and speed
 - low memory option
 
-You can configure the converter by defining any of the following constants:
+You can configure the converter by setting any of the following options:
 
-- `WEBPCONVERT_CWEBP_METHOD`: This parameter controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. When higher values are used, the encoder will spend more time inspecting additional encoding possibilities and decide on the quality gain. Lower value can result in faster processing time at the expense of larger file size and lower compression quality. Default value is 6 (higher than the default value of the cwebp command, which is 4).
-- `WEBPCONVERT_CWEBP_LOW_MEMORY`: The low memory option will make the encoding slower and the output slightly different in size and distortion. This flag is only effective for methods 3 and up. It is *on* by default. To turn it off, set the constant to `false`.
+- `webp:method`: This parameter controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. When higher values are used, the encoder will spend more time inspecting additional encoding possibilities and decide on the quality gain. Lower value can result in faster processing time at the expense of larger file size and lower compression quality. Default value is 6 (higher than the default value of the cwebp command, which is 4).
+- `webp:low-memory`: The low memory option will make the encoding slower and the output slightly different in size and distortion. This flag is only effective for methods 3 and up. It is *on* by default. To turn it off, set it to `false`.
 
 ----
 
