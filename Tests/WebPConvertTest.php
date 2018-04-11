@@ -43,7 +43,7 @@ class WebPConvertTest extends TestCase
     }
 */
     /**
-     * @expectedException \Exception
+     * @expectedExceptio \Exception
      */
      /*
     public function testIsValidTargetInvalid()
@@ -57,7 +57,7 @@ class WebPConvertTest extends TestCase
     }
 */
     /**
-     * @expectedException \Exception
+     * @expectedExceptio \Exception
      */
      /*
     public function testIsAllowedExtensionInvalid()
@@ -101,12 +101,72 @@ class WebPConvertTest extends TestCase
         $this->assertEquals($preferred, WebPConvert::getConverters());
     }
 */
+
 /*
+Idea: WebPConvert could throw custom exceptions, and we
+could test these like this:
+$this->expectException(InvalidArgumentException::class);
+https://phpunit.readthedocs.io/en/7.1/writing-tests-for-phpunit.html#testing-exceptions
+*/
+
+    /**
+     * Test convert.
+     * - It must either make a successful conversion, or thwrow an exception
+     * - It must not return anything
+     */
+
     public function testConvert()
     {
-        $source = (__DIR__ . '/test.jpg');
-        $destination = (__DIR__ . '/test.webp');
+        try {
+            $source = (__DIR__ . '/test.jpg');
+            $destination = (__DIR__ . '/test.webp');
 
-        $this->assertTrue(WebPConvert::convert($source, $destination));
-    }*/
+            $result = WebPConvert::convert($source, $destination);
+
+            $this->assertTrue(file_exists($destination));
+            $this->assertEmpty($result);
+        } catch (\WebPConvert\Exceptions\NoOperationalConvertersException $e) {
+            // No converters are operational.
+            // and that is ok!
+            // If other exceptions are thrown, such as TargetNotFoundException
+            // or a Exception, it will result in an exception, and PHPUnit will fail
+            // this test - as it should
+        }
+    }
+
+    public function testConvertWithNoConverters()
+    {
+        // Remove all converters from next conversion!
+        WebPConvert::setConverterOrder(array(), true);
+
+        $this->expectException(\WebPConvert\Exceptions\NoOperationalConvertersException::class);
+
+        WebPConvert::convert(__DIR__ . '/test.jpg', __DIR__ . '/test.webp');
+    }
+
+    public function testTargetNotFound()
+    {
+
+        $this->expectException(\WebPConvert\Exceptions\TargetNotFoundException::class);
+
+        WebPConvert::convert(__DIR__ . '/i-dont-exist.jpg', __DIR__ . '/i-dont-exist.webp');
+    }
+
+    public function testInvalidDestinationFolder()
+    {
+
+        // Notice: mkdir emits a warning on failure.
+        // I have reconfigured php unit to not turn warnings into exceptions (phpunit.xml.dist)
+        // - if I did not do that, the exception would not be CreateDestinationFolderException
+
+        $this->expectException(\WebPConvert\Exceptions\CreateDestinationFolderException::class);
+
+        // I here assume that no system grants write access to their root folder
+        // this is perhaps wrong to assume?
+        $destinationFolder = '/you-can-delete-me/';
+
+        WebPConvert::convert(__DIR__ . '/test.jpg', $destinationFolder . 'you-can-delete-me.webp');
+    }
+
+    // How to test CreateDestinationFileException ?
 }

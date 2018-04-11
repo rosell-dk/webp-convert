@@ -2,7 +2,12 @@
 
 namespace WebPConvert;
 
-use WebPConvert\Converters\Cwebp;
+//use WebPConvert\Converters\Cwebp;
+use WebPConvert\Exceptions\NoOperationalConvertersException;
+use WebPConvert\Exceptions\TargetNotFoundException;
+use WebPConvert\Exceptions\InvalidFileExtensionException;
+use WebPConvert\Exceptions\CreateDestinationFolderException;
+use WebPConvert\Exceptions\CreateDestinationFileException;
 
 class WebPConvert
 {
@@ -53,7 +58,6 @@ class WebPConvert
                 }
             }
         }
-
     }
 
     /* As there are many options available for imagick, it will be convenient to be able to set them in one go.
@@ -82,7 +86,7 @@ class WebPConvert
     private static function isValidTarget($filePath)
     {
         if (!file_exists($filePath)) {
-            throw new \Exception('File or directory not found: ' . $filePath);
+            throw new TargetNotFoundException('File or directory not found: ' . $filePath);
         }
 
         return true;
@@ -93,7 +97,7 @@ class WebPConvert
     {
         $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
         if (!in_array(strtolower($fileExtension), self::$allowedExtensions)) {
-            throw new \Exception('Unsupported file extension: ' . $fileExtension);
+            throw new InvalidFileExtensionException('Unsupported file extension: ' . $fileExtension);
         }
 
         return true;
@@ -103,7 +107,6 @@ class WebPConvert
     private static function createWritableFolder($filePath)
     {
         $folder = pathinfo($filePath, PATHINFO_DIRNAME);
-
         if (!file_exists($folder)) {
             // TODO: what if this is outside open basedir?
             // see http://php.net/manual/en/ini.core.php#ini.open-basedir
@@ -115,7 +118,7 @@ class WebPConvert
             $parentFolders = explode('/', $folder);
             $poppedFolders = [];
 
-            while (!(file_exists(implode('/', $parentFolders)))) {
+            while (!(file_exists(implode('/', $parentFolders))) && count($parentFolders) > 0) {
                 array_unshift($poppedFolders, array_pop($parentFolders));
             }
 
@@ -124,9 +127,11 @@ class WebPConvert
             $permissions = fileperms($closestExistingFolder) & 000777;
 
             // Trying to create the given folder
+            // Notice: mkdir emits a warning on failure. It would be nice to suppress that, if possible
             if (!mkdir($folder, $permissions, true)) {
-                throw new \Exception('Failed creating folder: ' . $folder);
+                throw new CreateDestinationFolderException('Failed creating folder: ' . $folder);
             }
+
 
             // `mkdir` doesn't respect permissions, so we have to `chmod` each created subfolder
             foreach ($poppedFolders as $subfolder) {
@@ -138,13 +143,13 @@ class WebPConvert
 
         // Checks if there's a file in $filePath & if writing permissions are correct
         if (file_exists($filePath) && !is_writable($filePath)) {
-            throw new \Exception('Cannot overwrite ' . basename($filePath) . ' - check file permissions.');
+            throw new CreateDestinationFileException('Cannot overwrite ' . basename($filePath) . ' - check file permissions.');
         }
 
         // There's either a rewritable file in $filePath or none at all.
         // If there is, simply attempt to delete it
         if (file_exists($filePath) && !unlink($filePath)) {
-            throw new \Exception('Existing file cannot be removed: ' . basename($filePath));
+            throw new CreateDestinationFileException('Existing file cannot be removed: ' . basename($filePath));
         }
 
         return true;
@@ -236,7 +241,8 @@ class WebPConvert
 
 
         if (!$success) {
-            throw new \Exception('No operational converters are available');
+            //throw new \Exception('No operational converters are available');
+            throw new NoOperationalConvertersException('No operational converters are available!');
             return;
         }
     }
