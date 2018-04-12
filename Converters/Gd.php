@@ -6,15 +6,8 @@ use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
 use WebPConvert\Converters\Exceptions\ConversionDeclinedException;
 
-class Gd
+class Gd extends ConverterBase
 {
-    // TODO: Move to WebPConvert or helper classes file (redundant, see Imagick.php)
-    private static function getExtension($filePath)
-    {
-        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
-        return strtolower($fileExtension);
-    }
-
     public static function convert($source, $destination, $quality, $stripMetadata, $options = array())
     {
         $defaultOptions = array(

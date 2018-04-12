@@ -2,18 +2,12 @@
 
 namespace WebPConvert\Converters;
 
+use WebPConvert\Converters\ConverterBase;
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
-class Imagick
+class Imagick extends ConverterBase
 {
-    // TODO: Move to WebPConvert or helper classes file (redundant, see Gd.php)
-    private static function getExtension($filePath)
-    {
-        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
-        return strtolower($fileExtension);
-    }
-
     public static function convert($source, $destination, $quality, $stripMetadata, $options = array())
     {
         $defaultOptions = array(

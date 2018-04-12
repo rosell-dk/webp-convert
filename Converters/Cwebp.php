@@ -5,7 +5,7 @@ namespace WebPConvert\Converters;
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
-class Cwebp
+class Cwebp extends ConverterBase
 {
     private static $cwebpDefaultPaths = [ // System paths to look for cwebp binary
         '/usr/bin/cwebp',

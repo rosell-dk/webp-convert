@@ -5,7 +5,7 @@ namespace WebPConvert\Converters;
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
-class Ewww
+class Ewww extends ConverterBase
 {
 
 /*
