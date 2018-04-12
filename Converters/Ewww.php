@@ -5,11 +5,11 @@ namespace WebPConvert\Converters;
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
-class Ewww extends ConverterBase
+class Ewww
 {
-    public static function convert($source, $destination, $quality, $stripMetadata, $options = array())
+    public static function convert($source, $destination, $quality = 80, $stripMetadata = true, $options = array())
     {
-        self::prepareDestinationFolderAndRunCommonValidations($source, $destination);
+        ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
 
         $defaultOptions = array(
             'key' => '',

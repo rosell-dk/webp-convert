@@ -1,6 +1,6 @@
 <?php
 
-namespace WebPConvert;
+namespace WebPConvert\Converters;
 
 //use WebPConvert\Converters\Cwebp;
 use WebPConvert\Exceptions\TargetNotFoundException;
@@ -8,10 +8,15 @@ use WebPConvert\Exceptions\InvalidFileExtensionException;
 use WebPConvert\Exceptions\CreateDestinationFolderException;
 use WebPConvert\Exceptions\CreateDestinationFileException;
 
-class GeneralHelper
+class ConverterHelper
 {
-    private static $allowedExtensions = ['jpg', 'jpeg', 'png'];
+    public static $allowedExtensions = ['jpg', 'jpeg', 'png'];
 
+    public static function getExtension($filePath)
+    {
+        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
+        return strtolower($fileExtension);
+    }
 
     // Throws an exception if the provided file doesn't exist
     public static function isValidTarget($filePath)
@@ -84,5 +89,12 @@ class GeneralHelper
         }
 
         return true;
+    }
+
+    public static function prepareDestinationFolderAndRunCommonValidations($source, $destination)
+    {
+        self::isValidTarget($source);
+        self::isAllowedExtension($source);
+        self::createWritableFolder($destination);
     }
 }

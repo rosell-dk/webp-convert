@@ -6,11 +6,11 @@ use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
 use WebPConvert\Converters\Exceptions\ConversionDeclinedException;
 
-class Gd extends ConverterBase
+class Gd
 {
-    public static function convert($source, $destination, $quality, $stripMetadata, $options = array())
+    public static function convert($source, $destination, $quality = 80, $stripMetadata = true, $options = array())
     {
-        self::prepareDestinationFolderAndRunCommonValidations($source, $destination);
+        ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
 
         $defaultOptions = array(
             'convert_pngs' => false
@@ -33,7 +33,7 @@ class Gd extends ConverterBase
             throw new ConverterNotOperationalException('Required imagewebp() function is not available.');
         }
 
-        switch (self::getExtension($source)) {
+        switch (ConverterHelper::getExtension($source)) {
             case 'png':
                 if ($options['convert_pngs']) {
                     if (!function_exists('imagecreatefrompng')) {

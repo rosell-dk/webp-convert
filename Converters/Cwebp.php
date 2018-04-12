@@ -5,7 +5,7 @@ namespace WebPConvert\Converters;
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
-class Cwebp extends ConverterBase
+class Cwebp
 {
     private static $cwebpDefaultPaths = [ // System paths to look for cwebp binary
         '/usr/bin/cwebp',
@@ -77,11 +77,11 @@ class Cwebp extends ConverterBase
         }
     }
 
-    public static function convert($source, $destination, $quality, $stripMetadata, $options = array())
+    public static function convert($source, $destination, $quality = 80, $stripMetadata = true, $options = array())
     {
 
-        self::prepareDestinationFolderAndRunCommonValidations($source, $destination);
-        
+        ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
+
         $defaultOptions = array(
             'webp:method' => 6,
             'webp:low-memory' => true
