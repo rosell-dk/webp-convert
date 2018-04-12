@@ -2,12 +2,6 @@
 
 namespace WebPConvert;
 
-//use WebPConvert\Converters\Cwebp;
-use WebPConvert\Exceptions\TargetNotFoundException;
-use WebPConvert\Exceptions\InvalidFileExtensionException;
-use WebPConvert\Exceptions\CreateDestinationFolderException;
-use WebPConvert\Exceptions\CreateDestinationFileException;
-
 class WebPConvert
 {
     private static $preferredConverters = [];
@@ -170,10 +164,6 @@ class WebPConvert
     {
         $success = false;
 
-        GeneralHelper::isValidTarget($source);
-        GeneralHelper::isAllowedExtension($source);
-        GeneralHelper::createWritableFolder($destination);
-
         $firstFailExecption = null;
 
         foreach (self::getConverters() as $converter) {
@@ -214,11 +204,8 @@ class WebPConvert
                 if (!$firstFailExecption) {
                     $firstFailExecption = $e;
                 }
-            } catch (\Exception $e) {
-                // Converter failed in an unanticipated fashion.
-                // They should not do that. Rethrow the error!
-                throw $e;
             }
+
 
             // As success will break the loop, being here means that no converters could
             // do the conversion.

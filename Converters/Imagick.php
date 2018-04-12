@@ -6,12 +6,14 @@ use WebPConvert\Converters\ConverterBase;
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
+use WebPConvert\Exceptions\TargetNotFoundException;
+
 class Imagick extends ConverterBase
 {
     public static function convert($source, $destination, $quality, $stripMetadata, $options = array())
     {
         self::prepareDestinationFolderAndRunCommonValidations($source, $destination);
-        
+
         $defaultOptions = array(
             'webp:method' => 6,
             'webp:low-memory' => true

@@ -57,4 +57,12 @@ class GdTest extends TestCase
             ));
         }
     }
+
+    public function testTargetNotFound()
+    {
+
+        $this->expectException(\WebPConvert\Exceptions\TargetNotFoundException::class);
+
+        Gd::convert(__DIR__ . '/i-dont-exist.jpg', __DIR__ . '/i-dont-exist.webp');
+    }
 }
