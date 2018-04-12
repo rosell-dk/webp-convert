@@ -2,6 +2,10 @@
 
 namespace WebPConvert\Converters;
 
+use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
+use WebPConvert\Converters\Exceptions\ConverterFailedException;
+use WebPConvert\Converters\Exceptions\ConversionDeclinedException;
+
 class Gd
 {
     // TODO: Move to WebPConvert or helper classes file (redundant, see Imagick.php)
@@ -14,34 +18,43 @@ class Gd
     public static function convert($source, $destination, $quality, $stripMetadata)
     {
         if (!extension_loaded('gd')) {
-            throw new \Exception('Required GD extension is not available.');
+            throw new ConverterNotOperationalException('Required GD extension is not available.');
         }
 
         if (!function_exists('imagewebp')) {
-            throw new \Exception('Required imagewebp() function is not available.');
+            throw new ConverterNotOperationalException('Required imagewebp() function is not available.');
         }
 
         switch (self::getExtension($source)) {
             case 'png':
                 if (defined('WEBPCONVERT_GD_PNG') && WEBPCONVERT_GD_PNG) {
+                    if (!function_exists('imagecreatefrompng')) {
+                        throw new ConverterNotOperationalException('Required imagecreatefrompng() function is not available.');
+                    }
                     $image = imagecreatefrompng($source);
+                    if (!$image) {
+                        throw new \Exception('imagecreatefrompng("' . $source . '") failed');
+                    }
                 } else {
-                    throw new \Exception('PNG file skipped. GD is configured not to convert PNGs');
+                    throw new ConversionDeclinedException('PNG file skipped. GD is configured not to convert PNGs');
                 }
                 break;
             default:
+                if (!function_exists('imagecreatefromjpeg')) {
+                    throw new ConverterNotOperationalException('Required imagecreatefromjpeg() function is not available.');
+                }
                 $image = imagecreatefromjpeg($source);
+                if (!$image) {
+                    throw new \Exception('imagecreatefromjpeg("' . $source . '") failed');
+                }
         }
 
         // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
-        if (!$image) {
-            throw new \Exception('Either imagecreatefromjpeg or imagecreatefrompng failed');
-        }
 
         $success = imagewebp($image, $destination, $quality);
 
         if (!$success) {
-            throw new \Exception('Failed writing file');
+            throw new ConverterFailedException('Call to imagewebp() failed. Probably failed writing file');
         }
 
         /*

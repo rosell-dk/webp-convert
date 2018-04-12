@@ -83,4 +83,37 @@ class CwebpTest extends TestCase
 
         $this->assertTrue(Cwebp::convert($source, $destination, $quality, $stripMetadata));
     }*/
+
+    /**
+     * Test convert.
+     * - It must either make a successful conversion, or throw one of these Exceptions:
+     *   NoOperationalConvertersException or ConverterFailedException
+     *   That shows that the exception was anticipated.
+     *   Other exceptions are unexpected and will result in test failure
+     * - It must not return anything
+     */            // To make sure that the exception is to be expected, we could however
+            // make the converters throw its own custom exception, ie ConverterNotOperationalException
+            // This way, we will detect unexpected exceptions.
+
+    public function testConvert()
+    {
+        try {
+            $source = (__DIR__ . '/../test.jpg');
+            $destination = (__DIR__ . '/../test.webp');
+            $quality = 80;
+            $stripMetadata = true;
+
+            $result = Cwebp::convert($source, $destination, $quality, $stripMetadata);
+
+            $this->assertTrue(file_exists($destination));
+            $this->assertEmpty($result);
+        } catch (\WebPConvert\Converters\Exceptions\ConverterNotOperationalException $e) {
+            // The converter is not operational.
+            // and that is ok!
+
+        } catch (\WebPConvert\Converters\Exceptions\ConverterFailedException $e) {
+            // Converter failed in an anticipated fashion.
+            // This is acceptable too
+        }
+    }
 }

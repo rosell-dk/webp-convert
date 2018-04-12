@@ -2,6 +2,9 @@
 
 namespace WebPConvert\Converters;
 
+use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
+use WebPConvert\Converters\Exceptions\ConverterFailedException;
+
 class Imagick
 {
     // TODO: Move to WebPConvert or helper classes file (redundant, see Gd.php)
@@ -14,18 +17,18 @@ class Imagick
     public static function convert($source, $destination, $quality, $stripMetadata)
     {
         if (!extension_loaded('imagick')) {
-            throw new \Exception('Required iMagick extension is not available.');
+            throw new ConverterNotOperationalException('Required iMagick extension is not available.');
         }
 
         if (!class_exists('Imagick')) {
-            throw new \Exception('iMagick is installed but cannot handle source file.');
+            throw new ConverterNotOperationalException('iMagick is installed, but not correctly. The class Imagick is not available');
         }
 
         $im = new \Imagick($source);
 
         // Throws an exception if iMagick does not support WebP conversion
         if (!in_array('WEBP', $im->queryFormats())) {
-            throw new \Exception('iMagick was compiled without WebP support.');
+            throw new ConverterNotOperationalException('iMagick was compiled without WebP support.');
         }
 
         $im->setImageFormat('WEBP');
@@ -69,7 +72,7 @@ class Imagick
         $success = $im->writeImageFile(fopen($destination, 'wb'));
 
         if (!$success) {
-            throw new \Exception('Failed writing file');
+            throw new ConverterFailedException('Failed writing file');
         }
     }
 }

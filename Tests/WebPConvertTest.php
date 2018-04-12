@@ -114,7 +114,6 @@ https://phpunit.readthedocs.io/en/7.1/writing-tests-for-phpunit.html#testing-exc
      * - It must either make a successful conversion, or thwrow an exception
      * - It must not return anything
      */
-
     public function testConvert()
     {
         try {

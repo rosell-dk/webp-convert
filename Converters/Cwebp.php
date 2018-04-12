@@ -2,6 +2,9 @@
 
 namespace WebPConvert\Converters;
 
+use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
+use WebPConvert\Converters\Exceptions\ConverterFailedException;
+
 class Cwebp
 {
     private static $cwebpDefaultPaths = [ // System paths to look for cwebp binary
@@ -25,7 +28,7 @@ class Cwebp
 
         // Throws an exception if binary file does not exist
         if (!file_exists($binaryFile)) {
-            throw new \Exception('Operating system is currently not supported: ' . PHP_OS);
+            throw new ConverterNotOperationalException('Operating system is currently not supported: ' . PHP_OS);
         }
 
         // File exists, now generate its hash
@@ -33,7 +36,7 @@ class Cwebp
 
         // Throws an exception if binary file checksum & deposited checksum do not match
         if ($binaryHash != $hash) {
-            throw new \Exception('Binary checksum is invalid.');
+            throw new ConverterNotOperationalException('Binary checksum is invalid.');
         }
 
         array_unshift($array, $binaryFile);
@@ -77,7 +80,7 @@ class Cwebp
     public static function convert($source, $destination, $quality, $stripMetadata)
     {
         if (!function_exists('exec')) {
-            throw new \Exception('exec() is not enabled.');
+            throw new ConverterNotOperationalException('exec() is not enabled.');
         }
 
         // Checks if provided binary file & its hash match with deposited version & updates cwebp binary array
@@ -169,7 +172,7 @@ class Cwebp
         }
 
         if (!$success) {
-            throw new \Exception('No working binaries were found');
+            throw new ConverterNotOperationalException('No working binaries were found');
         }
     }
 }

@@ -2,6 +2,9 @@
 
 namespace WebPConvert\Converters;
 
+use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
+use WebPConvert\Converters\Exceptions\ConverterFailedException;
+
 class Ewww
 {
 
@@ -75,24 +78,24 @@ class Ewww
     public static function convert($source, $destination, $quality, $stripMetadata)
     {
         if (!extension_loaded('curl')) {
-            throw new \Exception('Required cURL extension is not available.');
+            throw new ConverterNotOperationalException('Required cURL extension is not available.');
         }
 
         if (!function_exists('curl_init')) {
-            throw new \Exception('Required url_init() function is not available.');
+            throw new ConverterNotOperationalException('Required url_init() function is not available.');
         }
 
         if (!function_exists('curl_file_create')) {
-            throw new \Exception('Required curl_file_create() function is not available (requires PHP > 5.5).');
+            throw new ConverterNotOperationalException('Required curl_file_create() function is not available (requires PHP > 5.5).');
         }
 
         if (!defined("WEBPCONVERT_EWWW_KEY")) {
-            throw new \Exception('Missing API key.');
+            throw new ConverterNotOperationalException('Missing API key.');
         }
 
         $ch = curl_init();
         if (!$ch) {
-            throw new \Exception('Could not initialise cURL.');
+            throw new ConverterNotOperationalException('Could not initialise cURL.');
         }
 
         $curlOptions = [
@@ -120,7 +123,7 @@ class Ewww
         $response = curl_exec($ch);
 
         if (curl_errno($ch)) {
-            throw new \Exception(curl_error($ch));
+            throw new ConverterNotOperationalException(curl_error($ch));
         }
 
         // The API does not always return images.
@@ -130,18 +133,18 @@ class Ewww
         // So verify that we got an image back.
         if (curl_getinfo($ch, CURLINFO_CONTENT_TYPE) != 'application/octet-stream') {
             curl_close($ch);
-            throw new \Exception('ewww api did not return an image. It could be that the key is invalid');
+            throw new ConverterNotOperationalException('ewww api did not return an image. It could be that the key is invalid');
         }
 
         // Not sure this can happen. So just in case
         if ($response == '') {
-            throw new \Exception('ewww api did not return anything');
+            throw new ConverterNotOperationalException('ewww api did not return anything');
         }
 
         $success = file_put_contents($destination, $response);
 
         if (!$success) {
-            throw new \Exception('Error saving file');
+            throw new ConverterFailedException('Error saving file');
         }
     }
 }
