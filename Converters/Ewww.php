@@ -19,7 +19,7 @@ class Ewww
 
     }*/
 
-    // Throws an exception if the provided API key is invalid
+    // Throws an exception if the provided API key is invalid..
     /*
     public static function isValidKey($key)
     {
@@ -75,8 +75,21 @@ class Ewww
         return ($response == 'great');
     }*/
 
-    public static function convert($source, $destination, $quality, $stripMetadata)
+    public static function convert($source, $destination, $quality, $stripMetadata, $options = array())
     {
+        $defaultOptions = array(
+            'key' => '',
+        );
+
+        // For backwards compatibility
+        if (defined("WEBPCONVERT_EWWW_KEY")) {
+            if (!isset($options['key'])) {
+                $options['key'] = WEBPCONVERT_EWWW_KEY;
+            }
+        }
+
+        $options = array_merge($defaultOptions, $options);
+
         if (!extension_loaded('curl')) {
             throw new ConverterNotOperationalException('Required cURL extension is not available.');
         }
@@ -89,7 +102,7 @@ class Ewww
             throw new ConverterNotOperationalException('Required curl_file_create() function is not available (requires PHP > 5.5).');
         }
 
-        if (!defined("WEBPCONVERT_EWWW_KEY")) {
+        if ($options['key'] == '') {
             throw new ConverterNotOperationalException('Missing API key.');
         }
 
@@ -99,7 +112,7 @@ class Ewww
         }
 
         $curlOptions = [
-            'api_key' => WEBPCONVERT_EWWW_KEY,
+            'api_key' => $options['key'],
             'webp' => '1',
             'file' => curl_file_create($source),
             'domain' => $_SERVER['HTTP_HOST'],

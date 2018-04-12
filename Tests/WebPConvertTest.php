@@ -160,5 +160,18 @@ https://phpunit.readthedocs.io/en/7.1/writing-tests-for-phpunit.html#testing-exc
         WebPConvert::convert(__DIR__ . '/test.jpg', $destinationFolder . 'you-can-delete-me.webp');
     }
 
+    public function testPNGDeclined()
+    {
+        // only try Gd
+        WebPConvert::setConverterOrder(array('gd'), true);
+
+        // configure Gd not to convert pngs
+        WebPConvert::setConverterOption('gd', 'convert_pngs', false);
+
+        $this->expectException(\WebPConvert\Converters\Exceptions\ConversionDeclinedException::class);
+        WebPConvert::convert(__DIR__ . '/test.png', __DIR__ . '/test.png.webp');
+    }
+
+
     // How to test CreateDestinationFileException ?
 }

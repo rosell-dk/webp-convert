@@ -15,8 +15,21 @@ class Gd
         return strtolower($fileExtension);
     }
 
-    public static function convert($source, $destination, $quality, $stripMetadata)
+    public static function convert($source, $destination, $quality, $stripMetadata, $options = array())
     {
+        $defaultOptions = array(
+            'convert_pngs' => false
+        );
+
+        // For backwards compatibility
+        if (defined("WEBPCONVERT_GD_PNG")) {
+            if (!isset($options['convert_pngs'])) {
+                $options['convert_pngs'] = WEBPCONVERT_GD_PNG;
+            }
+        }
+
+        $options = array_merge($defaultOptions, $options);
+
         if (!extension_loaded('gd')) {
             throw new ConverterNotOperationalException('Required GD extension is not available.');
         }
@@ -27,7 +40,7 @@ class Gd
 
         switch (self::getExtension($source)) {
             case 'png':
-                if (defined('WEBPCONVERT_GD_PNG') && WEBPCONVERT_GD_PNG) {
+                if ($options['convert_pngs']) {
                     if (!function_exists('imagecreatefrompng')) {
                         throw new ConverterNotOperationalException('Required imagecreatefrompng() function is not available.');
                     }

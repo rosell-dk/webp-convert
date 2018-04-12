@@ -14,49 +14,14 @@ class WebPConvert
     private static $excludeConverters = false;
     private static $allowedExtensions = ['jpg', 'jpeg', 'png'];
 
+    private static $converterOptions = array();
+
     public static function setConverterOption($converter, $optionName, $optionValue)
     {
-        /*
-        The old way of setting converter options is depreciated
-        It will be removed in 2.0.0.
-
-        As we still support the functionality, we can use it here, as a quick way
-        of supporting the new API */
-
-        if (($converter == 'ewww') && ($optionName == 'key')) {
-            if (!defined("WEBPCONVERT_EWW_KEY")) {
-                define("WEBPCONVERT_EWW_KEY", $optionValue);
-            }
+        if (!isset($converterOptions['converter'])) {
+            $converterOptions['converter'] = array();
         }
-        if (($converter == 'gd') && ($optionName == 'convert_pngs')) {
-            if (!defined("WEBPCONVERT_GD_PNG")) {
-                define("WEBPCONVERT_GD_PNG", $optionValue);
-            }
-        }
-        if ($converter == 'imagick') {
-            if ($optionName == 'webp:method') {
-                if (!defined("WEBPCONVERT_IMAGICK_METHOD")) {
-                    define("WEBPCONVERT_IMAGICK_METHOD", $optionValue);
-                }
-            }
-            if ($optionName == 'webp:low-memory') {
-                if (!defined("WEBPCONVERT_IMAGICK_LOW_MEMORY")) {
-                    define("WEBPCONVERT_IMAGICK_LOW_MEMORY", $optionValue);
-                }
-            }
-        }
-        if ($converter == 'cwebp') {
-            if ($optionName == 'webp:method') {
-                if (!defined("WEBPCONVERT_CWEBP_METHOD")) {
-                    define("WEBPCONVERT_CWEBP_METHOD", $optionValue);
-                }
-            }
-            if ($optionName == 'webp:low-memory') {
-                if (!defined("WEBPCONVERT_CWEBP_LOW_MEMORY")) {
-                    define("WEBPCONVERT_CWEBP_LOW_MEMORY", $optionValue);
-                }
-            }
-        }
+        $converterOptions[$converter][$optionName] = $optionValue;
     }
 
     /* As there are many options available for imagick, it will be convenient to be able to set them in one go.
@@ -220,12 +185,14 @@ class WebPConvert
             }
 
             try {
+                $options = (isset($converterOptions[$converter]) ? $converterOptions[$converter] : array());
                 $conversion = call_user_func(
                     [$className, 'convert'],
                     $source,
                     $destination,
                     $quality,
-                    $stripMetadata
+                    $stripMetadata,
+                    $options
                 );
 
                 if (file_exists($destination)) {
@@ -244,6 +211,9 @@ class WebPConvert
             } catch (\WebPConvert\Converters\Exceptions\ConversionDeclinedException $e) {
                 // The converter declined.
                 // Gd is for example throwing this, when asked to convert a PNG, but configured not to
+                if (!$firstFailExecption) {
+                    $firstFailExecption = $e;
+                }
             } catch (\Exception $e) {
                 // Converter failed in an unanticipated fashion.
                 // They should not do that. Rethrow the error!

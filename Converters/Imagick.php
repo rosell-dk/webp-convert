@@ -14,8 +14,27 @@ class Imagick
         return strtolower($fileExtension);
     }
 
-    public static function convert($source, $destination, $quality, $stripMetadata)
+    public static function convert($source, $destination, $quality, $stripMetadata, $options = array())
     {
+        $defaultOptions = array(
+            'webp:method' => 6,
+            'webp:low-memory' => true
+        );
+
+        // For backwards compatibility
+        if (defined("WEBPCONVERT_IMAGICK_METHOD")) {
+            if (!isset($options['webp:method'])) {
+                $options['webp:method'] = WEBPCONVERT_IMAGICK_METHOD;
+            }
+        }
+        if (defined("WEBPCONVERT_IMAGICK_LOW_MEMORY")) {
+            if (!isset($options['webp:low-memory'])) {
+                $options['webp:low-memory'] = WEBPCONVERT_IMAGICK_LOW_MEMORY;
+            }
+        }
+
+        $options = array_merge($defaultOptions, $options);
+
         if (!extension_loaded('imagick')) {
             throw new ConverterNotOperationalException('Required iMagick extension is not available.');
         }
@@ -48,21 +67,10 @@ class Imagick
          * https://stackoverflow.com/questions/37711492/imagemagick-specific-webp-calls-in-php
          */
 
-        if (defined('WEBPCONVERT_IMAGICK_METHOD')) {
-            $im->setOption('webp:method', WEBPCONVERT_IMAGICK_METHOD);
-        } else {
-            $im->setOption('webp:method', '6');
-        }
+        // TODO: We could easily support all webp options with a loop
+        $im->setOption('webp:method', strval($options['webp:method']));
+        $im->setOption('webp:low-memory', strval($options['webp:low-memory']));
 
-        if (!defined('WEBPCONVERT_IMAGICK_LOW_MEMORY')) {
-            $im->setOption('webp:low-memory', 'true');
-        } else {
-            $im->setOption('webp:low-memory', (
-                WEBPCONVERT_IMAGICK_LOW_MEMORY
-                ? 'true'
-                : 'false'
-            ));
-        }
 
         $im->setImageCompressionQuality($quality);
 

@@ -77,8 +77,28 @@ class Cwebp
         }
     }
 
-    public static function convert($source, $destination, $quality, $stripMetadata)
+    public static function convert($source, $destination, $quality, $stripMetadata, $options = array())
     {
+
+        $defaultOptions = array(
+            'webp:method' => 6,
+            'webp:low-memory' => true
+        );
+
+        // For backwards compatibility
+        if (defined("WEBPCONVERT_CWEBP_METHOD")) {
+            if (!isset($options['webp:method'])) {
+                $options['webp:method'] = WEBPCONVERT_CWEBP_METHOD;
+            }
+        }
+        if (defined("WEBPCONVERT_CWEBP_LOW_MEMORY")) {
+            if (!isset($options['webp:low-memory'])) {
+                $options['webp:low-memory'] = WEBPCONVERT_CWEBP_LOW_MEMORY;
+            }
+        }
+
+        $options = array_merge($defaultOptions, $options);
+
         if (!function_exists('exec')) {
             throw new ConverterNotOperationalException('exec() is not enabled.');
         }
@@ -114,21 +134,13 @@ class Cwebp
         );
 
         // Built-in method option
-        $method = (
-            defined('WEBPCONVERT_CWEBP_METHOD')
-            ? ' -m ' . WEBPCONVERT_CWEBP_METHOD
-            : ' -m 6'
-        );
+        $method = ' -m ' . strval($options['webp:method']);
+
 
         // Built-in low memory option
-        if (!defined('WEBPCONVERT_CWEBP_LOW_MEMORY')) {
-            $lowMemory= '-low_memory';
-        } else {
-            $lowMemory = (
-                WEBPCONVERT_CWEBP_LOW_MEMORY
-                ? '-low_memory'
-                : ''
-            );
+        $lowMemory = '';
+        if ($options['webp:low-memory']) {
+            $lowMemory = '-low_memory';
         }
 
         $optionsArray = [

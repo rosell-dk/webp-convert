@@ -39,4 +39,18 @@ class GdTest extends TestCase
             // and that is ok!
         }
     }
+
+    public function testPNGDeclined()
+    {
+        $this->expectException(\WebPConvert\Converters\Exceptions\ConversionDeclinedException::class);
+        Gd::convert(__DIR__ . '/../test.png', __DIR__ . '/../test.png.webp', 80, true, array(
+            'convert_pngs' => false
+        ));
+    }
+
+    public function testPNGDeclined2()
+    {
+        $this->expectException(\WebPConvert\Converters\Exceptions\ConversionDeclinedException::class);
+        Gd::convert(__DIR__ . '/../test.png', __DIR__ . '/../test.png.webp', 80, true);
+    }
 }
