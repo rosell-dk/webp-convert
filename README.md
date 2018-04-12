@@ -61,15 +61,7 @@ $quality = 90;
 $stripMetadata = true;
 
 // .. fire up WebP conversion
-try {
-    WebPConvert::convert($source, $destination, $quality, $stripMetadata);
-}
-catch(Exception $e) {
-    echo 'Error: ';
-    echo $e->getMessage();
-  //print_r($e);
-}
-
+$success = WebPConvert::convert($source, $destination, $quality, $stripMetadata);
 ```
 
 ## Methods

@@ -3,7 +3,6 @@
 namespace WebPConvert;
 
 //use WebPConvert\Converters\Cwebp;
-use WebPConvert\Exceptions\NoOperationalConvertersException;
 use WebPConvert\Exceptions\TargetNotFoundException;
 use WebPConvert\Exceptions\InvalidFileExtensionException;
 use WebPConvert\Exceptions\CreateDestinationFolderException;
@@ -239,11 +238,6 @@ class WebPConvert
             $success = false;
         }
 
-
-        if (!$success) {
-            //throw new \Exception('No operational converters are available');
-            throw new NoOperationalConvertersException('No operational converters are available!');
-            return;
-        }
+        return $success;
     }
 }
