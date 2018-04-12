@@ -125,6 +125,10 @@ https://phpunit.readthedocs.io/en/7.1/writing-tests-for-phpunit.html#testing-exc
         $this->assertInternalType('boolean', $result);
     }
 
+    /**
+     *  Basically test what happens when no converters are able to do a conversion,
+     *  WebPConvert::convert should in that case return false
+    */
     public function testConvertWithNoConverters()
     {
         // Remove all converters from next conversion!
@@ -160,6 +164,9 @@ https://phpunit.readthedocs.io/en/7.1/writing-tests-for-phpunit.html#testing-exc
         WebPConvert::convert(__DIR__ . '/test.jpg', $destinationFolder . 'you-can-delete-me.webp');
     }
 
+    /**
+     * Test ConversionDeclinedException by testing Gd.
+     */
     public function testPNGDeclined()
     {
         // only try Gd
