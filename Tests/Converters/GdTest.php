@@ -37,9 +37,6 @@ class GdTest extends TestCase
         } catch (\WebPConvert\Converters\Exceptions\ConverterNotOperationalException $e) {
             // The converter is not operational.
             // and that is ok!
-        } catch (\WebPConvert\Converters\Exceptions\ConverterFailedException $e) {
-            // Converter failed in an anticipated fashion.
-            // This is acceptable too
         }
     }
 }

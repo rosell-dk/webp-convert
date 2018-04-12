@@ -209,6 +209,8 @@ class WebPConvert
         self::isAllowedExtension($source);
         self::createWritableFolder($destination);
 
+        $firstFailExecption = null;
+
         foreach (self::getConverters() as $converter) {
             $converter = ucfirst($converter);
             $className = 'WebPConvert\\Converters\\' . $converter;
@@ -230,10 +232,31 @@ class WebPConvert
                     $success = true;
                     break;
                 }
+            } catch (\WebPConvert\Converters\Exceptions\ConverterNotOperationalException $e) {
+                // The converter is not operational.
+                // Well, well, we will just have to try the next, then
+            } catch (\WebPConvert\Converters\Exceptions\ConverterFailedException $e) {
+                // Converter failed in an anticipated fashion.
+                // If no converter is able to do a conversion, we will rethrow the exception.
+                if (!$firstFailExecption) {
+                    $firstFailExecption = $e;
+                }
+            } catch (\WebPConvert\Converters\Exceptions\ConversionDeclinedException $e) {
+                // The converter declined.
+                // Gd is for example throwing this, when asked to convert a PNG, but configured not to
             } catch (\Exception $e) {
-                $success = false;
+                // Converter failed in an unanticipated fashion.
+                // They should not do that. Rethrow the error!
+                throw $e;
             }
 
+            // As success will break the loop, being here means that no converters could
+            // do the conversion.
+            // If no converters are operational, simply return false
+            // Otherwise rethrow the exception that was thrown first (the most prioritized converter)
+            if ($firstFailExecption) {
+                throw $e;
+            }
 
             $success = false;
         }

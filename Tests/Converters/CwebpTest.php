@@ -86,15 +86,12 @@ class CwebpTest extends TestCase
 
     /**
      * Test convert.
-     * - It must either make a successful conversion, or throw one of these Exceptions:
-     *   NoOperationalConvertersException or ConverterFailedException
-     *   That shows that the exception was anticipated.
-     *   Other exceptions are unexpected and will result in test failure
+     * - It must either make a successful conversion, or throw an ConverterNotOperationalException
+     *   It may not throw a ConverterFailedException because if it is operational, then it should also
+     *   be able to do the conversion.
+     *   It may not throw a normal Exception either
      * - It must not return anything
-     */            // To make sure that the exception is to be expected, we could however
-            // make the converters throw its own custom exception, ie ConverterNotOperationalException
-            // This way, we will detect unexpected exceptions.
-
+     */
     public function testConvert()
     {
         try {
@@ -110,10 +107,6 @@ class CwebpTest extends TestCase
         } catch (\WebPConvert\Converters\Exceptions\ConverterNotOperationalException $e) {
             // The converter is not operational.
             // and that is ok!
-
-        } catch (\WebPConvert\Converters\Exceptions\ConverterFailedException $e) {
-            // Converter failed in an anticipated fashion.
-            // This is acceptable too
         }
     }
 }

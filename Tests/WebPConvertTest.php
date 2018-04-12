@@ -112,25 +112,17 @@ https://phpunit.readthedocs.io/en/7.1/writing-tests-for-phpunit.html#testing-exc
     /**
      * Test convert.
      * - It must either make a successful conversion, or thwrow an exception
-     * - It must not return anything
+     * - It must return boolean
      */
     public function testConvert()
     {
-        try {
-            $source = (__DIR__ . '/test.jpg');
-            $destination = (__DIR__ . '/test.webp');
+        $source = (__DIR__ . '/test.jpg');
+        $destination = (__DIR__ . '/test.webp');
 
-            $result = WebPConvert::convert($source, $destination);
+        $result = WebPConvert::convert($source, $destination);
 
-            $this->assertTrue(file_exists($destination));
-            $this->assertEmpty($result);
-        } catch (\WebPConvert\Exceptions\NoOperationalConvertersException $e) {
-            // No converters are operational.
-            // and that is ok!
-            // If other exceptions are thrown, such as TargetNotFoundException
-            // or a Exception, it will result in an exception, and PHPUnit will fail
-            // this test - as it should
-        }
+        $this->assertTrue(file_exists($destination));
+        $this->assertInternalType('boolean', $result);
     }
 
     public function testConvertWithNoConverters()
@@ -138,9 +130,10 @@ https://phpunit.readthedocs.io/en/7.1/writing-tests-for-phpunit.html#testing-exc
         // Remove all converters from next conversion!
         WebPConvert::setConverterOrder(array(), true);
 
-        $this->expectException(\WebPConvert\Exceptions\NoOperationalConvertersException::class);
+        //$this->expectException(\WebPConvert\Exceptions\NoOperationalConvertersException::class);
 
-        WebPConvert::convert(__DIR__ . '/test.jpg', __DIR__ . '/test.webp');
+        $result = WebPConvert::convert(__DIR__ . '/test.jpg', __DIR__ . '/test.webp');
+        $this->assertFalse($result);
     }
 
     public function testTargetNotFound()
