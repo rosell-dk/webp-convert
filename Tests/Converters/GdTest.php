@@ -42,15 +42,19 @@ class GdTest extends TestCase
 
     public function testPNGDeclined()
     {
-        $this->expectException(\WebPConvert\Converters\Exceptions\ConversionDeclinedException::class);
-        Gd::convert(__DIR__ . '/../test.png', __DIR__ . '/../test.png.webp', 80, true, array(
-            'convert_pngs' => false
-        ));
-    }
-
-    public function testPNGDeclined2()
-    {
-        $this->expectException(\WebPConvert\Converters\Exceptions\ConversionDeclinedException::class);
-        Gd::convert(__DIR__ . '/../test.png', __DIR__ . '/../test.png.webp', 80, true);
+        try {
+            Gd::convert(__DIR__ . '/../test.png', __DIR__ . '/../test.png.webp', 80, true, array(
+                'convert_pngs' => false
+            ));
+        } catch (\WebPConvert\Converters\Exceptions\ConverterNotOperationalException $e) {
+            // converter isn't operational, so we cannot make the unit test
+            return;
+        } catch (\WebPConvert\Converters\Exceptions\ConversionDeclinedException $e) {
+            // Yeah, this is what we want to test.
+            $this->expectException(\WebPConvert\Converters\Exceptions\ConversionDeclinedException::class);
+            Gd::convert(__DIR__ . '/../test.png', __DIR__ . '/../test.png.webp', 80, true, array(
+                'convert_pngs' => false
+            ));
+        }
     }
 }

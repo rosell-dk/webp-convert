@@ -46,7 +46,7 @@ class Gd
                     }
                     $image = imagecreatefrompng($source);
                     if (!$image) {
-                        throw new \Exception('imagecreatefrompng("' . $source . '") failed');
+                        throw new ConverterFailedException('imagecreatefrompng("' . $source . '") failed');
                     }
                 } else {
                     throw new ConversionDeclinedException('PNG file skipped. GD is configured not to convert PNGs');
@@ -58,7 +58,7 @@ class Gd
                 }
                 $image = imagecreatefromjpeg($source);
                 if (!$image) {
-                    throw new \Exception('imagecreatefromjpeg("' . $source . '") failed');
+                    throw new ConverterFailedException('imagecreatefromjpeg("' . $source . '") failed');
                 }
         }
 
