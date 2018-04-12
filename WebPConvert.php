@@ -170,9 +170,9 @@ class WebPConvert
     {
         $success = false;
 
-        self::isValidTarget($source);
-        self::isAllowedExtension($source);
-        self::createWritableFolder($destination);
+        GeneralHelper::isValidTarget($source);
+        GeneralHelper::isAllowedExtension($source);
+        GeneralHelper::createWritableFolder($destination);
 
         $firstFailExecption = null;
 

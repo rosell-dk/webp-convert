@@ -10,6 +10,8 @@ class Gd extends ConverterBase
 {
     public static function convert($source, $destination, $quality, $stripMetadata, $options = array())
     {
+        self::prepareDestinationFolderAndRunCommonValidations($source, $destination);
+
         $defaultOptions = array(
             'convert_pngs' => false
         );
