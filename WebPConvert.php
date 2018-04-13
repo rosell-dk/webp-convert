@@ -4,19 +4,20 @@ namespace WebPConvert;
 
 class WebPConvert
 {
-    private static $preferredConverters = [];
-    private static $excludeConverters = false;
-    private static $allowedExtensions = ['jpg', 'jpeg', 'png'];
+    //private static $preferredConverters = [];
+    //private static $excludeConverters = false;
+    //private static $allowedExtensions = ['jpg', 'jpeg', 'png'];
 
-    private static $converterOptions = array();
+    //private static $converterOptions = array();
 
+/*
     public static function setConverterOption($converter, $optionName, $optionValue)
     {
         if (!isset($converterOptions['converter'])) {
             $converterOptions['converter'] = array();
         }
         $converterOptions[$converter][$optionName] = $optionValue;
-    }
+    }*/
 
     /* As there are many options available for imagick, it will be convenient to be able to set them in one go.
        So we will probably create a new public method setConverterOption($converter, $options)
@@ -31,6 +32,7 @@ class WebPConvert
 
 
     // Defines the array of preferred converters
+    /*
     public static function setConverterOrder($array, $exclude = false)
     {
         self::$preferredConverters = $array;
@@ -38,82 +40,13 @@ class WebPConvert
         if ($exclude) {
             self::$excludeConverters = true;
         }
-    }
+    }*/
 
-    // Throws an exception if the provided file doesn't exist
-    private static function isValidTarget($filePath)
-    {
-        if (!file_exists($filePath)) {
-            throw new TargetNotFoundException('File or directory not found: ' . $filePath);
-        }
-
-        return true;
-    }
-
-    // Throws an exception if the provided file's extension is invalid
-    private static function isAllowedExtension($filePath)
-    {
-        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
-        if (!in_array(strtolower($fileExtension), self::$allowedExtensions)) {
-            throw new InvalidFileExtensionException('Unsupported file extension: ' . $fileExtension);
-        }
-
-        return true;
-    }
-
-    // Creates folder in provided path & sets correct permissions
-    private static function createWritableFolder($filePath)
-    {
-        $folder = pathinfo($filePath, PATHINFO_DIRNAME);
-        if (!file_exists($folder)) {
-            // TODO: what if this is outside open basedir?
-            // see http://php.net/manual/en/ini.core.php#ini.open-basedir
-
-            // First, we have to figure out which permissions to set.
-            // We want same permissions as parent folder
-            // But which parent? - the parent to the first missing folder
-
-            $parentFolders = explode('/', $folder);
-            $poppedFolders = [];
-
-            while (!(file_exists(implode('/', $parentFolders))) && count($parentFolders) > 0) {
-                array_unshift($poppedFolders, array_pop($parentFolders));
-            }
-
-            // Retrieving permissions of closest existing folder
-            $closestExistingFolder = implode('/', $parentFolders);
-            $permissions = fileperms($closestExistingFolder) & 000777;
-
-            // Trying to create the given folder
-            // Notice: mkdir emits a warning on failure. It would be nice to suppress that, if possible
-            if (!mkdir($folder, $permissions, true)) {
-                throw new CreateDestinationFolderException('Failed creating folder: ' . $folder);
-            }
-
-
-            // `mkdir` doesn't respect permissions, so we have to `chmod` each created subfolder
-            foreach ($poppedFolders as $subfolder) {
-                $closestExistingFolder .= '/' . $subfolder;
-                // Setting directory permissions
-                chmod($folder, $permissions);
-            }
-        }
-
-        // Checks if there's a file in $filePath & if writing permissions are correct
-        if (file_exists($filePath) && !is_writable($filePath)) {
-            throw new CreateDestinationFileException('Cannot overwrite ' . basename($filePath) . ' - check file permissions.');
-        }
-
-        // There's either a rewritable file in $filePath or none at all.
-        // If there is, simply attempt to delete it
-        if (file_exists($filePath) && !unlink($filePath)) {
-            throw new CreateDestinationFileException('Existing file cannot be removed: ' . basename($filePath));
-        }
-
-        return true;
-    }
-
-    private static function getConverters()
+    /**
+     * $converters: Ie: array('imagick', 'cwebp' => array('use-nice' => true))
+     * $exclude
+     */
+    private static function getConverters($converters, $exclude = false)
     {
         // Prepare building up an array of converters
         $converters = [];
@@ -139,7 +72,7 @@ class WebPConvert
             }
         }
 
-        if (self::$excludeConverters) {
+        if ($exclude) {
             return $converters;
         }
 
@@ -157,32 +90,48 @@ class WebPConvert
     /*
       @param (string) $source: Absolute path to image to be converted (no backslashes). Image must be jpeg or png
       @param (string) $destination: Absolute path (no backslashes)
-      @param (int) $quality (optional): Quality of converted file (0-100)
-      @param (bool) $stripMetadata (optional): Whether or not to strip metadata. Default is to strip. Not all converters supports this
+      @param (object) $options: Array of named options, such as 'quality' and 'meta'
     */
-    public static function convert($source, $destination, $quality = 85, $stripMetadata = true)
+    public static function convert($source, $destination, $options = array())
     {
+        $defaultOptions = array(
+            'quality' => 85,
+            'metadata' => 'none',
+            'method' => 6,
+            'low-memory' => false,
+            'converters' =>  array('cwebp', 'imagick', 'gd')
+        );
+        $options = array_merge($defaultOptions, $options);
+
+        $defaultConverterOptions = $options;
+        $defaultConverterOptions['converters'] = null;
+
         $success = false;
 
         $firstFailExecption = null;
 
-        foreach (self::getConverters() as $converter) {
-            $converter = ucfirst($converter);
-            $className = 'WebPConvert\\Converters\\' . $converter;
+        foreach ($options['converters'] as $converter) {
+            if (is_array($converter)) {
+                $converterId = $converter['converter'];
+                $converterOptions = $converter['options'];
+            } else {
+                $converterId = $converter;
+                $converterOptions = array();
+            }
+
+            $className = 'WebPConvert\\Converters\\' . ucfirst($converterId);
 
             if (!is_callable([$className, 'convert'])) {
                 continue;
             }
 
             try {
-                $options = (isset($converterOptions[$converter]) ? $converterOptions[$converter] : array());
+                $converterOptions = array_merge($defaultConverterOptions, $converterOptions);
                 $conversion = call_user_func(
                     [$className, 'convert'],
                     $source,
                     $destination,
-                    $quality,
-                    $stripMetadata,
-                    $options
+                    $converterOptions
                 );
 
                 if (file_exists($destination)) {

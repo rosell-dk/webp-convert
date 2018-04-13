@@ -22,29 +22,14 @@ class GdTest extends TestCase
      *   Other exceptions are unexpected and will result in test failure
      * - It must not return anything
      */
-    public function testConvert()
-    {
-        try {
-            $source = (__DIR__ . '/../test.jpg');
-            $destination = (__DIR__ . '/../test.webp');
-            $quality = 80;
-            $stripMetadata = true;
-
-            $result = Gd::convert($source, $destination, $quality, $stripMetadata);
-
-            $this->assertTrue(file_exists($destination));
-            $this->assertEmpty($result);
-        } catch (\WebPConvert\Converters\Exceptions\ConverterNotOperationalException $e) {
-            // The converter is not operational.
-            // and that is ok!
-        }
-    }
 
     public function testPNGDeclined()
     {
         try {
-            Gd::convert(__DIR__ . '/../test.png', __DIR__ . '/../test.png.webp', 80, true, array(
-                'convert_pngs' => false
+            $source = __DIR__ . '/../test.png';
+            $destination = __DIR__ . '/../test.png.webp';
+            Gd::convert($source, $destination, array(
+                'skip-pngs' => true
             ));
         } catch (\WebPConvert\Converters\Exceptions\ConverterNotOperationalException $e) {
             // converter isn't operational, so we cannot make the unit test
@@ -52,8 +37,8 @@ class GdTest extends TestCase
         } catch (\WebPConvert\Converters\Exceptions\ConversionDeclinedException $e) {
             // Yeah, this is what we want to test.
             $this->expectException(\WebPConvert\Converters\Exceptions\ConversionDeclinedException::class);
-            Gd::convert(__DIR__ . '/../test.png', __DIR__ . '/../test.png.webp', 80, true, array(
-                'convert_pngs' => false
+            Gd::convert($source, $destination, array(
+                'skip-pngs' => true
             ));
         }
     }
@@ -64,5 +49,21 @@ class GdTest extends TestCase
         $this->expectException(\WebPConvert\Exceptions\TargetNotFoundException::class);
 
         Gd::convert(__DIR__ . '/i-dont-exist.jpg', __DIR__ . '/i-dont-exist.webp');
+    }
+
+    public function testConvert()
+    {
+        try {
+            $source = (__DIR__ . '/../test.jpg');
+            $destination = (__DIR__ . '/../test.webp');
+
+            $result = Gd::convert($source, $destination);
+
+            $this->assertTrue(file_exists($destination));
+            $this->assertEmpty($result);
+        } catch (\WebPConvert\Converters\Exceptions\ConverterNotOperationalException $e) {
+            // The converter is not operational.
+            // and that is ok!
+        }
     }
 }

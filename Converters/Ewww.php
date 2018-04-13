@@ -7,11 +7,13 @@ use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
 class Ewww
 {
-    public static function convert($source, $destination, $quality = 80, $stripMetadata = true, $options = array())
+    public static function convert($source, $destination, $options = array())
     {
         ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
 
         $defaultOptions = array(
+            'quality' => 80,
+            'metadata' => 'none',
             'key' => '',
         );
 
@@ -50,8 +52,8 @@ class Ewww
             'webp' => '1',
             'file' => curl_file_create($source),
             'domain' => $_SERVER['HTTP_HOST'],
-            'quality' => $quality,
-            'metadata' => ($stripMetadata ? '0' : '1')
+            'quality' => $options['quality'],
+            'metadata' => ($options['metadata'] == 'none' ? '0' : '1')
         ];
 
         curl_setopt_array($ch, [

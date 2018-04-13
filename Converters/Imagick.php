@@ -9,24 +9,25 @@ use WebPConvert\Exceptions\TargetNotFoundException;
 
 class Imagick
 {
-    public static function convert($source, $destination, $quality = 80, $stripMetadata = true, $options = array())
+    public static function convert($source, $destination, $options = array())
     {
         ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
 
         $defaultOptions = array(
-            'webp:method' => 6,
-            'webp:low-memory' => true
+            'quality' => 80,
+            'method' => 6,
+            'low-memory' => true
         );
 
         // For backwards compatibility
         if (defined("WEBPCONVERT_IMAGICK_METHOD")) {
-            if (!isset($options['webp:method'])) {
-                $options['webp:method'] = WEBPCONVERT_IMAGICK_METHOD;
+            if (!isset($options['method'])) {
+                $options['method'] = WEBPCONVERT_IMAGICK_METHOD;
             }
         }
         if (defined("WEBPCONVERT_IMAGICK_LOW_MEMORY")) {
-            if (!isset($options['webp:low-memory'])) {
-                $options['webp:low-memory'] = WEBPCONVERT_IMAGICK_LOW_MEMORY;
+            if (!isset($options['low-memory'])) {
+                $options['low-memory'] = WEBPCONVERT_IMAGICK_LOW_MEMORY;
             }
         }
 
@@ -61,15 +62,16 @@ class Imagick
         /*
          * More about iMagick's WebP options:
          * http://www.imagemagick.org/script/webp.php
+         * https://developers.google.com/speed/webp/docs/cwebp
          * https://stackoverflow.com/questions/37711492/imagemagick-specific-webp-calls-in-php
          */
 
         // TODO: We could easily support all webp options with a loop
-        $im->setOption('webp:method', strval($options['webp:method']));
-        $im->setOption('webp:low-memory', strval($options['webp:low-memory']));
+        $im->setOption('webp:method', strval($options['method']));
+        $im->setOption('webp:low-memory', strval($options['low-memory']));
 
 
-        $im->setImageCompressionQuality($quality);
+        $im->setImageCompressionQuality($options['quality']);
 
         // TODO: Check out other iMagick methods, see http://php.net/manual/de/imagick.writeimage.php#114714
         // 1. file_put_contents($destination, $im)

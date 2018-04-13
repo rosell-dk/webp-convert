@@ -97,10 +97,8 @@ class CwebpTest extends TestCase
         try {
             $source = (__DIR__ . '/../test.jpg');
             $destination = (__DIR__ . '/../test.webp');
-            $quality = 80;
-            $stripMetadata = true;
 
-            $result = Cwebp::convert($source, $destination, $quality, $stripMetadata);
+            $result = Cwebp::convert($source, $destination);
 
             $this->assertTrue(file_exists($destination));
             $this->assertEmpty($result);

@@ -77,25 +77,27 @@ class Cwebp
         }
     }
 
-    public static function convert($source, $destination, $quality = 80, $stripMetadata = true, $options = array())
+    public static function convert($source, $destination, $options = array())
     {
 
         ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
 
         $defaultOptions = array(
-            'webp:method' => 6,
-            'webp:low-memory' => true
+            'quality' => 80,
+            'metadata' => 'none',
+            'method' => 6,
+            'low-memory' => true
         );
 
         // For backwards compatibility
         if (defined("WEBPCONVERT_CWEBP_METHOD")) {
-            if (!isset($options['webp:method'])) {
-                $options['webp:method'] = WEBPCONVERT_CWEBP_METHOD;
+            if (!isset($options['method'])) {
+                $options['method'] = WEBPCONVERT_CWEBP_METHOD;
             }
         }
         if (defined("WEBPCONVERT_CWEBP_LOW_MEMORY")) {
-            if (!isset($options['webp:low-memory'])) {
-                $options['webp:low-memory'] = WEBPCONVERT_CWEBP_LOW_MEMORY;
+            if (!isset($options['low-memory'])) {
+                $options['low-memory'] = WEBPCONVERT_CWEBP_LOW_MEMORY;
             }
         }
 
@@ -118,37 +120,33 @@ class Cwebp
 
         // Metadata (all, exif, icc, xmp or none (default))
         // Comma-separated list of existing metadata to copy from input to output
-        $metadata = (
-            $stripMetadata
-            ? '-metadata none'
-            : '-metadata all'
-        );
+        $metadata = '-metadata ' . $options['metadata'];
 
         // Image quality
-        $quality = '-q ' . $quality;
+        $quality = '-q ' . $options['quality'];
 
         // Losless PNG conversion
         $fileExtension = pathinfo($source, PATHINFO_EXTENSION);
-        $losless = (
+        $lossless = (
             strtolower($fileExtension) == 'png'
             ? '-lossless'
             : ''
         );
 
         // Built-in method option
-        $method = ' -m ' . strval($options['webp:method']);
+        $method = ' -m ' . strval($options['method']);
 
 
         // Built-in low memory option
         $lowMemory = '';
-        if ($options['webp:low-memory']) {
+        if ($options['low-memory']) {
             $lowMemory = '-low_memory';
         }
 
         $optionsArray = [
             $metadata = $metadata,
             $quality = $quality,
-            $losless = $losless,
+            $lossless = $lossless,
             $method = $method,
             $lowMemory = $lowMemory,
             $input = self::escapeFilename($source),

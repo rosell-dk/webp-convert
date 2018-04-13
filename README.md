@@ -55,66 +55,88 @@ require 'vendor/autoload.php';
 use WebPConvert\WebPConvert;
 
 // Define basic conversion options
-$source = $_SERVER['DOCUMENT_ROOT'] . '/images/logo.jpg';
-$destination = $_SERVER['DOCUMENT_ROOT'] . '/images/logo.webp';
-$quality = 90;
-$stripMetadata = true;
+$source = __DIR__ . '/logo.jpg';
+$destination = __DIR__ . '/logo.jpg.webp';
 
 // .. fire up WebP conversion
-$success = WebPConvert::convert($source, $destination, $quality, $stripMetadata);
+$success = WebPConvert::convert($source, $destination array(
+    'quality' => 90,
+    // more options available!
+));
 ```
 
 ## Methods
 The following methods are available:
 
-**WebPConvert::convert($source, $destination, $quality, $stripMetadata)**
+**WebPConvert::convert($source, $destination)**
 
-| Parameter        | Type    | Default | Description                                                                                |
-| ---------------- | ------- | ------- | ------------------------------------------------------------------------------------------ |
-| `$source`        | String  | `''`    | Absolute path to source image (only forward slashes allowed)                               |
-| `$destination`   | String  | `''`    | Absolute path to converted image (only forward slashes allowed)                            |
-| `$quality`       | Integer | `85`    | Lossy quality of converted image (JPEG only - PNGs are created loslessly by default)       |
-| `$stripMetadata` | Boolean | `false` | Whether or not to copy JPEG metadata to converted image (not all converters supports this) |
+| Parameter        | Type    | Description                                                                                |
+| ---------------- | ------- | ------------------------------------------------------------------------------------------ |
+| `$source`        | String  | Absolute path to source image (only forward slashes allowed)                               |
+| `$destination`   | String  | Absolute path to converted image (only forward slashes allowed)                            |
+| `$options`       | Array   | Array of convertion options                                                                |
 
-----
+Available options:
 
-**WebPConvert::setConverterOrder($converters, $exclude)**
+Most options correspond to options of cwebp. These are documented [here](https://developers.google.com/speed/webp/docs/cwebp)
 
-| Parameter     | Type    | Default                              | Description                                                       |
-| ------------- | ------- | ------------------------------------ | ----------------------------------------------------------------- |
-| `$converters` | Array   | `['imagick', 'cwebp', 'gd', 'ewww']` | Desired order in which the converters are tried                   |
-| `$exclude`    | Boolean | `false`                              | Whether or not to exclude converters not selected by `$converter` |
+| Option            | Type    | Default                    | Description                                                          |
+| ----------------- | ------- | -------------------------- | -------------------------------------------------------------------- |
+| quality           | Integer | 85                         | Lossy quality of converted image (JPEG only - PNGs are created loslessly by default)  |
+| metadata          | String  | 'none'                     | Valid values: all, none, exif, icc, xmp. Note: Not supported by all converters             |
+| method            | Integer | 6                          | Specify the compression method to use (0-6). When higher values are used, the encoder will spend more time inspecting additional encoding possibilities and decide on the quality gain. Lower value can result in faster processing time at the expense of larger file size and lower compression quality. |
+| low-memory        | Boolean | false                      | Reduce memory usage of lossy encoding by saving four times the compressed size (typically) |
+| converters        | Array   | ['cwebp', 'imagick', 'gd'] | Specify converters to use, and their order. Also optionally set converter options (see below) |
+| extra-converters  | Array   | []                          | Add extra converter.    |
 
-**Example:** Changing it to `gd, ewww` would lead to `gd` being tried first, and `ewww` right after that and then `imagick`. This option will not remove any converters from the list, but rather put the selected converters at the top (unless `true` is passed as second parameter).
 
-----
+When setting the `converters` option, you can also set options for the converter. This can be used for either overriding default options, such as quality, or for setting options that are special for the converter.
 
-**WebPConvert::setConverterOption($converter, $optionName, $optionValue)**
-
-| Parameter      | Type    | Default                              | Description                                                       |
-| -------------- | ------- | ------------------------------------ | ----------------------------------------------------------------- |
-| `$converter`   | String  | null                                 | The converter to assign an option. Ie 'gd'                        |
-| `$optionName`  | String  | null                                 | The name of the option to set                                     |
-| `$optionValue` | Any     | null                                 | The value of the option                                           |
-
-**Examples:**
-
-```php
-WebPConvert::setConverterOption('ewww', 'key', 'YOUR-KEY-HERE');
-WebPConvert::setConverterOption('gd', 'convert_pngs', true);
-WebPConvert::setConverterOption('cwebp', 'webp:method', '6');
-WebPConvert::setConverterOption('imagick', 'webp:method', '6');
+Example:
+```
+WebPConvert::convert($source, $destination, array(
+    'converters' => array(
+        'cwebp',    
+        'imagick',
+        array(
+            'converter' => 'gd',
+            'options' => array(            
+                'skip-pngs' => false,
+            ),
+        ),
+    );
+)
 ```
 
+You use the `extra-converters` to append converters to the list defined by the `converters` option. This is the preferred way of adding cloud converters. As with the `converters` option, you are allowed to specify the same converter multiple times. This can be useful if you for example have multiple accounts for a cloud service and are afraid that one of them might expire.
+
+Example:
+
+```
+WebPConvert::convert($source, $destination, array(
+    'extra-converters' => array(
+        array(
+            'converter' => 'ewww',
+            'options' => array(
+                'key' => 'your api key here',
+            ),
+        ),
+        array(
+            'converter' => 'ewww',
+            'options' => array(
+                'key' => 'your other api key here, in case the first one has expired',
+            ),
+        ),
+    )
+)
+```
+
+----
 
 ## Converters
 Each "method" of converting an image to WebP is implemented through a separate converter `.php` file, containing a class of the same name. `WebPConvert` autodetects converters by scanning the `Converters` directory, so it's easy to add new converters and safe to remove existing ones.
 
-In the most basic design, a converter consists of a convert function which takes the same arguments as `WebPConvert::convert`. Its job is then to convert `$source` to WebP and save it at `$destination`, preferably taking `$quality` and `$stripMetadata` into account. It however relies on the `WebPConvert` class to take care of the following common tasks:
-- Checking that `$source` file exists
-- Creating `$destination`if it doesn't exist
-- Ensuring that write permissions are granted
-- Handling errors / exceptions if need be
+In the most basic design, a converter consists of a convert function which takes the same arguments as `WebPConvert::convert`. Its job is then to convert `$source` to WebP and save it at `$destination`, preferably taking the options specified in $options into account. The converters may be called directly. But you probably don't want to do that, because it would seem to defeat the purpose of using WebPConvert.
 
 ----
 

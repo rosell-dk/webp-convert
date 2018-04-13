@@ -131,33 +131,26 @@ https://phpunit.readthedocs.io/en/7.1/writing-tests-for-phpunit.html#testing-exc
     */
     public function testConvertWithNoConverters()
     {
-        // Remove all converters from next conversion!
-        WebPConvert::setConverterOrder(array(), true);
-
         //$this->expectException(\WebPConvert\Exceptions\NoOperationalConvertersException::class);
-
-        $result = WebPConvert::convert(__DIR__ . '/test.jpg', __DIR__ . '/test.webp');
+        $source = __DIR__ . '/test.jpg';
+        $destination = __DIR__ . '/test.jpg.webp';
+        $result = WebPConvert::convert($source, $destination, array(
+            'converters' => array()
+        ));
         $this->assertFalse($result);
     }
 
+
     public function testTargetNotFound()
     {
-
-        // Set converter array. Because it was removed in testConvertWithNoConverters
-        WebPConvert::setConverterOrder(array('imagick'), true);
-
         $this->expectException(\WebPConvert\Exceptions\TargetNotFoundException::class);
 
         WebPConvert::convert(__DIR__ . '/i-dont-existno.jpg', __DIR__ . '/i-dont-exist.webp');
         //$this->assertTrue($result);
     }
 
-
     public function testInvalidDestinationFolder()
     {
-
-        // Set converter array. Because it could have been removed by other tests
-        WebPConvert::setConverterOrder(array('imagick'), true);
 
         // Notice: mkdir emits a warning on failure.
         // I have reconfigured php unit to not turn warnings into exceptions (phpunit.xml.dist)
@@ -175,16 +168,28 @@ https://phpunit.readthedocs.io/en/7.1/writing-tests-for-phpunit.html#testing-exc
     /**
      * Test ConversionDeclinedException by testing Gd.
      */
-    public function testPNGDeclined()
+    public function testDeclined()
     {
         // only try Gd
-        WebPConvert::setConverterOrder(array('gd'), true);
+        //WebPConvert::setConverterOrder(array('gd'), true);
 
         // configure Gd not to convert pngs
-        WebPConvert::setConverterOption('gd', 'convert_pngs', false);
+        //WebPConvert::setConverterOption('gd', 'convert_pngs', false);
 
+        $source = __DIR__ . '/test.png';
+        $destination = __DIR__ . '/test.png.webp';
+        $options = array(
+            'converters' => array(
+                array(
+                    'converter' => 'gd',
+                    'options' => array(
+                        'skip-pngs' => true,
+                    ),
+                ),
+            )
+        );
         try {
-            WebPConvert::convert(__DIR__ . '/test.png', __DIR__ . '/test.png.webp');
+            WebPConvert::convert($source, $destination, $options);
         } catch (\WebPConvert\Converters\Exceptions\ConverterNotOperationalException $e) {
             // converter isn't operational, so we cannot make the unit test
             return;
@@ -192,7 +197,7 @@ https://phpunit.readthedocs.io/en/7.1/writing-tests-for-phpunit.html#testing-exc
             // Yeah, this is what we want to test.
 
             $this->expectException(\WebPConvert\Converters\Exceptions\ConversionDeclinedException::class);
-            WebPConvert::convert(__DIR__ . '/test.png', __DIR__ . '/test.png.webp');
+            WebPConvert::convert($source, $destination, $options);
         }
     }
 

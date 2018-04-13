@@ -26,10 +26,8 @@ class ImagickTest extends TestCase
         try {
             $source = (__DIR__ . '/../test.jpg');
             $destination = (__DIR__ . '/../test.webp');
-            $quality = 80;
-            $stripMetadata = true;
 
-            $result = Imagick::convert($source, $destination, $quality, $stripMetadata);
+            $result = Imagick::convert($source, $destination);
 
             $this->assertTrue(file_exists($destination));
             $this->assertEmpty($result);
@@ -48,7 +46,7 @@ class ImagickTest extends TestCase
             $source = (__DIR__ . '/../test.jpg');
             $destination = (__DIR__ . '/../test.webp');
 
-            Imagick::convert($source, $destination, 80, true);
+            Imagick::convert($source, $destination);
 
             // if we are here, it means that the converter is operational.
             // Now do something that tests that the converter fails the way it should,
@@ -60,7 +58,7 @@ class ImagickTest extends TestCase
             // this is perhaps wrong to assume?
             $destinationFolder = '/you-can-delete-me/';
 
-            Imagick::convert(__DIR__ . '/../test.jpg', $destinationFolder . 'you-can-delete-me.webp', 80, true);
+            Imagick::convert(__DIR__ . '/../test.jpg', $destinationFolder . 'you-can-delete-me.webp');
         } catch (\Exception $e) {
             // its ok...
         }

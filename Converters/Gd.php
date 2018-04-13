@@ -8,18 +8,19 @@ use WebPConvert\Converters\Exceptions\ConversionDeclinedException;
 
 class Gd
 {
-    public static function convert($source, $destination, $quality = 80, $stripMetadata = true, $options = array())
+    public static function convert($source, $destination, $options = array())
     {
         ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
 
         $defaultOptions = array(
+            'quality' => 80,
             'convert_pngs' => false
         );
 
         // For backwards compatibility
         if (defined("WEBPCONVERT_GD_PNG")) {
-            if (!isset($options['convert_pngs'])) {
-                $options['convert_pngs'] = WEBPCONVERT_GD_PNG;
+            if (!isset($options['skip-pngs'])) {
+                $options['skip-pngs'] = !WEBPCONVERT_GD_PNG;
             }
         }
 
@@ -35,7 +36,7 @@ class Gd
 
         switch (ConverterHelper::getExtension($source)) {
             case 'png':
-                if ($options['convert_pngs']) {
+                if (!$options['skip-pngs']) {
                     if (!function_exists('imagecreatefrompng')) {
                         throw new ConverterNotOperationalException('Required imagecreatefrompng() function is not available.');
                     }
@@ -59,7 +60,7 @@ class Gd
 
         // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
 
-        $success = imagewebp($image, $destination, $quality);
+        $success = imagewebp($image, $destination, $options['quality']);
 
         if (!$success) {
             throw new ConverterFailedException('Call to imagewebp() failed. Probably failed writing file');
