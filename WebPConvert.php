@@ -2,6 +2,8 @@
 
 namespace WebPConvert;
 
+use WebPConvert\Converters\ConverterHelper;
+
 class WebPConvert
 {
     //private static $preferredConverters = [];
@@ -94,6 +96,8 @@ class WebPConvert
     */
     public static function convert($source, $destination, $options = array())
     {
+        ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
+
         $defaultOptions = array(
             'quality' => 85,
             'metadata' => 'none',
@@ -131,7 +135,8 @@ class WebPConvert
                     [$className, 'convert'],
                     $source,
                     $destination,
-                    $converterOptions
+                    $converterOptions,
+                    false
                 );
 
                 if (file_exists($destination)) {

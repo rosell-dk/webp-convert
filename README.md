@@ -54,7 +54,6 @@ require 'vendor/autoload.php';
 
 use WebPConvert\WebPConvert;
 
-// Define basic conversion options
 $source = __DIR__ . '/logo.jpg';
 $destination = __DIR__ . '/logo.jpg.webp';
 
@@ -74,7 +73,7 @@ The following methods are available:
 | ---------------- | ------- | ------------------------------------------------------------------------------------------ |
 | `$source`        | String  | Absolute path to source image (only forward slashes allowed)                               |
 | `$destination`   | String  | Absolute path to converted image (only forward slashes allowed)                            |
-| `$options`       | Array   | Array of convertion options                                                                |
+| `$options`       | Array   | Array of conversion options                                                                |
 
 Available options:
 

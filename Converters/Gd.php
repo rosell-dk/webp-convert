@@ -8,9 +8,11 @@ use WebPConvert\Converters\Exceptions\ConversionDeclinedException;
 
 class Gd
 {
-    public static function convert($source, $destination, $options = array())
+    public static function convert($source, $destination, $options = array(), $prepareDestinationFolder = true)
     {
-        ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
+        if ($prepareDestinationFolder) {
+            ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
+        }
 
         $defaultOptions = array(
             'quality' => 80,
