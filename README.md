@@ -89,7 +89,7 @@ Most options correspond to options of cwebp. These are documented [here](https:/
 | extra-converters  | Array   | []                          | Add extra converters    |
 
 
-When setting the `converters` option, you can also set options for the converter. This can be used for either overriding default options, such as quality, or for setting options that are special for the converter.
+When setting the `converters` option, you can also set options for the converter. This can be used for overriding the general options. For example, you may generally want the `quality` to be 85, but for a single converter, you would like it to be 100. It can also be used to set options that are special for the converter. For example, the ewww converter has a `key` option and `cwebp` has the special `use-nice` options. Gd converter has the option `skip-pngs`.
 
 Example:
 ```
@@ -107,7 +107,7 @@ WebPConvert::convert($source, $destination, array(
 )
 ```
 
-You use the `extra-converters` to append converters to the list defined by the `converters` option. This is the preferred way of adding cloud converters. As with the `converters` option, you are allowed to specify the same converter multiple times. This can be useful if you for example have multiple accounts for a cloud service and are afraid that one of them might expire.
+You use the `extra-converters` to append converters to the list defined by the `converters` option. This is the preferred way of adding cloud converters. You are allowed to specify the same converter multiple times (you can btw also do that with the `converters` option). This can be useful if you for example have multiple accounts for a cloud service and are afraid that one of them might expire.
 
 Example:
 
