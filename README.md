@@ -87,7 +87,7 @@ Most options correspond to options of cwebp. These are documented [here](https:/
 | method            | Integer | 6                          | Specify the compression method to use (0-6). When higher values are used, the encoder will spend more time inspecting additional encoding possibilities and decide on the quality gain. Lower value can result in faster processing time at the expense of larger file size and lower compression quality. |
 | low-memory        | Boolean | false                      | Reduce memory usage of lossy encoding by saving four times the compressed size (typically) |
 | converters        | Array   | ['cwebp', 'imagick', 'gd'] | Specify converters to use, and their order. Also optionally set converter options (see below) |
-| extra-converters  | Array   | []                          | Add extra converter.    |
+| extra-converters  | Array   | []                          | Add extra converters    |
 
 
 When setting the `converters` option, you can also set options for the converter. This can be used for either overriding default options, such as quality, or for setting options that are special for the converter.
