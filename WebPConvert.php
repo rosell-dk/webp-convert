@@ -6,93 +6,11 @@ use WebPConvert\Converters\ConverterHelper;
 
 class WebPConvert
 {
-    //private static $preferredConverters = [];
-    //private static $excludeConverters = false;
-    //private static $allowedExtensions = ['jpg', 'jpeg', 'png'];
-
-    //private static $converterOptions = array();
-
-/*
-    public static function setConverterOption($converter, $optionName, $optionValue)
-    {
-        if (!isset($converterOptions['converter'])) {
-            $converterOptions['converter'] = array();
-        }
-        $converterOptions[$converter][$optionName] = $optionValue;
-    }*/
-
-    /* As there are many options available for imagick, it will be convenient to be able to set them in one go.
-       So we will probably create a new public method setConverterOption($converter, $options)
-       Example:
-
-       setConverterOptions('imagick', array(
-           'webp:low-memory' => 'true',
-           'webp:method' => '6',
-           'webp:lossless' => 'true',
-       ));
-       */
-
-
-    // Defines the array of preferred converters
-    /*
-    public static function setConverterOrder($array, $exclude = false)
-    {
-        self::$preferredConverters = $array;
-
-        if ($exclude) {
-            self::$excludeConverters = true;
-        }
-    }*/
-
-    /**
-     * $converters: Ie: array('imagick', 'cwebp' => array('use-nice' => true))
-     * $exclude
-     */
-    private static function getConverters($converters, $exclude = false)
-    {
-        // Prepare building up an array of converters
-        $converters = [];
-
-        // Saves all available converters inside the `Converters` directory to an array
-        $availableConverters = array_map(function ($filePath) {
-            $fileName = basename($filePath, '.php');
-            return strtolower($fileName);
-        }, glob(__DIR__ . '/Converters/*.php'));
-
-        // Order the available converters so imagick comes first, then cwebp, then gd
-        $availableConverters = array_unique(
-            array_merge(
-                array('imagick', 'cwebp', 'gd'),
-                $availableConverters
-            )
-        );
-
-        // Checks if preferred converters match available converters and adds all matches to $converters array
-        foreach (self::$preferredConverters as $preferredConverter) {
-            if (in_array($preferredConverter, $availableConverters)) {
-                $converters[] = $preferredConverter;
-            }
-        }
-
-        if ($exclude) {
-            return $converters;
-        }
-
-        // Fills $converters array with the remaining available converters, keeping the updated order of execution
-        foreach ($availableConverters as $availableConverter) {
-            if (in_array($availableConverter, $converters)) {
-                continue;
-            }
-            $converters[] = $availableConverter;
-        }
-
-        return $converters;
-    }
 
     /*
       @param (string) $source: Absolute path to image to be converted (no backslashes). Image must be jpeg or png
       @param (string) $destination: Absolute path (no backslashes)
-      @param (object) $options: Array of named options, such as 'quality' and 'meta'
+      @param (object) $options: Array of named options, such as 'quality' and 'metadata'
     */
     public static function convert($source, $destination, $options = array())
     {
