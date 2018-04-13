@@ -59,7 +59,7 @@ $source = __DIR__ . '/logo.jpg';
 $destination = __DIR__ . '/logo.jpg.webp';
 
 // .. fire up WebP conversion
-$success = WebPConvert::convert($source, $destination array(
+$success = WebPConvert::convert($source, $destination, array(
     'quality' => 90,
     // more options available!
 ));
