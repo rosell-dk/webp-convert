@@ -9,7 +9,7 @@ use WebPConvert\Exceptions\TargetNotFoundException;
 
 class Imagick
 {
-    public static function convert($source, $destination, $options = array(), $prepareDestinationFolder = true)
+    public static function convert($source, $destination, $options = [], $prepareDestinationFolder = true)
     {
         if ($prepareDestinationFolder) {
             ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);

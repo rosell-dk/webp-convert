@@ -57,15 +57,15 @@ class Cwebp
         }
     }
 
-    public static function convert($source, $destination, $options = array(), $prepareDestinationFolder = true)
+    public static function convert($source, $destination, $options = [], $prepareDestinationFolder = true)
     {
         if ($prepareDestinationFolder) {
             ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
         }
 
-        $defaultOptions = array_merge(ConverterHelper::$defaultOptions, array(
+        $defaultOptions = array_merge(ConverterHelper::$defaultOptions, [
             'use-nice' => true,
-        ));
+        ]);
 
         $options = array_merge($defaultOptions, $options);
 

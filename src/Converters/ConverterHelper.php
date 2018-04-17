@@ -12,13 +12,13 @@ class ConverterHelper
 {
     public static $allowedExtensions = ['jpg', 'jpeg', 'png'];
 
-    public static $defaultOptions = array(
+    public static $defaultOptions = [
         'quality' => 85,
         'metadata' => 'none',
         'method' => 6,
         'low-memory' => false,
-        'converters' =>  array('cwebp', 'imagick', 'gd')
-    );
+        'converters' =>  ['cwebp', 'imagick', 'gd']
+    ];
 
     public static function getExtension($filePath)
     {

@@ -7,7 +7,7 @@ use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
 class Wpc
 {
-    public static function convert($source, $destination, $options = array(), $prepareDestinationFolder = true)
+    public static function convert($source, $destination, $options = [], $prepareDestinationFolder = true)
     {
         if ($prepareDestinationFolder) {
             ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
@@ -39,18 +39,18 @@ class Wpc
             throw new ConverterNotOperationalException('Could not initialise cURL.');
         }
 
-        curl_setopt_array($ch, array(
+        curl_setopt_array($ch, [
             CURLOPT_URL => $options['url'],
             CURLOPT_POST => 1,
-            CURLOPT_POSTFIELDS => array(
+            CURLOPT_POSTFIELDS => [
                 'quality' => $options['quality'],
                 'file' => curl_file_create($source),
-            ),
+            ],
             CURLOPT_BINARYTRANSFER => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER => false,
             CURLOPT_SSL_VERIFYPEER => false
-        ));
+        ]);
 
         $response = curl_exec($ch);
 
@@ -74,27 +74,27 @@ class Wpc
         if (!$success) {
             throw new ConverterFailedException('Error saving file');
         }
-/*
-        $curlOptions = [
-            'api_key' => $options['key'],
-            'webp' => '1',
-            'file' => curl_file_create($source),
-            'domain' => $_SERVER['HTTP_HOST'],
-            'quality' => $options['quality'],
-            'metadata' => ($options['metadata'] == 'none' ? '0' : '1')
-        ];
-
-        curl_setopt_array($ch, [
-            CURLOPT_URL => "https://optimize.exactlywww.com/v2/",
-            CURLOPT_HTTPHEADER => [
-                'User-Agent: WebPConvert',
-                'Accept: image/*'
-            ],
-            CURLOPT_POSTFIELDS => $curlOptions,
-            CURLOPT_BINARYTRANSFER => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HEADER => false,
-            CURLOPT_SSL_VERIFYPEER => false
-        ]);*/
+        /*
+                $curlOptions = [
+                    'api_key' => $options['key'],
+                    'webp' => '1',
+                    'file' => curl_file_create($source),
+                    'domain' => $_SERVER['HTTP_HOST'],
+                    'quality' => $options['quality'],
+                    'metadata' => ($options['metadata'] == 'none' ? '0' : '1')
+                ];
+        
+                curl_setopt_array($ch, [
+                    CURLOPT_URL => "https://optimize.exactlywww.com/v2/",
+                    CURLOPT_HTTPHEADER => [
+                        'User-Agent: WebPConvert',
+                        'Accept: image/*'
+                    ],
+                    CURLOPT_POSTFIELDS => $curlOptions,
+                    CURLOPT_BINARYTRANSFER => true,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_HEADER => false,
+                    CURLOPT_SSL_VERIFYPEER => false
+                ]);*/
     }
 }

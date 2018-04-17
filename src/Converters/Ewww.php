@@ -7,15 +7,15 @@ use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
 class Ewww
 {
-    public static function convert($source, $destination, $options = array(), $prepareDestinationFolder = true)
+    public static function convert($source, $destination, $options = [], $prepareDestinationFolder = true)
     {
         if ($prepareDestinationFolder) {
             ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
         }
 
-        $defaultOptions = array_merge(ConverterHelper::$defaultOptions, array(
+        $defaultOptions = array_merge(ConverterHelper::$defaultOptions, [
             'key' => '',
-        ));
+        ]);
 
         $options = array_merge($defaultOptions, $options);
 
@@ -100,28 +100,27 @@ class Ewww
         }
     }
 
-/*
-    public static function blacklistKey($key)
-    {
-    }
-
-    public static function isKeyBlacklisted($key)
-    {
-    }*/
+    /*
+        public static function blacklistKey($key)
+        {
+        }
+    
+        public static function isKeyBlacklisted($key)
+        {
+        }*/
 
     /**
      *  Return "great", "exceeded" or "invalid"
      */
     public static function getKeyStatus($key)
     {
-
         $ch = ConverterHelper::initCurlForConverter();
 
         curl_setopt($ch, CURLOPT_URL, "https://optimize.exactlywww.com/verify/");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, array(
+        curl_setopt($ch, CURLOPT_POSTFIELDS, [
             'api_key' => $key
-        ));
+        ]);
 
         // The 403 forbidden is avoided with this line.
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)');
@@ -170,14 +169,15 @@ class Ewww
         return (self::getKeyStatus($key) != 'invalid');
     }
 
-    public static function getQuota($key) {
+    public static function getQuota($key)
+    {
         $ch = ConverterHelper::initCurlForConverter();
 
         curl_setopt($ch, CURLOPT_URL, "https://optimize.exactlywww.com/quota/");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, array(
+        curl_setopt($ch, CURLOPT_POSTFIELDS, [
             'api_key' => $key
-        ));
+        ]);
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)');
 
         $response = curl_exec($ch);

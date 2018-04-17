@@ -12,7 +12,7 @@ class WebPConvert
       @param (string) $destination: Absolute path (no backslashes)
       @param (object) $options: Array of named options, such as 'quality' and 'metadata'
     */
-    public static function convert($source, $destination, $options = array())
+    public static function convert($source, $destination, $options = [])
     {
         ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
 
@@ -31,7 +31,7 @@ class WebPConvert
                 $converterOptions = $converter['options'];
             } else {
                 $converterId = $converter;
-                $converterOptions = array();
+                $converterOptions = [];
             }
 
             $className = 'WebPConvert\\Converters\\' . ucfirst($converterId);
