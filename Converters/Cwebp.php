@@ -7,48 +7,22 @@ use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
 class Cwebp
 {
-    private static $cwebpDefaultPaths = [ // System paths to look for cwebp binary
+    // System paths to look for cwebp binary
+    private static $cwebpDefaultPaths = [
         '/usr/bin/cwebp',
         '/usr/local/bin/cwebp',
         '/usr/gnu/bin/cwebp',
         '/usr/syno/bin/cwebp'
     ];
 
-    private static $binaryInfo = [  // OS-specific binaries included in this library
+    // OS-specific binaries included in this library, along with hashes
+    private static $suppliedBinariesInfo = [
         'WinNT' => [ 'cwebp.exe', '49e9cb98db30bfa27936933e6fd94d407e0386802cb192800d9fd824f6476873'],
         'Darwin' => [ 'cwebp-mac12', 'a06a3ee436e375c89dbc1b0b2e8bd7729a55139ae072ed3f7bd2e07de0ebb379'],
         'SunOS' => [ 'cwebp-sol', '1febaffbb18e52dc2c524cda9eefd00c6db95bc388732868999c0f48deb73b4f'],
         'FreeBSD' => [ 'cwebp-fbsd', 'e5cbea11c97fadffe221fdf57c093c19af2737e4bbd2cb3cd5e908de64286573'],
         'Linux' => [ 'cwebp-linux', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568']
-    ][PHP_OS];
-
-    private static function updateBinaries($file, $hash, $array)
-    {
-        // Removes system paths if the corresponding binary does not exist
-        $array = array_filter($array, function($binary) {
-            return file_exists($binary);
-        });
-
-        $binaryFile = __DIR__ . '/Binaries/' . $file;
-
-        // Throws an exception if binary file does not exist
-        if (!file_exists($binaryFile)) {
-            throw new ConverterNotOperationalException('Operating system is currently not supported: ' . PHP_OS);
-        }
-
-        // File exists, now generate its hash
-        $binaryHash = hash_file('sha256', $binaryFile);
-
-        // Throws an exception if binary file checksum & deposited checksum do not match
-        if ($binaryHash != $hash) {
-            throw new ConverterNotOperationalException('Binary checksum is invalid.');
-        }
-
-        // Appends binary file to the provided array
-        $array[] = $binaryFile;
-
-        return $array;
-    }
+    ];
 
     private static function escapeFilename($string)
     {
@@ -93,7 +67,8 @@ class Cwebp
             'quality' => 80,
             'metadata' => 'none',
             'method' => 6,
-            'low-memory' => true
+            'low-memory' => true,
+            'use-nice' => true,
         );
 
         // For backwards compatibility
@@ -114,12 +89,37 @@ class Cwebp
             throw new ConverterNotOperationalException('exec() is not enabled.');
         }
 
-        // Checks if provided binary file & its hash match with deposited version & updates cwebp binary array
-        $binaries = self::updateBinaries(
-            self::$binaryInfo[0],
-            self::$binaryInfo[1],
-            self::$cwebpDefaultPaths
-        );
+
+        // Init with common system paths
+        $cwebpPathsToTest = self::$cwebpDefaultPaths;
+
+        // Remove paths that doesn't exist
+        $cwebpPathsToTest = array_filter($cwebpPathsToTest, function ($binary) {
+            return file_exists($binary);
+        });
+
+        // Add supplied binary to array (if available for OS, and hash is correct)
+        if (isset(self::$suppliedBinariesInfo[PHP_OS])) {
+            $info = self::$suppliedBinariesInfo[PHP_OS];
+
+            $file = $info[0];
+            $hash = $info[1];
+
+            $binaryFile = __DIR__ . '/Binaries/' . $file;
+
+            // The file should exist, but may have been removed manually. That would be ok, I suppose
+
+            if (file_exists($binaryFile)) {
+                // File exists, now generate its hash
+                $binaryHash = hash_file('sha256', $binaryFile);
+
+                // Throw an exception if binary file checksum & deposited checksum do not match
+                if ($binaryHash != $hash) {
+                    throw new ConverterNotOperationalException('Binary checksum is invalid.');
+                }
+                $cwebpPathsToTest[] = $binaryFile;
+            }
+        }
 
         /*
          * Preparing options
@@ -150,7 +150,7 @@ class Cwebp
             $lowMemory = '-low_memory';
         }
 
-        $optionsArray = [
+        $commandOptionsArray = [
             $metadata = $metadata,
             $quality = $quality,
             $lossless = $lossless,
@@ -161,16 +161,13 @@ class Cwebp
             $stderrRedirect = '2>&1'
         ];
 
-        $options = implode(' ', $optionsArray);
-        $nice = (
-            self::hasNiceSupport()
-            ? 'nice '
-            : ''
-        );
+        $nice = (($options['use-nice']) && self::hasNiceSupport()) ? 'nice ' : '';
+
+        $commandOptions = implode(' ', $commandOptionsArray);
 
         // Try all paths
-        foreach ($binaries as $index => $binary) {
-            $command = $nice . $binary . ' ' . $options;
+        foreach ($cwebpPathsToTest as $index => $binary) {
+            $command = $nice . $binary . ' ' . $commandOptions;
             exec($command, $output, $returnCode);
 
             if ($returnCode == 0) { // Everything okay!
