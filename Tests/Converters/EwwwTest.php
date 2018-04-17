@@ -34,4 +34,18 @@ class EwwwTest extends TestCase
             // and that is ok!
         }
     }
+    public function testIsValidKey()
+    {
+        $invalidKey = 'notvalidno';
+        $this->assertFalse(Ewww::isValidKey($invalidKey));
+
+        $demoKey = 'abc123';
+        $this->assertTrue(Ewww::isValidKey($demoKey));
+    }
+
+    public function testIsWorkingKey()
+    {
+        $invalidKey = 'notvalidno';
+        $this->assertFalse(Ewww::isWorkingKey($invalidKey));
+    }
 }

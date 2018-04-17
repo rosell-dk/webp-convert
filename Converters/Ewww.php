@@ -28,25 +28,23 @@ class Ewww
 
         $options = array_merge($defaultOptions, $options);
 
-        if (!extension_loaded('curl')) {
-            throw new ConverterNotOperationalException('Required cURL extension is not available.');
+
+        $keyStatus = self::getKeyStatus($options['key']);
+        switch ($keyStatus) {
+            case 'great':
+                break;
+            case 'exceeded':
+                throw new ConverterNotOperationalException('quota has exceeded');
+                break;
+            case 'invalid':
+                throw new ConverterNotOperationalException('key is invalid');
+                break;
         }
 
-        if (!function_exists('curl_init')) {
-            throw new ConverterNotOperationalException('Required url_init() function is not available.');
-        }
-
-        if (!function_exists('curl_file_create')) {
-            throw new ConverterNotOperationalException('Required curl_file_create() function is not available (requires PHP > 5.5).');
-        }
+        $ch = ConverterHelper::initCurlForConverter();
 
         if ($options['key'] == '') {
             throw new ConverterNotOperationalException('Missing API key.');
-        }
-
-        $ch = curl_init();
-        if (!$ch) {
-            throw new ConverterNotOperationalException('Could not initialise cURL.');
         }
 
         $curlOptions = [
@@ -83,8 +81,21 @@ class Ewww
         // Images has application/octet-stream.
         // So verify that we got an image back.
         if (curl_getinfo($ch, CURLINFO_CONTENT_TYPE) != 'application/octet-stream') {
+
+            //echo curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
             curl_close($ch);
-            throw new ConverterNotOperationalException('ewww api did not return an image. It could be that the key is invalid');
+
+            /* May return this: {"error":"invalid","t":"exceeded"} */
+            $responseObj = json_decode($response);
+            if (isset($responseObj->error)) {
+                //echo 'error:' . $responseObj->error . '<br>';
+                //echo $response;
+                //self::blacklistKey($key);
+                //throw new ConverterNotOperationalException('The key is invalid. Blacklisted it!');
+                throw new ConverterNotOperationalException('The key is invalid');
+            }
+
+            throw new ConverterNotOperationalException('ewww api did not return an image. It could be that the key is invalid. Response: ' . $response);
         }
 
         // Not sure this can happen. So just in case
@@ -99,71 +110,89 @@ class Ewww
         }
     }
 
+/*
+    public static function blacklistKey($key)
+    {
+    }
 
-    /*
-        public static function getQuota($key) {
-            curl_setopt($ch, CURLOPT_URL, "https://optimize.exactlywww.com/quota/");
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, "api_key=' . $key . '");
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    public static function isKeyBlacklisted($key)
+    {
+    }*/
 
+    /**
+     *  Return "great", "exceeded" or "invalid"
+     */
+    public static function getKeyStatus($key)
+    {
 
-        }*/
+        $ch = ConverterHelper::initCurlForConverter();
 
-        // Throws an exception if the provided API key is invalid..
-        /*
-        public static function isValidKey($key)
-        {
-            if (!extension_loaded('curl')) {
-                throw new \Exception('Required cURL extension is not available.');
+        curl_setopt($ch, CURLOPT_URL, "https://optimize.exactlywww.com/verify/");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, array(
+            'api_key' => $key
+        ));
+
+        // The 403 forbidden is avoided with this line.
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)');
+
+        $response = curl_exec($ch);
+        // echo $response;
+        if (curl_errno($ch)) {
+            throw new \Exception(curl_error($ch));
+        }
+        curl_close($ch);
+
+        // Possible responses:
+        // “great” = verification successful
+        // “exceeded” = indicates a valid key with no remaining image credits.
+        // an empty response indicates that the key is not valid
+
+        if ($response == '') {
+            return 'invalid';
+        }
+        $responseObj = json_decode($response);
+        if (isset($responseObj->error)) {
+            if ($responseObj->error == 'invalid') {
+                return 'invalid';
+            } else {
+                throw new \Exception('Ewww returned unexpected error: ' . $response);
             }
+        }
+        if (!isset($responseObj->status)) {
+            throw new \Exception('Ewww returned unexpected response to verify request: ' . $response);
+        }
+        switch ($responseObj->status) {
+            case 'great':
+            case 'exceeded':
+                return $responseObj->status;
+        }
+        throw new \Exception('Ewww returned unexpected status to verify request: "' . $responseObj->status . '"');
+    }
 
-            if (!function_exists('curl_init')) {
-                throw new \Exception('Required url_init() function is not available.');
-            }
+    public static function isWorkingKey($key)
+    {
+        return (self::getKeyStatus($key) == 'great');
+    }
 
-            $ch = curl_init();
-            if (!$ch) {
-                throw new \Exception('Could not initialise cURL.');
-            }
+    public static function isValidKey($key)
+    {
+        return (self::getKeyStatus($key) != 'invalid');
+    }
 
+    public static function getQuota($key) {
+        $ch = ConverterHelper::initCurlForConverter();
 
-            $headers = [];
-            $headers[] = "Content-Type: application/x-www-form-urlencoded";
+        curl_setopt($ch, CURLOPT_URL, "https://optimize.exactlywww.com/quota/");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, array(
+            'api_key' => $key
+        ));
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)');
 
-            curl_setopt($ch, CURLOPT_URL, "https://optimize.exactlywww.com/verify/");
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, "api_key=' . $key . '");
-            //curl_setopt($ch, CURLOPT_POSTFIELDS, array('api_key' => $key));
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-
-            // The 403 forbidden is avoided with this line.
-            // but still, we just get empty answer
-            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)');
-
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-            //curl_setopt($ch, CURLOPT_POST, 1);
-
-            $response = curl_exec($ch);
-
-            //$result[] = $response;
-            //echo implode($result, '<br>');
-
-            if (curl_errno($ch)) {
-                throw new \Exception(curl_error($ch));
-            }
-            curl_close($ch);
-
-            /*
-             * There are three possible responses:
-             * 'great' = verification successful
-             * 'exceeded' = indicates a valid key with no remaining image credits
-             * '' = an empty response indicates that the key is not valid
-            */ /*
-    //echo 'response: ' . $response . '...';
-            return ($response == 'great');
-        }*/
+        $response = curl_exec($ch);
+        return $response; // ie -830 23. Seems to return empty for invalid keys
+        // or empty
+        //echo $response;
+    }
 }
