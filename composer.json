@@ -10,7 +10,7 @@
     "test": "phpunit"
   },
   "autoload": {
-    "psr-4": { "WebPConvert\\": "" }
+    "psr-4": { "WebPConvert\\": "src/" }
   },
   "authors": [
     {

@@ -2,4 +2,4 @@
 composer.lock
 composer.phar
 /vendor
-/Tests/*.webp
+/tests/*.webp
