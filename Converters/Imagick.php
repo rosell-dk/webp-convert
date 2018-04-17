@@ -15,25 +15,7 @@ class Imagick
             ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
         }
 
-        $defaultOptions = array(
-            'quality' => 80,
-            'method' => 6,
-            'low-memory' => true
-        );
-
-        // For backwards compatibility
-        if (defined("WEBPCONVERT_IMAGICK_METHOD")) {
-            if (!isset($options['method'])) {
-                $options['method'] = WEBPCONVERT_IMAGICK_METHOD;
-            }
-        }
-        if (defined("WEBPCONVERT_IMAGICK_LOW_MEMORY")) {
-            if (!isset($options['low-memory'])) {
-                $options['low-memory'] = WEBPCONVERT_IMAGICK_LOW_MEMORY;
-            }
-        }
-
-        $options = array_merge($defaultOptions, $options);
+        $options = array_merge(ConverterHelper::$defaultOptions, $options);
 
         if (!extension_loaded('imagick')) {
             throw new ConverterNotOperationalException('Required iMagick extension is not available.');

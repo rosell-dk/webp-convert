@@ -14,18 +14,9 @@ class Gd
             ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
         }
 
-        $defaultOptions = array(
-            'quality' => 80,
-            'convert_pngs' => false
-        );
-
-        // For backwards compatibility
-        if (defined("WEBPCONVERT_GD_PNG")) {
-            if (!isset($options['skip-pngs'])) {
-                $options['skip-pngs'] = !WEBPCONVERT_GD_PNG;
-            }
-        }
-
+        $defaultOptions = array_merge(ConverterHelper::$defaultOptions, array(
+            'skip-pngs' => true,
+        ));
         $options = array_merge($defaultOptions, $options);
 
         if (!extension_loaded('gd')) {

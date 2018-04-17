@@ -13,21 +13,11 @@ class Ewww
             ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
         }
 
-        $defaultOptions = array(
-            'quality' => 80,
-            'metadata' => 'none',
+        $defaultOptions = array_merge(ConverterHelper::$defaultOptions, array(
             'key' => '',
-        );
-
-        // For backwards compatibility
-        if (defined("WEBPCONVERT_EWWW_KEY")) {
-            if (!isset($options['key'])) {
-                $options['key'] = WEBPCONVERT_EWWW_KEY;
-            }
-        }
+        ));
 
         $options = array_merge($defaultOptions, $options);
-
 
         $keyStatus = self::getKeyStatus($options['key']);
         switch ($keyStatus) {

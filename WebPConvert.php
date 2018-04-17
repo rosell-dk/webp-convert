@@ -16,14 +16,7 @@ class WebPConvert
     {
         ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
 
-        $defaultOptions = array(
-            'quality' => 85,
-            'metadata' => 'none',
-            'method' => 6,
-            'low-memory' => false,
-            'converters' =>  array('cwebp', 'imagick', 'gd')
-        );
-        $options = array_merge($defaultOptions, $options);
+        $options = array_merge(ConverterHelper::$defaultOptions, $options);
 
         $defaultConverterOptions = $options;
         $defaultConverterOptions['converters'] = null;

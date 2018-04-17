@@ -63,25 +63,9 @@ class Cwebp
             ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
         }
 
-        $defaultOptions = array(
-            'quality' => 80,
-            'metadata' => 'none',
-            'method' => 6,
-            'low-memory' => true,
+        $defaultOptions = array_merge(ConverterHelper::$defaultOptions, array(
             'use-nice' => true,
-        );
-
-        // For backwards compatibility
-        if (defined("WEBPCONVERT_CWEBP_METHOD")) {
-            if (!isset($options['method'])) {
-                $options['method'] = WEBPCONVERT_CWEBP_METHOD;
-            }
-        }
-        if (defined("WEBPCONVERT_CWEBP_LOW_MEMORY")) {
-            if (!isset($options['low-memory'])) {
-                $options['low-memory'] = WEBPCONVERT_CWEBP_LOW_MEMORY;
-            }
-        }
+        ));
 
         $options = array_merge($defaultOptions, $options);
 

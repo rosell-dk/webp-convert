@@ -13,13 +13,7 @@ class Wpc
             ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
         }
 
-        $defaultOptions = array(
-            'url' => '',
-            'quality' => 80,
-            'metadata' => 'none',
-        );
-
-        $options = array_merge($defaultOptions, $options);
+        $options = array_merge(ConverterHelper::$defaultOptions, $options);
 
         if ($options['url'] == '') {
             throw new ConverterNotOperationalException('Missing URL. You must install WebpConvertCloudService on a server, and supply url');
