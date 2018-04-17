@@ -24,6 +24,11 @@ class Cwebp
 
     private static function updateBinaries($file, $hash, $array)
     {
+        // Removes system paths if the corresponding binary does not exist
+        $array = array_filter($array, function($binary) {
+            return file_exists($binary);
+        });
+
         $binaryFile = __DIR__ . '/Binaries/' . $file;
 
         // Throws an exception if binary file does not exist
@@ -39,7 +44,8 @@ class Cwebp
             throw new ConverterNotOperationalException('Binary checksum is invalid.');
         }
 
-        array_unshift($array, $binaryFile);
+        // Appends binary file to the provided array
+        $array[] = $binaryFile;
 
         return $array;
     }
