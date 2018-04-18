@@ -12,6 +12,9 @@
   "autoload": {
     "psr-4": { "WebPConvert\\": "src/" }
   },
+  "autoload-dev": {
+    "psr-4": { "WebPConvert\\Tests\\": "tests/" }
+  }
   "authors": [
     {
       "name": "Bjørn Rosell",
