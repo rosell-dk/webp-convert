@@ -15,8 +15,6 @@ class Imagick
             ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
         }
 
-        $options = array_merge(ConverterHelper::$defaultOptions, $options);
-
         if (!extension_loaded('imagick')) {
             throw new ConverterNotOperationalException('Required iMagick extension is not available.');
         }
@@ -32,16 +30,14 @@ class Imagick
             throw new ConverterNotOperationalException('iMagick was compiled without WebP support.');
         }
 
-        $im->setImageFormat('WEBP');
+        $options = array_merge(ConverterHelper::$defaultOptions, $options);
 
-        // Apply losless compression for PNG images
-        switch (ConverterHelper::getExtension($source)) {
-            case 'png':
-                $im->setOption('webp:lossless', 'true');
-                break;
-            default:
-                break;
+        // Force lossless option to true for PNG images
+        if (ConverterHelper::getExtension($source) == 'png') {
+            $options['lossless'] = true;
         }
+
+        $im->setImageFormat('WEBP');
 
         /*
          * More about iMagick's WebP options:
@@ -53,6 +49,8 @@ class Imagick
         // TODO: We could easily support all webp options with a loop
         $im->setOption('webp:method', strval($options['method']));
         $im->setOption('webp:low-memory', strval($options['low-memory']));
+        $im->setOption('webp:lossless', strval($options['lossless']));
+
 
 
         $im->setImageCompressionQuality($options['quality']);

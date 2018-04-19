@@ -69,6 +69,11 @@ class Cwebp
 
         $options = array_merge($defaultOptions, $options);
 
+        // Force lossless option to true for PNG images
+        if (ConverterHelper::getExtension($source) == 'png') {
+            $options['lossless'] = true;
+        }
+
         if (!function_exists('exec')) {
             throw new ConverterNotOperationalException('exec() is not enabled.');
         }
@@ -117,12 +122,7 @@ class Cwebp
         $quality = '-q ' . $options['quality'];
 
         // Losless PNG conversion
-        $fileExtension = pathinfo($source, PATHINFO_EXTENSION);
-        $lossless = (
-            strtolower($fileExtension) == 'png'
-            ? '-lossless'
-            : ''
-        );
+        $lossless = ($options['lossless'] ? '-lossless' : '');
 
         // Built-in method option
         $method = ' -m ' . strval($options['method']);

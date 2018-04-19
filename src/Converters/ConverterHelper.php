@@ -17,6 +17,7 @@ class ConverterHelper
         'metadata' => 'none',
         'method' => 6,
         'low-memory' => false,
+        'lossless' => false,
         'converters' =>  ['cwebp', 'imagick', 'gd']
     ];
 

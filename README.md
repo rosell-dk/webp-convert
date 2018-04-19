@@ -81,11 +81,12 @@ Most options correspond to options of cwebp. These are documented [here](https:/
 
 | Option            | Type    | Default                    | Description                                                          |
 | ----------------- | ------- | -------------------------- | -------------------------------------------------------------------- |
-| quality           | Integer | 85                         | Lossy quality of converted image (JPEG only - PNGs are created loslessly by default)  |
-| metadata          | String  | 'none'                     | Valid values: all, none, exif, icc, xmp. Note: Not supported by all converters             |
-| method            | Integer | 6                          | Specify the compression method to use (0-6). When higher values are used, the encoder will spend more time inspecting additional encoding possibilities and decide on the quality gain. Lower value can result in faster processing time at the expense of larger file size and lower compression quality. |
-| low-memory        | Boolean | false                      | Reduce memory usage of lossy encoding by saving four times the compressed size (typically) |
-| converters        | Array   | ['cwebp', 'imagick', 'gd'] | Specify converters to use, and their order. Also optionally set converter options (see below) |
+| quality           | Integer | 85                          | Lossy quality of converted image (JPEG only - PNGs are created loslessly by default)  |
+| metadata          | String  | 'none'                      | Valid values: all, none, exif, icc, xmp. Note: Not supported by all converters             |
+| method            | Integer | 6                           | Specify the compression method to use (0-6). When higher values are used, the encoder will spend more time inspecting additional encoding possibilities and decide on the quality gain. Lower value can result in faster processing time at the expense of larger file size and lower compression quality. |
+| low-memory        | Boolean | false                       | Reduce memory usage of lossy encoding by saving four times the compressed size (typically) |
+| lossless          | Boolean | false                       | Encode the image without any loss. The option is ignored for PNG's (forced true) |
+| converters        | Array   | ['cwebp', 'imagick', 'gd']  | Specify converters to use, and their order. Also optionally set converter options (see below) |
 | extra-converters  | Array   | []                          | Add extra converters    |
 
 
@@ -150,16 +151,7 @@ In the most basic design, a converter consists of a convert function which takes
 
 WebP conversion with `imagick` is fast and [exposes many WebP options](http://www.imagemagick.org/script/webp.php). Unfortunately, WebP support for the `imagick` extension is pretty uncommon. At least not on the systems I have tried (Ubuntu 16.04 and Ubuntu 17.04). But if installed, it works great and has several WebP options.
 
-The converter supports:
-- lossless encoding of PNGs
-- setting quality
-- prioritizing between quality and speed
-- low memory option
-
-You can configure `imagick` by defining any of the following [constants](http://php.net/manual/en/language.constants.php):
-
-- `webp:method`: This parameter controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. When higher values are used, the encoder will spend more time inspecting additional encoding possibilities and decide on the quality gain. Lower value can result in faster processing time at the expense of larger file size and lower compression quality. Default value is 6 (higher than the default value of the `cwebp` command, which is 4).
-- `webp:low-memory`: The low memory option will make the encoding slower and the output slightly different in size and distortion. This flag is only effective for methods 3 and up. It is *on* by default. To turn it off, set it to `false`.
+The converter supports the following options: `quality`, `method`, `low-memory`, `lossless`
 
 In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
 1. [Compile libwebp from source](https://developers.google.com/speed/webp/docs/compiling)
@@ -203,19 +195,7 @@ To get WebP support for `gd` in PHP 5.5.0, PHP must be configured with the `--wi
 
 [cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP conversion command line converter released by Google. A its core, our implementation looks in the /bin folder for a precompiled binary appropriate for the OS and executes it with [exec()](http://php.net/manual/en/function.exec.php). Thanks to Shane Bishop for letting me copy the precompiled binaries that come with his plugin, [EWWW Image Optimizer](https://ewww.io).
 
-The converter supports:
-- lossless encoding of PNGs
-- quality
-- strip metadata
-- prioritize between quality and speed
-- low memory option
-
-You can configure the converter by setting any of the following options:
-
-- `webp:method`: This parameter controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. When higher values are used, the encoder will spend more time inspecting additional encoding possibilities and decide on the quality gain. Lower value can result in faster processing time at the expense of larger file size and lower compression quality. Default value is 6 (higher than the default value of the cwebp command, which is 4).
-- `webp:low-memory`: The low memory option will make the encoding slower and the output slightly different in size and distortion. This flag is only effective for methods 3 and up. It is *on* by default. To turn it off, set it to `false`.
-
-----
+The converter supports the following options: `quality`, `method`, `low-memory`, `lossless`
 
 The `cwebp` command has more options, which can easily be implemented, if there is an interest. View the options [here](https://developers.google.com/speed/webp/docs/cwebp).
 
