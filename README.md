@@ -144,14 +144,16 @@ In the most basic design, a converter consists of a convert function which takes
 
 <table>
   <tr><th>Requirements</th><td>Imagick PHP extension (compiled with WebP support)</td></tr>
-  <tr><th>Performance</th><td>~20-320ms to convert a 40kb image (depending on <code>WEBPCONVERT_IMAGICK_METHOD</code>)</td></tr>
+  <tr><th>Performance</th><td>~20-320ms to convert a 40kb image (depending on `method` option)</td></tr>
   <tr><th>Reliability</th><td>No problems detected so far!</td></tr>
   <tr><th>Availability</th><td>Probably only available on few shared hosts (if any)</td></tr>
+  <tr><th>General options supported</th><td>`quality`, `method`, `low-memory`, `lossless`</td></tr>
+  <tr><th>Extra options</th><td>None</td></tr>
 </table>
 
 WebP conversion with `imagick` is fast and [exposes many WebP options](http://www.imagemagick.org/script/webp.php). Unfortunately, WebP support for the `imagick` extension is pretty uncommon. At least not on the systems I have tried (Ubuntu 16.04 and Ubuntu 17.04). But if installed, it works great and has several WebP options.
 
-The converter supports the following options: `quality`, `method`, `low-memory`, `lossless`
+The converter supports the following options:
 
 In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
 1. [Compile libwebp from source](https://developers.google.com/speed/webp/docs/compiling)
@@ -167,13 +169,12 @@ In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
   <tr><th>Performance</th><td>~30ms to convert a 40kb image</td></tr>
   <tr><th>Reliability</th><td>Not sure - I have experienced corrupted images, but cannot reproduce</td></tr>
   <tr><th>Availability</th><td>Unfortunately, according to <a href="https://stackoverflow.com/questions/25248382/how-to-create-a-webp-image-in-php">this link</a>, WebP support on shared hosts is rare.</td></tr>
+  <tr><th>General options supported</th><td>`quality`</td></tr>
+  <tr><th>Extra options</th><td>`skip-pngs`</td></tr>
 </table>
 
-`gd` neither supports copying metadata nor exposes any WebP options. Lacking the option to set lossless encoding results in poor encoding of PNGs - the filesize is generally much larger than the original. For this reason, PNG conversion is *disabled* by default. To make the converter to encode PNGs, set the `convert_pngs` option to `true`:
+`gd` neither supports copying metadata nor exposes any WebP options. Lacking the option to set lossless encoding results in poor encoding of PNGs - the filesize is generally much larger than the original. For this reason, PNG conversion is *disabled* by default, but it can be enabled my setting `skip-pngs` option to `false`.
 
-```php
-WebPConvert::setConverterOption('gd', 'convert_pngs', true);
-```
 <details>
 <summary><strong>Known bugs</strong> 👁</summary>
 
@@ -191,23 +192,24 @@ To get WebP support for `gd` in PHP 5.5.0, PHP must be configured with the `--wi
   <tr><th>Performance</th><td>~40-120ms to convert a 40kb image (depending on <code>WEBPCONVERT_CWEBP_METHOD</code>)</td></tr>
   <tr><th>Reliability</th><td>No problems detected so far!</td></tr>
   <tr><th>Availability</th><td><code>exec()</code> is available on surprisingly many webhosts (a selection of which can be found <a href="https://docs.ewww.io/article/43-supported-web-hosts">here</a></td></tr>
+  <tr><th>General options supported</th><td>`quality`, `method`, `low-memory`, `lossless`</td></tr>
+  <tr><th>Extra options</th><td>`use-nice`</td></tr>
 </table>
 
-[cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP conversion command line converter released by Google. A its core, our implementation looks in the /bin folder for a precompiled binary appropriate for the OS and executes it with [exec()](http://php.net/manual/en/function.exec.php). Thanks to Shane Bishop for letting me copy the precompiled binaries that come with his plugin, [EWWW Image Optimizer](https://ewww.io).
+[cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP conversion command line converter released by Google. Our implementation ships with precompiled binaries for Linux, FreeBSD, WinNT, Darwin and SunOS. If however a cwebp binary is found in a usual location, that binary will be preferred. It is executed with [exec()](http://php.net/manual/en/function.exec.php).
 
-The converter supports the following options: `quality`, `method`, `low-memory`, `lossless`
-
-The `cwebp` command has more options, which can easily be implemented, if there is an interest. View the options [here](https://developers.google.com/speed/webp/docs/cwebp).
+In more detail, the implementation does this:
+- It is tested whether cwebp is available in a common system path (eg `/usr/bin/cwebp`, ..)
+- If not, then supplied binary is selected from `Converters/Binaries` (according to OS) - after validating checksum
+- Command-line options are generated from the options
+- If [`nice`]( https://en.wikipedia.org/wiki/Nice_(Unix)) command is found on host, binary is executed with low priority in order to save system resources
+- Permissions of the generated file are set to be the same as parent folder
 
 Official precompilations are available [here](https://developers.google.com/speed/webp/docs/precompiled). Since `WebPConvert` compares each binary's checksum first, you will have to change the checksums hardcoded in `Converters/Cwebp.php` if you want to replace any of them. If you feel the need of using another binary, please let me know - chances are that it should be added to the project!
 
-In more detail, the implementation does this:
-- Binary is selected from `Converters/Binaries` (according to OS)
-- If there's no matching binary or execution fails, try common system paths (eg `/usr/bin/cwebp`, ..)
-- Before executing binary, the checksum is tested
-- Options are generated. `-lossless` is used for PNG. `-metadata` is set to `all` or `none`
-- If [`nice`]( https://en.wikipedia.org/wiki/Nice_(Unix)) command is found on host, binary is executed with low priority in order to save system ressources
-- Permissions of the generated file are set to be the same as parent
+The `cwebp` binary has more options than we cared to implement. They can however easily be implemented, if there is an interest. View the options [here](https://developers.google.com/speed/webp/docs/cwebp).
+
+The implementation is based on the work of Shane Bishop for his plugin, [EWWW Image Optimizer](https://ewww.io). Thanks for letting us do that.
 
 ----
 
@@ -218,20 +220,19 @@ In more detail, the implementation does this:
   <tr><th>Performance</th><td>~1300ms to convert a 40kb image</td></tr>
   <tr><th>Reliability</th><td>Great (but, as with any cloud service, there is a risk of downtime)</td></tr>
   <tr><th>Availability</th><td>Should work on <em>almost</em> any webhost</td></tr>
+  <tr><th>General options supported</th><td>`quality`, `metadata` (partly)</td></tr>
+  <tr><th>Extra options</th><td>`key`</td></tr>
 </table>
 
-EWWW Image Optimizer is a very cheap cloud service for optimizing images. After purchasing an API key, simply set it up like this:
+EWWW Image Optimizer is a very cheap cloud service for optimizing images. After purchasing an API key, add the converter in the `extra-converters` option, with `key` set to the key. Be aware that the `key` should be stored safely to avoid exploitation - preferably in the environment, ie with  [dotenv](https://github.com/vlucas/phpdotenv).
 
-```php
-WebPConvert::setConverterOption('ewww', 'key', 'YOUR-KEY-HERE');
-```
+The EWWW api doesn't support the `lossless` option, but it does automatically convert PNG's losslessly. Metadata is either all or none. If you have set it to something else than one of these, all metadata will be preserved.
 
-The converter supports:
-- lossless encoding of PNGs
-- quality
-- metadata
+In more detail, the implementation does this:
+- Validates that there is a key, and that `curl` extension is working
+- Validates the key, using the [/verify/ endpoint](https://ewww.io/api/) (in order to [protect the EWWW service from unnecessary file uploads, when key has expired](https://github.com/rosell-dk/webp-convert/issues/38))
+- Converts, using the [/ endpoint](https://ewww.io/api/).
 
-The cloud service supports other options, which can easily be implemented, if there is an interest. View options [here](https://ewww.io/api).
 
 <details>
 <summary><strong>Roadmap</strong> 👁</summary>
