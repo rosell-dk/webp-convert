@@ -24,8 +24,6 @@ Basically, there are three ways for JPEG & PNG to WebP conversion:
 
 Converters **based on PHP extensions** should be your first choice. They are faster than other methods and they don't rely on server-side `exec()` calls (which may cause security risks). However, the `gd` converter doesn't support lossless conversion, so you may want to skip it when converting PNG images. Converters that **execute a binary** are also very fast (~ 50ms). Converters delegating the conversion process to a **cloud service** are much slower (~ one second), but work on *almost* any shared hosts (as opposed to the other methods). This makes the cloud-based converters an ideal last resort. They generally require you to *purchase* a paid plan, but the API key for [EWWW Image Optimizer](https://ewww.io) is very cheap. Beware though that you may encounter down-time whenever the cloud service is unavailable.
 
-----
-
 `WebPConvert` currently supports the following converters:
 
 | Converter                     | Method                                         | Summary                                       |
@@ -131,14 +129,10 @@ WebPConvert::convert($source, $destination, array(
 )
 ```
 
-----
-
 ## Converters
-Each "method" of converting an image to WebP is implemented through a separate converter `.php` file, containing a class of the same name. `WebPConvert` autodetects converters by scanning the `Converters` directory, so it's easy to add new converters and safe to remove existing ones.
+In the most basic design, a converter consists of a static convert function which takes the same arguments as `WebPConvert::convert`. Its job is then to convert `$source` to WebP and save it at `$destination`, preferably taking the options specified in $options into account.
 
-In the most basic design, a converter consists of a convert function which takes the same arguments as `WebPConvert::convert`. Its job is then to convert `$source` to WebP and save it at `$destination`, preferably taking the options specified in $options into account. The converters may be called directly. But you probably don't want to do that, because it would seem to defeat the purpose of using WebPConvert.
-
-----
+The converters may be called directly. But you probably don't want to do that, as it really doesn't hurt having other converters ready to take over, in case your preferred converter should fail.
 
 ### ImageMagick
 
@@ -154,8 +148,6 @@ In the most basic design, a converter consists of a convert function which takes
 WebP conversion with `imagick` is fast and [exposes many WebP options](http://www.imagemagick.org/script/webp.php). Unfortunately, WebP support for the `imagick` extension is pretty uncommon. At least not on the systems I have tried (Ubuntu 16.04 and Ubuntu 17.04). But if installed, it works great and has several WebP options.
 
 See [this page](https://github.com/rosell-dk/webp-convert/wiki/Installing-Imagick-extension) in the Wiki for instructions on installing the extension.
-
-----
 
 ### GD Graphics (Draw)
 
@@ -178,8 +170,6 @@ Installaition instructions are [available in the wiki](https://github.com/rosell
 <summary><strong>Known bugs</strong> 👁</summary>
 Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes created corrupted images. That bug can however easily be fixed in PHP (fix was released [here](https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files)). However, I have experienced corrupted images *anyway* (but cannot reproduce that bug). So use this converter with caution. The corrupted images look completely transparent in Google Chrome, but have the correct size.
 </details>
-
-----
 
 ### cwebp binary
 
@@ -206,8 +196,6 @@ The `cwebp` binary has more options than we cared to implement. They can however
 The implementation is based on the work of Shane Bishop for his plugin, [EWWW Image Optimizer](https://ewww.io). Thanks for letting us do that!
 
 See [the wiki](https://github.com/rosell-dk/webp-convert/wiki/Installing-cwebp---using-official-precompilations) for instructions regarding installing cwebp or using official precompilations.
-
-----
 
 ### EWWW cloud service
 
