@@ -153,12 +153,7 @@ In the most basic design, a converter consists of a convert function which takes
 
 WebP conversion with `imagick` is fast and [exposes many WebP options](http://www.imagemagick.org/script/webp.php). Unfortunately, WebP support for the `imagick` extension is pretty uncommon. At least not on the systems I have tried (Ubuntu 16.04 and Ubuntu 17.04). But if installed, it works great and has several WebP options.
 
-The converter supports the following options:
-
-In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
-1. [Compile libwebp from source](https://developers.google.com/speed/webp/docs/compiling)
-2. [Compile imagemagick from source](https://www.imagemagick.org/script/install-source.php) (```./configure --with-webp=yes```)
-3. Compile php-imagick from source, phpize it and add ```extension=/path/to/imagick.so``` to php.ini
+See [this page](https://github.com/rosell-dk/webp-convert/wiki/Installing-Imagick-extension) in the Wiki for instructions on installing the extension.
 
 ----
 
@@ -173,14 +168,15 @@ In order to get imagick with WebP on Ubuntu 16.04, you currently need to:
   <tr><th>Extra options</th><td>`skip-pngs`</td></tr>
 </table>
 
+[imagewebp](http://php.net/manual/en/function.imagewebp.php) is a function that comes with PHP (>5.5.0), *provided* that PHP has been compiled with WebP support.
+
 `gd` neither supports copying metadata nor exposes any WebP options. Lacking the option to set lossless encoding results in poor encoding of PNGs - the filesize is generally much larger than the original. For this reason, PNG conversion is *disabled* by default, but it can be enabled my setting `skip-pngs` option to `false`.
+
+Installaition instructions are [available in the wiki](https://github.com/rosell-dk/webp-convert/wiki/Installing-Gd-extension).
 
 <details>
 <summary><strong>Known bugs</strong> 👁</summary>
-
-[imagewebp](http://php.net/manual/en/function.imagewebp.php) is a function that comes with PHP (>5.5.0), *provided* that PHP has been compiled with WebP support. Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes created corrupted images. That bug can however easily be fixed in PHP (fix was released [here](https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files)). However, I have experienced corrupted images *anyway* (but cannot reproduce that bug). So use this converter with caution. The corrupted images look completely transparent in Google Chrome, but have the correct size.
-
-To get WebP support for `gd` in PHP 5.5.0, PHP must be configured with the `--with-vpx-dir` flag. In PHP >7.0.0, PHP has to be configured with the `--with-webp-dir` flag ([source](http://il1.php.net/manual/en/image.installation.php)).
+Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes created corrupted images. That bug can however easily be fixed in PHP (fix was released [here](https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files)). However, I have experienced corrupted images *anyway* (but cannot reproduce that bug). So use this converter with caution. The corrupted images look completely transparent in Google Chrome, but have the correct size.
 </details>
 
 ----
@@ -205,11 +201,11 @@ In more detail, the implementation does this:
 - If [`nice`]( https://en.wikipedia.org/wiki/Nice_(Unix)) command is found on host, binary is executed with low priority in order to save system resources
 - Permissions of the generated file are set to be the same as parent folder
 
-Official precompilations are available [here](https://developers.google.com/speed/webp/docs/precompiled). Since `WebPConvert` compares each binary's checksum first, you will have to change the checksums hardcoded in `Converters/Cwebp.php` if you want to replace any of them. If you feel the need of using another binary, please let me know - chances are that it should be added to the project!
-
 The `cwebp` binary has more options than we cared to implement. They can however easily be implemented, if there is an interest. View the options [here](https://developers.google.com/speed/webp/docs/cwebp).
 
-The implementation is based on the work of Shane Bishop for his plugin, [EWWW Image Optimizer](https://ewww.io). Thanks for letting us do that.
+The implementation is based on the work of Shane Bishop for his plugin, [EWWW Image Optimizer](https://ewww.io). Thanks for letting us do that!
+
+See [the wiki](https://github.com/rosell-dk/webp-convert/wiki/Installing-cwebp---using-official-precompilations) for instructions regarding installing cwebp or using official precompilations.
 
 ----
 
