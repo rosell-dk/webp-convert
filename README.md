@@ -14,6 +14,7 @@ In summary, the current state of WebP conversion in PHP is this: There are sever
   - [`imagick`](#imagemagick)
   - [`gd`](#gd-graphics-draw)
   - [`cwebp`](#cwebp-binary)
+  - [`wpc`](#webp-convert-cloud-service)
   - [`ewww`](#ewww-cloud-service)
 
 ## Introduction
@@ -26,12 +27,13 @@ Converters **based on PHP extensions** should be your first choice. They are fas
 
 `WebPConvert` currently supports the following converters:
 
-| Converter                     | Method                                         | Summary                                       |
-| ----------------------------- | ---------------------------------------------- | --------------------------------------------- |
-| [`imagick`](#imagemagick)     | Imagick extension (`ImageMagick` wrapper)      | (+) best (-) rarely available on shared hosts |
-| [`gd`](#gd-graphics-draw)     | GD Graphics (Draw) extension (`LibGD` wrapper) | (+) fast (-) unable to do lossless encoding   |
-| [`cwebp`](#cwebp-binary)      | Calling `cwebp` binary directly                | (+) great (-) requires `exec()` function      |
-| [`ewww`](#ewww-cloud-service) | Cloud service `EWWW Image Optimizer`           | (+) high availability (-) slow, fee-based     |
+| Converter                            | Method                                         | Summary                                       |
+| ------------------------------------ | ---------------------------------------------- | --------------------------------------------- |
+| [`imagick`](#imagemagick)            | Imagick extension (`ImageMagick` wrapper)      | (+) best (-) rarely available on shared hosts |
+| [`gd`](#gd-graphics-draw)            | GD Graphics (Draw) extension (`LibGD` wrapper) | (+) fast (-) unable to do lossless encoding   |
+| [`cwebp`](#cwebp-binary)             | Calling `cwebp` binary directly                | (+) great (-) requires `exec()` function      |
+| [`wpc`](#webp-convert-cloud-service) | Open source cloud service                      | (+) high availability (-) slow                |
+| [`ewww`](#ewww-cloud-service)        | Cloud service `EWWW Image Optimizer`           | (+) high availability (-) slow, fee-based     |
 
 ## Getting started
 
@@ -126,7 +128,7 @@ WebPConvert::convert($source, $destination, array(
             ),
         ),
     )
-)
+));
 ```
 
 ## Converters
@@ -178,7 +180,7 @@ Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes c
   <tr><th>Performance</th><td>~40-120ms to convert a 40kb image (depending on <code>WEBPCONVERT_CWEBP_METHOD</code>)</td></tr>
   <tr><th>Reliability</th><td>No problems detected so far!</td></tr>
   <tr><th>Availability</th><td><code>exec()</code> is available on surprisingly many webhosts (a selection of which can be found <a href="https://docs.ewww.io/article/43-supported-web-hosts">here</a></td></tr>
-  <tr><th>General options supported</th><td>`quality`, `method`, `low-memory`, `lossless`</td></tr>
+  <tr><th>General options supported</th><td>All (`quality`, `metadata`, `method`, `low-memory`, `lossless`)</td></tr>
   <tr><th>Extra options</th><td>`use-nice`</td></tr>
 </table>
 
@@ -196,6 +198,38 @@ The `cwebp` binary has more options than we cared to implement. They can however
 The implementation is based on the work of Shane Bishop for his plugin, [EWWW Image Optimizer](https://ewww.io). Thanks for letting us do that!
 
 See [the wiki](https://github.com/rosell-dk/webp-convert/wiki/Installing-cwebp---using-official-precompilations) for instructions regarding installing cwebp or using official precompilations.
+
+### WebPConvert Cloud Service (Will be available in 1.1.0. Its available in master)
+
+<table>
+  <tr><th>Requirements</th><td>Access to a server with [webp-convert-cloud-service](https://github.com/rosell-dk/webp-convert-cloud-service) installed, <code>cURL</code> and PHP >= 5.5.0</td></tr>
+  <tr><th>Performance</th><td>Depends on the server where [webp-convert-cloud-service](https://github.com/rosell-dk/webp-convert-cloud-service) is set up, and the speed of internet connections. But perhaps ~1000ms to convert a 40kb image</td></tr>
+  <tr><th>Reliability</th><td>Great (depends on the reliability on the server where it is set up)</td></tr>
+  <tr><th>Availability</th><td>Should work on <em>almost</em> any webhost</td></tr>
+  <tr><th>General options supported</th><td>All (`quality`, `metadata`, `method`, `low-memory`, `lossless`)</td></tr>
+  <tr><th>Extra options</th><td>`url`, `secret`</td></tr>
+</table>
+
+[WebPConvert Cloud Service](https://github.com/rosell-dk/webp-convert-cloud-service) is an open source cloud service. You do not buy a key, you set it up on a server. As WebPConvert Cloud Service itself is based on WebPConvert, all options are supported.
+
+To use it, simply add it as extra converter with `url` option set to the correct endpoint, and `secret` set to match the secret set up on the server side.
+
+Example:
+
+```php
+WebPConvert::convert($source, $destination, array(
+    'extra-converters' => array(
+        array(
+            'converter' => 'wpc',
+            'options' => array(
+                'url' => 'http://example.com/wpc.php',
+                'secret' => 'my dog is white',
+            ),
+        ),
+    )
+));
+```
+
 
 ### EWWW cloud service
 

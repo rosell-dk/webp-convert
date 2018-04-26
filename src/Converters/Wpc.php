@@ -13,7 +13,10 @@ class Wpc
             ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
         }
 
-        $options = array_merge(ConverterHelper::$defaultOptions, $options);
+        $defaultOptions = array_merge(ConverterHelper::$defaultOptions, [
+            'secret' => 'my dog is white',
+        ]);
+        $options = array_merge($defaultOptions, $options);
 
         if ($options['url'] == '') {
             throw new ConverterNotOperationalException('Missing URL. You must install WebpConvertCloudService on a server, and supply url');
@@ -39,12 +42,17 @@ class Wpc
             throw new ConverterNotOperationalException('Could not initialise cURL.');
         }
 
+        $optionsToSend = $options;
+        unset($optionsToSend['converters']);
+        unset($optionsToSend['secret']);
+
         curl_setopt_array($ch, [
             CURLOPT_URL => $options['url'],
             CURLOPT_POST => 1,
             CURLOPT_POSTFIELDS => [
-                'quality' => $options['quality'],
                 'file' => curl_file_create($source),
+                'hash' => md5(md5_file($source) . $options['secret']),
+                'options' => json_encode($optionsToSend)
             ],
             CURLOPT_BINARYTRANSFER => true,
             CURLOPT_RETURNTRANSFER => true,
@@ -83,7 +91,7 @@ class Wpc
                     'quality' => $options['quality'],
                     'metadata' => ($options['metadata'] == 'none' ? '0' : '1')
                 ];
-        
+
                 curl_setopt_array($ch, [
                     CURLOPT_URL => "https://optimize.exactlywww.com/v2/",
                     CURLOPT_HTTPHEADER => [
