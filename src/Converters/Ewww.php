@@ -19,6 +19,10 @@ class Ewww
 
         $options = array_merge($defaultOptions, $options);
 
+        if ($options['key'] == '') {
+            throw new ConverterNotOperationalException('Missing API key.');
+        }
+
         $keyStatus = self::getKeyStatus($options['key']);
         switch ($keyStatus) {
             case 'great':
@@ -32,10 +36,6 @@ class Ewww
         }
 
         $ch = ConverterHelper::initCurlForConverter();
-
-        if ($options['key'] == '') {
-            throw new ConverterNotOperationalException('Missing API key.');
-        }
 
         $curlOptions = [
             'api_key' => $options['key'],
@@ -104,7 +104,7 @@ class Ewww
         public static function blacklistKey($key)
         {
         }
-    
+
         public static function isKeyBlacklisted($key)
         {
         }*/
