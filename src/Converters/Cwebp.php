@@ -128,6 +128,12 @@ class Cwebp
         $method = ' -m ' . strval($options['method']);
 
 
+        // TODO:
+        // Why not use -af ?  (https://developers.google.com/speed/webp/docs/cwebp)
+        // Would it be possible get a quality similar to source?
+        // It seems so: "identify -format '%Q' yourimage.jpg" (https://stackoverflow.com/questions/2024947/is-it-possible-to-tell-the-quality-level-of-a-jpeg)
+        // -- With -jpeg_like option, or perhaps the -size option
+
         // Built-in low memory option
         $lowMemory = '';
         if ($options['low-memory']) {
@@ -152,6 +158,8 @@ class Cwebp
         // Try all paths
         foreach ($cwebpPathsToTest as $index => $binary) {
             $command = $nice . $binary . ' ' . $commandOptions;
+
+            //throw new ConverterNotOperationalException($command);
             exec($command, $output, $returnCode);
 
             if ($returnCode == 0) { // Everything okay!

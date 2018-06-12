@@ -55,6 +55,11 @@ class Imagick
 
         $im->setImageCompressionQuality($options['quality']);
 
+        // TODO:
+        // Should we set alpha channel for PNG's like suggested here:
+        // https://gauntface.com/blog/2014/09/02/webp-support-with-imagemagick-and-php ??
+        // It seems that alpha channel works without... (at least I see completely transparerent pixels)
+
         // TODO: Check out other iMagick methods, see http://php.net/manual/de/imagick.writeimage.php#114714
         // 1. file_put_contents($destination, $im)
         // 2. $im->writeImage($destination)
