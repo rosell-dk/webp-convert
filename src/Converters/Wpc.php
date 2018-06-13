@@ -7,16 +7,30 @@ use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
 class Wpc
 {
+    public static $extraOptions = [
+        [
+            'name' => 'secret',
+            'type' => 'string',
+            'sensitive' => true,
+            'default' => 'my dog is white',
+            'required' => true
+        ],
+        [
+            'name' => 'url',
+            'type' => 'string',
+            'sensitive' => true,
+            'default' => '',
+            'required' => true
+        ],
+    ];
+
     public static function convert($source, $destination, $options = [], $prepareDestinationFolder = true)
     {
         if ($prepareDestinationFolder) {
             ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
         }
 
-        $defaultOptions = array_merge(ConverterHelper::$defaultOptions, [
-            'secret' => 'my dog is white',
-        ]);
-        $options = array_merge($defaultOptions, $options);
+        $options = ConverterHelper::mergeOptions($options, self::$extraOptions);
 
         if ($options['url'] == '') {
             throw new ConverterNotOperationalException('Missing URL. You must install WebpConvertCloudService on a server, and supply url');

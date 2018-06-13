@@ -7,6 +7,23 @@ use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
 class Cwebp
 {
+    public static $extraOptions = [
+        [
+            'name' => 'use-nice',
+            'type' => 'boolean',
+            'sensitive' => false,
+            'default' => false,
+            'required' => false
+        ],
+    ];
+
+    public static function getSpecialOptions()
+    {
+        return [
+            'use-nice' => 'boolean',
+        ];
+    }
+
     // System paths to look for cwebp binary
     private static $cwebpDefaultPaths = [
         '/usr/bin/cwebp',
@@ -63,11 +80,7 @@ class Cwebp
             ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
         }
 
-        $defaultOptions = array_merge(ConverterHelper::$defaultOptions, [
-            'use-nice' => true,
-        ]);
-
-        $options = array_merge($defaultOptions, $options);
+        $options = ConverterHelper::mergeOptions($options, self::$extraOptions);
 
         // Force lossless option to true for PNG images
         if (ConverterHelper::getExtension($source) == 'png') {

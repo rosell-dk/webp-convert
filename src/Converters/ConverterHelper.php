@@ -21,6 +21,12 @@ class ConverterHelper
         'converters' =>  ['cwebp', 'imagick', 'gd']
     ];
 
+    public static function mergeOptions($options, $extraOptions)
+    {
+        $defaultOptions = array_merge(self::$defaultOptions, array_column($extraOptions, 'default', 'name'));
+        return array_merge($defaultOptions, $options);
+    }
+
     public static function getExtension($filePath)
     {
         $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);

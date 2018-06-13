@@ -8,16 +8,23 @@ use WebPConvert\Converters\Exceptions\ConversionDeclinedException;
 
 class Gd
 {
+    public static $extraOptions = [
+        [
+            'name' => 'skip-pngs',
+            'type' => 'boolean',
+            'sensitive' => false,
+            'default' => true,
+            'required' => false
+        ],
+    ];
+
     public static function convert($source, $destination, $options = [], $prepareDestinationFolder = true)
     {
         if ($prepareDestinationFolder) {
             ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
         }
 
-        $defaultOptions = array_merge(ConverterHelper::$defaultOptions, [
-            'skip-pngs' => true,
-        ]);
-        $options = array_merge($defaultOptions, $options);
+        $options = ConverterHelper::mergeOptions($options, self::$extraOptions);
 
         if (!extension_loaded('gd')) {
             throw new ConverterNotOperationalException('Required GD extension is not available.');

@@ -7,17 +7,23 @@ use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
 class Ewww
 {
+    public static $extraOptions = [
+        [
+            'name' => 'key',
+            'type' => 'string',
+            'sensitive' => true,
+            'default' => '',
+            'required' => true
+        ],
+    ];
+
     public static function convert($source, $destination, $options = [], $prepareDestinationFolder = true)
     {
         if ($prepareDestinationFolder) {
             ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
         }
 
-        $defaultOptions = array_merge(ConverterHelper::$defaultOptions, [
-            'key' => '',
-        ]);
-
-        $options = array_merge($defaultOptions, $options);
+        $options = ConverterHelper::mergeOptions($options, self::$extraOptions);
 
         if ($options['key'] == '') {
             throw new ConverterNotOperationalException('Missing API key.');
