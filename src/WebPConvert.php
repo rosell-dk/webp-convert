@@ -28,7 +28,7 @@ class WebPConvert
 
         $success = false;
 
-        $firstFailExecption = null;
+        $firstFailException = null;
 
         foreach ($options['converters'] as $converter) {
             if (is_array($converter)) {
@@ -54,14 +54,14 @@ class WebPConvert
             } catch (\WebPConvert\Converters\Exceptions\ConverterFailedException $e) {
                 // Converter failed in an anticipated fashion.
                 // If no converter is able to do a conversion, we will rethrow the exception.
-                if (!$firstFailExecption) {
-                    $firstFailExecption = $e;
+                if (!$firstFailException) {
+                    $firstFailException = $e;
                 }
             } catch (\WebPConvert\Converters\Exceptions\ConversionDeclinedException $e) {
                 // The converter declined.
                 // Gd is for example throwing this, when asked to convert a PNG, but configured not to
-                if (!$firstFailExecption) {
-                    $firstFailExecption = $e;
+                if (!$firstFailException) {
+                    $firstFailException = $e;
                 }
             }
 
@@ -70,7 +70,7 @@ class WebPConvert
             // do the conversion.
             // If no converters are operational, simply return false
             // Otherwise rethrow the exception that was thrown first (the most prioritized converter)
-            if ($firstFailExecption) {
+            if ($firstFailException) {
                 throw $e;
             }
 
