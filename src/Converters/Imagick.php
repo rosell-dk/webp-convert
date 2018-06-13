@@ -5,7 +5,7 @@ namespace WebPConvert\Converters;
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
-use WebPConvert\Exceptions\TargetNotFoundException;
+//use WebPConvert\Exceptions\TargetNotFoundException;
 
 class Imagick
 {

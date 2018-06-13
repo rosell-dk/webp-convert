@@ -39,21 +39,10 @@ class WebPConvert
                 $converterOptions = [];
             }
 
-            $className = 'WebPConvert\\Converters\\' . ucfirst($converterId);
-
-            if (!is_callable([$className, 'convert'])) {
-                continue;
-            }
+            $converterOptions = array_merge($defaultConverterOptions, $converterOptions);
 
             try {
-                $converterOptions = array_merge($defaultConverterOptions, $converterOptions);
-                $conversion = call_user_func(
-                    [$className, 'convert'],
-                    $source,
-                    $destination,
-                    $converterOptions,
-                    false
-                );
+                ConverterHelper::callConvert($converterId, $source, $destination, $converterOptions, false);
 
                 if (file_exists($destination)) {
                     $success = true;

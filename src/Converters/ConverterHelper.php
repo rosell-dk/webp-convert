@@ -3,10 +3,15 @@
 namespace WebPConvert\Converters;
 
 //use WebPConvert\Converters\Cwebp;
+use WebPConvert\Exceptions\ConversionFailedException;
+
+use WebPConvert\Exceptions\ConverterNotFoundException;
 use WebPConvert\Exceptions\TargetNotFoundException;
 use WebPConvert\Exceptions\InvalidFileExtensionException;
 use WebPConvert\Exceptions\CreateDestinationFolderException;
 use WebPConvert\Exceptions\CreateDestinationFileException;
+
+use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 
 class ConverterHelper
 {
@@ -25,6 +30,22 @@ class ConverterHelper
     {
         $defaultOptions = array_merge(self::$defaultOptions, array_column($extraOptions, 'default', 'name'));
         return array_merge($defaultOptions, $options);
+    }
+
+    /* Call the "convert" method on a converter, by id */
+    public static function callConvert($converterId, $source, $destination, $options = [], $prepareDestinationFolder = true)
+    {
+        $className = 'WebPConvert\\Converters\\' . ucfirst($converterId);
+        if (!is_callable([$className, 'convert'])) {
+            throw new ConverterNotFoundException();
+        }
+        call_user_func(
+            [$className, 'convert'],
+            $source,
+            $destination,
+            $options,
+            $prepareDestinationFolder
+        );
     }
 
     public static function getExtension($filePath)
