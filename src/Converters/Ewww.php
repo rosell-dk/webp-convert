@@ -28,6 +28,9 @@ class Ewww
         if ($options['key'] == '') {
             throw new ConverterNotOperationalException('Missing API key.');
         }
+        if (strlen($options['key']) < 20) {
+            throw new ConverterNotOperationalException('Key is invalid. Keys are supposed to be 32 characters long - your key is much shorter');
+        }
 
         $keyStatus = self::getKeyStatus($options['key']);
         switch ($keyStatus) {
