@@ -32,10 +32,16 @@ class ConverterHelper
         return array_merge($defaultOptions, $options);
     }
 
+    public static function getClassNameOfConverter($converterId)
+    {
+        return 'WebPConvert\\Converters\\' . ucfirst($converterId);
+    }
+
+
     /* Call the "convert" method on a converter, by id */
     public static function callConvert($converterId, $source, $destination, $options = [], $prepareDestinationFolder = true)
     {
-        $className = 'WebPConvert\\Converters\\' . ucfirst($converterId);
+        $className = self::getClassNameOfConverter($converterId);
         if (!is_callable([$className, 'convert'])) {
             throw new ConverterNotFoundException();
         }
