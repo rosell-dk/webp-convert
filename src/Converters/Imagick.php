@@ -10,6 +10,7 @@ use WebPConvert\Converters\Exceptions\ConverterFailedException;
 class Imagick
 {
 
+    public static $extraOptions = [];
     public static function convert($source, $destination, $options = [], $prepareDestinationFolder = true)
     {
         if ($prepareDestinationFolder) {
