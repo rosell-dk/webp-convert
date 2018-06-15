@@ -1,6 +1,7 @@
 <?php
 
 namespace WebPConvert\Converters\Exceptions;
+
 use WebPConvert\Exceptions\WebPConvertBaseException;
 
 class ConverterFailedException extends WebPConvertBaseException

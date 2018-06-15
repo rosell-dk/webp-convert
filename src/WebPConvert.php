@@ -42,7 +42,7 @@ class WebPConvert
             $converterOptions = array_merge($defaultConverterOptions, $converterOptions);
 
             try {
-                ConverterHelper::callConvert($converterId, $source, $destination, $converterOptions, false);
+                ConverterHelper::runConverter($converterId, $source, $destination, $converterOptions, false);
 
                 if (file_exists($destination)) {
                     $success = true;

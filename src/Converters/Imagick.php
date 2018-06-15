@@ -9,14 +9,16 @@ use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
 class Imagick
 {
-
     public static $extraOptions = [];
-    public static function convert($source, $destination, $options = [], $prepareDestinationFolder = true)
-    {
-        if ($prepareDestinationFolder) {
-            ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
-        }
 
+    public static function convert($source, $destination, $options = [])
+    {
+        ConverterHelper::runConverter('imagick', $source, $destination, $options, true);
+    }
+
+    // Although this method is public, do not call directly.
+    public static function doConvert($source, $destination, $options = [])
+    {
         if (!extension_loaded('imagick')) {
             throw new ConverterNotOperationalException('Required iMagick extension is not available.');
         }

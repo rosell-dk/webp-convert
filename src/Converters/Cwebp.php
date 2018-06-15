@@ -17,13 +17,11 @@ class Cwebp
         ],
     ];
 
-    public static function getSpecialOptions()
+    public static function convert($source, $destination, $options = [])
     {
-        return [
-            'use-nice' => 'boolean',
-        ];
+        ConverterHelper::runConverter('cwebp', $source, $destination, $options, true);
     }
-
+    
     // System paths to look for cwebp binary
     private static $cwebpDefaultPaths = [
         '/usr/bin/cwebp',
@@ -74,14 +72,9 @@ class Cwebp
         }
     }
 
-    public static function convert($source, $destination, $options = [], $prepareDestinationFolder = true)
+    // Although this method is public, do not call directly.
+    public static function doConvert($source, $destination, $options = [])
     {
-        if ($prepareDestinationFolder) {
-            ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
-        }
-
-        $options = ConverterHelper::mergeOptions($options, self::$extraOptions);
-
         // Force lossless option to true for PNG images
         if (ConverterHelper::getExtension($source) == 'png') {
             $options['lossless'] = true;
@@ -90,7 +83,6 @@ class Cwebp
         if (!function_exists('exec')) {
             throw new ConverterNotOperationalException('exec() is not enabled.');
         }
-
 
         // Init with common system paths
         $cwebpPathsToTest = self::$cwebpDefaultPaths;

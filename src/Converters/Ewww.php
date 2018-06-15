@@ -17,14 +17,14 @@ class Ewww
         ],
     ];
 
-    public static function convert($source, $destination, $options = [], $prepareDestinationFolder = true)
+    public static function convert($source, $destination, $options = [])
     {
-        if ($prepareDestinationFolder) {
-            ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
-        }
+        ConverterHelper::runConverter('ewww', $source, $destination, $options, true);
+    }
 
-        $options = ConverterHelper::mergeOptions($options, self::$extraOptions);
-
+    // Although this method is public, do not call directly.
+    public static function doConvert($source, $destination, $options = [])
+    {
         if ($options['key'] == '') {
             throw new ConverterNotOperationalException('Missing API key.');
         }

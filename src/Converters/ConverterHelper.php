@@ -3,13 +3,12 @@
 namespace WebPConvert\Converters;
 
 //use WebPConvert\Converters\Cwebp;
-use WebPConvert\Exceptions\ConversionFailedException;
 
 use WebPConvert\Exceptions\ConverterNotFoundException;
-use WebPConvert\Exceptions\TargetNotFoundException;
-use WebPConvert\Exceptions\InvalidFileExtensionException;
-use WebPConvert\Exceptions\CreateDestinationFolderException;
 use WebPConvert\Exceptions\CreateDestinationFileException;
+use WebPConvert\Exceptions\CreateDestinationFolderException;
+use WebPConvert\Exceptions\InvalidFileExtensionException;
+use WebPConvert\Exceptions\TargetNotFoundException;
 
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 
@@ -28,8 +27,7 @@ class ConverterHelper
 
     public static function mergeOptions($options, $extraOptions)
     {
-        $defaultOptions = array_merge(self::$defaultOptions, array_column($extraOptions, 'default', 'name'));
-        return array_merge($defaultOptions, $options);
+        return $options;
     }
 
     public static function getClassNameOfConverter($converterId)
@@ -38,20 +36,42 @@ class ConverterHelper
     }
 
 
-    /* Call the "convert" method on a converter, by id */
-    public static function callConvert($converterId, $source, $destination, $options = [], $prepareDestinationFolder = true)
+    /* Call the "convert" method on a converter, by id.
+       - but also prepares options (merges in the $extraOptions of the converter),
+         prepares destination folder, and runs some standard validations */
+    public static function runConverter($converterId, $source, $destination, $options = [], $prepareDestinationFolder = true)
     {
+        if ($prepareDestinationFolder) {
+            ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
+        }
+
         $className = self::getClassNameOfConverter($converterId);
         if (!is_callable([$className, 'convert'])) {
             throw new ConverterNotFoundException();
         }
+
+        // Prepare options.
+        // -  Remove 'converters'
+        $defaultOptions = self::$defaultOptions;
+        unset($defaultOptions['converters']);
+
+        // -  Merge defaults of the converters extra options into the standard default options.
+        $defaultOptions = array_merge($defaultOptions, array_column($className::$extraOptions, 'default', 'name'));
+
+        // -  Merge $defaultOptions into provided options
+        $options = array_merge($defaultOptions, $options);
+
         call_user_func(
-            [$className, 'convert'],
+            [$className, 'doConvert'],
             $source,
             $destination,
             $options,
             $prepareDestinationFolder
         );
+
+        if (!file_exists($destination)) {
+            throw new ConverterFailedException('Destination file is not there');
+        }
     }
 
     public static function getExtension($filePath)

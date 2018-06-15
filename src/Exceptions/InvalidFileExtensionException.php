@@ -1,6 +1,7 @@
 <?php
 
 namespace WebPConvert\Exceptions;
+
 use WebPConvert\Exceptions\WebPConvertBaseException;
 
 class InvalidFileExtensionException extends WebPConvertBaseException
