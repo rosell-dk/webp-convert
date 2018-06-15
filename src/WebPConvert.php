@@ -12,8 +12,11 @@ class WebPConvert
       @param (string) $destination: Absolute path (no backslashes)
       @param (object) $options: Array of named options, such as 'quality' and 'metadata'
     */
-    public static function convert($source, $destination, $options = [])
+    public static function convert($source, $destination, $options = [], $logger = null)
     {
+        if (!isset($logger)) {
+            $logger = new \WebPConvert\Loggers\VoidLogger();
+        }
         ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
 
         $options = array_merge(ConverterHelper::$defaultOptions, $options);
@@ -25,8 +28,6 @@ class WebPConvert
 
         $defaultConverterOptions = $options;
         $defaultConverterOptions['converters'] = null;
-
-        $success = false;
 
         $firstFailException = null;
 
@@ -42,41 +43,58 @@ class WebPConvert
             $converterOptions = array_merge($defaultConverterOptions, $converterOptions);
 
             try {
+                $logger->logLn('Trying:' . $converterId, 'italic');
+
                 ConverterHelper::runConverter($converterId, $source, $destination, $converterOptions, false);
 
-                if (file_exists($destination)) {
-                    $success = true;
-                    break;
-                }
+                // Still here? - well, we did it! - job is done.
+                $logger->logLn('ok', 'bold');
+                return true;
+
             } catch (\WebPConvert\Converters\Exceptions\ConverterNotOperationalException $e) {
+//                $logger->logLnLn($e->description . ' : ' . $e->getMessage());
+                $logger->logLnLn($e->getMessage());
+
                 // The converter is not operational.
                 // Well, well, we will just have to try the next, then
+
+                if (!$firstFailException) {
+                    $firstFailException = $e;
+                }
+
             } catch (\WebPConvert\Converters\Exceptions\ConverterFailedException $e) {
-                // Converter failed in an anticipated fashion.
-                // If no converter is able to do a conversion, we will rethrow the exception.
+                $logger->logLnLn($e->getMessage());
+
+                // Converter failed in an anticipated, yet somewhat surprising fashion.
+                // The converter seemed operational - requirements was in order - but it failed anyway.
+                // This is moderately bad.
+                // If some other converter can handle the conversion, we will let this one go.
+                // But if not, we shall throw the exception
+
                 if (!$firstFailException) {
                     $firstFailException = $e;
                 }
             } catch (\WebPConvert\Converters\Exceptions\ConversionDeclinedException $e) {
+                $logger->logLnLn($e->getMessage());
+
                 // The converter declined.
                 // Gd is for example throwing this, when asked to convert a PNG, but configured not to
+                // We also possibly rethrow this, because it may have come as a surprise to the user
+                // who perhaps only tested jpg
                 if (!$firstFailException) {
                     $firstFailException = $e;
                 }
             }
-
-
-            // As success will break the loop, being here means that no converters could
-            // do the conversion.
-            // If no converters are operational, simply return false
-            // Otherwise rethrow the exception that was thrown first (the most prioritized converter)
-            if ($firstFailException) {
-                throw $e;
-            }
-
-            $success = false;
         }
 
-        return $success;
+        $logger->logLn('Conversion failed. None of the tried converters are operational', 'bold');
+
+        // No converters could do the job.
+        // If one of them failed moderately bad, rethrow that exception.
+        if ($firstFailException) {
+            throw $firstFailException;
+        }
+
+        return false;
     }
 }
