@@ -58,10 +58,6 @@ class WebPConvert
                 // The converter is not operational.
                 // Well, well, we will just have to try the next, then
 
-                if (!$firstFailException) {
-                    $firstFailException = $e;
-                }
-
             } catch (\WebPConvert\Converters\Exceptions\ConverterFailedException $e) {
                 $logger->logLnLn($e->getMessage());
 
