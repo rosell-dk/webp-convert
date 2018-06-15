@@ -23,7 +23,7 @@ class ConverterHelper
         'method' => 6,
         'low-memory' => false,
         'lossless' => false,
-        'converters' =>  ['cwebp', 'imagick', 'gd']
+        'converters' =>  ['cwebp', 'gd', 'imagick']
     ];
 
     public static function mergeOptions($options, $extraOptions)
