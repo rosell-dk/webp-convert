@@ -21,7 +21,7 @@ class Cwebp
     {
         ConverterHelper::runConverter('cwebp', $source, $destination, $options, true);
     }
-    
+
     // System paths to look for cwebp binary
     private static $cwebpDefaultPaths = [
         '/usr/bin/cwebp',
@@ -72,9 +72,36 @@ class Cwebp
         }
     }
 
-    // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options = [])
+    //
+    private static function executeBinary($binary, $commandOptions, $useNice, $logger)
     {
+      $command = ($useNice ? 'nice ' : '') . $binary . ' ' . $commandOptions;
+
+      $logger->logLn('Trying to execute binary:' . $binary);
+      //$logger->logLn();
+
+      exec($command, $output, $returnCode);
+
+      switch ($returnCode) {
+        case 0:
+          $logger->logLn('Success!');
+          break;
+        case 126:
+          $logger->logLn('Permission denied. The user that the command was run with (' . shell_exec('whoami') . ') does not have permission to execute that binary.');
+          break;
+        case 127:
+          $logger->logLn('No binary found at that location');
+          break;
+        default:
+          $logger->logLn('Failed. Return code:' .  $returnCode . '. See http://tldp.org/LDP/abs/html/exitcodes.html for failcodes');
+      }
+      return ($returnCode == 0);
+    }
+
+    // Although this method is public, do not call directly.
+    public static function doConvert($source, $destination, $options = [], $logger)
+    {
+        $errorMsg = '';
         // Force lossless option to true for PNG images
         if (ConverterHelper::getExtension($source) == 'png') {
             $options['lossless'] = true;
@@ -84,39 +111,8 @@ class Cwebp
             throw new ConverterNotOperationalException('exec() is not enabled.');
         }
 
-        // Init with common system paths
-        $cwebpPathsToTest = self::$cwebpDefaultPaths;
-
-        // Remove paths that doesn't exist
-        $cwebpPathsToTest = array_filter($cwebpPathsToTest, function ($binary) {
-            return file_exists($binary);
-        });
-
-        // Add supplied binary to array (if available for OS, and hash is correct)
-        if (isset(self::$suppliedBinariesInfo[PHP_OS])) {
-            $info = self::$suppliedBinariesInfo[PHP_OS];
-
-            $file = $info[0];
-            $hash = $info[1];
-
-            $binaryFile = __DIR__ . '/Binaries/' . $file;
-
-            // The file should exist, but may have been removed manually. That would be ok, I suppose
-
-            if (file_exists($binaryFile)) {
-                // File exists, now generate its hash
-                $binaryHash = hash_file('sha256', $binaryFile);
-
-                // Throw an exception if binary file checksum & deposited checksum do not match
-                if ($binaryHash != $hash) {
-                    throw new ConverterNotOperationalException('Binary checksum is invalid.');
-                }
-                $cwebpPathsToTest[] = $binaryFile;
-            }
-        }
-
         /*
-         * Preparing options
+         * Prepare cwebp options
          */
 
         // Metadata (all, exif, icc, xmp or none (default))
@@ -156,36 +152,88 @@ class Cwebp
             $stderrRedirect = '2>&1'
         ];
 
-        $nice = (($options['use-nice']) && self::hasNiceSupport()) ? 'nice ' : '';
+        $useNice = (($options['use-nice']) && self::hasNiceSupport()) ? true : false;
 
         $commandOptions = implode(' ', $commandOptionsArray);
 
-        // Try all paths
+
+        // Init with common system paths
+        $cwebpPathsToTest = self::$cwebpDefaultPaths;
+
+        // Remove paths that doesn't exist
+        $cwebpPathsToTest = array_filter($cwebpPathsToTest, function ($binary) {
+            //return file_exists($binary);
+            return @is_readable($binary);
+        });
+
+        // Try all common paths that exitst
+        $success = false;
         foreach ($cwebpPathsToTest as $index => $binary) {
-            $command = $nice . $binary . ' ' . $commandOptions;
-
-            //throw new ConverterNotOperationalException($command);
-            exec($command, $output, $returnCode);
-
-            if ($returnCode == 0) { // Everything okay!
-                // cwebp sets file permissions to 664 but instead ..
-                // .. $destination's parent folder's permissions should be used (except executable bits)
-                $destinationParent = dirname($destination);
-                $fileStatistics = stat($destinationParent);
-
-                // Apply same permissions as parent folder but strip off the executable bits
-                $permissions = $fileStatistics['mode'] & 0000666;
-                chmod($destination, $permissions);
-
-                $success = true;
+            $success = self::executeBinary($binary, $commandOptions, $useNice, $logger);
+            if ($success) {
                 break;
             }
+        }
+        if (!$success) {
+          //$logger->logLn('');
+          if (count($cwebpPathsToTest) > 0) {
+            $errorMsg .= 'Found cwebp binaries at these locations: ' . implode(', ', $cwebpPathsToTest) . ' however, none of these worked.';
+          } else {
+            $errorMsg .= 'Found no cwebp binaries in any common locations. ';
+          }
 
-            $success = false;
         }
 
         if (!$success) {
-            throw new ConverterNotOperationalException('No working binaries were found');
+
+          // Try supplied binary (if available for OS, and hash is correct)
+          if (isset(self::$suppliedBinariesInfo[PHP_OS])) {
+              $info = self::$suppliedBinariesInfo[PHP_OS];
+
+              $file = $info[0];
+              $hash = $info[1];
+
+              $binaryFile = __DIR__ . '/Binaries/' . $file;
+
+              // The file should exist, but may have been removed manually.
+              if (file_exists($binaryFile)) {
+                  // File exists, now generate its hash
+                  $binaryHash = hash_file('sha256', $binaryFile);
+
+                  // Throw an exception if binary file checksum & deposited checksum do not match
+                  if ($binaryHash != $hash) {
+                      //throw new ConverterNotOperationalException('Binary checksum is invalid.');
+                      $errorMsg .= 'Binary checksum of supplied binary is invalid! Did you transfer with FTP, but not in binary mode? File:' . $binaryFile . '. Expected checksum: ' . $hash . ' Actual checksum:' . $binaryHash;
+                  } else {
+                    $success = self::executeBinary($binaryFile, $commandOptions, $useNice, $logger);
+
+                  }
+
+              } else {
+                $errorMsg .= 'Supplied binary not found:' . $binaryFile;
+              }
+          } else {
+            $errorMsg .= 'No supplied binaries found for OS:' . PHP_OS;
+          }
+
+        }
+
+
+
+        // cwebp sets file permissions to 664 but instead ..
+        // .. $destination's parent folder's permissions should be used (except executable bits)
+        if ($success) {
+
+          $destinationParent = dirname($destination);
+          $fileStatistics = stat($destinationParent);
+
+          // Apply same permissions as parent folder but strip off the executable bits
+          $permissions = $fileStatistics['mode'] & 0000666;
+          chmod($destination, $permissions);
+        }
+
+        if (!$success) {
+            throw new ConverterNotOperationalException($errorMsg);
         }
     }
 }

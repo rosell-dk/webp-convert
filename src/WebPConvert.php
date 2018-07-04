@@ -45,7 +45,7 @@ class WebPConvert
             try {
                 $logger->logLn('Trying:' . $converterId, 'italic');
 
-                ConverterHelper::runConverter($converterId, $source, $destination, $converterOptions, false);
+                ConverterHelper::runConverter($converterId, $source, $destination, $converterOptions, false, $logger);
 
                 // Still here? - well, we did it! - job is done.
                 $logger->logLn('ok', 'bold');

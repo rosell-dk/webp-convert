@@ -30,7 +30,7 @@ class Wpc
     }
 
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options = [])
+    public static function doConvert($source, $destination, $options = [], $logger)
     {
         if ($options['url'] == '') {
             throw new ConverterNotOperationalException('Missing URL. You must install WebpConvertCloudService on a server, and supply url');

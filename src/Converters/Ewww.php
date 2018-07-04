@@ -23,7 +23,7 @@ class Ewww
     }
 
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options = [])
+    public static function doConvert($source, $destination, $options = [], $logger)
     {
         if ($options['key'] == '') {
             throw new ConverterNotOperationalException('Missing API key.');

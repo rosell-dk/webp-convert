@@ -26,7 +26,7 @@ class Gd
     }
 
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options = [])
+    public static function doConvert($source, $destination, $options = [], $logger)
     {
         if (!extension_loaded('gd')) {
             throw new ConverterNotOperationalException('Required GD extension is not available.');

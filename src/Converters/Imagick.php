@@ -17,7 +17,7 @@ class Imagick
     }
 
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options = [])
+    public static function doConvert($source, $destination, $options = [], $logger)
     {
         if (!extension_loaded('imagick')) {
             throw new ConverterNotOperationalException('Required iMagick extension is not available.');

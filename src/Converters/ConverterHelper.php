@@ -39,10 +39,14 @@ class ConverterHelper
     /* Call the "convert" method on a converter, by id.
        - but also prepares options (merges in the $extraOptions of the converter),
          prepares destination folder, and runs some standard validations */
-    public static function runConverter($converterId, $source, $destination, $options = [], $prepareDestinationFolder = true)
+    public static function runConverter($converterId, $source, $destination, $options = [], $prepareDestinationFolder = true, $logger = null)
     {
         if ($prepareDestinationFolder) {
             ConverterHelper::prepareDestinationFolderAndRunCommonValidations($source, $destination);
+        }
+
+        if (!isset($logger)) {
+            $logger = new \WebPConvert\Loggers\VoidLogger();
         }
 
         $className = self::getClassNameOfConverter($converterId);
@@ -66,7 +70,7 @@ class ConverterHelper
             $source,
             $destination,
             $options,
-            $prepareDestinationFolder
+            $logger
         );
 
         if (!file_exists($destination)) {
