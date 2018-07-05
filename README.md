@@ -78,7 +78,7 @@ Many options correspond to options of cwebp. These are documented [here](https:/
 | method            | Integer | 6                           | Specify the compression method to use (0-6). When higher values are used, the encoder will spend more time inspecting additional encoding possibilities and decide on the quality gain. Lower value can result in faster processing time at the expense of larger file size and lower compression quality. |
 | low-memory        | Boolean | false                       | Reduce memory usage of lossy encoding by saving four times the compressed size (typically) |
 | lossless          | Boolean | false                       | Encode the image without any loss. The option is ignored for PNG's (forced true) |
-| converters        | Array   | ['cwebp', 'imagick', 'gd']  | Specify converters to use, and their order. Also optionally set converter options (see below) |
+| converters        | Array   | ['cwebp', 'gd', 'imagick']  | Specify converters to use, and their order. Also optionally set converter options (see below) |
 | extra-converters  | Array   | []                          | Add extra converters    |
 
 
@@ -123,6 +123,7 @@ WebPConvert::convert($source, $destination, array(
     )
 ));
 ```
+This used to be the preferred way of adding cloud converters, because it allows putting converters to the list without removing the default ones. That way, if new converters should arrive, they would be included in the list. However, if you use *wpc*, you probably want that to prioritized over *gd* and *imagick*. In that case, you will have to go for the `converters` option, rather than the `extra-converters` option.
 
 ### More on the `$logger` parameter
 WebPConvert and the individual converters can provide information regarding the conversion process. Per default (when the parameter isn't provided), they write this to `\WebPConvert\Loggers\VoidLogger`, which does nothing with it.
@@ -134,7 +135,7 @@ use WebPConvert\Loggers\EchoLogger;
 WebPConvert::convert($source, $destination, $options, new EchoLogger());
 ```
 
-In order to do something else with the information (perhaps write it to a log file?), you can extend `\WebPConvert\Loggers\BaseLogger`. 
+In order to do something else with the information (perhaps write it to a log file?), you can extend `\WebPConvert\Loggers\BaseLogger`.
 
 ## Converters
 In the most basic design, a converter consists of a static convert function which takes the same arguments as `WebPConvert::convert`. Its job is then to convert `$source` to WebP and save it at `$destination`, preferably taking the options specified in $options into account.
