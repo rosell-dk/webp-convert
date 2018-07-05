@@ -54,17 +54,18 @@ $success = WebPConvert::convert($source, $destination, [
 ## Methods
 The following methods are available:
 
-**WebPConvert::convert($source, $destination)**
+**WebPConvert::convert($source, $destination, $options, $logger)**
 
 | Parameter        | Type    | Description                                                                                |
 | ---------------- | ------- | ------------------------------------------------------------------------------------------ |
 | `$source`        | String  | Absolute path to source image (only forward slashes allowed)                               |
 | `$destination`   | String  | Absolute path to converted image (only forward slashes allowed)                            |
-| `$options`       | Array   | Array of conversion options                                                                |
+| `$options` (optional)      | Array   | Array of conversion (option) options                                                                |
+| `$logger` (optional)        | Baselogger   | Information about the conversion process will be passed to this object. Read more below                               |
 
-Available options:
+### Available options
 
-Most options correspond to options of cwebp. These are documented [here](https://developers.google.com/speed/webp/docs/cwebp)
+Many options correspond to options of cwebp. These are documented [here](https://developers.google.com/speed/webp/docs/cwebp)
 
 
 
@@ -81,6 +82,7 @@ Most options correspond to options of cwebp. These are documented [here](https:/
 | extra-converters  | Array   | []                          | Add extra converters    |
 
 
+#### More on the `converters` option
 When setting the `converters` option, you can also set options for the converter. This can be used for overriding the general options. For example, you may generally want the `quality` to be 85, but for a single converter, you would like it to be 100. It can also be used to set options that are special for the converter. For example, the ewww converter has a `key` option and `cwebp` has the special `use-nice` options. Gd converter has the option `skip-pngs`.
 
 Example:
@@ -99,10 +101,10 @@ WebPConvert::convert($source, $destination, array(
 )
 ```
 
+#### More on the `extra-converters` option
 You use the `extra-converters` to append converters to the list defined by the `converters` option. This is the preferred way of adding cloud converters. You are allowed to specify the same converter multiple times (you can btw also do that with the `converters` option). This can be useful if you for example have multiple accounts for a cloud service and are afraid that one of them might expire.
 
 Example:
-
 ```
 WebPConvert::convert($source, $destination, array(
     'extra-converters' => array(
@@ -122,10 +124,23 @@ WebPConvert::convert($source, $destination, array(
 ));
 ```
 
+### More on the `$logger` parameter
+WebPConvert and the individual converters can provide information regarding the conversion process. Per default (when the parameter isn't provided), they write this to `\WebPConvert\Loggers\VoidLogger`, which does nothing with it.
+In order to get this information echoed out, you can use `\WebPConvert\Loggers\EchoLogger` - like this:
+
+```php
+use WebPConvert\Loggers\EchoLogger;
+
+WebPConvert::convert($source, $destination, $options, new EchoLogger());
+```
+
+In order to do something else with the information (perhaps write it to a log file?), you can extend `\WebPConvert\Loggers\BaseLogger`. 
+
 ## Converters
 In the most basic design, a converter consists of a static convert function which takes the same arguments as `WebPConvert::convert`. Its job is then to convert `$source` to WebP and save it at `$destination`, preferably taking the options specified in $options into account.
 
 The converters may be called directly. But you probably don't want to do that, as it really doesn't hurt having other converters ready to take over, in case your preferred converter should fail.
+
 
 ## The converters at a glance
 
