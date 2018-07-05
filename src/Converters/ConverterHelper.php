@@ -78,6 +78,33 @@ class ConverterHelper
         }
     }
 
+    /* Try to detect quality of jpeg.
+       If not possible, nothing is returned (null). Otherwise quality is returned (int)
+        */
+    public static function detectQualityOfJpg($filename)
+    {
+      // Try Imagick extension
+      if (extension_loaded('imagick') && class_exists('Imagick')) {
+        $img = new Imagick($filename);
+        return $img->getImageCompressionQuality();
+      }
+
+      if (function_exists('shell_exec')) {
+
+        // Try Imagick
+        $quality = shell_exec("identify -format '%Q' " . $filename);
+        if ($quality) {
+          return intval($quality);
+        }
+
+        // Try GraphicsMagick
+        $quality = shell_exec("gm identify -format '%Q' " . $filename);
+        if ($quality) {
+          return intval($quality);
+        }
+      }
+    }
+
     public static function getExtension($filePath)
     {
         $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
