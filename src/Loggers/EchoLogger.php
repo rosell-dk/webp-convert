@@ -15,7 +15,8 @@ class EchoLogger extends BaseLogger
         }
     }
 
-    public function ln() {
+    public function ln()
+    {
         echo '<br>';
     }
 }

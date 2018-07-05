@@ -78,16 +78,16 @@ class ConverterHelper
             $q = ConverterHelper::detectQualityOfJpg($source);
             $logger->log('Quality set to auto... Quality of source: ');
             if (!$q) {
-              $q = $options['default-quality'];
-              $logger->logLn('could not be established (Imagick or GraphicsMagick is required) - Using default instead (' . $options['default-quality'] . ').');
+                $q = $options['default-quality'];
+                $logger->logLn('could not be established (Imagick or GraphicsMagick is required) - Using default instead (' . $options['default-quality'] . ').');
 
-              // this allows the wpc converter to know
-              $options['_quality_could_not_be_detected'] = true;
+                // this allows the wpc converter to know
+                $options['_quality_could_not_be_detected'] = true;
             } else {
-              $logger->log($q);
+                $logger->log($q);
             }
             if ($q > $options['max-quality']) {
-              $logger->log('. This is higher than max-quality, so using that instead (' . $options['max-quality'] . ')');
+                $logger->log('. This is higher than max-quality, so using that instead (' . $options['max-quality'] . ')');
             }
             $logger->ln();
             $q = min($q, $options['max-quality']);
@@ -114,26 +114,26 @@ class ConverterHelper
         */
     public static function detectQualityOfJpg($filename)
     {
-      // Try Imagick extension
-      if (extension_loaded('imagick') && class_exists('Imagick')) {
-        $img = new Imagick($filename);
-        return $img->getImageCompressionQuality();
-      }
+        // Try Imagick extension
+        if (extension_loaded('imagick') && class_exists('Imagick')) {
+            $img = new Imagick($filename);
+            return $img->getImageCompressionQuality();
+        }
 
-      if (function_exists('shell_exec')) {
+        if (function_exists('shell_exec')) {
 
         // Try Imagick
-        $quality = shell_exec("identify -format '%Q' " . $filename);
-        if ($quality) {
-          return intval($quality);
-        }
+            $quality = shell_exec("identify -format '%Q' " . $filename);
+            if ($quality) {
+                return intval($quality);
+            }
 
-        // Try GraphicsMagick
-        $quality = shell_exec("gm identify -format '%Q' " . $filename);
-        if ($quality) {
-          return intval($quality);
+            // Try GraphicsMagick
+            $quality = shell_exec("gm identify -format '%Q' " . $filename);
+            if ($quality) {
+                return intval($quality);
+            }
         }
-      }
     }
 
 

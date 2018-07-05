@@ -50,14 +50,12 @@ class WebPConvert
                 // Still here? - well, we did it! - job is done.
                 $logger->logLn('ok', 'bold');
                 return true;
-
             } catch (\WebPConvert\Converters\Exceptions\ConverterNotOperationalException $e) {
 //                $logger->logLnLn($e->description . ' : ' . $e->getMessage());
                 $logger->logLnLn($e->getMessage());
 
                 // The converter is not operational.
                 // Well, well, we will just have to try the next, then
-
             } catch (\WebPConvert\Converters\Exceptions\ConverterFailedException $e) {
                 $logger->logLnLn($e->getMessage());
 

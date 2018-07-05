@@ -75,14 +75,14 @@ class Cwebp
     //
     private static function executeBinary($binary, $commandOptions, $useNice, $logger)
     {
-      $command = ($useNice ? 'nice ' : '') . $binary . ' ' . $commandOptions;
+        $command = ($useNice ? 'nice ' : '') . $binary . ' ' . $commandOptions;
 
-      $logger->logLn('Trying to execute binary:' . $binary);
-      //$logger->logLn();
+        $logger->logLn('Trying to execute binary:' . $binary);
+        //$logger->logLn();
 
-      exec($command, $output, $returnCode);
+        exec($command, $output, $returnCode);
 
-      switch ($returnCode) {
+        switch ($returnCode) {
         case 0:
           $logger->logLn('Success!');
           break;
@@ -95,7 +95,7 @@ class Cwebp
         default:
           $logger->logLn('Failed. Return code:' .  $returnCode . '. See http://tldp.org/LDP/abs/html/exitcodes.html for failcodes');
       }
-      return $returnCode;
+        return $returnCode;
     }
 
     // Although this method is public, do not call directly.
@@ -175,58 +175,55 @@ class Cwebp
             }
         }
         if (!$success) {
-          //$logger->logLn('');
-          if (count($cwebpPathsToTest) > 0) {
-            $errorMsg .= 'Found cwebp binaries at these locations: "' . implode('", "', $cwebpPathsToTest) . '". However, executing these failed. ';
-          } else {
-            $errorMsg .= 'Found no cwebp binaries in any common locations. ';
-          }
-
+            //$logger->logLn('');
+            if (count($cwebpPathsToTest) > 0) {
+                $errorMsg .= 'Found cwebp binaries at these locations: "' . implode('", "', $cwebpPathsToTest) . '". However, executing these failed. ';
+            } else {
+                $errorMsg .= 'Found no cwebp binaries in any common locations. ';
+            }
         }
 
         if (!$success) {
 
           // Try supplied binary (if available for OS, and hash is correct)
-          if (isset(self::$suppliedBinariesInfo[PHP_OS])) {
-              $info = self::$suppliedBinariesInfo[PHP_OS];
+            if (isset(self::$suppliedBinariesInfo[PHP_OS])) {
+                $info = self::$suppliedBinariesInfo[PHP_OS];
 
-              $file = $info[0];
-              $hash = $info[1];
+                $file = $info[0];
+                $hash = $info[1];
 
-              $binaryFile = __DIR__ . '/Binaries/' . $file;
+                $binaryFile = __DIR__ . '/Binaries/' . $file;
 
-              // The file should exist, but may have been removed manually.
-              if (file_exists($binaryFile)) {
-                  // File exists, now generate its hash
-                  $binaryHash = hash_file('sha256', $binaryFile);
+                // The file should exist, but may have been removed manually.
+                if (file_exists($binaryFile)) {
+                    // File exists, now generate its hash
+                    $binaryHash = hash_file('sha256', $binaryFile);
 
-                  // Throw an exception if binary file checksum & deposited checksum do not match
-                  if ($binaryHash != $hash) {
-                      //throw new ConverterNotOperationalException('Binary checksum is invalid.');
-                      $errorMsg .= 'Binary checksum of supplied binary is invalid! Did you transfer with FTP, but not in binary mode? File:' . $binaryFile . '. Expected checksum: ' . $hash . ' Actual checksum:' . $binaryHash . '. ';
-                  } else {
-                    $returnCode = self::executeBinary($binaryFile, $commandOptions, $useNice, $logger);
-                    if ($returnCode == 0) {
-                      $success = true;
+                    // Throw an exception if binary file checksum & deposited checksum do not match
+                    if ($binaryHash != $hash) {
+                        //throw new ConverterNotOperationalException('Binary checksum is invalid.');
+                        $errorMsg .= 'Binary checksum of supplied binary is invalid! Did you transfer with FTP, but not in binary mode? File:' . $binaryFile . '. Expected checksum: ' . $hash . ' Actual checksum:' . $binaryHash . '. ';
                     } else {
-                      $errorMsg .= 'Tried executing supplied binary (' . $binaryFile . '), but that failed too: ';
-                      switch ($returnCode) {
+                        $returnCode = self::executeBinary($binaryFile, $commandOptions, $useNice, $logger);
+                        if ($returnCode == 0) {
+                            $success = true;
+                        } else {
+                            $errorMsg .= 'Tried executing supplied binary (' . $binaryFile . '), but that failed too: ';
+                            switch ($returnCode) {
                         case 126:
                           $errorMsg .= 'Permission denied (user "' . trim(shell_exec('whoami')) . '" does not have permission to execute the binary)';
                           break;
                         default:
                           $errorMsg .= 'Fail code: ' . $returnCode;
                       }
+                        }
                     }
-                  }
-
-              } else {
-                $errorMsg .= 'Supplied binary not found:' . $binaryFile;
-              }
-          } else {
-            $errorMsg .= 'No supplied binaries found for OS:' . PHP_OS;
-          }
-
+                } else {
+                    $errorMsg .= 'Supplied binary not found:' . $binaryFile;
+                }
+            } else {
+                $errorMsg .= 'No supplied binaries found for OS:' . PHP_OS;
+            }
         }
 
 
@@ -234,13 +231,12 @@ class Cwebp
         // cwebp sets file permissions to 664 but instead ..
         // .. $destination's parent folder's permissions should be used (except executable bits)
         if ($success) {
+            $destinationParent = dirname($destination);
+            $fileStatistics = stat($destinationParent);
 
-          $destinationParent = dirname($destination);
-          $fileStatistics = stat($destinationParent);
-
-          // Apply same permissions as parent folder but strip off the executable bits
-          $permissions = $fileStatistics['mode'] & 0000666;
-          chmod($destination, $permissions);
+            // Apply same permissions as parent folder but strip off the executable bits
+            $permissions = $fileStatistics['mode'] & 0000666;
+            chmod($destination, $permissions);
         }
 
         if (!$success) {
