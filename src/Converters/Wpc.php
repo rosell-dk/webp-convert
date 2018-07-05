@@ -57,8 +57,16 @@ class Wpc
         }
 
         $optionsToSend = $options;
+
+        if (isset($options['_quality_could_not_be_detected'])) {
+          // quality was set to "auto", but we could not meassure the quality of the jpeg locally
+          // Ask the cloud service to do it, rather than using what we came up with.
+          $optionsToSend['quality'] = 'auto';
+        }
+
         unset($optionsToSend['converters']);
         unset($optionsToSend['secret']);
+        unset($optionsToSend['_quality_could_not_be_detected']);
 
         curl_setopt_array($ch, [
             CURLOPT_URL => $options['url'],
@@ -82,6 +90,8 @@ class Wpc
 
         // The WPC cloud service either returns an image or an error message
         // Images has application/octet-stream.
+
+        // TODO: Check for 404 response, and handle that here
 
         // Verify that we got an image back.
         if (curl_getinfo($ch, CURLINFO_CONTENT_TYPE) != 'application/octet-stream') {

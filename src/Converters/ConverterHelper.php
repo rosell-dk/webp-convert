@@ -11,6 +11,7 @@ use WebPConvert\Exceptions\InvalidFileExtensionException;
 use WebPConvert\Exceptions\TargetNotFoundException;
 
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
+use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
 class ConverterHelper
 {
@@ -68,20 +69,30 @@ class ConverterHelper
         $options = array_merge($defaultOptions, $options);
 
         // Individual converters do not accept quality = auto. They need a number.
+        // Change $options['quality'] to number, based on quality of source and several settings
+
+
         if ($options['quality'] == 'auto') {
-            $options['quality'] = ConverterHelper::detectQualityOfJpg($source);
+
+            // TODO: avoid detecting quality of same JPG for each converter
+            $q = ConverterHelper::detectQualityOfJpg($source);
             $logger->log('Quality set to auto... Quality of source: ');
-            if (!$options['quality']) {
-              $options['quality'] = $options['default-quality'];
+            if (!$q) {
+              $q = $options['default-quality'];
               $logger->logLn('could not be established (Imagick or GraphicsMagick is required) - Using default instead (' . $options['default-quality'] . ').');
+
+              // this allows the wpc converter to know
+              $options['_quality_could_not_be_detected'] = true;
             } else {
-              $logger->log($options['quality']);
+              $logger->log($q);
             }
-            if ($options['quality'] > $options['max-quality']) {
+            if ($q > $options['max-quality']) {
               $logger->log('. This is higher than max-quality, so using that instead (' . $options['max-quality'] . ')');
             }
             $logger->ln();
-            $options['quality'] = min($options['quality'], $options['max-quality']);
+            $q = min($q, $options['max-quality']);
+            $options['quality'] = $q;
+
             //$logger->logLn('Using quality: ' . $options['quality']);
         }
 
