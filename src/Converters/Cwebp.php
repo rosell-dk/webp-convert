@@ -75,7 +75,6 @@ class Cwebp
     //
     private static function executeBinary($binary, $commandOptions, $useNice, $logger)
     {
-      return 126;
       $command = ($useNice ? 'nice ' : '') . $binary . ' ' . $commandOptions;
 
       $logger->logLn('Trying to execute binary:' . $binary);
