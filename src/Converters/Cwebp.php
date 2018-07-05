@@ -75,6 +75,7 @@ class Cwebp
     //
     private static function executeBinary($binary, $commandOptions, $useNice, $logger)
     {
+      return 126;
       $command = ($useNice ? 'nice ' : '') . $binary . ' ' . $commandOptions;
 
       $logger->logLn('Trying to execute binary:' . $binary);
@@ -95,7 +96,7 @@ class Cwebp
         default:
           $logger->logLn('Failed. Return code:' .  $returnCode . '. See http://tldp.org/LDP/abs/html/exitcodes.html for failcodes');
       }
-      return ($returnCode == 0);
+      return $returnCode;
     }
 
     // Although this method is public, do not call directly.
@@ -169,7 +170,7 @@ class Cwebp
         // Try all common paths that exitst
         $success = false;
         foreach ($cwebpPathsToTest as $index => $binary) {
-            $success = self::executeBinary($binary, $commandOptions, $useNice, $logger);
+            $success = (self::executeBinary($binary, $commandOptions, $useNice, $logger) == 0);
             if ($success) {
                 break;
             }
@@ -177,7 +178,7 @@ class Cwebp
         if (!$success) {
           //$logger->logLn('');
           if (count($cwebpPathsToTest) > 0) {
-            $errorMsg .= 'Found cwebp binaries at these locations: ' . implode(', ', $cwebpPathsToTest) . ' however, none of these worked.';
+            $errorMsg .= 'Found cwebp binaries at these locations: "' . implode('", "', $cwebpPathsToTest) . '". However, executing these failed. ';
           } else {
             $errorMsg .= 'Found no cwebp binaries in any common locations. ';
           }
@@ -203,10 +204,21 @@ class Cwebp
                   // Throw an exception if binary file checksum & deposited checksum do not match
                   if ($binaryHash != $hash) {
                       //throw new ConverterNotOperationalException('Binary checksum is invalid.');
-                      $errorMsg .= 'Binary checksum of supplied binary is invalid! Did you transfer with FTP, but not in binary mode? File:' . $binaryFile . '. Expected checksum: ' . $hash . ' Actual checksum:' . $binaryHash;
+                      $errorMsg .= 'Binary checksum of supplied binary is invalid! Did you transfer with FTP, but not in binary mode? File:' . $binaryFile . '. Expected checksum: ' . $hash . ' Actual checksum:' . $binaryHash . '. ';
                   } else {
-                    $success = self::executeBinary($binaryFile, $commandOptions, $useNice, $logger);
-
+                    $returnCode = self::executeBinary($binaryFile, $commandOptions, $useNice, $logger);
+                    if ($returnCode == 0) {
+                      $success = true;
+                    } else {
+                      $errorMsg .= 'Tried executing supplied binary (' . $binaryFile . '), but that failed too: ';
+                      switch ($returnCode) {
+                        case 126:
+                          $errorMsg .= 'Permission denied (user "' . trim(shell_exec('whoami')) . '" does not have permission to execute the binary)';
+                          break;
+                        default:
+                          $errorMsg .= 'Fail code: ' . $returnCode;
+                      }
+                    }
                   }
 
               } else {
