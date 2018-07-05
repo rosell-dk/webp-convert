@@ -44,11 +44,11 @@ $destination = __DIR__ . '/logo.jpg.webp';
 
 // .. fire up WebP conversion
 $success = WebPConvert::convert($source, $destination, [
-    'quality' => 80,
+    'quality' => 80,  // Note: As of v1.1beta, the *quality* option can be set to "auto"
+
     // more options available!
 ]);
 ```
-**New:** As of v1.1beta, the *quality* option can be set to "auto"
 
 
 ## Methods
