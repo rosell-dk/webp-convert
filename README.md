@@ -43,11 +43,13 @@ $source = __DIR__ . '/logo.jpg';
 $destination = __DIR__ . '/logo.jpg.webp';
 
 // .. fire up WebP conversion
-$success = WebPConvert::convert($source, $destination, array(
-    'quality' => 90,
+$success = WebPConvert::convert($source, $destination, [
+    'quality' => 80,
     // more options available!
-));
+]);
 ```
+**New:** As of v1.1beta, the *quality* option can be set to "auto"
+
 
 ## Methods
 The following methods are available:
@@ -64,9 +66,13 @@ Available options:
 
 Most options correspond to options of cwebp. These are documented [here](https://developers.google.com/speed/webp/docs/cwebp)
 
+
+
 | Option            | Type    | Default                    | Description                                                          |
 | ----------------- | ------- | -------------------------- | -------------------------------------------------------------------- |
-| quality           | Integer | 85                          | Lossy quality of converted image (JPEG only - PNGs are created loslessly by default)  |
+| quality           | An integer between 0-100. As of v1.1beta, it can also be "auto" | In v1.0, default is 85<br><br>As of v1.1beta, default is "auto"                          | Lossy quality of converted image (JPEG only - PNGs are always losless).<br><br> If set to "auto", *WebPConvert* will try to determine the quality of the JPEG (this is only possible, if Imagick or GraphicsMagic is installed). If successfully determined, the quality of the webp will be set to the same as that of the JPEG. however not to more than specified in the new `max-quality` option. If quality cannot be determined, quality will be set to what is specified in the new `default-quality` option |
+| max-quality           | An integer between 0-100 | 85 | See the `quality` option. Only relevant, when quality is set to "auto".
+| default-quality           | An integer between 0-100 | 80 | See the `quality` option. Only relevant, when quality is set to "auto".
 | metadata          | String  | 'none'                      | Valid values: all, none, exif, icc, xmp. Note: Not supported by all converters             |
 | method            | Integer | 6                           | Specify the compression method to use (0-6). When higher values are used, the encoder will spend more time inspecting additional encoding possibilities and decide on the quality gain. Lower value can result in faster processing time at the expense of larger file size and lower compression quality. |
 | low-memory        | Boolean | false                       | Reduce memory usage of lossy encoding by saving four times the compressed size (typically) |
@@ -84,9 +90,9 @@ WebPConvert::convert($source, $destination, array(
         'cwebp',    
         'imagick',
         array(
-            'converter' => 'gd',
+            'converter' => 'ewww',
             'options' => array(            
-                'skip-pngs' => false,
+                'key' => 'your api key here',
             ),
         ),
     );
@@ -123,9 +129,9 @@ The converters may be called directly. But you probably don't want to do that, a
 
 ## The converters at a glance
 
-[`cwebp`](#cwebp) works by executing the *cwebp* binary from Google. This should be your first choice. Its best in terms of quality, speed and options. The only catch is that it requires that the server is allowed to execute permissions. If you are on a shared host that doesn't allow that, you can turn to the `wpc` cloud converter.
+[`cwebp`](#cwebp) works by executing the *cwebp* binary from Google. This should be your first choice. Its best in terms of quality, speed and options. The only catch is that it requires the `exec` function to be enabled, and that the webserver user is allowed to execute the `cwebp` binary (either at known system locations, or one of the precompiled binaries, that comes with this library). If you are on a shared host that doesn't allow that, you can turn to the `wpc` cloud converter.
 
- [`wpc`](#wpc) is an open source cloud converter based on *WebPConvert*. Conversions will of course be slower than *cwebp*, as images need to go back and forth to the cloud converter. As images usually just needs to be converted once, the slower conversion speed is probably acceptable. The conversion quality and options of *wpc* matches *cwebp*. The only catch is that you will need to install the *WPC* library on a server (or have someone do it for you). If this this is a problem, we suggest you turn to *ewww*.
+ [`wpc`](#wpc) is an open source cloud converter based on *WebPConvert*. Conversions will of course be slower than *cwebp*, as images need to go back and forth to the cloud converter. As images usually just needs to be converted once, the slower conversion speed is probably acceptable. The conversion quality and options of *wpc* matches *cwebp*. The only catch is that you will need to install the *WPC* library on a server (or have someone do it for you). If this this is a problem, we suggest you turn to *ewww*. (PS: A Wordpress plugin is planned, making it easier to set up a WPC instance)
 
 [`ewww`](#ewww) is also a cloud service. It is a decent alternative for those who don't have the technical know-how to install *wpc*. *ewww* is using cwebp to do the conversion, so quality is great. *ewww* however only provides one conversion option (quality), and it is not free. But very cheap. Like in *almost* free.
 
@@ -139,7 +145,7 @@ The converters may be called directly. But you probably don't want to do that, a
 
 | Converter                            | Method                                         | Quality                                       | Requirements                                       |
 | ------------------------------------ | ---------------------------------------------- | --------------------------------------------- |
-| [`cwebp`](#cwebp)             | Calls `cwebp` binary directly                | best | `exec()` function      |
+| [`cwebp`](#cwebp)             | Calls `cwebp` binary directly                | best | `exec()` function *and* that the webserver user has permission to run `cwebp` binary      |
 | [`wpc`](#wpc) | Connects to WPC cloud service                      | best | A working *WPC* installation                |
 | [`ewww`](#ewww)        | Connects to *EWWW Image Optimizer* cloud service           | great | Purchasing a key     |
 | [`gd`](#gd)            | GD Graphics (Draw) extension (`LibGD` wrapper) | good | GD PHP extension compiled with WebP support  |
@@ -149,10 +155,10 @@ The converters may be called directly. But you probably don't want to do that, a
 ### cwebp
 
 <table>
-  <tr><th>Requirements</th><td><code>exec()</code> function</td></tr>
-  <tr><th>Performance</th><td>~40-120ms to convert a 40kb image (depending on <code>WEBPCONVERT_CWEBP_METHOD</code>)</td></tr>
+  <tr><th>Requirements</th><td><code>exec()</code> function and that the webserver has permission to run `cwebp` binary (either found in system path, or a precompiled version supplied with this library)</td></tr>
+  <tr><th>Performance</th><td>~40-120ms to convert a 40kb image (depending on *method* option)</td></tr>
   <tr><th>Reliability</th><td>No problems detected so far!</td></tr>
-  <tr><th>Availability</th><td><code>exec()</code> is available on surprisingly many webhosts (a selection of which can be found <a href="https://docs.ewww.io/article/43-supported-web-hosts">here</a></td></tr>
+  <tr><th>Availability</th><td>According to ewww docs, requirements are met on surprisingly many webhosts. Look <a href="https://docs.ewww.io/article/43-supported-web-hosts">here</a> for a list</td></tr>
   <tr><th>General options supported</th><td>All (`quality`, `metadata`, `method`, `low-memory`, `lossless`)</td></tr>
   <tr><th>Extra options</th><td>`use-nice`</td></tr>
 </table>
@@ -258,11 +264,12 @@ Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes c
 
 <table>
   <tr><th>Requirements</th><td>Imagick PHP extension (compiled with WebP support)</td></tr>
-  <tr><th>Performance</th><td>~20-320ms to convert a 40kb image (depending on `method` option)</td></tr>
-  <tr><th>Reliability</th><td>No problems detected so far!</td></tr>
-  <tr><th>Availability</th><td>Probably only available on few shared hosts (if any)</td></tr>
+  <tr><th>Quality</th><td>Poor. [See this issue]( https://github.com/rosell-dk/webp-convert/issues/43)</td></tr>
   <tr><th>General options supported</th><td>`quality`, `method`, `low-memory`, `lossless`</td></tr>
   <tr><th>Extra options</th><td>None</td></tr>
+  <tr><th>Performance</th><td>~20-320ms to convert a 40kb image (depending on `method` option)</td></tr>
+  <tr><th>Reliability</th><td>No problems detected so far</td></tr>
+  <tr><th>Availability</th><td>Probably only available on few shared hosts (if any)</td></tr>
 </table>
 
 WebP conversion with `imagick` is fast and [exposes many WebP options](http://www.imagemagick.org/script/webp.php). Unfortunately, WebP support for the `imagick` extension is pretty uncommon. At least not on the systems I have tried (Ubuntu 16.04 and Ubuntu 17.04). But if installed, it works great and has several WebP options.
