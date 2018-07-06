@@ -47,6 +47,12 @@ class WebPConvert
             try {
                 $logger->logLn('Trying:' . $converterId, 'italic');
 
+                // If quality is different, we must recalculate
+                if ($converterOptions['quality'] != $defaultConverterOptions['quality']) {
+                    unset($converterOptions['_calculated_quality']);
+                    ConverterHelper::processQualityOption($source, $converterOptions, $logger);
+                }
+
                 ConverterHelper::runConverter($converterId, $source, $destination, $converterOptions, false, $logger);
 
                 // Still here? - well, we did it! - job is done.
