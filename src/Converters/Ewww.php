@@ -51,7 +51,7 @@ class Ewww
             'webp' => '1',
             'file' => curl_file_create($source),
             'domain' => $_SERVER['HTTP_HOST'],
-            'quality' => $options['quality'],
+            'quality' => $options['_calculated_quality'],
             'metadata' => ($options['metadata'] == 'none' ? '0' : '1')
         ];
 

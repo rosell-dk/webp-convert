@@ -57,7 +57,7 @@ class Imagick
 
 
 
-        $im->setImageCompressionQuality($options['quality']);
+        $im->setImageCompressionQuality($options['_calculated_quality']);
 
         // TODO:
         // Should we set alpha channel for PNG's like suggested here:

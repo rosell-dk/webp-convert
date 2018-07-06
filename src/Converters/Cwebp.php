@@ -120,7 +120,7 @@ class Cwebp
         $metadata = '-metadata ' . $options['metadata'];
 
         // Image quality
-        $quality = '-q ' . $options['quality'];
+        $quality = '-q ' . $options['_calculated_quality'];
 
         // Losless PNG conversion
         $lossless = ($options['lossless'] ? '-lossless' : '');

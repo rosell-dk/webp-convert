@@ -21,6 +21,8 @@ class WebPConvert
 
         $options = array_merge(ConverterHelper::$defaultOptions, $options);
 
+        ConverterHelper::processQualityOption($source, $options, $logger);
+
         // Force lossless option to true for PNG images
         if (ConverterHelper::getExtension($source) == 'png') {
             $options['lossless'] = true;

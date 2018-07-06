@@ -62,7 +62,7 @@ class Gd
 
         // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
 
-        $success = imagewebp($image, $destination, $options['quality']);
+        $success = imagewebp($image, $destination, $options['_calculated_quality']);
 
         if (!$success) {
             throw new ConverterFailedException('Call to imagewebp() failed. Probably failed writing file');

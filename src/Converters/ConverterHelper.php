@@ -71,30 +71,7 @@ class ConverterHelper
         // Individual converters do not accept quality = auto. They need a number.
         // Change $options['quality'] to number, based on quality of source and several settings
 
-
-        if ($options['quality'] == 'auto') {
-
-            // TODO: avoid detecting quality of same JPG for each converter
-            $q = ConverterHelper::detectQualityOfJpg($source);
-            $logger->log('Quality set to auto... Quality of source: ');
-            if (!$q) {
-                $q = $options['default-quality'];
-                $logger->logLn('could not be established (Imagick or GraphicsMagick is required) - Using default instead (' . $options['default-quality'] . ').');
-
-                // this allows the wpc converter to know
-                $options['_quality_could_not_be_detected'] = true;
-            } else {
-                $logger->log($q);
-            }
-            if ($q > $options['max-quality']) {
-                $logger->log('. This is higher than max-quality, so using that instead (' . $options['max-quality'] . ')');
-            }
-            $logger->ln();
-            $q = min($q, $options['max-quality']);
-            $options['quality'] = $q;
-
-            //$logger->logLn('Using quality: ' . $options['quality']);
-        }
+        self::processQualityOption($source, $options, $logger);
 
         call_user_func(
             [$className, 'doConvert'],
@@ -134,6 +111,39 @@ class ConverterHelper
                 return intval($quality);
             }
         }
+    }
+
+    public static function processQualityOption($source, &$options, $logger)
+    {
+        if (isset($options['_calculated_quality'])) {
+            return;
+        }
+        if ($options['quality'] == 'auto') {
+            $q = self::detectQualityOfJpg($source);
+            //$logger->log('Quality set to auto... Quality of source: ');
+            if (!$q) {
+                $q = $options['default-quality'];
+                $logger->logLn('Quality of source could not be established (Imagick or GraphicsMagick is required) - Using default instead (' . $options['default-quality'] . ').');
+
+                // this allows the wpc converter to know
+                $options['_quality_could_not_be_detected'] = true;
+            } else {
+                if ($q > $options['max-quality']) {
+                    $logger->log('Quality of source is ' . $q . '. This is higher than max-quality, so using that instead (' . $options['max-quality'] . ')');
+                } else {
+                    $logger->log('Quality set to same as source: ' . $q);
+                }
+            }
+            $logger->ln();
+            $q = min($q, $options['max-quality']);
+
+            $options['_calculated_quality'] = $q;
+        //$logger->logLn('Using quality: ' . $options['quality']);
+        } else {
+            $logger->logLn('Quality: ' . $options['quality'] . '. Consider setting quality to "auto" instead. It is generally a better idea');
+            $options['_calculated_quality'] = $options['quality'];
+        }
+        $logger->ln();
     }
 
 

@@ -62,11 +62,14 @@ class Wpc
             // quality was set to "auto", but we could not meassure the quality of the jpeg locally
             // Ask the cloud service to do it, rather than using what we came up with.
             $optionsToSend['quality'] = 'auto';
+        } else {
+            $optionsToSend['quality'] = $options['_calculated_quality'];
         }
 
         unset($optionsToSend['converters']);
         unset($optionsToSend['secret']);
         unset($optionsToSend['_quality_could_not_be_detected']);
+        unset($optionsToSend['_calculated_quality']);
 
         curl_setopt_array($ch, [
             CURLOPT_URL => $options['url'],
