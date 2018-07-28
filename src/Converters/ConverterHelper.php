@@ -94,7 +94,9 @@ class ConverterHelper
         // Try Imagick extension
         if (extension_loaded('imagick') && class_exists('Imagick')) {
             $img = new Imagick($filename);
-            return $img->getImageCompressionQuality();
+            if (method_exists($img, 'getImageCompressionQuality')) {
+              return $img->getImageCompressionQuality();
+            }
         }
 
         if (function_exists('shell_exec')) {
