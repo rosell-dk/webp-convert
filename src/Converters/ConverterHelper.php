@@ -94,6 +94,8 @@ class ConverterHelper
         // Try Imagick extension
         if (extension_loaded('imagick') && class_exists('Imagick')) {
             $img = new Imagick($filename);
+
+            // The required function is available as from PECL imagick v2.2.2
             if (method_exists($img, 'getImageCompressionQuality')) {
               return $img->getImageCompressionQuality();
             }
