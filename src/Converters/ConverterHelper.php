@@ -97,7 +97,7 @@ class ConverterHelper
 
             // The required function is available as from PECL imagick v2.2.2
             if (method_exists($img, 'getImageCompressionQuality')) {
-              return $img->getImageCompressionQuality();
+                return $img->getImageCompressionQuality();
             }
         }
 
