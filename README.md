@@ -44,7 +44,7 @@ $destination = __DIR__ . '/logo.jpg.webp';
 
 // .. fire up WebP conversion
 $success = WebPConvert::convert($source, $destination, [
-    'quality' => 80,  // Note: As of v1.1beta, the *quality* option can be set to "auto"
+    'quality' => 80,  // Note: As of v1.1, the *quality* option can be set to "auto"
 
     // more options available!
 ]);
@@ -71,7 +71,7 @@ Many options correspond to options of cwebp. These are documented [here](https:/
 
 | Option            | Type    | Default                    | Description                                                          |
 | ----------------- | ------- | -------------------------- | -------------------------------------------------------------------- |
-| quality           | An integer between 0-100. As of v1.1beta, it can also be "auto" | In v1.0, default is 85<br><br>As of v1.1beta, default is "auto"                          | Lossy quality of converted image (JPEG only - PNGs are always losless).<br><br> If set to "auto", *WebPConvert* will try to determine the quality of the JPEG (this is only possible, if Imagick or GraphicsMagic is installed). If successfully determined, the quality of the webp will be set to the same as that of the JPEG. however not to more than specified in the new `max-quality` option. If quality cannot be determined, quality will be set to what is specified in the new `default-quality` option |
+| quality           | An integer between 0-100. As of v1.1, it can also be "auto" | In v1.0, default is 85<br><br>As of v1.1, default is "auto"                          | Lossy quality of converted image (JPEG only - PNGs are always losless).<br><br> If set to "auto", *WebPConvert* will try to determine the quality of the JPEG (this is only possible, if Imagick or GraphicsMagic is installed). If successfully determined, the quality of the webp will be set to the same as that of the JPEG. however not to more than specified in the new `max-quality` option. If quality cannot be determined, quality will be set to what is specified in the new `default-quality` option |
 | max-quality           | An integer between 0-100 | 85 | See the `quality` option. Only relevant, when quality is set to "auto".
 | default-quality           | An integer between 0-100 | 80 | See the `quality` option. Only relevant, when quality is set to "auto".
 | metadata          | String  | 'none'                      | Valid values: all, none, exif, icc, xmp. Note: Not supported by all converters             |
@@ -197,7 +197,6 @@ See [the wiki](https://github.com/rosell-dk/webp-convert/wiki/Installing-cwebp--
 ### wpc
 *WebPConvert Cloud Service*
 
-**Will be available in 1.1.0. Its available in master**
 <table>
   <tr><th>Requirements</th><td>Access to a server with [webp-convert-cloud-service](https://github.com/rosell-dk/webp-convert-cloud-service) installed, <code>cURL</code> and PHP >= 5.5.0</td></tr>
   <tr><th>Performance</th><td>Depends on the server where [webp-convert-cloud-service](https://github.com/rosell-dk/webp-convert-cloud-service) is set up, and the speed of internet connections. But perhaps ~1000ms to convert a 40kb image</td></tr>
