@@ -88,7 +88,7 @@ class Wpc
 
         $response = curl_exec($ch);
         if (curl_errno($ch)) {
-            throw new ConverterNotOperationalException('Curl error:', curl_error($ch));
+            throw new ConverterNotOperationalException('Curl error:' . curl_error($ch));
         }
 
 
