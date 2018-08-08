@@ -44,6 +44,7 @@ class Wpc
             throw new ConverterNotOperationalException('Required url_init() function is not available.');
         }
 
+
         if (!function_exists('curl_file_create')) {
             throw new ConverterNotOperationalException('Required curl_file_create() function is not available (requires PHP > 5.5).');
         }
@@ -86,10 +87,10 @@ class Wpc
         ]);
 
         $response = curl_exec($ch);
-
         if (curl_errno($ch)) {
-            throw new ConverterNotOperationalException(curl_error($ch));
+            throw new ConverterNotOperationalException('Curl error:', curl_error($ch));
         }
+
 
         // The WPC cloud service either returns an image or an error message
         // Images has application/octet-stream.
@@ -99,7 +100,7 @@ class Wpc
         // Verify that we got an image back.
         if (curl_getinfo($ch, CURLINFO_CONTENT_TYPE) != 'application/octet-stream') {
             curl_close($ch);
-            throw new ConverterFailedException($response);
+            throw new ConverterFailedException('We did not get an image back from WPC. This is what we got:' . $response);
             //throw new ConverterNotOperationalException($response);
         }
 
