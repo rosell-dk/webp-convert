@@ -203,25 +203,32 @@ class Cwebp
                 // The file should exist, but may have been removed manually.
                 if (file_exists($binaryFile)) {
                     // File exists, now generate its hash
-                    $binaryHash = hash_file('sha256', $binaryFile);
 
-                    // Throw an exception if binary file checksum & deposited checksum do not match
-                    if ($binaryHash != $hash) {
-                        //throw new ConverterNotOperationalException('Binary checksum is invalid.');
-                        $errorMsg .= 'Binary checksum of supplied binary is invalid! Did you transfer with FTP, but not in binary mode? File:' . $binaryFile . '. Expected checksum: ' . $hash . ' Actual checksum:' . $binaryHash . '. ';
-                    } else {
+                    // hash_file() is normally available, but it is not always
+                    // - https://stackoverflow.com/questions/17382712/php-5-3-20-undefined-function-hash
+                    // If available, validate that hash is correct.
+                    $proceedAfterHashCheck = true;
+                    if (function_exists('hash_file')) {
+                        $binaryHash = hash_file('sha256', $binaryFile);
+
+                        if ($binaryHash != $hash) {
+                            $errorMsg .= 'Binary checksum of supplied binary is invalid! Did you transfer with FTP, but not in binary mode? File:' . $binaryFile . '. Expected checksum: ' . $hash . ' Actual checksum:' . $binaryHash . '. ';
+                            $proceedAfterHashCheck = false;
+                        }
+                    }
+                    if ($proceedAfterHashCheck) {
                         $returnCode = self::executeBinary($binaryFile, $commandOptions, $useNice, $logger);
                         if ($returnCode == 0) {
                             $success = true;
                         } else {
                             $errorMsg .= 'Tried executing supplied binary (' . $binaryFile . '), but that failed too: ';
                             switch ($returnCode) {
-                        case 126:
-                          $errorMsg .= 'Permission denied (user "' . trim(shell_exec('whoami')) . '" does not have permission to execute the binary)';
-                          break;
-                        default:
-                          $errorMsg .= 'Fail code: ' . $returnCode;
-                      }
+                                case 126:
+                                  $errorMsg .= 'Permission denied (user "' . trim(shell_exec('whoami')) . '" does not have permission to execute the binary)';
+                                  break;
+                                default:
+                                  $errorMsg .= 'Fail code: ' . $returnCode;
+                            }
                         }
                     }
                 } else {
