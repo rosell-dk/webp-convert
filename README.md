@@ -331,3 +331,9 @@ Furthermore, testing is done with Sebastian Bergmann's excellent testing framewo
 ```text
 composer test
 ```
+
+Individual test files can be executed like this:
+
+```text
+composer test tests/Converters/WPCTest
+```
