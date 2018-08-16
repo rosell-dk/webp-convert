@@ -100,7 +100,25 @@ class Wpc
         // Verify that we got an image back.
         if (curl_getinfo($ch, CURLINFO_CONTENT_TYPE) != 'application/octet-stream') {
             curl_close($ch);
-            throw new ConverterFailedException('We did not get an image back from WPC. This is what we got:' . $response);
+
+            if (substr($response, 0, 1) == '{') {
+                $responseObj = json_decode($response, true);
+                if (isset($responseObj['errorCode'])) {
+                    switch ($responseObj['errorCode']) {
+                        case 0:
+                            throw new ConverterFailedException('WPC reported problems with server setup: "' . $responseObj['errorMessage'] . '"');
+                        case 1:
+                            throw new ConverterFailedException('WPC denied us access to the service: "' . $responseObj['errorMessage'] . '"');
+                        default:
+                            throw new ConverterFailedException('WPC failed: "' . $responseObj['errorMessage'] . '"');
+                    }
+                }
+            }
+
+
+            $errorMsg = 'Error: Unexpected result. We did not receive an image. We received: "';
+            $errorMsg .= str_replace("\r", '', str_replace("\n", '', htmlentities(substr($response, 0, 400))));
+            throw new ConverterFailedException($errorMsg . '..."');
             //throw new ConverterNotOperationalException($response);
         }
 
