@@ -91,12 +91,15 @@ class Wpc
             throw new ConverterNotOperationalException('Curl error:' . curl_error($ch));
         }
 
+        // Check if we got a 404
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if ($httpCode == 404) {
+            curl_close($ch);
+            throw new ConverterFailedException('WPC was not found and the specified URL - we got a 404 response.');
+        }
 
         // The WPC cloud service either returns an image or an error message
         // Images has application/octet-stream.
-
-        // TODO: Check for 404 response, and handle that here
-
         // Verify that we got an image back.
         if (curl_getinfo($ch, CURLINFO_CONTENT_TYPE) != 'application/octet-stream') {
             curl_close($ch);
@@ -115,6 +118,10 @@ class Wpc
                 }
             }
 
+            // WPC 0.1 returns 'failed![error messag]' when conversion fails. Handle that.
+            if (substr($response, 0, 7) == 'failed!') {
+                throw new ConverterFailedException('WPC failed converting image: "' . substr($response, 7) . '"');
+            }
 
             $errorMsg = 'Error: Unexpected result. We did not receive an image. We received: "';
             $errorMsg .= str_replace("\r", '', str_replace("\n", '', htmlentities(substr($response, 0, 400))));
