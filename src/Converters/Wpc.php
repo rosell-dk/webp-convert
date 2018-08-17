@@ -46,7 +46,17 @@ class Wpc
 
 
         if (!function_exists('curl_file_create')) {
-            throw new ConverterNotOperationalException('Required curl_file_create() function is not available (requires PHP > 5.5).');
+            throw new ConverterNotOperationalException('Required curl_file_create() PHP function is not available (requires PHP > 5.5).');
+        }
+
+        if (!empty($options['secret'])) {
+            // if secret is set, we need md5() and md5_file() functions
+            if (!function_exists('md5')) {
+                throw new ConverterNotOperationalException('A secret has been set, which requires us to create a md5 hash from the secret and the file contents. But the required md5() PHP function is not available.');
+            }
+            if (!function_exists('md5_file')) {
+                throw new ConverterNotOperationalException('A secret has been set, which requires us to create a md5 hash from the secret and the file contents. But the required md5_file() PHP function is not available.');
+            }
         }
 
         // Got some code here:
