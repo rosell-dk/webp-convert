@@ -23,10 +23,19 @@ In summary, the current state of WebP conversion in PHP is this: There are sever
 ## Getting started
 
 ### Installation
-Simply require this plugin from the command line via [Composer](https://getcomposer.org):
+
+#### With composer:
+Simply require this library, like this:
 
 ```text
 composer require rosell-dk/webp-convert
+```
+
+#### Without composer:
+A file is maintained, that includes all the files in the library (in the right order). So, simply download the library and include "require-all.inc":
+
+```php
+require_once("path/to/this/library/that/you/downloaded/require-all.inc");
 ```
 
 ### Basic usage example
