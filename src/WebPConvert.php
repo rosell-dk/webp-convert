@@ -89,7 +89,13 @@ class WebPConvert
             }
         }
 
-        $logger->logLn('Conversion failed. None of the tried converters are operational', 'bold');
+        if ($firstFailException) {
+            // At least one converter failed or declined.
+            $logger->logLn('Conversion failed. None of the tried converters could convert the image', 'bold');
+        } else {
+            // All converters threw a ConverterNotOperationalException
+            $logger->logLn('Conversion failed. None of the tried converters are operational', 'bold');
+        }
 
         // No converters could do the job.
         // If one of them failed moderately bad, rethrow that exception.
