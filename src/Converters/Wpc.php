@@ -105,7 +105,7 @@ class Wpc
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         if ($httpCode == 404) {
             curl_close($ch);
-            throw new ConverterFailedException('WPC was not found and the specified URL - we got a 404 response.');
+            throw new ConverterFailedException('WPC was not found at the specified URL - we got a 404 response.');
         }
 
         // The WPC cloud service either returns an image or an error message
