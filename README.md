@@ -96,17 +96,17 @@ When setting the `converters` option, you can also set options for the converter
 
 Example:
 ```
-WebPConvert::convert($source, $destination, array(
-    'converters' => array(
+WebPConvert::convert($source, $destination, [
+    'converters' => [
         'cwebp',    
         'imagick',
-        array(
+        [
             'converter' => 'ewww',
-            'options' => array(            
+            'options' => [            
                 'key' => 'your api key here',
-            ),
-        ),
-    );
+            ],
+        ],
+    ];
 )
 ```
 
@@ -115,22 +115,22 @@ You use the `extra-converters` to append converters to the list defined by the `
 
 Example:
 ```
-WebPConvert::convert($source, $destination, array(
-    'extra-converters' => array(
-        array(
+WebPConvert::convert($source, $destination, [
+    'extra-converters' => [
+        [
             'converter' => 'ewww',
-            'options' => array(
+            'options' => [
                 'key' => 'your api key here',
-            ),
-        ),
-        array(
+            ],
+        ],
+        [
             'converter' => 'ewww',
-            'options' => array(
+            'options' => [
                 'key' => 'your other api key here, in case the first one has expired',
-            ),
-        ),
-    )
-));
+            ],
+        ],
+    ]
+]);
 ```
 This used to be the preferred way of adding cloud converters, because it allows putting converters to the list without removing the default ones. That way, if new converters should arrive, they would be included in the list. However, if you use *wpc*, you probably want that to prioritized over *gd* and *imagick*. In that case, you will have to go for the `converters` option, rather than the `extra-converters` option.
 
@@ -156,7 +156,7 @@ The converters may be called directly. But you probably don't want to do that, a
 
 [`cwebp`](#cwebp) works by executing the *cwebp* binary from Google. This should be your first choice. Its best in terms of quality, speed and options. The only catch is that it requires the `exec` function to be enabled, and that the webserver user is allowed to execute the `cwebp` binary (either at known system locations, or one of the precompiled binaries, that comes with this library). If you are on a shared host that doesn't allow that, you can turn to the `wpc` cloud converter.
 
- [`wpc`](#wpc) is an open source cloud converter based on *WebPConvert*. Conversions will of course be slower than *cwebp*, as images need to go back and forth to the cloud converter. As images usually just needs to be converted once, the slower conversion speed is probably acceptable. The conversion quality and options of *wpc* matches *cwebp*. The only catch is that you will need to install the *WPC* library on a server (or have someone do it for you). If this this is a problem, we suggest you turn to *ewww*. (PS: A Wordpress plugin is planned, making it easier to set up a WPC instance)
+ [`wpc`](#wpc) is an open source cloud converter based on *WebPConvert*. Conversions will of course be slower than *cwebp*, as images need to go back and forth to the cloud converter. As images usually just needs to be converted once, the slower conversion speed is probably acceptable. The conversion quality a[nd options of *wpc* matches *cwebp*. The only catch is that you will need to install the *WPC* library on a server (or have someone do it for you). If this this is a problem, we suggest you turn to *ewww*. (PS: A Wordpress plugin is planned, making it easier to set up a WPC instance)
 
 [`ewww`](#ewww) is also a cloud service. It is a decent alternative for those who don't have the technical know-how to install *wpc*. *ewww* is using cwebp to do the conversion, so quality is great. *ewww* however only provides one conversion option (quality), and it is not free. But very cheap. Like in *almost* free.
 
@@ -222,16 +222,16 @@ To use it, simply add it as extra converter with `url` option set to the correct
 Example:
 
 ```php
-WebPConvert::convert($source, $destination, array(
-    'extra-converters' => array(
-        array(
+WebPConvert::convert($source, $destination, [
+    'extra-converters' => [
+        [
             'converter' => 'wpc',
-            'options' => array(
+            'options' => [
                 'url' => 'http://example.com/wpc.php',
                 'secret' => 'my dog is white',
-            ),
-        ),
-    )
+            ],
+        ],
+    ]
 ));
 ```
 
