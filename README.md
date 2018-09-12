@@ -156,7 +156,7 @@ The converters may be called directly. But you probably don't want to do that, a
 
 [`cwebp`](#cwebp) works by executing the *cwebp* binary from Google. This should be your first choice. Its best in terms of quality, speed and options. The only catch is that it requires the `exec` function to be enabled, and that the webserver user is allowed to execute the `cwebp` binary (either at known system locations, or one of the precompiled binaries, that comes with this library). If you are on a shared host that doesn't allow that, you can turn to the `wpc` cloud converter.
 
- [`wpc`](#wpc) is an open source cloud converter based on *WebPConvert*. Conversions will of course be slower than *cwebp*, as images need to go back and forth to the cloud converter. As images usually just needs to be converted once, the slower conversion speed is probably acceptable. The conversion quality a[nd options of *wpc* matches *cwebp*. The only catch is that you will need to install the *WPC* library on a server (or have someone do it for you). If this this is a problem, we suggest you turn to *ewww*. (PS: A Wordpress plugin is planned, making it easier to set up a WPC instance)
+ [`wpc`](#wpc) is an open source cloud converter based on *WebPConvert*. Conversions will of course be slower than *cwebp*, as images need to go back and forth to the cloud converter. As images usually just needs to be converted once, the slower conversion speed is probably acceptable. The conversion quality and options of *wpc* matches *cwebp*. The only catch is that you will need to install the *WPC* library on a server (or have someone do it for you). If this this is a problem, we suggest you turn to *ewww*. (PS: A Wordpress plugin is planned, making it easier to set up a WPC instance)
 
 [`ewww`](#ewww) is also a cloud service. It is a decent alternative for those who don't have the technical know-how to install *wpc*. *ewww* is using cwebp to do the conversion, so quality is great. *ewww* however only provides one conversion option (quality), and it is not free. But very cheap. Like in *almost* free.
 
@@ -168,13 +168,13 @@ The converters may be called directly. But you probably don't want to do that, a
 
 *WebPConvert* currently supports the following converters:
 
-| Converter                            | Method                                         | Quality                                       | Requirements                                       |
-| ------------------------------------ | ---------------------------------------------- | --------------------------------------------- |
-| [`cwebp`](#cwebp)             | Calls `cwebp` binary directly                | best | `exec()` function *and* that the webserver user has permission to run `cwebp` binary      |
-| [`wpc`](#wpc) | Connects to WPC cloud service                      | best | A working *WPC* installation                |
-| [`ewww`](#ewww)        | Connects to *EWWW Image Optimizer* cloud service           | great | Purchasing a key     |
-| [`gd`](#gd)            | GD Graphics (Draw) extension (`LibGD` wrapper) | good | GD PHP extension compiled with WebP support  |
-| [`imagick`](#imagick)            | Imagick extension (`ImageMagick` wrapper)      | so-so | Imagick PHP extension compiled with WebP support |
+| Converter                            | Method                                           | Quality | Requirements                                       |
+| ------------------------------------ | ------------------------------------------------ | --------| -------------------------------------------------- |
+| [`cwebp`](#cwebp)                    | Calls `cwebp` binary directly                    | best    | `exec()` function *and* that the webserver user has permission to run `cwebp` binary |
+| [`wpc`](#wpc)                        | Connects to WPC cloud service                    | best    | A working *WPC* installation                       |
+| [`ewww`](#ewww)                      | Connects to *EWWW Image Optimizer* cloud service | great   | Purchasing a key                                   |
+| [`gd`](#gd)                          | GD Graphics (Draw) extension (`LibGD` wrapper)   | good    | GD PHP extension compiled with WebP support        |
+| [`imagick`](#imagick)                | Imagick extension (`ImageMagick` wrapper)        | so-so   | Imagick PHP extension compiled with WebP support   |
 
 
 ### cwebp
