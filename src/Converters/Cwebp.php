@@ -105,7 +105,7 @@ class Cwebp
     }
 
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options = [], $logger)
+    public static function doConvert($source, $destination, $options, $logger)
     {
         $errorMsg = '';
         // Force lossless option to true for PNG images
