@@ -5,9 +5,26 @@
   "license": "MIT",
   "keywords": ["webp", "images", "cwebp", "imagick", "gd", "jpg2webp", "png2webp", "jpg", "png", "image conversion"],
   "scripts": {
+    "ci": [
+      "@test",
+      "@phpcs",
+      "@composer validate --no-check-all --strict"
+    ],
+    "cs-fix-all": [
+      "php-cs-fixer fix src"
+    ],
     "cs-fix": "php-cs-fixer fix",
     "cs-dry": "php-cs-fixer fix --dry-run --diff",
-    "test": "phpunit"
+    "test": "phpunit",
+    "phpcs": "phpcs --standard=PSR2 src"
+  },
+  "extra": {
+      "scripts-descriptions": {
+        "ci": "Run tests before CI",
+        "cs-fix-all": "Fix the coding style of all the source files, to comply with the PSR-2 coding standard",
+        "cs-fix": "Fix the coding style of a PHP file or directory, which you must specify.",
+        "test": "Launches the preconfigured PHPUnit"
+      }
   },
   "autoload": {
     "psr-4": { "WebPConvert\\": "src/" }
@@ -29,6 +46,10 @@
   ],
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^2.11",
-    "phpunit/phpunit": "5.7.27"
+    "phpunit/phpunit": "5.7.27",
+    "squizlabs/php_codesniffer": "3.*"
+  },
+  "config": {
+    "sort-packages": true
   }
 }
