@@ -77,7 +77,7 @@ To see all options, look at the API: [docs/api/convert-and-serve.md](https://git
 
 
 ## WebP on demand
-The library can be used to create a *WebP On Demand* solution, which automatically serves WebP images instead of jpeg/pngs for browsers that supports WebP. Setting that up is described in the docs. To set this up, follow the instructions in [docs/webp-on-demand/webp-on-demand.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/webp-on-demand/webp-on-demand.md)
+The library can be used to create a *WebP On Demand* solution, which automatically serves WebP images instead of jpeg/pngs for browsers that supports WebP. To set this up is described  [in this tutorial](https://github.com/rosell-dk/webp-convert/blob/master/docs/webp-on-demand/webp-on-demand.md)
 
 
 ## WebP Convert in the wild
