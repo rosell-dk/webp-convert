@@ -100,8 +100,8 @@ Other tweaking is described in *docs/webp-on-demand/tweaks.md*:
 If images are neither routed to the converter or a 404, it means that the redirect rule isn't taking effect. Common reasons for this includes:
 
 - Perhaps there are other rules in your *.htaccess* that interfere with the rules?
-- Perhaps your site is on *Apache*, but it has been configured to use *Nginx* to serve image files. You then need to reconfigure your server setup. Or create Nginx rules. There are some [here](https://github.com/S1SYPHOS/kirby-webp#nginx).
-- Perhaps the server isn't configured to allow .htaccess files? Try inserting rubbish in the top of the .htaccess file and refresh. You should now see an *Internal Server Error* error page. If you don't, your .htaccess file is ignored. Probably you will need to set *AllowOverride All* in your Virtual Host. [Look here for more help](
+- Perhaps your site is on *Apache*, but it has been configured to use *Nginx* to serve image files. To find out which server that is handling the images, browse to an image and eximine the "Server" response header. In case *NGINX* are serving images, see if you can reconfigure your server setup. Alternatively, you can create *NGINX* rewrite rules. There are some [here](https://github.com/S1SYPHOS/kirby-webp#nginx).
+- Perhaps the server isn't configured to allow *.htaccess* files? Try inserting rubbish in the top of the *.htaccess* file and refresh. You should now see an *Internal Server Error* error page. If you don't, your *.htaccess* file is ignored. Probably you will need to set *AllowOverride All* in your Virtual Host. [Look here for more help](
 https://docs.bolt.cm/3.4/howto/making-sure-htaccess-works#test-if-htaccess-is-working)
 
 
