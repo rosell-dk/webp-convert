@@ -289,7 +289,7 @@ class ConverterHelper
     // Throws an exception if the provided file doesn't exist
     public static function isValidTarget($filePath)
     {
-        if (!file_exists($filePath)) {
+        if (!@file_exists($filePath)) {
             throw new TargetNotFoundException('File or directory not found: ' . $filePath);
         }
 
@@ -308,9 +308,10 @@ class ConverterHelper
     }
 
     // Creates folder in provided path & sets correct permissions
+    // also deletes the file at filePath (if it already exists)
     public static function createWritableFolder($filePath)
     {
-        $folder = pathinfo($filePath, PATHINFO_DIRNAME);
+        $folder = dirname($filePath);
         if (!@file_exists($folder)) {
             // TODO: what if this is outside open basedir?
             // see http://php.net/manual/en/ini.core.php#ini.open-basedir
@@ -328,35 +329,40 @@ class ConverterHelper
 
             // Retrieving permissions of closest existing folder
             $closestExistingFolder = implode('/', $parentFolders);
-            $permissions = fileperms($closestExistingFolder) & 000777;
+            $permissions = @fileperms($closestExistingFolder) & 000777;
+            $stat = @stat($closestExistingFolder);
 
-            // Trying to create the given folder
+            // Trying to create the given folder (recursively)
             if (!@mkdir($folder, $permissions, true)) {
                 throw new CreateDestinationFolderException('Failed creating folder: ' . $folder);
             }
-
 
             // `mkdir` doesn't always respect permissions, so we have to `chmod` each created subfolder
             foreach ($poppedFolders as $subfolder) {
                 $closestExistingFolder .= '/' . $subfolder;
                 // Setting directory permissions
-                @chmod($folder, $permissions);
+                if ($permissions !== false) {
+                    @chmod($folder, $permissions);
+                }
+                if ($stat !== false) {
+                    if (isset($stat['uid'])) {
+                        @chown($folder, $stat['uid']);
+                    }
+                    if (isset($stat['gid'])) {
+                        @chgrp($folder, $stat['gid']);
+                    }
+                }
             }
         }
 
-        // Checks if there's a file in $filePath & if writing permissions are correct
-        if (@file_exists($filePath) && !@is_writable($filePath)) {
-            throw new CreateDestinationFileException(
-                'Cannot overwrite ' . basename($filePath) . ' - check file permissions.'
-            );
-        }
-
-        // There's either a rewritable file in $filePath or none at all.
-        // If there is, simply attempt to delete it
-        if (@file_exists($filePath) && !@unlink($filePath)) {
-            throw new CreateDestinationFileException(
-                'Existing file cannot be removed: ' . basename($filePath)
-            );
+        if (@file_exists($filePath)) {
+            // A file already exists in this folder...
+            // We delete it, to make way for a new webp
+            if (!@unlink($filePath)) {
+                throw new CreateDestinationFileException(
+                    'Existing file cannot be removed: ' . basename($filePath)
+                );
+            }
         }
 
         return true;
