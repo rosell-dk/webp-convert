@@ -14,28 +14,37 @@ Then install the dev tools with composer:
 composer install
 ```
 
-## Coding style fixing
-
-`WebPConvert` uses the [PHP-CS-FIXER](https://github.com/FriendsOfPHP/PHP-CS-Fixer) library (based on squizlabs' [PHP_CodeSniffer](https://github.com/squizlabs/PHP_CodeSniffer)) so all PHP files automagically comply with the [PSR-2](https://www.php-fig.org/psr/psr-2/) coding standard.
-
-```
-// Dry run - without making changes to any files
-composer cs-dry
-
-// Production mode
-composer cs-fix
-```
-
-## Unit testing
-
-Testing is done with Sebastian Bergmann's excellent testing framework [PHPUnit](https://github.com/sebastianbergmann/phpunit), like this:
-
+## Unit Testing
+To run all the unit tests do this:
 ```
 composer test
 ```
 
 Individual test files can be executed like this:
-
 ```
 composer test tests/Converters/WPCTest
+```
+
+## Coding styles
+WebPConvert complies with the [PSR-2](https://www.php-fig.org/psr/psr-2/) coding standard.
+
+To validate coding style of all files, do this:
+```
+composer phpcs src
+```
+
+To automatically fix the coding style of all files, using [PHP_CodeSniffer](https://github.com/squizlabs/PHP_CodeSniffer), do this:
+```
+composer phpcbf src
+```
+
+Or, alternatively, you can fix with the use the [PHP-CS-FIXER](https://github.com/FriendsOfPHP/PHP-CS-Fixer) library instead:
+```
+composer cs-fix
+```
+
+## Running all tests in one command
+The following script runs the unit tests, checks the coding styles and validates composer.json. Run this before pushing to github
+```
+composer ci
 ```
