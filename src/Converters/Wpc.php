@@ -33,7 +33,9 @@ class Wpc
     public static function doConvert($source, $destination, $options, $logger)
     {
         if ($options['url'] == '') {
-            throw new ConverterNotOperationalException('Missing URL. You must install WebpConvertCloudService on a server, and supply url');
+            throw new ConverterNotOperationalException(
+                'Missing URL. You must install WebpConvertCloudService on a server, and supply url'
+            );
         }
 
         if (!extension_loaded('curl')) {
@@ -46,16 +48,25 @@ class Wpc
 
 
         if (!function_exists('curl_file_create')) {
-            throw new ConverterNotOperationalException('Required curl_file_create() PHP function is not available (requires PHP > 5.5).');
+            throw new ConverterNotOperationalException(
+                'Required curl_file_create() PHP function is not available (requires PHP > 5.5).'
+            );
         }
 
         if (!empty($options['secret'])) {
             // if secret is set, we need md5() and md5_file() functions
             if (!function_exists('md5')) {
-                throw new ConverterNotOperationalException('A secret has been set, which requires us to create a md5 hash from the secret and the file contents. But the required md5() PHP function is not available.');
+                throw new ConverterNotOperationalException(
+                    'A secret has been set, which requires us to create a md5 hash from the secret and the file ' .
+                    'contents. ' .
+                    'But the required md5() PHP function is not available.'
+                );
             }
             if (!function_exists('md5_file')) {
-                throw new ConverterNotOperationalException('A secret has been set, which requires us to create a md5 hash from the secret and the file contents. But the required md5_file() PHP function is not available.');
+                throw new ConverterNotOperationalException(
+                    'A secret has been set, which requires us to create a md5 hash from the secret and the file ' .
+                    'contents. But the required md5_file() PHP function is not available.'
+                );
             }
         }
 
@@ -105,7 +116,9 @@ class Wpc
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         if ($httpCode == 404) {
             curl_close($ch);
-            throw new ConverterFailedException('WPC was not found at the specified URL - we got a 404 response.');
+            throw new ConverterFailedException(
+                'WPC was not found at the specified URL - we got a 404 response.'
+            );
         }
 
         // The WPC cloud service either returns an image or an error message
@@ -119,18 +132,27 @@ class Wpc
                 if (isset($responseObj['errorCode'])) {
                     switch ($responseObj['errorCode']) {
                         case 0:
-                            throw new ConverterFailedException('WPC reported problems with server setup: "' . $responseObj['errorMessage'] . '"');
+                            throw new ConverterFailedException(
+                                'WPC reported problems with server setup: "' .
+                                $responseObj['errorMessage'] . '"'
+                            );
                         case 1:
-                            throw new ConverterFailedException('WPC denied us access to the service: "' . $responseObj['errorMessage'] . '"');
+                            throw new ConverterFailedException(
+                                'WPC denied us access to the service: "' . $responseObj['errorMessage'] . '"'
+                            );
                         default:
-                            throw new ConverterFailedException('WPC failed: "' . $responseObj['errorMessage'] . '"');
+                            throw new ConverterFailedException(
+                                'WPC failed: "' . $responseObj['errorMessage'] . '"'
+                            );
                     }
                 }
             }
 
             // WPC 0.1 returns 'failed![error messag]' when conversion fails. Handle that.
             if (substr($response, 0, 7) == 'failed!') {
-                throw new ConverterFailedException('WPC failed converting image: "' . substr($response, 7) . '"');
+                throw new ConverterFailedException(
+                    'WPC failed converting image: "' . substr($response, 7) . '"'
+                );
             }
 
             $errorMsg = 'Error: Unexpected result. We did not receive an image. We received: "';

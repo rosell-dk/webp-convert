@@ -1,4 +1,4 @@
-<?php 
+<?php
 require_once(__DIR__  . "/Exceptions/WebPConvertBaseException.php");
 require_once(__DIR__  . "/Loggers/BaseLogger.php");
 require_once(__DIR__  . "/WebPConvert.php");

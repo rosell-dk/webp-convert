@@ -24,7 +24,9 @@ class Imagick
         }
 
         if (!class_exists('Imagick')) {
-            throw new ConverterNotOperationalException('iMagick is installed, but not correctly. The class Imagick is not available');
+            throw new ConverterNotOperationalException(
+                'iMagick is installed, but not correctly. The class Imagick is not available'
+            );
         }
 
         $im = new \Imagick($source);

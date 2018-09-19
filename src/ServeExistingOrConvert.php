@@ -59,7 +59,6 @@ class ServeExistingOrConvert
             return false;  // original image, because converted is larger
         }
         return true;
-
     }
 
     public static function serveExisting($destination, $options)
@@ -98,10 +97,14 @@ class ServeExistingOrConvert
 
     private static function setErrorReporting($options)
     {
-        if (($options['error-reporting'] === true) || (($options['error-reporting'] === 'auto') && ($options['show-report'] === true))) {
+        if (($options['error-reporting'] === true) ||
+            (($options['error-reporting'] === 'auto') && ($options['show-report'] === true))
+        ) {
             error_reporting(E_ALL);
             ini_set('display_errors', 'On');
-        } elseif (($options['error-reporting'] === false) || (($options['error-reporting'] === 'auto') && ($options['show-report'] === false))) {
+        } elseif (($options['error-reporting'] === false) ||
+            (($options['error-reporting'] === 'auto') && ($options['show-report'] === false))
+        ) {
             error_reporting(0);
             ini_set('display_errors', 'Off');
         }

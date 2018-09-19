@@ -89,18 +89,24 @@ class Cwebp
         exec($command, $output, $returnCode);
 
         switch ($returnCode) {
-        case 0:
-          $logger->logLn('Success!');
-          break;
-        case 126:
-          $logger->logLn('Permission denied. The user that the command was run with (' . shell_exec('whoami') . ') does not have permission to execute that binary.');
-          break;
-        case 127:
-          $logger->logLn('No binary found at that location');
-          break;
-        default:
-          $logger->logLn('Failed. Return code:' .  $returnCode . '. See http://tldp.org/LDP/abs/html/exitcodes.html for failcodes');
-      }
+            case 0:
+                $logger->logLn('Success!');
+                break;
+            case 126:
+                $logger->logLn(
+                    'Permission denied. The user that the command was run with (' .
+                    shell_exec('whoami') . ') does not have permission to execute that binary.'
+                );
+                break;
+            case 127:
+                $logger->logLn('No binary found at that location');
+                break;
+            default:
+                $logger->logLn(
+                    'Failed. Return code:' .  $returnCode .
+                    '. See http://tldp.org/LDP/abs/html/exitcodes.html for failcodes'
+                );
+        }
         return $returnCode;
     }
 
@@ -138,7 +144,8 @@ class Cwebp
         // TODO:
         // Why not use -af ?  (https://developers.google.com/speed/webp/docs/cwebp)
         // Would it be possible get a quality similar to source?
-        // It seems so: "identify -format '%Q' yourimage.jpg" (https://stackoverflow.com/questions/2024947/is-it-possible-to-tell-the-quality-level-of-a-jpeg)
+        // It seems so: "identify -format '%Q' yourimage.jpg"
+        // (https://stackoverflow.com/questions/2024947/is-it-possible-to-tell-the-quality-level-of-a-jpeg)
         // -- With -jpeg_like option, or perhaps the -size option
 
         // Built-in low memory option
@@ -183,14 +190,15 @@ class Cwebp
         if (!$success) {
             //$logger->logLn('');
             if (count($cwebpPathsToTest) > 0) {
-                $errorMsg .= 'Found cwebp binaries at these locations: "' . implode('", "', $cwebpPathsToTest) . '". However, executing these failed. ';
+                $errorMsg .= 'Found cwebp binaries at these locations: "' .
+                    implode('", "', $cwebpPathsToTest) .
+                    '". However, executing these failed. ';
             } else {
                 $errorMsg .= 'Found no cwebp binaries in any common locations. ';
             }
         }
 
         if (!$success) {
-
           // Try supplied binary (if available for OS, and hash is correct)
             if (isset(self::$suppliedBinariesInfo[PHP_OS])) {
                 $info = self::$suppliedBinariesInfo[PHP_OS];
@@ -212,7 +220,11 @@ class Cwebp
                         $binaryHash = hash_file('sha256', $binaryFile);
 
                         if ($binaryHash != $hash) {
-                            $errorMsg .= 'Binary checksum of supplied binary is invalid! Did you transfer with FTP, but not in binary mode? File:' . $binaryFile . '. Expected checksum: ' . $hash . ' Actual checksum:' . $binaryHash . '. ';
+                            $errorMsg .= 'Binary checksum of supplied binary is invalid! ' .
+                                'Did you transfer with FTP, but not in binary mode? ' .
+                                'File:' . $binaryFile . '. ' .
+                                'Expected checksum: ' . $hash . '. ' .
+                                'Actual checksum:' . $binaryHash . '.';
                             $proceedAfterHashCheck = false;
                         }
                     }
@@ -224,10 +236,12 @@ class Cwebp
                             $errorMsg .= 'Tried executing supplied binary (' . $binaryFile . '), but that failed too: ';
                             switch ($returnCode) {
                                 case 126:
-                                  $errorMsg .= 'Permission denied (user "' . trim(shell_exec('whoami')) . '" does not have permission to execute the binary)';
-                                  break;
+                                    $errorMsg .= 'Permission denied (user "' .
+                                        trim(shell_exec('whoami')) .
+                                        '" does not have permission to execute the binary)';
+                                    break;
                                 default:
-                                  $errorMsg .= 'Fail code: ' . $returnCode;
+                                    $errorMsg .= 'Fail code: ' . $returnCode;
                             }
                         }
                     }

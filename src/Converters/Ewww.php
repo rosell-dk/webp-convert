@@ -29,7 +29,9 @@ class Ewww
             throw new ConverterNotOperationalException('Missing API key.');
         }
         if (strlen($options['key']) < 20) {
-            throw new ConverterNotOperationalException('Key is invalid. Keys are supposed to be 32 characters long - your key is much shorter');
+            throw new ConverterNotOperationalException(
+                'Key is invalid. Keys are supposed to be 32 characters long - your key is much shorter'
+            );
         }
 
         $keyStatus = self::getKeyStatus($options['key']);
@@ -96,7 +98,10 @@ class Ewww
                 throw new ConverterNotOperationalException('The key is invalid');
             }
 
-            throw new ConverterNotOperationalException('ewww api did not return an image. It could be that the key is invalid. Response: ' . $response);
+            throw new ConverterNotOperationalException(
+                'ewww api did not return an image. It could be that the key is invalid. Response: '
+                . $response
+            );
         }
 
         // Not sure this can happen. So just in case
@@ -138,7 +143,11 @@ class Ewww
         );
 
         // The 403 forbidden is avoided with this line.
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)');
+        curl_setopt(
+            $ch,
+            CURLOPT_USERAGENT,
+            'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)'
+        );
 
         $response = curl_exec($ch);
         // echo $response;
@@ -197,7 +206,11 @@ class Ewww
             'api_key' => $key
             ]
         );
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)');
+        curl_setopt(
+            $ch,
+            CURLOPT_USERAGENT,
+            'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)'
+        );
 
         $response = curl_exec($ch);
         return $response; // ie -830 23. Seems to return empty for invalid keys

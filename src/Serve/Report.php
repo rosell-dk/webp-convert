@@ -5,7 +5,6 @@ use WebPConvert\WebPConvert;
 use WebPConvert\Converters\ConverterHelper;
 use WebPConvert\Loggers\EchoLogger;
 
-
 //use WebPConvert\Loggers\EchoLogger;
 
 class Report
@@ -60,7 +59,7 @@ class Report
         return $printable_options;
     }
 
-    public static function getPrintableOptionsAsString($options, $glue='. ')
+    public static function getPrintableOptionsAsString($options, $glue = '. ')
     {
         $optionsForPrint = [];
         foreach (self::getPrintableOptions($options) as $optionName => $optionValue) {
@@ -91,7 +90,6 @@ class Report
                     $glueMe[] = '(' . $converter . ': (' . implode($opt, ', ') . '))';
                 }
                 $printValue = implode(',', $glueMe);
-
             } else {
                 switch (gettype($optionValue)) {
                     case 'boolean':
@@ -140,7 +138,9 @@ class Report
                 <td><i>options:</i></td>
                 <td>
                     <i style="text-decoration:underline;cursor:pointer" onclick="showOptions(this)">click to see</i>
-                    <pre id="options" style="display:none"><?php echo print_r(self::getPrintableOptionsAsString($options, '<br>'), true); ?></pre>
+                    <pre id="options" style="display:none"><?php
+                        echo print_r(self::getPrintableOptionsAsString($options, '<br>'), true);
+                    ?></pre>
                     <?php //echo json_encode(self::getPrintableOptions($options)); ?>
                     <?php //echo print_r(self::getPrintableOptions($options), true); ?>
                 </td>
@@ -172,6 +172,6 @@ class Report
         ?>
     </body>
     </html>
-    <?php
+        <?php
     }
 }

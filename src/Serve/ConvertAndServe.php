@@ -174,7 +174,6 @@ class ConvertAndServe
 
 
         if (@file_exists($destination)) {
-
             if (ServeExistingOrConvert::shouldWeServeExisting($source, $destination, $options)) {
                 return ServeExistingOrConvert::serveExisting($destination, $options);
             }
@@ -273,7 +272,5 @@ class ConvertAndServe
         self::fail($description, $failArgs);
         return false;
         //echo '<p>This is how conversion process went:</p>' . $bufferLogger->getHtml();
-
     }
-
 }

@@ -40,19 +40,27 @@ class Gd
             case 'png':
                 if (!$options['skip-pngs']) {
                     if (!function_exists('imagecreatefrompng')) {
-                        throw new ConverterNotOperationalException('Required imagecreatefrompng() function is not available.');
+                        throw new ConverterNotOperationalException(
+                            'Required imagecreatefrompng() function is not available.'
+                        );
                     }
                     $image = imagecreatefrompng($source);
                     if (!$image) {
-                        throw new ConverterFailedException('imagecreatefrompng("' . $source . '") failed');
+                        throw new ConverterFailedException(
+                            'imagecreatefrompng("' . $source . '") failed'
+                        );
                     }
                 } else {
-                    throw new ConversionDeclinedException('PNG file skipped. GD is configured not to convert PNGs');
+                    throw new ConversionDeclinedException(
+                        'PNG file skipped. GD is configured not to convert PNGs'
+                    );
                 }
                 break;
             default:
                 if (!function_exists('imagecreatefromjpeg')) {
-                    throw new ConverterNotOperationalException('Required imagecreatefromjpeg() function is not available.');
+                    throw new ConverterNotOperationalException(
+                        'Required imagecreatefromjpeg() function is not available.'
+                    );
                 }
                 $image = imagecreatefromjpeg($source);
                 if (!$image) {

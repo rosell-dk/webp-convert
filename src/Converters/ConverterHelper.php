@@ -42,8 +42,14 @@ class ConverterHelper
     /* Call the "convert" method on a converter, by id.
        - but also prepares options (merges in the $extraOptions of the converter),
          prepares destination folder, and runs some standard validations */
-    public static function runConverter($converterId, $source, $destination, $options = [], $prepareDestinationFolder = true, $logger = null)
-    {
+    public static function runConverter(
+        $converterId,
+        $source,
+        $destination,
+        $options = [],
+        $prepareDestinationFolder = true,
+        $logger = null
+    ) {
         if ($prepareDestinationFolder) {
             self::prepareDestinationFolderAndRunCommonValidations($source, $destination);
         }
@@ -130,7 +136,8 @@ class ConverterHelper
                 $converterId = $converter;
                 $converterOptions = [];
                 if (isset($options['converter-options'][$converterId])) {
-                    // Note: right now, converter-options are not meant to be used, when you have several converters of the same type
+                    // Note: right now, converter-options are not meant to be used,
+                    //       when you have several converters of the same type
                     $converterOptions = $options['converter-options'][$converterId];
                 }
             }
@@ -215,7 +222,6 @@ class ConverterHelper
         }
 
         if (function_exists('shell_exec')) {
-
         // Try Imagick
             $quality = shell_exec("identify -format '%Q' " . $filename);
             if ($quality) {
@@ -240,13 +246,19 @@ class ConverterHelper
             //$logger->log('Quality set to auto... Quality of source: ');
             if (!$q) {
                 $q = $options['default-quality'];
-                $logger->logLn('Quality of source could not be established (Imagick or GraphicsMagick is required) - Using default instead (' . $options['default-quality'] . ').');
+                $logger->logLn(
+                    'Quality of source could not be established (Imagick or GraphicsMagick is required)' .
+                    ' - Using default instead (' . $options['default-quality'] . ').'
+                );
 
                 // this allows the wpc converter to know
                 $options['_quality_could_not_be_detected'] = true;
             } else {
                 if ($q > $options['max-quality']) {
-                    $logger->log('Quality of source is ' . $q . '. This is higher than max-quality, so using that instead (' . $options['max-quality'] . ')');
+                    $logger->log(
+                        'Quality of source is ' . $q . '. ' .
+                        'This is higher than max-quality, so using that instead (' . $options['max-quality'] . ')'
+                    );
                 } else {
                     $logger->log('Quality set to same as source: ' . $q);
                 }
@@ -257,7 +269,10 @@ class ConverterHelper
             $options['_calculated_quality'] = $q;
         //$logger->logLn('Using quality: ' . $options['quality']);
         } else {
-            $logger->logLn('Quality: ' . $options['quality'] . '. Consider setting quality to "auto" instead. It is generally a better idea');
+            $logger->logLn(
+                'Quality: ' . $options['quality'] . '. ' .
+                'Consider setting quality to "auto" instead. It is generally a better idea'
+            );
             $options['_calculated_quality'] = $options['quality'];
         }
         $logger->ln();
@@ -331,13 +346,17 @@ class ConverterHelper
 
         // Checks if there's a file in $filePath & if writing permissions are correct
         if (file_exists($filePath) && !is_writable($filePath)) {
-            throw new CreateDestinationFileException('Cannot overwrite ' . basename($filePath) . ' - check file permissions.');
+            throw new CreateDestinationFileException(
+                'Cannot overwrite ' . basename($filePath) . ' - check file permissions.'
+            );
         }
 
         // There's either a rewritable file in $filePath or none at all.
         // If there is, simply attempt to delete it
         if (file_exists($filePath) && !unlink($filePath)) {
-            throw new CreateDestinationFileException('Existing file cannot be removed: ' . basename($filePath));
+            throw new CreateDestinationFileException(
+                'Existing file cannot be removed: ' . basename($filePath)
+            );
         }
 
         return true;
@@ -361,7 +380,9 @@ class ConverterHelper
         }
 
         if (!function_exists('curl_file_create')) {
-            throw new ConverterNotOperationalException('Required curl_file_create() function is not available (requires PHP > 5.5).');
+            throw new ConverterNotOperationalException(
+                'Required curl_file_create() function is not available (requires PHP > 5.5).'
+            );
         }
 
         $ch = curl_init();
