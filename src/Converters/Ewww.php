@@ -23,7 +23,7 @@ class Ewww
     }
 
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options = [], $logger)
+    public static function doConvert($source, $destination, $options, $logger)
     {
         if ($options['key'] == '') {
             throw new ConverterNotOperationalException('Missing API key.');
@@ -55,7 +55,9 @@ class Ewww
             'metadata' => ($options['metadata'] == 'none' ? '0' : '1')
         ];
 
-        curl_setopt_array($ch, [
+        curl_setopt_array(
+            $ch,
+            [
             CURLOPT_URL => "https://optimize.exactlywww.com/v2/",
             CURLOPT_HTTPHEADER => [
                 'User-Agent: WebPConvert',
@@ -66,7 +68,8 @@ class Ewww
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER => false,
             CURLOPT_SSL_VERIFYPEER => false
-        ]);
+            ]
+        );
 
         $response = curl_exec($ch);
 
@@ -80,7 +83,6 @@ class Ewww
         // Images has application/octet-stream.
         // So verify that we got an image back.
         if (curl_getinfo($ch, CURLINFO_CONTENT_TYPE) != 'application/octet-stream') {
-
             //echo curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
             curl_close($ch);
 
@@ -127,9 +129,13 @@ class Ewww
 
         curl_setopt($ch, CURLOPT_URL, "https://optimize.exactlywww.com/verify/");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, [
+        curl_setopt(
+            $ch,
+            CURLOPT_POSTFIELDS,
+            [
             'api_key' => $key
-        ]);
+            ]
+        );
 
         // The 403 forbidden is avoided with this line.
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)');
@@ -184,9 +190,13 @@ class Ewww
 
         curl_setopt($ch, CURLOPT_URL, "https://optimize.exactlywww.com/quota/");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, [
+        curl_setopt(
+            $ch,
+            CURLOPT_POSTFIELDS,
+            [
             'api_key' => $key
-        ]);
+            ]
+        );
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)');
 
         $response = curl_exec($ch);
