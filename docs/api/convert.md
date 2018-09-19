@@ -26,10 +26,11 @@ Many options correspond to options of *cwebp*. These are documented [here](https
 | low-memory        | Boolean | false                       | Reduce memory usage of lossy encoding by saving four times the compressed size (typically) |
 | lossless          | Boolean | false                       | Encode the image without any loss. The option is ignored for PNG's (forced true) |
 | converters        | Array   | ['cwebp', 'gd', 'imagick']  | Specify conversion methods to use, and their order. Also optionally set converter options (see below) |
-| converter-options | Array   | []                          | Set options of the individual converters (see below) |
+| converter-options | Array   | []                          | <b>Upcoming in v1.2.0</b>. Set options of the individual converters (see below) |
 
 
 #### More on the `converter-options` option
+***This option is available in master and will be part of the upcoming v1.2.0***
 You use this option to set options for the individual converters. Example:
 
 ```
