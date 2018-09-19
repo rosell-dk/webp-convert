@@ -37,7 +37,10 @@ $success = WebPConvert::convert($source, $destination, [
     // We set some, for the sake of the example.
     'quality' => 'auto',
     'max-quality' => 80,
-    'converters' => ['cwebp', 'gd', 'imagick', 'wpc', 'ewww'],
+    'converters' => ['cwebp', 'gd', 'imagick', 'wpc', 'ewww'],  // Specify conversion methods to use, and their order
+
+    // Note: the next option is only available in master (will be available in v1.2.0)
+    // In pre 1.2.0, you set the options in the converters array (see docs)
     'converter-options' => [
         'ewww' => [
             'key' => 'your-api-key-here'
