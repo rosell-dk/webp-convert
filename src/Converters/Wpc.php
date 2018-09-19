@@ -161,11 +161,11 @@ class Wpc
             //throw new ConverterNotOperationalException($response);
         }
 
-        $success = file_put_contents($destination, $response);
+        $success = @file_put_contents($destination, $response);
         curl_close($ch);
 
         if (!$success) {
-            throw new ConverterFailedException('Error saving file');
+            throw new ConverterFailedException('Error saving file. Check file permissions');
         }
         /*
                 $curlOptions = [
