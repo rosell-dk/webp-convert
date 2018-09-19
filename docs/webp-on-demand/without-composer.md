@@ -5,7 +5,7 @@ For your convenience, the library has been cooked down to two files: *webp-on-de
 ## Installing
 
 ### 1. Copy the latest build files into your website
-Copy *webp-on-demand.inc* and *webp-convert-and-serve.inc* from the *build* folder into your website. They can be located wherever you like.
+Copy *webp-on-demand-1.inc* and *webp-on-demand-2.inc* from the *build* folder into your website. They can be located wherever you like.
 
 ### 2. Create a *webp-on-demand.php*
 
