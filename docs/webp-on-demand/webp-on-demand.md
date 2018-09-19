@@ -17,7 +17,7 @@ A setup consists of a PHP script that serves converted images and some *redirect
 
 ## Installation
 
-Here we assume you are using Composer. [Not using composer? - Follow me!](https://github.com/rosell-dk/webp-convert/blob/master/docs/webp-on-demand-without-composer.md)
+Here we assume you are using Composer. [Not using composer? - Follow me!](https://github.com/rosell-dk/webp-convert/blob/master/docs/webp-on-demand/without-composer.md)
 
 ### 1. Require this library with composer
 ```
@@ -85,13 +85,13 @@ It should work now, but to be absolute sure:
 
 ### 5. Customizing and tweaking
 
-Basic customizing is done by setting options in the `$options` array. Check out the [docs on convert()](https://github.com/rosell-dk/webp-convert/blob/master/docs/api-convert.md) and the [docs on convertAndServe()](https://github.com/rosell-dk/webp-convert/)
+Basic customizing is done by setting options in the `$options` array. Check out the [docs on convert()](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert.md) and the [docs on convertAndServe()](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert-and-serve.md)
 
-Other tweaking is described in *docs/webp-on-demand-tweaks.md*:
-- [Store converted images in separate folder](https://github.com/rosell-dk/webp-convert/blob/master/docs/tweaks.md#store-converted-images-in-separate-folder)
-- [CDN](https://github.com/rosell-dk/webp-convert/blob/master/docs/tweaks.md#cdn)
-- [Make .htaccess route directly to existing images](https://github.com/rosell-dk/webp-convert/blob/master/docs/tweaks.md#make-htaccess-route-directly-to-existing-images)
-- [Forward the query string](https://github.com/rosell-dk/webp-convert/blob/master/docs/tweaks.md#forward-the-querystring)
+Other tweaking is described in *docs/webp-on-demand/tweaks.md*:
+- [Store converted images in separate folder](https://github.com/rosell-dk/webp-convert/blob/master/docs/webp-on-demand/tweaks.md#store-converted-images-in-separate-folder)
+- [CDN](https://github.com/rosell-dk/webp-convert/blob/master/docs/webp-on-demand/tweaks.md#cdn)
+- [Make .htaccess route directly to existing images](https://github.com/rosell-dk/webp-convert/blob/master/docs/webp-on-demand/tweaks.md#make-htaccess-route-directly-to-existing-images)
+- [Forward the query string](https://github.com/rosell-dk/webp-convert/blob/master/docs/webp-on-demand/tweaks.md#forward-the-querystring)
 
 
 ## Troubleshooting

@@ -17,7 +17,7 @@ composer require rosell-dk/webp-convert
 ```
 
 ## Converting images
-To convert an image, using a stack of converters, use the *WebPConvert::convert* method. It is documented in [docs/api-convert.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/api-convert.md).
+To convert an image, using a stack of converters, use the *WebPConvert::convert* method. It is documented in [docs/api/convert.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert.md).
 
 Here is an example:
 
@@ -54,7 +54,7 @@ $success = WebPConvert::convert($source, $destination, [
 
 To convert using a specific conversion method, simply set the *converters* option so it only has that method.
 
-The conversion methods (aka "converters") are documented here:   [docs/converters.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/docs/converters.md).
+The conversion methods (aka "converters") are documented here:   [docs/converters.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/converters.md).
 
 
 ## Serving converted images
@@ -69,11 +69,11 @@ $success = WebPConvert::convertAndServe($source, $destination, [
     // Besides the specific options for convertAndServe(), you can also use the options for convert()
 ]);
 ```
-To see all options, look at the API: [docs/api-convert-and-serve.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/api-convert-and-serve.md)
+To see all options, look at the API: [docs/api/convert-and-serve.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert-and-serve.md)
 
 
 ## WebP on demand
-The library can be used to create a *WebP On Demand* solution, which automatically serves WebP images instead of jpeg/pngs for browsers that supports WebP. Setting that up is described in the docs. To set this up, follow the instructions in [docs/webp-on-demand.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/webp-on-demand.md)
+The library can be used to create a *WebP On Demand* solution, which automatically serves WebP images instead of jpeg/pngs for browsers that supports WebP. Setting that up is described in the docs. To set this up, follow the instructions in [docs/webp-on-demand/webp-on-demand.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/webp-on-demand/webp-on-demand.md)
 
 
 ## WebP Convert in the wild
