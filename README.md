@@ -6,8 +6,8 @@
 
 This library enables you to do webp conversion with PHP using *cwebp*, *gd*, *imagick*, *ewww* cloud converter or the open source *wpc* cloud converter. It also allows you to try a whole stack &ndash; useful if you do not have control over the environment, and simply want the library to do *everything it can* to convert the image to webp.
 
-**New. Only available in master:**
-In addition to converting, the library also has a method for serving converted images, and we have instructions here on how to set up a solution for automatically serving webp images to browsers that supports webp.
+**New. Only available in master:** 
+In addition to converting, the library also has a method for *serving* converted images, and we have instructions here on how to set up a solution for automatically serving webp images to browsers that supports webp.
 
 ## Installation
 Require the library with *Composer*, like this:
