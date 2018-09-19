@@ -23,7 +23,7 @@ class ServeExistingOrConvert
     public static $defaultOptions = [
         'show-report' => false,
         'reconvert' => false,
-        'original' => false,
+        'serve-original' => false,
         'add-x-header-status' => true,
         'add-vary-header' => true,
         'error-reporting' => 'auto'
@@ -37,7 +37,7 @@ class ServeExistingOrConvert
         }
 
         // We should not serve existing if told directly otherwise
-        if ($options['reconvert'] || $options['original'] || $options['show-report']) {
+        if ($options['reconvert'] || $options['serve-original'] || $options['show-report']) {
             return false;
         }
 

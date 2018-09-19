@@ -17,7 +17,7 @@ class ConvertAndServe
 
         'show-report' => false,
         'reconvert' => false,
-        'original' => false,
+        'serve-original' => false,
         'add-x-header-status' => true,
         'add-x-header-options' => false,
         'add-vary-header' => true,
@@ -163,7 +163,7 @@ class ConvertAndServe
             return true;  // yeah, lets say that a report is always a success, even if conversion is a failure
         }
 
-        if ($options['original']) {
+        if ($options['serve-original']) {
             self::addXStatusHeader('Serving original image (was explicitly told to)', $options);
             if (!self::serveOriginal($source)) {
                 self::criticalFail('could not read source file', $failArgs);

@@ -36,7 +36,7 @@ Default value: *false*
 Force a conversion, discarding existing converted image (if any).
 Default value: *false*
 
-### *original*
+### *serve-original*
 Forces serving original image.  
 Default value: *false*
 
