@@ -65,7 +65,8 @@ Example:
 ```php
 <?php
 $success = WebPConvert::convertAndServe($source, $destination, [
-    'fail' => 'original',       // original | 404 | report-as-image | report
+    'fail' => 'original',            // original | 404 | report-as-image | report
+
     // Besides the specific options for convertAndServe(), you can also use the options for convert()
 ]);
 ```
