@@ -1,8 +1,6 @@
 # WebP On Demand without composer
 
-***THIS SOLUTION NEEDS TO BE UPDATED. The method only works in the webp-on-demand git repository. But I'm soon closing that one in favour of having it here***
-
-For your convenience, the library has been cooked down to two files: *webp-on-demand.inc* and *webp-convert-and-serve.inc*. The second one is loaded when the first one decides it needs to do a conversion (and not simply serve existing image).
+For your convenience, the library has been cooked down to two files: *webp-on-demand-1.inc* and *webp-on-demand-2.inc*. The second one is loaded when the first one decides it needs to do a conversion (and not simply serve existing image).
 
 ## Installing
 
@@ -17,9 +15,14 @@ Here is a minimal example to get started with:
 
 ```php
 <?php
-require 'webp-on-demand.inc';
+// To start with, lets display any errors.
+// You can later comment these out
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
 
-use WebPOnDemand\WebPOnDemand;
+require 'webp-on-demand-1.inc';
+
+use WebPConvert\WebPConvert;
 
 $source = $_GET['source'];            // Absolute file path to source file. Comes from the .htaccess
 $destination = $source . '.webp';     // Store the converted images besides the original images (other options are available!)
@@ -28,15 +31,14 @@ $options = [
 
     // Tell where to find the webp-convert-and-serve library, which will
     // be dynamically loaded, if need be.
-    'require-for-conversion' => 'webp-convert-and-serve.inc';
+    'require-for-conversion' => 'webp-on-demand-2.inc',
 
-    // UNCOMMENT NEXT LINE, WHEN YOU ARE UP AND RUNNING!    
+    // UNCOMMENT NEXT LINE, WHEN YOU ARE UP AND RUNNING!
     'show-report' => true             // Show a conversion report instead of serving the converted image.
 
     // More options available!
 ];
-
-WebPOnDemand::serve($source, $destination, $options);
+WebPConvert::convertAndServe($source, $destination, $options);
 ```
 
 ### 3. Continue the main install instructions from step 3
