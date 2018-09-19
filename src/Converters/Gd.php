@@ -70,7 +70,7 @@ class Gd
 
         // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
 
-        $success = imagewebp($image, $destination, $options['_calculated_quality']);
+        $success = @imagewebp($image, $destination, $options['_calculated_quality']);
 
         if (!$success) {
             throw new ConverterFailedException('Call to imagewebp() failed. Probably failed writing file');
@@ -81,9 +81,8 @@ class Gd
          * See https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files
          *
          */
-
-        if (filesize($destination) % 2 == 1) {
-            file_put_contents($destination, "\0", FILE_APPEND);
+        if (@filesize($destination) % 2 == 1) {
+            @file_put_contents($destination, "\0", FILE_APPEND);
         }
 
         imagedestroy($image);
