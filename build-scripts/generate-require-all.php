@@ -48,7 +48,7 @@ class RequireGenerator
 
         // generate file content
         $data = '';
-        $data .= "<?php \n";
+        $data .= "<?php\n";
         foreach (self::$required as $path) {
             $data .= 'require_once __DIR__  . "' . $path . '";' . "\n";
         }
