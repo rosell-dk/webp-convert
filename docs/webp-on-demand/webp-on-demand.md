@@ -33,7 +33,7 @@ Here is a minimal example to get started with:
 
 ```php
 <?php
-require 'vendor/autoload.php';
+require 'vendor/autoload.php';        // Make sure to point this correctly
 
 use WebPConvert\WebPConvert;
 
@@ -79,7 +79,7 @@ It should work now, but to be absolute sure:
 - Right-click the page and choose "Inspect"
 - Click the "Network" tab
 - Reload the page
-- Find a jpeg or png image in the list. In the "type" column, it should say "webp". There should also be a *X-WebP-On-Demand* header on the image.
+- Find a jpeg or png image in the list. In the "type" column, it should say "webp". There should also be a *X-WebP-Convert-Status* header on the image that provides some insights on how things went.
 
 
 
