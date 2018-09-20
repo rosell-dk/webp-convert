@@ -32,7 +32,7 @@ class Gmagick
         $im = new \Gmagick($source);
 
         // Throws an exception if Gmagick does not support WebP conversion
-        if (!in_array('WEBP', $im->queryFormats())) {
+        if (!in_array('WEBP', $im->queryformats())) {
             throw new ConverterNotOperationalException('Gmagick was compiled without WebP support.');
         }
 
@@ -43,33 +43,22 @@ class Gmagick
             $options['lossless'] = true;
         }
 
-        $im->setImageFormat('WEBP');
+        $im->setimageformat('WEBP');
 
         /*
-         * More about Gmagick's WebP options:
-         * http://www.imagemagick.org/script/webp.php
-         * https://developers.google.com/speed/webp/docs/cwebp
-         * https://stackoverflow.com/questions/37711492/imagemagick-specific-webp-calls-in-php
-         */
-
-        // TODO: We could easily support all webp options with a loop
-        /*$im->setOption('webp:method', strval($options['method']));
-        $im->setOption('webp:low-memory', strval($options['low-memory']));
-        $im->setOption('webp:lossless', strval($options['lossless']));
+        Seems there are currently no way to set webp options
+        As noted in the following link, it should probably be done with a $im->addDefinition() method
+        - but that isn't exposed (yet)
+        (TODO: see if anyone has answered...)
+        https://stackoverflow.com/questions/47294962/how-to-write-lossless-webp-files-with-perlmagick
         */
+        // The following two does not have any effect... How to set WebP options?
+        //$im->setimageoption('WEBP', 'lossless', true);
+        //$im->setimageoption('WEBP', 'WEBP:method', 1);
 
-        $im->setCompressionQuality($options['_calculated_quality']);
+        $im->setcompressionquality($options['_calculated_quality']);
 
-
-        // TODO:
-        // Should we set alpha channel for PNG's like suggested here:
-        // https://gauntface.com/blog/2014/09/02/webp-support-with-imagemagick-and-php ??
-        // It seems that alpha channel works without... (at least I see completely transparerent pixels)
-
-        // TODO: Check out other Gmagick methods, see http://php.net/manual/de/Gmagick.writeimage.php#114714
-        // 1. file_put_contents($destination, $im)
-        // 2. $im->writeImage($destination)
-        $success = $im->writeImageFile(fopen($destination, 'wb'));
+        $success = $im->writeimagefile(fopen($destination, 'wb'));
 
         if (!$success) {
             throw new ConverterFailedException('Failed writing file');
