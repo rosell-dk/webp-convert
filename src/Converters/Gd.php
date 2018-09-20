@@ -73,7 +73,9 @@ class Gd
         $success = @imagewebp($image, $destination, $options['_calculated_quality']);
 
         if (!$success) {
-            throw new ConverterFailedException('Call to imagewebp() failed. Probably failed writing file. Check file permissions!');
+            throw new ConverterFailedException(
+                'Call to imagewebp() failed. Probably failed writing file. Check file permissions!'
+            );
         }
 
         /*

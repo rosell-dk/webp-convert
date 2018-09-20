@@ -101,7 +101,6 @@ class Cwebp
         exec($command, $output, $returnCode);
         //$logger->logLn(self::msgForExitCode($returnCode));
         return intval($returnCode);
-
     }
 
     // Although this method is public, do not call directly.
@@ -182,12 +181,12 @@ class Cwebp
 
         if (!$options['try-supplied-binary-for-os'] && !$options['try-common-system-paths']) {
             $errorMsg .= 'Configured to neither look for cweb binaries in common system locations, ' .
-                'nor to use one of the supplied precompiled binaries. But these are the only ways this converter can convert images. No conversion can be made!';
+                'nor to use one of the supplied precompiled binaries. But these are the only ways ' .
+                'this converter can convert images. No conversion can be made!';
         }
 
         if ($options['try-common-system-paths']) {
             foreach ($cwebpPathsToTest as $index => $binary) {
-
                 $returnCode = self::executeBinary($binary, $commandOptions, $useNice, $logger);
                 if ($returnCode == 0) {
                     $logger->logLn('Successfully executed binary: ' . $binary);
@@ -207,7 +206,8 @@ class Cwebp
                     switch ($majorFailCode) {
                         case 126:
                             $errorMsg = 'Permission denied. The user that the command was run with (' .
-                                shell_exec('whoami') . ') does not have permission to execute any of the cweb binaries found in common system locations. ';
+                                shell_exec('whoami') . ') does not have permission to execute any of the ' .
+                                'cweb binaries found in common system locations. ';
                             break;
                         case 127:
                             $errorMsg .= 'Found no cwebp binaries in any common system locations. ';
@@ -235,7 +235,6 @@ class Cwebp
                         $errorMsg .= 'None of the cwebp binaries in the common system locations could be executed ' .
                             '(mixed results - got the following exit codes: ' . implode(',', $failureCodes) . '). ';
                     }
-
                 }
             }
         }
@@ -282,7 +281,8 @@ class Cwebp
                             } else {
                                 switch ($returnCode) {
                                     case 0:
-                                        $success = true;;
+                                        $success = true;
+                                        ;
                                         break;
                                     case 126:
                                         $errorMsg .= ': Permission denied. The user that the command was run with (' .
