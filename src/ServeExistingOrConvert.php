@@ -29,7 +29,7 @@ class ServeExistingOrConvert
         'error-reporting' => 'auto'
     ];
 
-    private static function shouldWeServeExisting($source, $destination, $options)
+    public static function shouldWeServeExisting($source, $destination, $options)
     {
         // We should not serve existing if there are evident problems
         if (!file_exists($source) || !file_exists($destination) || !@is_readable($destination)) {
