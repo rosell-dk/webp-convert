@@ -57,8 +57,6 @@ class Imagick
         $im->setOption('webp:low-memory', strval($options['low-memory']));
         $im->setOption('webp:lossless', strval($options['lossless']));
 
-
-
         $im->setImageCompressionQuality($options['_calculated_quality']);
 
         // TODO:
