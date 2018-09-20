@@ -219,7 +219,9 @@ class ConvertAndServe
                 } else {
                     self::addXStatusHeader('Serving freshly converted image', $options);
                 }
-                ServeExistingOrConvert::addVaryHeader($options);
+                if ($options['add-vary-header']) {
+                    header('Vary: Accept');
+                }
 
                 // Should we add Content-Length header?
                 // header('Content-Length: ' . filesize($file));
