@@ -93,7 +93,8 @@ class ConverterHelper
         } else {
             $sourceSize = @filesize($source);
             if ($sourceSize !== false) {
-                $msg = 'Weight: ' . round(filesize($destination)/filesize($source) * 100) . '% of original ';
+                $msg = 'Success. ';
+                $msg .= 'Reduced file size with ' . round((filesize($source) - filesize($destination))/filesize($source) * 100) . '% ';
 
                 if ($sourceSize < 10000) {
                     $msg .= '(went from ' . round(filesize($source)) . ' bytes to ';

@@ -29,6 +29,8 @@ class Gmagick
             );
         }
 
+        // This might throw an exception.
+        // We let it...
         $im = new \Gmagick($source);
 
         // Throws an exception if Gmagick does not support WebP conversion
