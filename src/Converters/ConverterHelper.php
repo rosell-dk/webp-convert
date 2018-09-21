@@ -100,8 +100,8 @@ class ConverterHelper
                     $msg .= round(filesize($destination)) . ' bytes)';
                 }
                 else {
-                    $msg .= '(went from ' . round(filesize($source)/1000) . ' kb to ';
-                    $msg .= round(filesize($destination)/1000) . ' kb)';
+                    $msg .= '(went from ' . round(filesize($source)/1024) . ' kb to ';
+                    $msg .= round(filesize($destination)/1024) . ' kb)';
                 }
                 $logger->logLn($msg);
             }
