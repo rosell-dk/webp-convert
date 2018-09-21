@@ -12,6 +12,8 @@
 
 [`imagick`](#imagick) would be your last choice. For some reason it produces conversions that are only marginally better than the originals. See [this issue](https://github.com/rosell-dk/webp-convert/issues/43). But it is fast, and it supports many *cwebp* conversion options.
 
+[`gmagick`](#gmagick) uses the *gmagick* extension. As with the *imagick* extension, it seems to produce conversions that are only marginally better than the originals in terms of quality/size ratio.
+
 **Summary:**
 
 *WebPConvert* currently supports the following converters:
@@ -23,10 +25,12 @@
 | [`ewww`](#ewww)                      | Connects to *EWWW Image Optimizer* cloud service | great   | Purchasing a key                                   |
 | [`gd`](#gd)                          | GD Graphics (Draw) extension (`LibGD` wrapper)   | good    | GD PHP extension compiled with WebP support        |
 | [`imagick`](#imagick)                | Imagick extension (`ImageMagick` wrapper)        | so-so   | Imagick PHP extension compiled with WebP support   |
+| [`gmagick`](#gmagick)                | Gmagick extension (`ImageMagick` wrapper)        | so-so   | Gmagick PHP extension compiled with WebP support   |
 
+## Installation
+Instructions regarding getting the individual converters to work are [on the wiki](https://github.com/rosell-dk/webp-convert/wiki)
 
-### cwebp
-
+## cwebp
 <table>
   <tr><th>Requirements</th><td><code>exec()</code> function and that the webserver has permission to run `cwebp` binary (either found in system path, or a precompiled version supplied with this library)</td></tr>
   <tr><th>Performance</th><td>~40-120ms to convert a 40kb image (depending on *method* option)</td></tr>
@@ -51,7 +55,7 @@ The implementation is based on the work of Shane Bishop for his plugin, [EWWW Im
 
 See [the wiki](https://github.com/rosell-dk/webp-convert/wiki/Installing-cwebp---using-official-precompilations) for instructions regarding installing cwebp or using official precompilations.
 
-### wpc
+## wpc
 *WebPConvert Cloud Service*
 
 <table>
@@ -84,7 +88,7 @@ WebPConvert::convert($source, $destination, [
 ```
 
 
-### ewww
+## ewww
 
 <table>
   <tr><th>Requirements</th><td>Valid EWWW Image Optimizer <a href="https://ewww.io">API key</a>, <code>cURL</code> and PHP >= 5.5.0</td></tr>
@@ -110,7 +114,7 @@ In more detail, the implementation does this:
 The converter could be improved by using `fsockopen` when `cURL` is not available - which is extremely rare. PHP >= 5.5.0 is also widely available (PHP 5.4.0 reached end of life [more than two years ago!](http://php.net/supported-versions.php)).
 </details>
 
-### gd
+## gd
 
 <table>
   <tr><th>Requirements</th><td>GD PHP extension and PHP >= 5.5.0 (compiled with WebP support)</td></tr>
@@ -132,7 +136,7 @@ Installaition instructions are [available in the wiki](https://github.com/rosell
 Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes created corrupted images. That bug can however easily be fixed in PHP (fix was released [here](https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files)). However, I have experienced corrupted images *anyway* (but cannot reproduce that bug). So use this converter with caution. The corrupted images look completely transparent in Google Chrome, but have the correct size.
 </details>
 
-### imagick
+## imagick
 
 <table>
   <tr><th>Requirements</th><td>Imagick PHP extension (compiled with WebP support)</td></tr>
