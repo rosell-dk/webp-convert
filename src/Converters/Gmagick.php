@@ -53,8 +53,8 @@ class Gmagick
         https://stackoverflow.com/questions/47294962/how-to-write-lossless-webp-files-with-perlmagick
         */
         // The following two does not have any effect... How to set WebP options?
-        //$im->setimageoption('WEBP', 'lossless', true);
-        //$im->setimageoption('WEBP', 'WEBP:method', 1);
+        //$im->setimageoption('webp', 'webp:lossless', $options['lossless'] ? 'true' : 'false');
+        //$im->setimageoption('WEBP', 'method', strval($options['method']));
 
         $im->setcompressionquality($options['_calculated_quality']);
 
