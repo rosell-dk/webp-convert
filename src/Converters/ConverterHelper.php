@@ -88,8 +88,24 @@ class ConverterHelper
             $logger
         );
 
-        if (!file_exists($destination)) {
+        if (!@file_exists($destination)) {
             throw new ConverterFailedException('Destination file is not there');
+        } else {
+            $sourceSize = @filesize($source);
+            if ($sourceSize !== false) {
+                $msg = 'Weight: ' . round(filesize($destination)/filesize($source) * 100) . '% of original ';
+
+                if ($sourceSize < 10000) {
+                    $msg .= '(went from ' . round(filesize($source)) . ' bytes to ';
+                    $msg .= round(filesize($destination)) . ' bytes)';
+                }
+                else {
+                    $msg .= '(went from ' . round(filesize($source)/1000) . ' kb to ';
+                    $msg .= round(filesize($destination)/1000) . ' kb)';
+                }
+                $logger->logLn($msg);
+            }
+
         }
     }
 
