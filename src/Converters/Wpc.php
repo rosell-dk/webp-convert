@@ -92,7 +92,7 @@ class Wpc
                     'File is larger than your max upload (set in your php.ini). File size:' .
                         round($fileSize/1024) . ' kb. ' .
                         'upload_max_filesize in php.ini: ' . ini_get('upload_max_filesize') .
-                        ' (parsed as ' . $uploadMaxSize . ' bytes)'
+                        ' (parsed as ' . round($uploadMaxSize/1024) . ' kb)'
                 );
             }
 
@@ -102,7 +102,7 @@ class Wpc
                     'File is larger than your post_max_size limit (set in your php.ini). File size:' .
                         round($fileSize/1024) . ' kb. ' .
                         'post_max_size in php.ini: ' . ini_get('post_max_size') .
-                        ' (parsed as ' . $postMaxSize . ' bytes)'
+                        ' (parsed as ' . round($postMaxSize/1024) . ' kb)'
                 );
             }
 
