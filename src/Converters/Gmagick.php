@@ -58,14 +58,23 @@ class Gmagick
         //$im->setimageoption('webp', 'webp:lossless', $options['lossless'] ? 'true' : 'false');
         //$im->setimageoption('WEBP', 'method', strval($options['method']));
 
+        // It seems there is no COMPRESSION_WEBP...
+        // http://php.net/manual/en/imagick.setimagecompression.php
+        //$im->setImageCompression(Imagick::COMPRESSION_JPEG);
+        //$im->setImageCompression(Imagick::COMPRESSION_UNDEFINED);
+
+
         $im->setcompressionquality($options['_calculated_quality']);
 
         $im->setimageformat('WEBP');
 
-        // Strip metadata and profiles
-        //$im->stripImage();
+        if ($options['metadata'] == 'none') {
+            // Strip metadata and profiles
+            $im->stripImage();
+        }
 
-        $success = $im->writeimagefile(fopen($destination, 'wb'));
+        //$success = $im->writeimagefile(fopen($destination, 'wb'));
+        $success = @file_put_contents($destination, $im->getImageBlob());
 
         if (!$success) {
             throw new ConverterFailedException('Failed writing file');
