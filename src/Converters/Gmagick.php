@@ -33,6 +33,7 @@ class Gmagick
         // We let it...
         $im = new \Gmagick($source);
 
+
         // Throws an exception if Gmagick does not support WebP conversion
         if (!in_array('WEBP', $im->queryformats())) {
             throw new ConverterNotOperationalException('Gmagick was compiled without WebP support.');
@@ -45,7 +46,6 @@ class Gmagick
             $options['lossless'] = true;
         }
 
-        $im->setimageformat('WEBP');
 
         /*
         Seems there are currently no way to set webp options
@@ -59,6 +59,11 @@ class Gmagick
         //$im->setimageoption('WEBP', 'method', strval($options['method']));
 
         $im->setcompressionquality($options['_calculated_quality']);
+
+        $im->setimageformat('WEBP');
+
+        // Strip metadata and profiles
+        //$im->stripImage();
 
         $success = $im->writeimagefile(fopen($destination, 'wb'));
 
