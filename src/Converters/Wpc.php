@@ -29,6 +29,20 @@ class Wpc
         ConverterHelper::runConverter('wpc', $source, $destination, $options, true);
     }
 
+    // Took this parser from Drupal
+    private static function parseSize($size) {
+
+        $unit = preg_replace('/[^bkmgtpezy]/i', '', $size); // Remove the non-unit characters from the size.
+            $size = preg_replace('/[^0-9\.]/', '', $size); // Remove the non-numeric characters from the size.
+            if ($unit) {
+                // Find the position of the unit in the ordered string which is the power of magnitude to multiply a kilobyte by.
+                return round($size * pow(1024, stripos('bkmgtpezy', $unit[0])));
+            }
+            else {
+                return round($size);
+            }
+    }
+
     // Although this method is public, do not call directly.
     public static function doConvert($source, $destination, $options, $logger)
     {
@@ -72,21 +86,23 @@ class Wpc
 
         $fileSize = @filesize($source);
         if ($fileSize !== false) {
-            $uploadMaxSize = ini_get('upload_max_filesize');
+            $uploadMaxSize = self::parseSize(ini_get('upload_max_filesize'));
             if (($uploadMaxSize !== false) && ($uploadMaxSize < $fileSize)) {
                 throw new ConverterFailedException(
-                    'File is larger than your upload_max_filesize (set in your php.ini). File size:' .
-                        round($fileSize/1000) . ' kb.' .
-                        'Upload limit: ' . $uploadMaxSize
+                    'File is larger than your max upload (set in your php.ini). File size:' .
+                        round($fileSize/1024) . ' kb. ' .
+                        'upload_max_filesize in php.ini: ' . ini_get('upload_max_filesize') .
+                        ' (parsed as ' . $uploadMaxSize . ' bytes)'
                 );
             }
 
-            $postMaxSize = ini_get('post_max_size');
+            $postMaxSize = self::parseSize(ini_get('post_max_size'));
             if (($postMaxSize !== false) && ($postMaxSize < $fileSize)) {
                 throw new ConverterFailedException(
                     'File is larger than your post_max_size limit (set in your php.ini). File size:' .
-                        round($fileSize/1000) . ' kb. ' .
-                        'Upload limit: ' . $postMaxSize
+                        round($fileSize/1024) . ' kb. ' .
+                        'post_max_size in php.ini: ' . ini_get('post_max_size') .
+                        ' (parsed as ' . $postMaxSize . ' bytes)'
                 );
             }
 
