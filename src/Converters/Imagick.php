@@ -29,6 +29,9 @@ class Imagick
             );
         }
 
+        // This might throw an exception.
+        // Ie "ImagickException: no decode delegate for this image format `JPEG'"
+        // We let it...
         $im = new \Imagick($source);
 
         // Throws an exception if iMagick does not support WebP conversion
