@@ -70,6 +70,30 @@ class Wpc
             }
         }
 
+        $fileSize = @filesize($source);
+        if ($fileSize !== false) {
+            $uploadMaxSize = ini_get('upload_max_filesize');
+            if (($uploadMaxSize !== false) && ($uploadMaxSize < $fileSize)) {
+                throw new ConverterFailedException(
+                    'File is larger than your upload_max_filesize (set in your php.ini). File size:' .
+                        round($fileSize/1000) . ' kb.' .
+                        'Upload limit: ' . $uploadMaxSize
+                );
+            }
+
+            $postMaxSize = ini_get('post_max_size');
+            if (($postMaxSize !== false) && ($postMaxSize < $fileSize)) {
+                throw new ConverterFailedException(
+                    'File is larger than your post_max_size limit (set in your php.ini). File size:' .
+                        round($fileSize/1000) . ' kb. ' .
+                        'Upload limit: ' . $postMaxSize
+                );
+            }
+
+            // ini_get('memory_limit')
+
+        }
+
         // Got some code here:
         // https://coderwall.com/p/v4ps1a/send-a-file-via-post-with-curl-and-php
 
@@ -155,9 +179,15 @@ class Wpc
                 );
             }
 
-            $errorMsg = 'Error: Unexpected result. We did not receive an image. We received: "';
-            $errorMsg .= str_replace("\r", '', str_replace("\n", '', htmlentities(substr($response, 0, 400))));
-            throw new ConverterFailedException($errorMsg . '..."');
+            if (empty($response)) {
+                $errorMsg = 'Error: Unexpected result. We got nothing back. HTTP CODE: ' . $httpCode;
+                throw new ConverterFailedException($errorMsg);
+
+            } else {
+                $errorMsg = 'Error: Unexpected result. We did not receive an image. We received: "';
+                $errorMsg .= str_replace("\r", '', str_replace("\n", '', htmlentities(substr($response, 0, 400))));
+                throw new ConverterFailedException($errorMsg . '..."');
+            }
             //throw new ConverterNotOperationalException($response);
         }
 
