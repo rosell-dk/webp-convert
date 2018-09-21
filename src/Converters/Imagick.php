@@ -62,6 +62,10 @@ class Imagick
 
         $im->setImageCompressionQuality($options['_calculated_quality']);
 
+        // TODO: Read up on
+        // https://www.smashingmagazine.com/2015/06/efficient-image-resizing-with-imagemagick/
+        // https://github.com/nwtn/php-respimg
+
         // TODO:
         // Should we set alpha channel for PNG's like suggested here:
         // https://gauntface.com/blog/2014/09/02/webp-support-with-imagemagick-and-php ??
