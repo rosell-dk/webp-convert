@@ -33,6 +33,8 @@ class Imagick
         // Ie "ImagickException: no decode delegate for this image format `JPEG'"
         // We let it...
         $im = new \Imagick($source);
+        //$im = new \Imagick();
+        //$im->readImage($source);
 
         // Throws an exception if iMagick does not support WebP conversion
         if (!in_array('WEBP', $im->queryFormats())) {
@@ -56,11 +58,27 @@ class Imagick
          */
 
         // TODO: We could easily support all webp options with a loop
+
+        /*
+        After using getImageBlob() to write image, the following setOption() calls
+        makes settings makes imagick fail. So can't use those. But its a small price
+        to get a converter that actually makes great quality conversions.
+
         $im->setOption('webp:method', strval($options['method']));
         $im->setOption('webp:low-memory', strval($options['low-memory']));
         $im->setOption('webp:lossless', strval($options['lossless']));
+        */
+
+        if ($options['metadata'] == 'none') {
+            // Strip metadata and profiles
+            $im->stripImage();
+        }
+
 
         $im->setImageCompressionQuality($options['_calculated_quality']);
+
+        // https://stackoverflow.com/questions/29171248/php-imagick-jpeg-optimization
+        // setImageFormat
 
         // TODO: Read up on
         // https://www.smashingmagazine.com/2015/06/efficient-image-resizing-with-imagemagick/
@@ -74,7 +92,11 @@ class Imagick
         // TODO: Check out other iMagick methods, see http://php.net/manual/de/imagick.writeimage.php#114714
         // 1. file_put_contents($destination, $im)
         // 2. $im->writeImage($destination)
-        $success = $im->writeImageFile(fopen($destination, 'wb'));
+
+        // We used to use writeImageFile() method. But we now use getImageBlob(). See issue #43
+        //$success = $im->writeImageFile(fopen($destination, 'wb'));
+
+        $success = @file_put_contents($destination, $im->getImageBlob());
 
         if (!$success) {
             throw new ConverterFailedException('Failed writing file');
