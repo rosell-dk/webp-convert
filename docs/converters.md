@@ -2,17 +2,19 @@
 
 ## The converters at a glance
 
-[`cwebp`](#cwebp) works by executing the *cwebp* binary from Google. This should be your first choice. Its best in terms of quality, speed and options. The only catch is that it requires the `exec` function to be enabled, and that the webserver user is allowed to execute the `cwebp` binary (either at known system locations, or one of the precompiled binaries, that comes with this library). If you are on a shared host that doesn't allow that, you can turn to the `wpc` cloud converter.
+[`cwebp`](#cwebp) works by executing the *cwebp* binary from Google, which is build upon the *libwebp* (also from Google). That library is actually the only library in town for generating webp images, which means that the other conversion methods ultimately uses that very same library. Which again means that the results using the different methods are very similar. However, with *cwebp*, we have more parameters to tweak than with the rest. We for example have the *method* option, which controls the trade off between encoding speed and the compressed file size and quality. Setting this to max, we can squeeze the images a few percent extra - without loosing quality (the converter is still pretty fast, so in most cases it is probably worth it). Unfortunately, *cwebp* (unlike *gmagick*) does not have a way to automatically use same quality for the converted image as was used for the source image. If you set the quality option to "auto", our library will try to detect the quality with Imagick and Gmagick, but if this fails, the fallback quality will be used. The effect is that a jpeg image with low quality (say 50) will be converted with higher quality (say 75). Converting a q=50 to a q=50 would typically result in a 60% reduction. But converting it to q=75 will only result in a ~45% reduction. Converting q=30 to q=75 only gives ~25% reduction. But I guess it is a rare case having jpeg images in q<50.
 
- [`wpc`](#wpc) is an open source cloud converter based on *WebPConvert*. Conversions will of course be slower than *cwebp*, as images need to go back and forth to the cloud converter. As images usually just needs to be converted once, the slower conversion speed is probably acceptable. The conversion quality and options of *wpc* matches *cwebp*. The only catch is that you will need to install the *WPC* library on a server (or have someone do it for you). If this this is a problem, we suggest you turn to *ewww*. (PS: A Wordpress plugin is planned, making it easier to set up a WPC instance)
+Of course, as we here have to call a binary directly, *cwebp* requires the *exec* function to be enabled, and that the webserver user is allowed to execute the `cwebp` binary (either at known system locations, or one of the precompiled binaries, that comes with this library).
 
-[`ewww`](#ewww) is also a cloud service. It is a decent alternative for those who don't have the technical know-how to install *wpc*. *ewww* is using cwebp to do the conversion, so quality is great. *ewww* however only provides one conversion option (quality), and it is not free. But very cheap. Like in *almost* free.
+[`imagick`](#imagick) does not support any special webp options, but is at least able to strip all metadata, if metadata is set to none. Imagick has a very nice feature - that it is able to detect the quality of a jpeg file. This enables it to automatically use same quality for destination as for source, which eliminates the risk of setting quality higher for the destination than for source (the result of that is that the file size gets higher, but the quality remains the same). As the other converters lends this capability from Imagick, this is however no reason for using Imagick rather than the other converters.
 
-[`gd`](#gd) uses the *Gd* extension to do the conversion. It is placed below the cloud converters for two reasons. Firstly, it does not seem to produce quite as good quality as *cwebp*. Secondly, it provides no conversion options, besides quality. The *Gd* extension is pretty common, so the main feature of this converter is that it may work out of the box. This is in contrast to the cloud converters, which requires that the user does some setup.
+[`gmagick`](#gmagick) uses the *gmagick* extension. It is very similar to *imagick*.
 
-[`imagick`](#imagick) would be your last choice. For some reason it produces conversions that are only marginally better than the originals. See [this issue](https://github.com/rosell-dk/webp-convert/issues/43). But it is fast, and it supports many *cwebp* conversion options.
+[`gd`](#gd) uses the *Gd* extension to do the conversion. The *Gd* extension is pretty common, so the main feature of this converter is that it may work out of the box. It does not support any webp options, and does not support stripping metadata.
 
-[`gmagick`](#gmagick) uses the *gmagick* extension. As with the *imagick* extension, it seems to produce conversions that are only marginally better than the originals in terms of quality/size ratio.
+[`wpc`](#wpc) is an open source cloud converter based on *WebPConvert*. Conversions will of course be slower than the local converters, as images need to go back and forth to the cloud converter. As images usually just needs to be converted once, the slower conversion speed is probably acceptable. To get going, you need to install the [WPC library](https://github.com/rosell-dk/webp-convert-cloud-service) on a server (or have someone do it for you). If this this is a problem, we suggest you turn to *ewww*. (PS: A Wordpress plugin is planned, making it easier to set up a WPC instance)
+
+[`ewww`](#ewww) is also a cloud service. It is a decent alternative for those who don't have the technical know-how to install *wpc*. *ewww* is using cwebp to do the conversion, so quality is great. *ewww* however only provides one conversion option (quality), and it is not free. But very cheap. Like in *almost* free. Oh, and *ewww* does not support auto quality (you need to have Imagick or Gmagick), but I have pitched the idea to the developer.
 
 **Summary:**
 
@@ -23,9 +25,9 @@
 | [`cwebp`](#cwebp)                    | Calls `cwebp` binary directly                    | best    | `exec()` function *and* that the webserver user has permission to run `cwebp` binary |
 | [`wpc`](#wpc)                        | Connects to WPC cloud service                    | best    | A working *WPC* installation                       |
 | [`ewww`](#ewww)                      | Connects to *EWWW Image Optimizer* cloud service | great   | Purchasing a key                                   |
-| [`gd`](#gd)                          | GD Graphics (Draw) extension (`LibGD` wrapper)   | good    | GD PHP extension compiled with WebP support        |
-| [`imagick`](#imagick)                | Imagick extension (`ImageMagick` wrapper)        | so-so   | Imagick PHP extension compiled with WebP support   |
-| [`gmagick`](#gmagick)                | Gmagick extension (`ImageMagick` wrapper)        | so-so   | Gmagick PHP extension compiled with WebP support   |
+| [`gd`](#gd)                          | GD Graphics (Draw) extension (`LibGD` wrapper)   | great    | GD PHP extension compiled with WebP support        |
+| [`imagick`](#imagick)                | Imagick extension (`ImageMagick` wrapper)        | great   | Imagick PHP extension compiled with WebP support   |
+| [`gmagick`](#gmagick)                | Gmagick extension (`ImageMagick` wrapper)        | great   | Gmagick PHP extension compiled with WebP support   |
 
 ## Installation
 Instructions regarding getting the individual converters to work are [on the wiki](https://github.com/rosell-dk/webp-convert/wiki)
