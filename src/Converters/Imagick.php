@@ -74,8 +74,20 @@ class Imagick
             $im->stripImage();
         }
 
+        if (isset($options['_quality_could_not_be_detected'])) {
+            // quality was set to "auto", but we could not meassure the quality of the jpeg locally
+            // but luckily imagick is a big boy, and automatically converts with same quality as
+            // source, when the quality isn't set.
+            // So we simply do not set quality.
+            // This actually kills the max-height functionality. But I deem that this is more important
+            // because setting image quality to something higher than source generates bigger files,
+            // but gets you no extra quality. When failing to limit quality, you at least get something
+            // out of it
+        } else {
+            $im->setImageCompressionQuality($options['_calculated_quality']);
+        }
 
-        $im->setImageCompressionQuality($options['_calculated_quality']);
+
 
         // https://stackoverflow.com/questions/29171248/php-imagick-jpeg-optimization
         // setImageFormat
