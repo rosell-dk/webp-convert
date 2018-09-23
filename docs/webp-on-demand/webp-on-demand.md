@@ -19,7 +19,7 @@ A setup consists of a PHP script that serves converted images and some *redirect
 
 Here we assume you are using Composer. [Not using composer? - Follow me!](https://github.com/rosell-dk/webp-convert/blob/master/docs/webp-on-demand/without-composer.md)
 
-### 1. Require this library with composer
+### 1. Require the webp-convert library with composer
 ```
 composer require rosell-dk/webp-convert
 ```
@@ -100,10 +100,11 @@ Other tweaking is described in *docs/webp-on-demand/tweaks.md*:
 If images are neither routed to the converter or a 404, it means that the redirect rule isn't taking effect. Common reasons for this includes:
 
 - Perhaps there are other rules in your *.htaccess* that interfere with the rules?
-- Perhaps your site is on *Apache*, but it has been configured to use *Nginx* to serve image files. To find out which server that is handling the images, browse to an image and eximine the "Server" response header. In case *NGINX* are serving images, see if you can reconfigure your server setup. Alternatively, you can create *NGINX* rewrite rules. There are some [here](https://github.com/S1SYPHOS/kirby-webp#nginx).
+- Perhaps your site is on *Apache*, but it has been configured to use *Nginx* to serve image files. To find out which server that is handling the images, browse to an image and eximine the "Server" response header. In case *NGINX* are serving images, see if you can reconfigure your server setup. Alternatively, you can create *NGINX* rewrite rules. There are some [here](https://github.com/S1SYPHOS/kirby-webp#nginx) and [there](https://github.com/uhop/grunt-tight-sprite/wiki/Recipe:-serve-WebP-with-nginx-conditionally).
 - Perhaps the server isn't configured to allow *.htaccess* files? Try inserting rubbish in the top of the *.htaccess* file and refresh. You should now see an *Internal Server Error* error page. If you don't, your *.htaccess* file is ignored. Probably you will need to set *AllowOverride All* in your Virtual Host. [Look here for more help](
 https://docs.bolt.cm/3.4/howto/making-sure-htaccess-works#test-if-htaccess-is-working)
 
 
 ## Related
 * https://www.maxcdn.com/blog/how-to-reduce-image-size-with-webp-automagically/
+* https://www.digitalocean.com/community/tutorials/how-to-create-and-serve-webp-images-to-speed-up-your-website
