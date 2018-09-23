@@ -64,6 +64,7 @@ class Gmagick
         //$im->setImageCompression(Imagick::COMPRESSION_UNDEFINED);
 
 
+
         $im->setimageformat('WEBP');
 
         if ($options['metadata'] == 'none') {
@@ -71,19 +72,9 @@ class Gmagick
             $im->stripImage();
         }
 
-        if (isset($options['_quality_could_not_be_detected'])) {
-            // quality was set to "auto", but we could not meassure the quality of the jpeg locally
-            // but luckily imagick is a big boy, and automatically converts with same quality as
-            // source, when the quality isn't set.
-            // So we simply do not set quality.
-            // This actually kills the max-height functionality. But I deem that this is more important
-            // because setting image quality to something higher than source generates bigger files,
-            // but gets you no extra quality. When failing to limit quality, you at least get something
-            // out of it
-        } else {
-            $im->setImageCompressionQuality($options['_calculated_quality']);
-        }
-
+        // Ps: Imagick automatically uses same quality as source, when no quality is set
+        // This feature is however not present in Gmagick
+        $im->setcompressionquality($options['_calculated_quality']);
 
         //$success = $im->writeimagefile(fopen($destination, 'wb'));
         $success = @file_put_contents($destination, $im->getImageBlob());
