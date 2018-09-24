@@ -61,6 +61,11 @@ Depending on how things goes, the header will be set to one of the following:
 Add a "Vary: Accept" header when an image is served. Experimental.  
 Default value: *true*
 
+### *add-content-type-header*
+Add a "Content-Type" header
+Default value: *true*
+If set, a Content-Type header will be added. It will be set to "image/webp" if a converted image is served, "image/jpeg" or "image/png", if the original is served or "image/gif", if an error message is served (as image). You can set it to false when debugging (to check if any errors are being outputted)
+
 ### *error-reporting*
 Set error reporting
 Allowed values: *"auto"*, *"dont-mess"*, *true*, *false*

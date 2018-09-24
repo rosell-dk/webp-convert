@@ -25,6 +25,7 @@ class ServeExistingOrConvert
         'reconvert' => false,
         'serve-original' => false,
         'add-x-header-status' => true,
+        'add-content-type-header' => true,
         'add-vary-header' => true,
         'error-reporting' => 'auto'
     ];
@@ -63,8 +64,9 @@ class ServeExistingOrConvert
 
     public static function serveExisting($destination, $options)
     {
-        //echo ':' . $destination;
-        header('Content-type: image/webp');
+        if ($options['add-content-type-header']) {
+            header('Content-type: image/webp');
+        }
 
         if ($options['add-x-header-status']) {
             header('X-WebP-Convert-Status: Serving existing converted image');
