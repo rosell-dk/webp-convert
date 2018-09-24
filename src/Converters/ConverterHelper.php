@@ -20,7 +20,7 @@ class ConverterHelper
     public static $defaultOptions = [
         'quality' => 'auto',
         'max-quality' => 85,
-        'default-quality' => 80,
+        'default-quality' => 75,
         'metadata' => 'none',
         'method' => 6,
         'low-memory' => false,
@@ -39,7 +39,6 @@ class ConverterHelper
         return 'WebPConvert\\Converters\\' . ucfirst($converterId);
     }
 
-
     /* Call the "convert" method on a converter, by id.
        - but also prepares options (merges in the $extraOptions of the converter),
          prepares destination folder, and runs some standard validations */
@@ -51,6 +50,8 @@ class ConverterHelper
         $prepareDestinationFolder = true,
         $logger = null
     ) {
+
+
         if ($prepareDestinationFolder) {
             self::prepareDestinationFolderAndRunCommonValidations($source, $destination);
         }
@@ -107,6 +108,28 @@ class ConverterHelper
                 $logger->logLn($msg);
             }
 
+        }
+    }
+
+    public static function runConverterWithTiming(
+        $converterId,
+        $source,
+        $destination,
+        $options = [],
+        $prepareDestinationFolder = true,
+        $logger = null
+    )
+    {
+        $beginTime = microtime(true);
+        if (!isset($logger)) {
+            $logger = new \WebPConvert\Loggers\VoidLogger();
+        }
+        try {
+            self::runConverter($converterId, $source, $destination, $options, $prepareDestinationFolder, $logger);
+            $logger->logLn('Successfully converted test image in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
+        } catch (\Exception $e) {
+            $logger->logLn('Failed in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
+            throw $e;
         }
     }
 
@@ -171,9 +194,8 @@ class ConverterHelper
                     self::processQualityOption($source, $converterOptions, $logger);
                 }
 
-                self::runConverter($converterId, $source, $destination, $converterOptions, false, $logger);
+                self::runConverterWithTiming($converterId, $source, $destination, $converterOptions, false, $logger);
 
-                // Still here? - well, we did it! - job is done.
                 $logger->logLn('ok', 'bold');
                 return true;
             } catch (\WebPConvert\Converters\Exceptions\ConverterNotOperationalException $e) {
