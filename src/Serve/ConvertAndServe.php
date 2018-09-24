@@ -21,6 +21,7 @@ class ConvertAndServe
         'add-x-header-status' => true,
         'add-x-header-options' => false,
         'add-vary-header' => true,
+        'add-content-type-header' => true,
         'converters' =>  ['cwebp', 'gd', 'imagick']
     ];
 
@@ -53,18 +54,20 @@ class ConvertAndServe
         header($protocol . " 404 Not Found");
     }
 
-    protected static function serveOriginal($source)
+    protected static function serveOriginal($source, $options)
     {
-        $arr = explode('.', $source);
-        $ext = array_pop($arr);
-        switch (strtolower($ext)) {
-            case 'jpg':
-            case 'jpeg':
-                header('Content-type: image/jpeg');
-                break;
-            case 'png':
-                header('Content-type: image/png');
-                break;
+        if ($options['add-content-type-header']) {
+            $arr = explode('.', $source);
+            $ext = array_pop($arr);
+            switch (strtolower($ext)) {
+                case 'jpg':
+                case 'jpeg':
+                    header('Content-type: image/jpeg');
+                    break;
+                case 'png':
+                    header('Content-type: image/png');
+                    break;
+            }
         }
 
         if (@readfile($source) === false) {
@@ -74,136 +77,9 @@ class ConvertAndServe
         return true;
     }
 
-    protected static function serveErrorMessageImage($msg)
+    public static function serveFreshlyConverted($source, $destination, $options, $additionalInfo)
     {
-        // Generate image containing error message
-        header('Content-type: image/gif');
-
-        // Prevent caching image
-        self::addHeadersPreventingCaching();
-
-        // TODO: handle if this fails...
-        $image = imagecreatetruecolor(620, 200);
-        imagestring($image, 1, 5, 5, $msg, imagecolorallocate($image, 233, 214, 291));
-        // echo imagewebp($image);
-        echo imagegif($image);
-        imagedestroy($image);
-    }
-
-    protected static function fail($description, $failArgs, $critical = false)
-    {
-        $options = $failArgs['options'];
-        //print_r($options);
-        self::addXStatusHeader('Failed (' . $description . ')', $options);
-
-        $action = $critical ? $options['fail-when-original-unavailable'] : $options['fail'];
-
-        $title = 'Conversion failed';
-        switch ($action) {
-            case 'original':
-                if (!self::serveOriginal($source)) {
-                    self::serve404();
-                };
-                break;
-            case '404':
-                self::serve404();
-                break;
-            case 'report-as-image':
-                // todo: handle if this fails
-                self::serveErrorMessageImage($title . '. ' . $description);
-                break;
-            case 'report':
-                echo '<h1>' . $title . '</h1>' . $description;
-                break;
-        }
-    }
-
-    protected static function criticalFail($description, $failArgs)
-    {
-        return self::fail($description, $failArgs, true);
-    }
-
-
-    /**
-     * Main method
-     */
-    public static function convertAndServe($source, $destination, $options)
-    {
-        // For backward compatability:
-        if (isset($options['critical-fail']) && !isset($options['fail-when-original-unavailable'])) {
-            $options['fail-when-original-unavailable'] = $options['critical-fail'];
-        }
-
-        $options = array_merge(self::$defaultOptions, $options);
-
-        $failArgs = [
-            'source' => $source,
-            'destination' => $destination,
-            'options' => $options,
-        ];
-
-        self::addXOptionsHeader($options);
-
-        if (empty($source)) {
-            self::criticalFail('missing source argument', $failArgs);
-            return false;
-        }
-        if (@!file_exists($source)) {
-            self::criticalFail('source not found', $failArgs);
-            return false;
-        }
-        if (empty($destination)) {
-            self::fail('missing destination argument', $failArgs);
-            return false;
-        }
-//Report::convertAndReport($source, $destination, $options);
-        if ($options['show-report']) {
-            self::addXStatusHeader('Reporting...', $options);
-            Report::convertAndReport($source, $destination, $options);
-            return true;  // yeah, lets say that a report is always a success, even if conversion is a failure
-        }
-
-        if ($options['serve-original']) {
-            self::addXStatusHeader('Serving original image (was explicitly told to)', $options);
-            if (!self::serveOriginal($source)) {
-                self::criticalFail('could not read source file', $failArgs);
-                return false;
-            }
-            return true;
-        }
-
-
-        if (@file_exists($destination)) {
-            if (ServeExistingOrConvert::shouldWeServeExisting($source, $destination, $options)) {
-                return ServeExistingOrConvert::serveExisting($destination, $options);
-            }
-
-            // Serve source file if it is lighter than destination
-            $filesizeDestination = @filesize($destination);
-            $filesizeSource = @filesize($source);
-            if (($filesizeSource !== false) &&
-                ($filesizeDestination !== false) &&
-                ($filesizeDestination > $filesizeSource)) {
-                self::addXStatusHeader('Serving original image - because it is smaller than the converted!', $options);
-                return self::serveOriginal($source);
-            }
-        }
-
-        // Check if source file if it has been modified (we must check before doing the conversion...)
-        $originalHasChanged = false;
-        if (@file_exists($destination)) {
-            $timestampSource = @filemtime($source);
-            $timestampDestination = @filemtime($destination);
-            if (($timestampSource !== false) &&
-                ($timestampDestination !== false) &&
-                ($timestampSource > $timestampDestination)) {
-                $originalHasChanged = true;
-            }
-        }
-
-
-        $failAction = $options['fail'];
-        $criticalFailAction = $options['fail-when-original-unavailable'];
+        $failArgs = [$source, $destination, $options];
 
         $criticalFail = false;
         $success = false;
@@ -213,12 +89,31 @@ class ConvertAndServe
             $success = WebPConvert::convert($source, $destination, $options, $bufferLogger);
 
             if ($success) {
-                header('Content-type: image/webp');
-                if ($originalHasChanged) {
-                    self::addXStatusHeader('Serving freshly converted image (the original had changed)', $options);
-                } else {
-                    self::addXStatusHeader('Serving freshly converted image', $options);
+                if ($options['add-content-type-header']) {
+                    header('Content-type: image/webp');
                 }
+                if ($additionalInfo == 'explicitly-told-to') {
+                    self::addXStatusHeader(
+                        'Serving freshly converted image (was explicitly told to reconvert)',
+                        $options
+                    );
+                } elseif ($additionalInfo == 'source-modified') {
+                    self::addXStatusHeader(
+                        'Serving freshly converted image (the original had changed)',
+                        $options
+                    );
+                } elseif ($additionalInfo == 'no-existing') {
+                    self::addXStatusHeader(
+                        'Serving freshly converted image (there were no existing to serve)',
+                        $options
+                    );
+                } else {
+                    self::addXStatusHeader(
+                        'Serving freshly converted image (dont know why!)',
+                        $options
+                    );
+                }
+
                 if ($options['add-vary-header']) {
                     header('Vary: Accept');
                 }
@@ -266,13 +161,199 @@ class ConvertAndServe
             $msg = $e->getMessage();
         }
 
-
         // Next line is commented out, because we need to be absolute sure that the details does not violate syntax
         // We could either try to filter it, or we could change WebPConvert, such that it only provides safe texts.
         // header('X-WebP-Convert-And-Serve-Details: ' . $bufferLogger->getText());
 
-        self::fail($description, $failArgs);
+        self::fail($description, $failArgs, $criticalFail);
         return false;
         //echo '<p>This is how conversion process went:</p>' . $bufferLogger->getHtml();
+    }
+
+    protected static function serveErrorMessageImage($msg, $options)
+    {
+        // Generate image containing error message
+        if ($options['add-content-type-header']) {
+            header('Content-type: image/gif');
+        }
+
+        // TODO: handle if this fails...
+        $image = imagecreatetruecolor(620, 200);
+        imagestring($image, 1, 5, 5, $msg, imagecolorallocate($image, 233, 214, 291));
+        // echo imagewebp($image);
+        echo imagegif($image);
+        imagedestroy($image);
+    }
+
+    protected static function fail($description, $failArgs, $critical = false)
+    {
+        list ($source, $destination, $options) = $failArgs;
+
+        //print_r($options);
+        self::addXStatusHeader('Failed (' . $description . ')', $options);
+
+        // Prevent caching
+        self::addHeadersPreventingCaching();
+
+        $action = $critical ? $options['fail-when-original-unavailable'] : $options['fail'];
+
+        $title = 'Conversion failed';
+        switch ($action) {
+            case 'original':
+                if (!self::serveOriginal($source, $options)) {
+                    self::serve404();
+                };
+                break;
+            case '404':
+                self::serve404();
+                break;
+            case 'report-as-image':
+                // todo: handle if this fails
+                self::serveErrorMessageImage($title . '. ' . $description, $options);
+                break;
+            case 'report':
+                echo '<h1>' . $title . '</h1>' . $description;
+                break;
+        }
+    }
+
+    protected static function criticalFail($description, $failArgs)
+    {
+        return self::fail($description, $failArgs, true);
+    }
+
+    /**
+     *  Decides what to serve.
+     *  Returns array. First item is what to do, second is additional info.
+     *  First item can be one of these:
+     *  - "destination"  (serve existing converted image at the destination path)
+     *  - "source"
+     *       - "explicitly-told-to"
+     *       - "source-lighter"
+     *  - "fresh-conversion" (note: this may still fail)
+     *       - "explicitly-told-to"
+     *       - "source-modified"
+     *       - "no-existing"
+     *  - "fail"
+     *        - missing destination argument
+     *  - "critical-fail"   (a failure where the source file cannot be served)
+     *        - "missing source argument"
+     *        - "source not found"
+     *  - "report"
+     */
+    public static function desideWhatToServe($source, $destination, $options)
+    {
+        $options = array_merge(self::$defaultOptions, $options);
+
+        if (empty($source)) {
+            return ['critical-fail', 'missing source argument'];
+        }
+        if (@!file_exists($source)) {
+            return ['critical-fail', 'source not found'];
+        }
+        if (empty($destination)) {
+            return ['fail', 'missing destination argument'];
+        }
+        if ($options['serve-original']) {
+            return ['source', 'explicitly-told-to'];
+        }
+        if ($options['reconvert']) {
+            return ['fresh-conversion', 'explicitly-told-to'];
+        }
+        if ($options['show-report']) {
+            return ['report', ''];
+        }
+
+        if (@file_exists($destination)) {
+            // Reconvert if source file is newer than destination
+            $timestampSource = @filemtime($source);
+            $timestampDestination = @filemtime($destination);
+            if (($timestampSource !== false) &&
+                ($timestampDestination !== false) &&
+                ($timestampSource > $timestampDestination)) {
+                return ['fresh-conversion', 'source-modified'];
+            }
+
+            // Serve source if it is smaller than destination
+            $filesizeDestination = @filesize($destination);
+            $filesizeSource = @filesize($source);
+            if (($filesizeSource !== false) &&
+                ($filesizeDestination !== false) &&
+                ($filesizeDestination > $filesizeSource)) {
+                return ['source', 'source-lighter'];
+            }
+
+            // Destination exists, and there is no reason left not to serve it
+            return ['destination', ''];
+        } else {
+            return ['fresh-conversion', 'no-existing'];
+        }
+    }
+
+    /**
+     *  Serve the thing specified in $decisionArr
+     *  You can get a valid $decisionArr by calling the desideWhatToServe() method
+     *  You may for example do this in order to add your own headers based on
+     *  desideWhatToServe, before proccessing
+     */
+    public static function serveThis($source, $destination, $options, $decisionArr)
+    {
+        $options = array_merge(self::$defaultOptions, $options);
+        $failArgs = [$source, $destination, $options];
+        list($whatToServe, $additionalInfo) = $decisionArr;
+
+        self::addXOptionsHeader($options);
+
+        switch ($whatToServe) {
+            case 'destination':
+                return ServeExistingOrConvert::serveExisting($destination, $options);
+            case 'source':
+                if ($additionalInfo == 'explicitly-told-to') {
+                    self::addXStatusHeader(
+                        'Serving original image (was explicitly told to)',
+                        $options
+                    );
+                } else {
+                    self::addXStatusHeader(
+                        'Serving original image (it is smaller than the already converted)',
+                        $options
+                    );
+                }
+                if (!self::serveOriginal($source, $options)) {
+                    self::criticalFail('could not read source file', $failArgs);
+                    return false;
+                }
+                return true;
+            case 'fresh-conversion':
+                return self::serveFreshlyConverted($source, $destination, $options, $additionalInfo);
+                break;
+            case 'critical-fail':
+                self::criticalFail($additionalInfo, $failArgs);
+                return false;
+            case 'fail':
+                self::fail($additionalInfo, $failArgs);
+                return false;
+            case 'report':
+                self::addXStatusHeader('Reporting...', $options);
+                Report::convertAndReport($source, $destination, $options);
+                return true;  // yeah, lets say that a report is always a success, even if conversion is a failure
+        }
+    }
+
+    //self::desideWhatToServe($source, $destination, $options)
+    /**
+     * Main method
+     */
+    public static function convertAndServe($source, $destination, $options)
+    {
+        ServeExistingOrConvert::setErrorReporting($options);
+
+        // For backward compatability:
+        if (isset($options['critical-fail']) && !isset($options['fail-when-original-unavailable'])) {
+            $options['fail-when-original-unavailable'] = $options['critical-fail'];
+        }
+
+        $decisionArr = self::desideWhatToServe($source, $destination, $options);
+        return self::serveThis($source, $destination, $options, $decisionArr);
     }
 }
