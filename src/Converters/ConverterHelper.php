@@ -22,7 +22,7 @@ class ConverterHelper
         'max-quality' => 85,
         'default-quality' => 75,
         'metadata' => 'none',
-        'method' => 6,source-lighter
+        'method' => 6,
         'low-memory' => false,
         'lossless' => false,
         'converters' =>  ['cwebp', 'gd', 'imagick'],
