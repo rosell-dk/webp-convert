@@ -15,6 +15,7 @@ class Cwebp
             'default' => false,
             'required' => false
         ],
+        // low-memory is defined for all, in ConverterHelper
         [
             'name' => 'try-common-system-paths',
             'type' => 'boolean',
@@ -27,6 +28,20 @@ class Cwebp
             'type' => 'boolean',
             'sensitive' => false,
             'default' => true,
+            'required' => false
+        ],
+        [
+            'name' => 'autofilter',
+            'type' => 'boolean',
+            'sensitive' => false,
+            'default' => false,     // the -af option is very slow, and does not have much effect
+            'required' => false
+        ],
+        [
+            'name' => 'size-in-percent',
+            'type' => 'number',
+            'sensitive' => false,
+            'default' => null,
             'required' => false
         ],
     ];
@@ -120,43 +135,56 @@ class Cwebp
          * Prepare cwebp options
          */
 
+        $commandOptionsArray = [];
+
         // Metadata (all, exif, icc, xmp or none (default))
         // Comma-separated list of existing metadata to copy from input to output
-        $metadata = '-metadata ' . $options['metadata'];
+        $commandOptionsArray[] = '-metadata ' . $options['metadata'];
 
-        // Image quality
-        $quality = '-q ' . $options['_calculated_quality'];
+        // Size
+        if (!is_null($options['size-in-percent'])) {
+            $sizeSource =  @filesize($source);
+            if ($sizeSource !== false) {
+                $targetSize = floor($sizeSource * $options['size-in-percent'] / 100);
+            }
+        }
+        if (isset($targetSize)) {
+            $commandOptionsArray[] = '-size ' . $targetSize;
+        } else {
 
-        // Losless PNG conversion
-        $lossless = ($options['lossless'] ? '-lossless' : '');
-
-        // Built-in method option
-        $method = ' -m ' . strval($options['method']);
-
-
-        // TODO:
-        // Why not use -af ?  (https://developers.google.com/speed/webp/docs/cwebp)
-        // Would it be possible get a quality similar to source?
-        // It seems so: "identify -format '%Q' yourimage.jpg"
-        // (https://stackoverflow.com/questions/2024947/is-it-possible-to-tell-the-quality-level-of-a-jpeg)
-        // -- With -jpeg_like option, or perhaps the -size option
-
-        // Built-in low memory option
-        $lowMemory = '';
-        if ($options['low-memory']) {
-            $lowMemory = '-low_memory';
+            // Image quality
+            $commandOptionsArray[] = '-q ' . $options['_calculated_quality'];
         }
 
-        $commandOptionsArray = [
-            $metadata = $metadata,
-            $quality = $quality,
-            $lossless = $lossless,
-            $method = $method,
-            $lowMemory = $lowMemory,
-            $input = self::escapeFilename($source),
-            $output = '-o ' . self::escapeFilename($destination),
-            $stderrRedirect = '2>&1'
-        ];
+
+        // Losless PNG conversion
+        $commandOptionsArray[] = ($options['lossless'] ? '-lossless' : '');
+
+        // Built-in method option
+        $commandOptionsArray[] = '-m ' . strval($options['method']);
+
+        // Built-in low memory option
+        if ($options['low-memory']) {
+            $commandOptionsArray[] = '-low_memory';
+        }
+
+        // Autofilter
+        if ($options['autofilter']) {
+            $commandOptionsArray[] = '-af';
+        }
+
+        //
+
+        // Source file
+        $commandOptionsArray[] = self::escapeFilename($source);
+
+        // Output
+        $commandOptionsArray[] = '-o ' . self::escapeFilename($destination);
+
+        // Redirect stderr to same place as stdout
+        // https://www.brianstorti.com/understanding-shell-script-idiom-redirect/
+        $commandOptionsArray[] = '2>&1';
+
 
         $useNice = (($options['use-nice']) && self::hasNiceSupport()) ? true : false;
 
