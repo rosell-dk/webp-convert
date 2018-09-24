@@ -151,7 +151,6 @@ class Cwebp
         if (isset($targetSize)) {
             $commandOptionsArray[] = '-size ' . $targetSize;
         } else {
-
             // Image quality
             $commandOptionsArray[] = '-q ' . $options['_calculated_quality'];
         }

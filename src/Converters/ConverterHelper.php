@@ -22,7 +22,7 @@ class ConverterHelper
         'max-quality' => 85,
         'default-quality' => 75,
         'metadata' => 'none',
-        'method' => 6,
+        'method' => 6,source-lighter
         'low-memory' => false,
         'lossless' => false,
         'converters' =>  ['cwebp', 'gd', 'imagick'],
@@ -95,19 +95,18 @@ class ConverterHelper
             $sourceSize = @filesize($source);
             if ($sourceSize !== false) {
                 $msg = 'Success. ';
-                $msg .= 'Reduced file size with ' . round((filesize($source) - filesize($destination))/filesize($source) * 100) . '% ';
+                $msg .= 'Reduced file size with ' .
+                    round((filesize($source) - filesize($destination))/filesize($source) * 100) . '% ';
 
                 if ($sourceSize < 10000) {
                     $msg .= '(went from ' . round(filesize($source)) . ' bytes to ';
                     $msg .= round(filesize($destination)) . ' bytes)';
-                }
-                else {
+                } else {
                     $msg .= '(went from ' . round(filesize($source)/1024) . ' kb to ';
                     $msg .= round(filesize($destination)/1024) . ' kb)';
                 }
                 $logger->logLn($msg);
             }
-
         }
     }
 
@@ -118,15 +117,17 @@ class ConverterHelper
         $options = [],
         $prepareDestinationFolder = true,
         $logger = null
-    )
-    {
+    ) {
         $beginTime = microtime(true);
         if (!isset($logger)) {
             $logger = new \WebPConvert\Loggers\VoidLogger();
         }
         try {
             self::runConverter($converterId, $source, $destination, $options, $prepareDestinationFolder, $logger);
-            $logger->logLn('Successfully converted test image in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
+            $logger->logLn(
+                'Successfully converted test image in ' .
+                round((microtime(true) - $beginTime) * 1000) . ' ms'
+            );
         } catch (\Exception $e) {
             $logger->logLn('Failed in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
             throw $e;

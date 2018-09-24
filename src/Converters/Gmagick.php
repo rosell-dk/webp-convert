@@ -83,7 +83,6 @@ class Gmagick
             throw new ConverterFailedException('Failed writing file');
         } else {
             //$logger->logLn('sooms we made it!');
-
         }
     }
 }
