@@ -60,6 +60,9 @@ This option sets the file size, *cwebp* should aim for, in percentage of the ori
 #### the `autofilter` option
 Turns auto-filter on. This algorithm will spend additional time optimizing the filtering strength to reach a well-balanced quality. Unfortunately, it is extremely expensive in terms of computation. It takes about 5-10 times longer to do a conversion. A 1MB picture which perhaps typically takes about 2 seconds to convert, will takes about 15 seconds to convert with auto-filter. So in most cases, you will want to leave this at its default, which is off.
 
+#### the `low-memory` option
+Reduce memory usage of lossy encoding at the cost of ~30% longer encoding time and marginally larger output size. Default: `false`. Read more in [the docs](https://developers.google.com/speed/webp/docs/cwebp)
+
 #### final words on cwebp
 The `cwebp` binary has more options than we cared to implement. They can however easily be implemented, if there is an interest. View the options [here](https://developers.google.com/speed/webp/docs/cwebp).
 
