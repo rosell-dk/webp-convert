@@ -18,9 +18,9 @@ Many options correspond to options of *cwebp*. These are documented [here](https
 
 | Option            | Type    | Default                    | Description                                                          |
 | ----------------- | ------- | -------------------------- | -------------------------------------------------------------------- |
-| quality           | An integer between 0-100. As of v1.1, it can also be "auto" | In v1.0, default is 85<br><br>As of v1.1, default is "auto"                          | Lossy quality of converted image (JPEG only - PNGs are always losless).<br><br> If set to "auto", *WebPConvert* will try to determine the quality of the JPEG (this is only possible, if Imagick or GraphicsMagic is installed). If successfully determined, the quality of the webp will be set to the same as that of the JPEG. however not to more than specified in the new `max-quality` option. If quality cannot be determined, quality will be set to what is specified in the new `default-quality` option |
+| quality           | An integer between 0-100, or "auto" | "auto" | Lossy quality of converted image (JPEG only - PNGs are always losless).<br><br> If set to "auto", *WebPConvert* will try to determine the quality of the JPEG (this is only possible, if Imagick or GraphicsMagic is installed). If successfully determined, the quality of the webp will be set to the same as that of the JPEG. however not to more than specified in the new `max-quality` option. If quality cannot be determined, quality will be set to what is specified in the new `default-quality` option (however, if you use the *wpc* converter, it will also get a shot at detecting the quality) |
 | max-quality           | An integer between 0-100 | 85 | See the `quality` option. Only relevant, when quality is set to "auto".
-| default-quality           | An integer between 0-100 | 80 | See the `quality` option. Only relevant, when quality is set to "auto".
+| default-quality           | An integer between 0-100 | 75 | See the `quality` option. Only relevant, when quality is set to "auto".
 | metadata          | String  | 'none'                      | Valid values: all, none, exif, icc, xmp. Note: Not supported by all converters             |
 | method            | Integer | 6                           | Specify the compression method to use (0-6). When higher values are used, the encoder will spend more time inspecting additional encoding possibilities and decide on the quality gain. Lower value can result in faster processing time at the expense of larger file size and lower compression quality. |
 | low-memory        | Boolean | false                       | Reduce memory usage of lossy encoding by saving four times the compressed size (typically) |
@@ -28,6 +28,17 @@ Many options correspond to options of *cwebp*. These are documented [here](https
 | converters        | Array   | ['cwebp', 'gd', 'imagick']  | Specify conversion methods to use, and their order. Also optionally set converter options (see below) |
 | converter-options | Array   | []                          | <b>Upcoming in v1.2.0</b>. Set options of the individual converters (see below) |
 
+#### More on quality=auto
+Unfortunately, *libwebp* does not provide a way to use the same quality for the converted image, as for source. This feature is implemented by *imagick* and *gmagick*. No matter which conversion method you choose, if you set *quality* to *auto*, our library will try to detect the quality of the source file using one of these libraries. If this isn't available, it will revert to the value set in the *default-quality* option (75 per default). *However*, with the *wpc* converter you have a second chance: If quality cannot be detected locally, it will send quality="auto" to *wpc*.
+
+The bottom line is: If you do not have imagick or gmagick installed on your host (and have no way to install it), your best option quality-wise is to install *wpc* on a server that you do have access to, and connect to that. However,... read on:
+
+**How much does it matter?**
+The effect of not having quality detection is that jpeg images with medium quality (say 50) will be converted with higher quality (say 75). Converting a q=50 to a q=50 would typically result in a ~60% reduction. But converting it to q=75 will only result in a ~45% reduction. When converting low quality jpeg images, it gets worse. Converting q=30 to q=75 only achieves ~25% reduction.
+
+I guess it is a rare case having jpeg images in low quality. Even having middle quality is rare, as there seems to have been a tendency to choose higher quality than actually needed for web. So, in many cases, the impact of not having quality detection is minor. If you set the *default-quality* a bit low, ie 65, you will further minimize the effect.
+
+To determine if *webp-convert* is able to autodetect quality on your system, run a conversion with the *$logger* parameter set to `new EchoLogger()` (see api).
 
 #### More on the `converter-options` option
 ***This option is available in master and will be part of the upcoming v1.2.0***
