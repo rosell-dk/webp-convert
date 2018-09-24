@@ -11,6 +11,17 @@ use WebPConvert\Serve\Report;
 
 class ConvertAndServe
 {
+    public $source;
+    public $destination;
+    public $options;
+
+    function __construct($source, $destination, $options) {
+        $this->source = $source;
+        $this->destination = $destination;
+        $this->options = array_merge(self::$defaultOptions, $options);
+        //print_r($this->options);
+    }
+
     public static $defaultOptions = [
         'fail' => 'original',
         'fail-when-original-unavailable' => '404',
@@ -25,18 +36,23 @@ class ConvertAndServe
         'converters' =>  ['cwebp', 'gd', 'imagick']
     ];
 
+    private static function header($header, $replace = true)
+    {
+        header($header, $replace);
+    }
+
     private static function addHeadersPreventingCaching()
     {
         // Prevent caching
-        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-        header("Cache-Control: post-check=0, pre-check=0", false);
-        header("Pragma: no-cache");
+        self::header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+        self::header("Cache-Control: post-check=0, pre-check=0", false);
+        self::header("Pragma: no-cache");
     }
 
     private static function addXStatusHeader($text, $options)
     {
         if ($options['add-x-header-status']) {
-            header('X-WebP-Convert-Status: ' . $text);
+            self::header('X-WebP-Convert-Status: ' . $text, true);
         }
     }
 
@@ -45,13 +61,13 @@ class ConvertAndServe
         if (!$options['add-x-header-options']) {
             return;
         }
-        header('X-WebP-Convert-Options:' . Report::getPrintableOptionsAsString($options));
+        self::header('X-WebP-Convert-Options:' . Report::getPrintableOptionsAsString($options));
     }
 
     protected static function serve404()
     {
         $protocol = isset($_SERVER["SERVER_PROTOCOL"]) ? $_SERVER["SERVER_PROTOCOL"] : 'HTTP/1.0';
-        header($protocol . " 404 Not Found");
+        self::header($protocol . " 404 Not Found");
     }
 
     protected static function serveOriginal($source, $options)
@@ -62,16 +78,16 @@ class ConvertAndServe
             switch (strtolower($ext)) {
                 case 'jpg':
                 case 'jpeg':
-                    header('Content-type: image/jpeg');
+                    self::header('Content-type: image/jpeg');
                     break;
                 case 'png':
-                    header('Content-type: image/png');
+                    self::header('Content-type: image/png');
                     break;
             }
         }
 
         if (@readfile($source) === false) {
-            header('X-WebP-Convert: Could not read file');
+            self::header('X-WebP-Convert: Could not read file');
             return false;
         }
         return true;
@@ -107,7 +123,7 @@ class ConvertAndServe
 
             if ($success) {
                 if ($options['add-content-type-header']) {
-                    header('Content-type: image/webp');
+                    self::header('Content-type: image/webp');
                 }
                 if ($additionalInfo == 'explicitly-told-to') {
                     self::addXStatusHeader(
@@ -132,11 +148,11 @@ class ConvertAndServe
                 }
 
                 if ($options['add-vary-header']) {
-                    header('Vary: Accept');
+                    self::header('Vary: Accept');
                 }
 
                 // Should we add Content-Length header?
-                // header('Content-Length: ' . filesize($file));
+                // self::header('Content-Length: ' . filesize($file));
                 if (@readfile($destination)) {
                     return true;
                 } else {
@@ -180,7 +196,18 @@ class ConvertAndServe
 
         // Next line is commented out, because we need to be absolute sure that the details does not violate syntax
         // We could either try to filter it, or we could change WebPConvert, such that it only provides safe texts.
-        // header('X-WebP-Convert-And-Serve-Details: ' . $bufferLogger->getText());
+        // self::header('X-WebP-Convert-And-Serve-Details: ' . $bufferLogger->getText());
+
+        if (!is_null($callbackBeforeServing)) {
+            if (call_user_func($callbackBeforeServing,
+                'fresh-conversion-failed',
+                $additionalInfo,
+                $description,
+                $msg
+            ) === false) {
+                return;
+            };
+        }
 
         self::fail($description, $failArgs, $criticalFail);
         return false;
@@ -191,7 +218,7 @@ class ConvertAndServe
     {
         // Generate image containing error message
         if ($options['add-content-type-header']) {
-            header('Content-type: image/gif');
+            self::header('Content-type: image/gif');
         }
 
         // TODO: handle if this fails...
@@ -271,14 +298,14 @@ class ConvertAndServe
         if (empty($destination)) {
             return ['fail', 'missing-destination-argument'];
         }
+        if ($options['show-report']) {
+            return ['report', ''];
+        }
         if ($options['serve-original']) {
             return ['source', 'explicitly-told-to'];
         }
         if ($options['reconvert']) {
             return ['fresh-conversion', 'explicitly-told-to'];
-        }
-        if ($options['show-report']) {
-            return ['report', ''];
         }
 
         if (@file_exists($destination)) {
