@@ -46,6 +46,33 @@ class Ewww
                 break;
         }
 
+        $fileSize = @filesize($source);
+        if ($fileSize !== false) {
+            $uploadMaxSize = self::parseSize(ini_get('upload_max_filesize'));
+            if (($uploadMaxSize !== false) && ($uploadMaxSize < $fileSize)) {
+                throw new ConverterFailedException(
+                    'File is larger than your max upload (set in your php.ini). File size:' .
+                        round($fileSize/1024) . ' kb. ' .
+                        'upload_max_filesize in php.ini: ' . ini_get('upload_max_filesize') .
+                        ' (parsed as ' . round($uploadMaxSize/1024) . ' kb)'
+                );
+            }
+
+            $postMaxSize = self::parseSize(ini_get('post_max_size'));
+            if (($postMaxSize !== false) && ($postMaxSize < $fileSize)) {
+                throw new ConverterFailedException(
+                    'File is larger than your post_max_size limit (set in your php.ini). File size:' .
+                        round($fileSize/1024) . ' kb. ' .
+                        'post_max_size in php.ini: ' . ini_get('post_max_size') .
+                        ' (parsed as ' . round($postMaxSize/1024) . ' kb)'
+                );
+            }
+
+            // ini_get('memory_limit')
+
+        }
+
+
         $ch = ConverterHelper::initCurlForConverter();
 
         $curlOptions = [
