@@ -1,8 +1,12 @@
 # The webp converters
 
 ## The converters at a glance
+When it comes to webp conversion, there is actually only one library in town: *libwebp* from Google. All conversion methods below ultimately uses that very same library for conversion. This means that it does not matter much, which conversion method you use. Whatever works. There is however one thing to take note of, if you set *quality* to *auto*, and your system cannot determine the quality of the source (this requires imagick or gmagick), and you do not have access to install those, then the only way to get quality-detection is to connect to a *wpc* cloud converter. However, with *cwebp*, you can specify the desired reduction (the *size-in-percent* option) - at the cost of doubling the conversion time. Read more about those considerations in the API.
 
-[`cwebp`](#cwebp) works by executing the *cwebp* binary from Google, which is build upon the *libwebp* (also from Google). That library is actually the only library in town for generating webp images, which means that the other conversion methods ultimately uses that very same library. Which again means that the results using the different methods are very similar. However, with *cwebp*, we have more parameters to tweak than with the rest. We for example have the *method* option, which controls the trade off between encoding speed and the compressed file size and quality. Setting this to max, we can squeeze the images a few percent extra - without loosing quality (the converter is still pretty fast, so in most cases it is probably worth it). Unfortunately, *cwebp* (unlike *gmagick*) does not have a way to automatically use same quality for the converted image as was used for the source image. If you set the quality option to "auto", our library will try to detect the quality with Imagick and Gmagick, but if this fails, the fallback quality will be used. The effect is that a jpeg image with low quality (say 50) will be converted with higher quality (say 75). Converting a q=50 to a q=50 would typically result in a 60% reduction. But converting it to q=75 will only result in a ~45% reduction. Converting q=30 to q=75 only gives ~25% reduction. But I guess it is a rare case having jpeg images in q<50.
+Speed-wise, there is not much difference. *cweb* is the fastest (with method=3). *gd* is right behind, merely 3% slower than *cwebp*. *gmagick* are third place, ~8% slower than *cwebp*. *imagick* comes in ~22% slower than *cwebp*. *ewww* depends very much on your servers upload speed. On my digital ocean droplet, it is ~70% slower than *cwebp* (surprisingly fast, actually).
+
+
+[`cwebp`](#cwebp) works by executing the *cwebp* binary from Google, which is build upon the *libwebp* (also from Google). That library is actually the only library in town for generating webp images, which means that the other conversion methods ultimately uses that very same library. Which again means that the results using the different methods are very similar. However, with *cwebp*, we have more parameters to tweak than with the rest. We for example have the *method* option, which controls the trade off between encoding speed and the compressed file size and quality. Setting this to max, we can squeeze the images a few percent extra - without loosing quality (the converter is still pretty fast, so in most cases it is probably worth it).
 
 Of course, as we here have to call a binary directly, *cwebp* requires the *exec* function to be enabled, and that the webserver user is allowed to execute the `cwebp` binary (either at known system locations, or one of the precompiled binaries, that comes with this library).
 
@@ -14,20 +18,20 @@ Of course, as we here have to call a binary directly, *cwebp* requires the *exec
 
 [`wpc`](#wpc) is an open source cloud converter based on *WebPConvert*. Conversions will of course be slower than the local converters, as images need to go back and forth to the cloud converter. As images usually just needs to be converted once, the slower conversion speed is probably acceptable. To get going, you need to install the [WPC library](https://github.com/rosell-dk/webp-convert-cloud-service) on a server (or have someone do it for you). If this this is a problem, we suggest you turn to *ewww*. (PS: A Wordpress plugin is planned, making it easier to set up a WPC instance)
 
-[`ewww`](#ewww) is also a cloud service. It is a decent alternative for those who don't have the technical know-how to install *wpc*. *ewww* is using cwebp to do the conversion, so quality is great. *ewww* however only provides one conversion option (quality), and it is not free. But very cheap. Like in *almost* free. Oh, and *ewww* does not support auto quality (you need to have Imagick or Gmagick), but I have pitched the idea to the developer.
+[`ewww`](#ewww) is also a cloud service. Not free, but cheap enough to be considered *practically* free. It produces webp files a few percent smaller than the rest. It seems to produce same size as *cwebp*, when method is set to 6. Unfortunately, *ewww* does not support quality=auto, like *wpc*, and it does not support *size-in-percent* like *cwebp*, either. I have requested such features, and he is considering...
 
 **Summary:**
 
 *WebPConvert* currently supports the following converters:
 
-| Converter                            | Method                                           | Quality | Requirements                                       |
-| ------------------------------------ | ------------------------------------------------ | --------| -------------------------------------------------- |
-| [`cwebp`](#cwebp)                    | Calls `cwebp` binary directly                    | best    | `exec()` function *and* that the webserver user has permission to run `cwebp` binary |
-| [`wpc`](#wpc)                        | Connects to WPC cloud service                    | best    | A working *WPC* installation                       |
-| [`ewww`](#ewww)                      | Connects to *EWWW Image Optimizer* cloud service | great   | Purchasing a key                                   |
-| [`gd`](#gd)                          | GD Graphics (Draw) extension (`LibGD` wrapper)   | great    | GD PHP extension compiled with WebP support        |
-| [`imagick`](#imagick)                | Imagick extension (`ImageMagick` wrapper)        | great   | Imagick PHP extension compiled with WebP support   |
-| [`gmagick`](#gmagick)                | Gmagick extension (`ImageMagick` wrapper)        | great   | Gmagick PHP extension compiled with WebP support   |
+| Converter                            | Method                                           | Requirements                                       |
+| ------------------------------------ | ------------------------------------------------ | -------------------------------------------------- |
+| [`cwebp`](#cwebp)                    | Calls `cwebp` binary directly                    | `exec()` function *and* that the webserver user has permission to run `cwebp` binary |
+| [`imagick`](#imagick)                | Imagick extension (`ImageMagick` wrapper)        | Imagick PHP extension compiled with WebP support   |
+| [`gmagick`](#gmagick)                | Gmagick extension (`ImageMagick` wrapper)        | Gmagick PHP extension compiled with WebP support   |
+| [`gd`](#gd)                          | GD Graphics (Draw) extension (`LibGD` wrapper)   | GD PHP extension compiled with WebP support        |
+| [`wpc`](#wpc)                        | Connects to WPC cloud service                    | A working *WPC* installation                       |
+| [`ewww`](#ewww)                      | Connects to *EWWW Image Optimizer* cloud service | Purchasing a key                                   |
 
 ## Installation
 Instructions regarding getting the individual converters to work are [on the wiki](https://github.com/rosell-dk/webp-convert/wiki)
@@ -39,7 +43,7 @@ Instructions regarding getting the individual converters to work are [on the wik
   <tr><th>Reliability</th><td>No problems detected so far!</td></tr>
   <tr><th>Availability</th><td>According to ewww docs, requirements are met on surprisingly many webhosts. Look <a href="https://docs.ewww.io/article/43-supported-web-hosts">here</a> for a list</td></tr>
   <tr><th>General options supported</th><td>All (`quality`, `metadata`, `method`, `low-memory`, `lossless`)</td></tr>
-  <tr><th>Extra options</th><td>`use-nice` (boolean)<br>`try-common-system-paths` (boolean)<br> `try-supplied-binary-for-os` (boolean)</td></tr>
+  <tr><th>Extra options</th><td>`use-nice` (boolean)<br>`try-common-system-paths` (boolean)<br> `try-supplied-binary-for-os` (boolean)<br>`autofilter` (boolean)<br>`size-in-percent` (number / null)</td></tr>
 </table>
 
 [cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP conversion command line converter released by Google. Our implementation ships with precompiled binaries for Linux, FreeBSD, WinNT, Darwin and SunOS. If however a cwebp binary is found in a usual location, that binary will be preferred. It is executed with [exec()](http://php.net/manual/en/function.exec.php).
@@ -51,6 +55,13 @@ In more detail, the implementation does this:
 - If [`nice`]( https://en.wikipedia.org/wiki/Nice_(Unix)) command is found on host, binary is executed with low priority in order to save system resources
 - Permissions of the generated file are set to be the same as parent folder
 
+#### The `size-in-percent` option
+This option sets the file size, *cwebp* should aim for, in percentage of the original. If you for example set it to *45*, and the source file is 100 kb, *cwebp* will try to create a file with size 45 kb (we use the `-size` option). This is an excellent alternative to the "quality:auto" option. If the quality detection isn't working on your system (and you do not have the rights to install imagick or gmagick), you should consider using this options instead. *Cwebp* is generally able to create webp files with the same quality at about 45% the size. So *45* would be a good choice. The option overrides the quality option. And note that it slows down the conversion - it takes about 2.5 times longer to do a conversion this way, than when quality is specified. Default is *off* (null)
+
+#### the `autofilter` option
+Turns auto-filter on. This algorithm will spend additional time optimizing the filtering strength to reach a well-balanced quality. Unfortunately, it is extremely expensive in terms of computation. It takes about 5-10 times longer to do a conversion. A 1MB picture which perhaps typically takes about 2 seconds to convert, will takes about 15 seconds to convert with auto-filter. So in most cases, you will want to leave this at its default, which is off.
+
+#### final words on cwebp
 The `cwebp` binary has more options than we cared to implement. They can however easily be implemented, if there is an interest. View the options [here](https://developers.google.com/speed/webp/docs/cwebp).
 
 The implementation is based on the work of Shane Bishop for his plugin, [EWWW Image Optimizer](https://ewww.io). Thanks for letting us do that!
