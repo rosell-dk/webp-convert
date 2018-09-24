@@ -77,8 +77,13 @@ class ConvertAndServe
         return true;
     }
 
-    public static function serveFreshlyConverted($source, $destination, $options, $additionalInfo)
-    {
+    public static function serveFreshlyConverted(
+        $source,
+        $destination,
+        $options,
+        $additionalInfo,
+        $callbackBeforeServing = null
+    ) {
         $failArgs = [$source, $destination, $options];
 
         $criticalFail = false;
@@ -87,6 +92,18 @@ class ConvertAndServe
 
         try {
             $success = WebPConvert::convert($source, $destination, $options, $bufferLogger);
+
+            if (!is_null($callbackBeforeServing)) {
+                $continue = (call_user_func(
+                    $callbackBeforeServing,
+                    'fresh-conversion-' . ($success ? 'successful' : 'failed'),
+                    $additionalInfo
+                ) !== false);
+                if (!$continue) {
+                    return;
+                }
+            }
+
 
             if ($success) {
                 if ($options['add-content-type-header']) {
@@ -235,24 +252,24 @@ class ConvertAndServe
      *       - "source-modified"
      *       - "no-existing"
      *  - "fail"
-     *        - missing destination argument
+     *        - missing-destination-argument
      *  - "critical-fail"   (a failure where the source file cannot be served)
-     *        - "missing source argument"
-     *        - "source not found"
+     *        - "missing-source-argument"
+     *        - "source-not-found"
      *  - "report"
      */
-    public static function desideWhatToServe($source, $destination, $options)
+    public static function decideWhatToServe($source, $destination, $options)
     {
         $options = array_merge(self::$defaultOptions, $options);
 
         if (empty($source)) {
-            return ['critical-fail', 'missing source argument'];
+            return ['critical-fail', 'missing-source-argument'];
         }
         if (@!file_exists($source)) {
-            return ['critical-fail', 'source not found'];
+            return ['critical-fail', 'source-not-found'];
         }
         if (empty($destination)) {
-            return ['fail', 'missing destination argument'];
+            return ['fail', 'missing-destination-argument'];
         }
         if ($options['serve-original']) {
             return ['source', 'explicitly-told-to'];
@@ -292,11 +309,11 @@ class ConvertAndServe
 
     /**
      *  Serve the thing specified in $decisionArr
-     *  You can get a valid $decisionArr by calling the desideWhatToServe() method
+     *  You can get a valid $decisionArr by calling the decideWhatToServe() method
      *  You may for example do this in order to add your own headers based on
-     *  desideWhatToServe, before proccessing
+     *  decideWhatToServe, before proccessing
      */
-    public static function serveThis($source, $destination, $options, $decisionArr)
+    public static function serveThis($source, $destination, $options, $decisionArr, $callbackBeforeServing = null)
     {
         $options = array_merge(self::$defaultOptions, $options);
         $failArgs = [$source, $destination, $options];
@@ -304,6 +321,15 @@ class ConvertAndServe
 
         self::addXOptionsHeader($options);
 
+        $continue = true;
+        if ($whatToServe != 'fresh-conversion') {
+            if (!is_null($callbackBeforeServing)) {
+                $continue = (call_user_func($callbackBeforeServing, $whatToServe, $additionalInfo) !== false);
+            }
+        }
+        if (!$continue) {
+            return;
+        }
         switch ($whatToServe) {
             case 'destination':
                 return ServeExistingOrConvert::serveExisting($destination, $options);
@@ -325,7 +351,13 @@ class ConvertAndServe
                 }
                 return true;
             case 'fresh-conversion':
-                return self::serveFreshlyConverted($source, $destination, $options, $additionalInfo);
+                return self::serveFreshlyConverted(
+                    $source,
+                    $destination,
+                    $options,
+                    $additionalInfo,
+                    $callbackBeforeServing
+                );
                 break;
             case 'critical-fail':
                 self::criticalFail($additionalInfo, $failArgs);
@@ -340,11 +372,11 @@ class ConvertAndServe
         }
     }
 
-    //self::desideWhatToServe($source, $destination, $options)
+    //self::decideWhatToServe($source, $destination, $options)
     /**
      * Main method
      */
-    public static function convertAndServe($source, $destination, $options)
+    public static function convertAndServe($source, $destination, $options, $callbackBeforeServing = null)
     {
         ServeExistingOrConvert::setErrorReporting($options);
 
@@ -353,7 +385,7 @@ class ConvertAndServe
             $options['fail-when-original-unavailable'] = $options['critical-fail'];
         }
 
-        $decisionArr = self::desideWhatToServe($source, $destination, $options);
-        return self::serveThis($source, $destination, $options, $decisionArr);
+        $decisionArr = self::decideWhatToServe($source, $destination, $options);
+        return self::serveThis($source, $destination, $options, $decisionArr, $callbackBeforeServing);
     }
 }
