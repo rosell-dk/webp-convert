@@ -14,12 +14,12 @@ The method tries to serve a converted image. If destination already exists, the 
 The options argument is a named array. Besides the options described below, you can also use any options that the *convert* method takes (if a fresh convertion needs to be created, this method will call the *convert* method and hand over the options argument)
 
 ### *fail*
-Indicate what to serve, in case of normal conversion failure.
+Indicate what to do, in case of normal conversion failure.
 Default value: *"original"*
 
 | Possible values   | Meaning                                         |
 | ----------------- | ----------------------------------------------- |
-| "original"        | Serve the original image.                       |
+| "serve-original"  | Serve the original image.                       |
 | "404"             | Serve 404 status (not found)                    |
 | "report-as-image" | Serve an image with text explaining the problem |
 | "report"          | Serve a textual report explaining the problem   |
@@ -84,6 +84,47 @@ If set to false, error reporting will be turned off, like this:
 ```
 If set to "auto", errors will be turned off, unless the `show-report` option is set, in which case errors will be turned off.
 If set to "dont-mess", error reporting will not be touched.
+
+### *aboutToServeImageCallBack*
+This callback is called right before an image is served. This is a great chance to adding headers. You can stop the image from being served by returning *false*.
+
+**Arguments:**
+The first argument to the callback contains a string that tells what is about to be served. It can be 'fresh-conversion', 'destination' or 'source'.
+
+The second argument tells you why that is served. It can be one of the following:
+for 'source':
+- "explicitly-told-to"     (when the "original" option is set)
+- "source-lighter"         (when original image is actually smaller than the converted)
+
+for 'fresh-conversion':
+- "explicitly-told-to"     (when the "reconvert" option is set)
+- "source-modified"        (when source is newer than existing)
+- "no-existing"            (when there is no existing at the destination)
+
+for 'destination':
+- "no-reason-not-to"       (it is lighter than source, its not older, and we were not told to do otherwise)
+
+
+```
+function aboutToServeImageCallBack($servingWhat, $whyServingThis, $obj)
+{
+    $messages = [
+        'source' => [
+            'explicitly-told-to'
+        ]
+    ]
+    switch ($servingWhat) {
+        case 'destination':
+            break;
+    }
+    echo 'about to serve: ' . $servingWhat . '<br>';
+    echo 'Why? - because: ' . $whyServingThis;
+    return false;   // Do not serve!
+}
+```
+
+### *aboutToPerformFailAction*
+
 
 
 ### *require-for-conversion*
