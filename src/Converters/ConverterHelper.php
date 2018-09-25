@@ -262,6 +262,8 @@ class ConverterHelper
             }
         }
 
+        // TODO: How about Gmagick ?
+
         if (function_exists('shell_exec')) {
         // Try Imagick
             $quality = shell_exec("identify -format '%Q' " . $filename);

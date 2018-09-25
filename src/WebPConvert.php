@@ -4,6 +4,7 @@ namespace WebPConvert;
 
 use WebPConvert\Converters\ConverterHelper;
 use WebPConvert\ServeExistingOrConvert;
+use WebPConvert\Serve\ServeExistingOrHandOver;
 
 class WebPConvert
 {
@@ -20,6 +21,7 @@ class WebPConvert
 
     public static function convertAndServe($source, $destination, $options = [])
     {
-        return ServeExistingOrConvert::serveExistingOrConvert($source, $destination, $options);
+        //return ServeExistingOrConvert::serveExistingOrConvert($source, $destination, $options);
+        return ServeExistingOrHandOver::serveConverted($source, $destination, $options);
     }
 }
