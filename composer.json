@@ -6,9 +6,14 @@
   "keywords": ["webp", "images", "cwebp", "imagick", "gd", "jpg2webp", "png2webp", "jpg", "png", "image conversion"],
   "scripts": {
     "ci": [
+      "@build",
       "@test",
       "@phpcs-all",
       "@composer validate --no-check-all --strict"
+    ],
+    "build": [
+      "@build-wod",
+      "@build-require-all"
     ],
     "cs-fix-all": [
       "php-cs-fixer fix src"
@@ -18,7 +23,9 @@
     "test": "phpunit",
     "phpcs": "phpcs --standard=PSR2",
     "phpcs-all": "phpcs --standard=PSR2 src",
-    "phpcbf": "phpcbf --standard=PSR2"
+    "phpcbf": "phpcbf --standard=PSR2",
+    "build-wod": "php build-scripts/build-webp-on-demand.php",
+    "build-require-all": "php build-scripts/generate-require-all.php"
   },
   "extra": {
       "scripts-descriptions": {
