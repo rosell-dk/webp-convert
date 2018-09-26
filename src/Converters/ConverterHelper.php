@@ -262,10 +262,11 @@ class ConverterHelper
             }
         }
 
-        // TODO: How about Gmagick ?
+        // Gmagick extension doesn't seem to support this (yet):
+        // https://bugs.php.net/bug.php?id=63939
 
         if (function_exists('shell_exec')) {
-        // Try Imagick
+            // Try Imagick
             $quality = shell_exec("identify -format '%Q' " . $filename);
             if ($quality) {
                 return intval($quality);
