@@ -31,9 +31,11 @@ class ServeExistingOrHandOver extends ServeBase
             $server->whyServingThis = 'no-reason-not-to';
             return $server->serveExisting();
         } else {
+            // Load extra php classes, if told to
+            if (isset($options['require-for-conversion'])) {
+                require($options['require-for-conversion']);
+            }
             ServeConverted::serveConverted($source, $destination, $options);
         }
     }
-
-
 }
