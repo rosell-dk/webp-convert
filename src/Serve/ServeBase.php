@@ -1,7 +1,7 @@
 <?php
 namespace WebPConvert\Serve;
 
-use WebPConvert\Serve\Report;
+//use WebPConvert\Serve\Report;
 
 class ServeBase
 {
@@ -14,7 +14,8 @@ class ServeBase
     public $whatToServe;
     public $whyServingThis = '';
 
-    function __construct($source, $destination, $options) {
+    public function __construct($source, $destination, $options)
+    {
 
         $this->source = $source;
         $this->destination = $destination;
@@ -64,13 +65,6 @@ class ServeBase
     {
         if ($this->options['add-x-header-status']) {
             $this->header('X-WebP-Convert-Status: ' . $text, true);
-        }
-    }
-
-    public function addXOptionsHeader()
-    {
-        if ($this->options['add-x-header-options']) {
-            $this->header('X-WebP-Convert-Options:' . Report::getPrintableOptionsAsString($this->options));
         }
     }
 
@@ -125,7 +119,13 @@ class ServeBase
         if (!isset($this->options['aboutToServeImageCallBack'])) {
             return true;
         }
-        return (call_user_func($this->options['aboutToServeImageCallBack'], $whatToServe, $this->whyServingThis, $this) !== false);
+        $result = call_user_func(
+            $this->options['aboutToServeImageCallBack'],
+            $whatToServe,
+            $this->whyServingThis,
+            $this
+        );
+        return ($result !== false);
     }
 
     /**
@@ -194,5 +194,4 @@ class ServeBase
             return ['fresh-conversion', 'no-existing'];
         }
     }
-
 }

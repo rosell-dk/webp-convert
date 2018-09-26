@@ -13,6 +13,13 @@ use WebPConvert\Serve\Report;
 class ServeConverted extends ServeBase
 {
 
+    private function addXOptionsHeader()
+    {
+        if ($this->options['add-x-header-options']) {
+            $this->header('X-WebP-Convert-Options:' . Report::getPrintableOptionsAsString($this->options));
+        }
+    }
+
     private function addHeadersPreventingCaching()
     {
         $this->header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -55,7 +62,8 @@ class ServeConverted extends ServeBase
         return true;
     }
 
-    public function serveFreshlyConverted($additionalInfo) {
+    public function serveFreshlyConverted($additionalInfo)
+    {
 
         $criticalFail = false;
         $success = false;
@@ -65,14 +73,12 @@ class ServeConverted extends ServeBase
             $success = WebPConvert::convert($this->source, $this->destination, $this->options, $bufferLogger);
 
             if ($success) {
-
                 // Serve source if it is smaller than destination
                 $filesizeDestination = @filesize($this->destination);
                 $filesizeSource = @filesize($this->source);
                 if (($filesizeSource !== false) &&
                     ($filesizeDestination !== false) &&
                     ($filesizeDestination > $filesizeSource)) {
-
                     return $this->serveOriginal();
                 }
 
@@ -177,7 +183,13 @@ class ServeConverted extends ServeBase
         $action = $critical ? $this->options['fail-when-original-unavailable'] : $this->options['fail'];
 
         if (!is_null($this->options['aboutToPerformFailActionCallback'])) {
-            if (call_user_func($this->options['aboutToPerformFailActionCallback'], $title, $description, $action, $this) === false) {
+            if (call_user_func(
+                $this->options['aboutToPerformFailActionCallback'],
+                $title,
+                $description,
+                $action,
+                $this
+            ) === false) {
                 return;
             }
         }
@@ -282,6 +294,4 @@ class ServeConverted extends ServeBase
 
         return $cs->decideWhatToServeAndServeIt();
     }
-
-
 }
