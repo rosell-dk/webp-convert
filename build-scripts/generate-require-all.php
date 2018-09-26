@@ -54,7 +54,7 @@ class RequireGenerator
         }
 
         // generate file
-        $my_file = $def['destination'];
+        $my_file = __DIR__ . '/' . $def['destination'];
         $handle = fopen($my_file, 'w') or die('Cannot open file:  '.$my_file);
         fwrite($handle, $data);
 
