@@ -1,12 +1,12 @@
 <?php
 require_once __DIR__  . "/Exceptions/WebPConvertBaseException.php";
 require_once __DIR__  . "/Loggers/BaseLogger.php";
-require_once __DIR__  . "/ServeExistingOrConvert.php";
 require_once __DIR__  . "/WebPConvert.php";
 require_once __DIR__  . "/Converters/ConverterHelper.php";
 require_once __DIR__  . "/Converters/Cwebp.php";
 require_once __DIR__  . "/Converters/Ewww.php";
 require_once __DIR__  . "/Converters/Gd.php";
+require_once __DIR__  . "/Converters/Gmagick.php";
 require_once __DIR__  . "/Converters/Imagick.php";
 require_once __DIR__  . "/Converters/Wpc.php";
 require_once __DIR__  . "/Exceptions/ConverterNotFoundException.php";
@@ -20,5 +20,7 @@ require_once __DIR__  . "/Converters/Exceptions/ConverterNotOperationalException
 require_once __DIR__  . "/Loggers/BufferLogger.php";
 require_once __DIR__  . "/Loggers/EchoLogger.php";
 require_once __DIR__  . "/Loggers/VoidLogger.php";
-require_once __DIR__  . "/Serve/ConvertAndServe.php";
 require_once __DIR__  . "/Serve/Report.php";
+require_once __DIR__  . "/Serve/ServeBase.php";
+require_once __DIR__  . "/Serve/ServeConverted.php";
+require_once __DIR__  . "/Serve/ServeExistingOrHandOver.php";
