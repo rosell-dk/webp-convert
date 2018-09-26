@@ -56,12 +56,13 @@ class ConverterHelper
     public static $defaultOptions = [
         'quality' => 'auto',
         'max-quality' => 85,
-        'default-quality' => 80,
+        'default-quality' => 75,
         'metadata' => 'none',
         'method' => 6,
         'low-memory' => false,
         'lossless' => false,
-        'converters' =>  ['cwebp', 'gd', 'imagick']
+        'converters' =>  ['cwebp', 'gd', 'imagick'],
+        'converter-options' => []
     ];
 
     public static function mergeOptions($options, $extraOptions)
@@ -74,7 +75,6 @@ class ConverterHelper
         return 'WebPConvert\\Converters\\' . ucfirst($converterId);
     }
 
-
     /* Call the "convert" method on a converter, by id.
        - but also prepares options (merges in the $extraOptions of the converter),
          prepares destination folder, and runs some standard validations */
@@ -86,6 +86,8 @@ class ConverterHelper
         $prepareDestinationFolder = true,
         $logger = null
     ) {
+
+
         if ($prepareDestinationFolder) {
             self::prepareDestinationFolderAndRunCommonValidations($source, $destination);
         }
@@ -123,8 +125,48 @@ class ConverterHelper
             $logger
         );
 
-        if (!file_exists($destination)) {
+        if (!@file_exists($destination)) {
             throw new ConverterFailedException('Destination file is not there');
+        } else {
+            $sourceSize = @filesize($source);
+            if ($sourceSize !== false) {
+                $msg = 'Success. ';
+                $msg .= 'Reduced file size with ' .
+                    round((filesize($source) - filesize($destination))/filesize($source) * 100) . '% ';
+
+                if ($sourceSize < 10000) {
+                    $msg .= '(went from ' . round(filesize($source)) . ' bytes to ';
+                    $msg .= round(filesize($destination)) . ' bytes)';
+                } else {
+                    $msg .= '(went from ' . round(filesize($source)/1024) . ' kb to ';
+                    $msg .= round(filesize($destination)/1024) . ' kb)';
+                }
+                $logger->logLn($msg);
+            }
+        }
+    }
+
+    public static function runConverterWithTiming(
+        $converterId,
+        $source,
+        $destination,
+        $options = [],
+        $prepareDestinationFolder = true,
+        $logger = null
+    ) {
+        $beginTime = microtime(true);
+        if (!isset($logger)) {
+            $logger = new \WebPConvert\Loggers\VoidLogger();
+        }
+        try {
+            self::runConverter($converterId, $source, $destination, $options, $prepareDestinationFolder, $logger);
+            $logger->logLn(
+                'Successfully converted test image in ' .
+                round((microtime(true) - $beginTime) * 1000) . ' ms'
+            );
+        } catch (\Exception $e) {
+            $logger->logLn('Failed in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
+            throw $e;
         }
     }
 
@@ -189,9 +231,8 @@ class ConverterHelper
                     self::processQualityOption($source, $converterOptions, $logger);
                 }
 
-                self::runConverter($converterId, $source, $destination, $converterOptions, false, $logger);
+                self::runConverterWithTiming($converterId, $source, $destination, $converterOptions, false, $logger);
 
-                // Still here? - well, we did it! - job is done.
                 $logger->logLn('ok', 'bold');
                 return true;
             } catch (\WebPConvert\Converters\Exceptions\ConverterNotOperationalException $e) {
@@ -257,8 +298,11 @@ class ConverterHelper
             }
         }
 
+        // Gmagick extension doesn't seem to support this (yet):
+        // https://bugs.php.net/bug.php?id=63939
+
         if (function_exists('shell_exec')) {
-        // Try Imagick
+            // Try Imagick
             $quality = shell_exec("identify -format '%Q' " . $filename);
             if ($quality) {
                 return intval($quality);
@@ -324,7 +368,7 @@ class ConverterHelper
     // Throws an exception if the provided file doesn't exist
     public static function isValidTarget($filePath)
     {
-        if (!file_exists($filePath)) {
+        if (!@file_exists($filePath)) {
             throw new TargetNotFoundException('File or directory not found: ' . $filePath);
         }
 
@@ -343,10 +387,11 @@ class ConverterHelper
     }
 
     // Creates folder in provided path & sets correct permissions
+    // also deletes the file at filePath (if it already exists)
     public static function createWritableFolder($filePath)
     {
-        $folder = pathinfo($filePath, PATHINFO_DIRNAME);
-        if (!file_exists($folder)) {
+        $folder = dirname($filePath);
+        if (!@file_exists($folder)) {
             // TODO: what if this is outside open basedir?
             // see http://php.net/manual/en/ini.core.php#ini.open-basedir
 
@@ -357,42 +402,46 @@ class ConverterHelper
             $parentFolders = explode('/', $folder);
             $poppedFolders = [];
 
-            while (!(file_exists(implode('/', $parentFolders))) && count($parentFolders) > 0) {
+            while (!(@file_exists(implode('/', $parentFolders))) && count($parentFolders) > 0) {
                 array_unshift($poppedFolders, array_pop($parentFolders));
             }
 
             // Retrieving permissions of closest existing folder
             $closestExistingFolder = implode('/', $parentFolders);
-            $permissions = fileperms($closestExistingFolder) & 000777;
+            $permissions = @fileperms($closestExistingFolder) & 000777;
+            $stat = @stat($closestExistingFolder);
 
-            // Trying to create the given folder
-            // Notice: mkdir emits a warning on failure. It would be nice to suppress that, if possible
-            if (!mkdir($folder, $permissions, true)) {
+            // Trying to create the given folder (recursively)
+            if (!@mkdir($folder, $permissions, true)) {
                 throw new CreateDestinationFolderException('Failed creating folder: ' . $folder);
             }
 
-
-            // `mkdir` doesn't respect permissions, so we have to `chmod` each created subfolder
+            // `mkdir` doesn't always respect permissions, so we have to `chmod` each created subfolder
             foreach ($poppedFolders as $subfolder) {
                 $closestExistingFolder .= '/' . $subfolder;
                 // Setting directory permissions
-                chmod($folder, $permissions);
+                if ($permissions !== false) {
+                    @chmod($folder, $permissions);
+                }
+                if ($stat !== false) {
+                    if (isset($stat['uid'])) {
+                        @chown($folder, $stat['uid']);
+                    }
+                    if (isset($stat['gid'])) {
+                        @chgrp($folder, $stat['gid']);
+                    }
+                }
             }
         }
 
-        // Checks if there's a file in $filePath & if writing permissions are correct
-        if (file_exists($filePath) && !is_writable($filePath)) {
-            throw new CreateDestinationFileException(
-                'Cannot overwrite ' . basename($filePath) . ' - check file permissions.'
-            );
-        }
-
-        // There's either a rewritable file in $filePath or none at all.
-        // If there is, simply attempt to delete it
-        if (file_exists($filePath) && !unlink($filePath)) {
-            throw new CreateDestinationFileException(
-                'Existing file cannot be removed: ' . basename($filePath)
-            );
+        if (@file_exists($filePath)) {
+            // A file already exists in this folder...
+            // We delete it, to make way for a new webp
+            if (!@unlink($filePath)) {
+                throw new CreateDestinationFileException(
+                    'Existing file cannot be removed: ' . basename($filePath)
+                );
+            }
         }
 
         return true;
@@ -444,6 +493,35 @@ class Cwebp
             'type' => 'boolean',
             'sensitive' => false,
             'default' => false,
+            'required' => false
+        ],
+        // low-memory is defined for all, in ConverterHelper
+        [
+            'name' => 'try-common-system-paths',
+            'type' => 'boolean',
+            'sensitive' => false,
+            'default' => true,
+            'required' => false
+        ],
+        [
+            'name' => 'try-supplied-binary-for-os',
+            'type' => 'boolean',
+            'sensitive' => false,
+            'default' => true,
+            'required' => false
+        ],
+        [
+            'name' => 'autofilter',
+            'type' => 'boolean',
+            'sensitive' => false,
+            'default' => false,     // the -af option is very slow, and does not have much effect
+            'required' => false
+        ],
+        [
+            'name' => 'size-in-percent',
+            'type' => 'number',
+            'sensitive' => false,
+            'default' => null,
             'required' => false
         ],
     ];
@@ -509,36 +587,15 @@ class Cwebp
         }
     }
 
-    //
     private static function executeBinary($binary, $commandOptions, $useNice, $logger)
     {
         $command = ($useNice ? 'nice ' : '') . $binary . ' ' . $commandOptions;
 
-        $logger->logLn('Trying to execute binary:' . $binary);
+        //$logger->logLn('Trying to execute binary:' . $binary);
         //$logger->logLn();
-
         exec($command, $output, $returnCode);
-
-        switch ($returnCode) {
-            case 0:
-                $logger->logLn('Success!');
-                break;
-            case 126:
-                $logger->logLn(
-                    'Permission denied. The user that the command was run with (' .
-                    shell_exec('whoami') . ') does not have permission to execute that binary.'
-                );
-                break;
-            case 127:
-                $logger->logLn('No binary found at that location');
-                break;
-            default:
-                $logger->logLn(
-                    'Failed. Return code:' .  $returnCode .
-                    '. See http://tldp.org/LDP/abs/html/exitcodes.html for failcodes'
-                );
-        }
-        return $returnCode;
+        //$logger->logLn(self::msgForExitCode($returnCode));
+        return intval($returnCode);
     }
 
     // Although this method is public, do not call directly.
@@ -558,43 +615,55 @@ class Cwebp
          * Prepare cwebp options
          */
 
+        $commandOptionsArray = [];
+
         // Metadata (all, exif, icc, xmp or none (default))
         // Comma-separated list of existing metadata to copy from input to output
-        $metadata = '-metadata ' . $options['metadata'];
+        $commandOptionsArray[] = '-metadata ' . $options['metadata'];
 
-        // Image quality
-        $quality = '-q ' . $options['_calculated_quality'];
-
-        // Losless PNG conversion
-        $lossless = ($options['lossless'] ? '-lossless' : '');
-
-        // Built-in method option
-        $method = ' -m ' . strval($options['method']);
-
-
-        // TODO:
-        // Why not use -af ?  (https://developers.google.com/speed/webp/docs/cwebp)
-        // Would it be possible get a quality similar to source?
-        // It seems so: "identify -format '%Q' yourimage.jpg"
-        // (https://stackoverflow.com/questions/2024947/is-it-possible-to-tell-the-quality-level-of-a-jpeg)
-        // -- With -jpeg_like option, or perhaps the -size option
-
-        // Built-in low memory option
-        $lowMemory = '';
-        if ($options['low-memory']) {
-            $lowMemory = '-low_memory';
+        // Size
+        if (!is_null($options['size-in-percent'])) {
+            $sizeSource =  @filesize($source);
+            if ($sizeSource !== false) {
+                $targetSize = floor($sizeSource * $options['size-in-percent'] / 100);
+            }
+        }
+        if (isset($targetSize)) {
+            $commandOptionsArray[] = '-size ' . $targetSize;
+        } else {
+            // Image quality
+            $commandOptionsArray[] = '-q ' . $options['_calculated_quality'];
         }
 
-        $commandOptionsArray = [
-            $metadata = $metadata,
-            $quality = $quality,
-            $lossless = $lossless,
-            $method = $method,
-            $lowMemory = $lowMemory,
-            $input = self::escapeFilename($source),
-            $output = '-o ' . self::escapeFilename($destination),
-            $stderrRedirect = '2>&1'
-        ];
+
+        // Losless PNG conversion
+        $commandOptionsArray[] = ($options['lossless'] ? '-lossless' : '');
+
+        // Built-in method option
+        $commandOptionsArray[] = '-m ' . strval($options['method']);
+
+        // Built-in low memory option
+        if ($options['low-memory']) {
+            $commandOptionsArray[] = '-low_memory';
+        }
+
+        // Autofilter
+        if ($options['autofilter']) {
+            $commandOptionsArray[] = '-af';
+        }
+
+        //
+
+        // Source file
+        $commandOptionsArray[] = self::escapeFilename($source);
+
+        // Output
+        $commandOptionsArray[] = '-o ' . self::escapeFilename($destination);
+
+        // Redirect stderr to same place as stdout
+        // https://www.brianstorti.com/understanding-shell-script-idiom-redirect/
+        $commandOptionsArray[] = '2>&1';
+
 
         $useNice = (($options['use-nice']) && self::hasNiceSupport()) ? true : false;
 
@@ -605,31 +674,79 @@ class Cwebp
         $cwebpPathsToTest = self::$cwebpDefaultPaths;
 
         // Remove paths that doesn't exist
+        /*
         $cwebpPathsToTest = array_filter($cwebpPathsToTest, function ($binary) {
             //return file_exists($binary);
             return @is_readable($binary);
         });
+        */
 
-        // Try all common paths that exitst
+        // Try all common paths that exists
         $success = false;
-        foreach ($cwebpPathsToTest as $index => $binary) {
-            $success = (self::executeBinary($binary, $commandOptions, $useNice, $logger) == 0);
-            if ($success) {
-                break;
-            }
+        $failures = [];
+        $failureCodes = [];
+
+        if (!$options['try-supplied-binary-for-os'] && !$options['try-common-system-paths']) {
+            $errorMsg .= 'Configured to neither look for cweb binaries in common system locations, ' .
+                'nor to use one of the supplied precompiled binaries. But these are the only ways ' .
+                'this converter can convert images. No conversion can be made!';
         }
-        if (!$success) {
-            //$logger->logLn('');
-            if (count($cwebpPathsToTest) > 0) {
-                $errorMsg .= 'Found cwebp binaries at these locations: "' .
-                    implode('", "', $cwebpPathsToTest) .
-                    '". However, executing these failed. ';
-            } else {
-                $errorMsg .= 'Found no cwebp binaries in any common locations. ';
+
+        if ($options['try-common-system-paths']) {
+            foreach ($cwebpPathsToTest as $index => $binary) {
+                $returnCode = self::executeBinary($binary, $commandOptions, $useNice, $logger);
+                if ($returnCode == 0) {
+                    $logger->logLn('Successfully executed binary: ' . $binary);
+                    $success = true;
+                    break;
+                } else {
+                    $failures[] = [$binary, $returnCode];
+                    if (!in_array($returnCode, $failureCodes)) {
+                        $failureCodes[] = $returnCode;
+                    }
+                }
+            }
+            $majorFailCode = 0;
+            if (!$success) {
+                if (count($failureCodes) == 1) {
+                    $majorFailCode = $failureCodes[0];
+                    switch ($majorFailCode) {
+                        case 126:
+                            $errorMsg = 'Permission denied. The user that the command was run with (' .
+                                shell_exec('whoami') . ') does not have permission to execute any of the ' .
+                                'cweb binaries found in common system locations. ';
+                            break;
+                        case 127:
+                            $errorMsg .= 'Found no cwebp binaries in any common system locations. ';
+                            break;
+                        default:
+                            $errorMsg .= 'Tried executing cwebp binaries in common system locations. ' .
+                                'All failed (exit code: ' . $majorFailCode . '). ';
+                    }
+                } else {
+                    $failureCodesBesides127 = array_diff($failureCodes, [127]);
+
+                    if (count($failureCodesBesides127) == 1) {
+                        $majorFailCode = $failureCodesBesides127[0];
+                        switch ($returnCode) {
+                            case 126:
+                                $errorMsg = 'Permission denied. The user that the command was run with (' .
+                                    shell_exec('whoami') . ') does not have permission to execute any of the cweb ' .
+                                    'binaries found in common system locations. ';
+                                break;
+                            default:
+                                $errorMsg .= 'Tried executing cwebp binaries in common system locations. ' .
+                                    'All failed (exit code: ' . $majorFailCode . '). ';
+                        }
+                    } else {
+                        $errorMsg .= 'None of the cwebp binaries in the common system locations could be executed ' .
+                            '(mixed results - got the following exit codes: ' . implode(',', $failureCodes) . '). ';
+                    }
+                }
             }
         }
 
-        if (!$success) {
+        if (!$success && $options['try-supplied-binary-for-os']) {
           // Try supplied binary (if available for OS, and hash is correct)
             if (isset(self::$suppliedBinariesInfo[PHP_OS])) {
                 $info = self::$suppliedBinariesInfo[PHP_OS];
@@ -640,7 +757,7 @@ class Cwebp
                 $binaryFile = __DIR__ . '/Binaries/' . $file;
 
                 // The file should exist, but may have been removed manually.
-                if (file_exists($binaryFile)) {
+                if (@file_exists($binaryFile)) {
                     // File exists, now generate its hash
 
                     // hash_file() is normally available, but it is not always
@@ -664,20 +781,31 @@ class Cwebp
                         if ($returnCode == 0) {
                             $success = true;
                         } else {
-                            $errorMsg .= 'Tried executing supplied binary (' . $binaryFile . '), but that failed too: ';
-                            switch ($returnCode) {
-                                case 126:
-                                    $errorMsg .= 'Permission denied (user "' .
-                                        trim(shell_exec('whoami')) .
-                                        '" does not have permission to execute the binary)';
-                                    break;
-                                default:
-                                    $errorMsg .= 'Fail code: ' . $returnCode;
+                            $errorMsg .= 'Tried executing supplied binary for ' . PHP_OS . ', ' .
+                                ($options['try-common-system-paths'] ? 'but that failed too' : 'but failed');
+                            if ($options['try-common-system-paths'] && ($majorFailCode > 0)) {
+                                $errorMsg .= ' (same error)';
+                            } else {
+                                switch ($returnCode) {
+                                    case 0:
+                                        $success = true;
+                                        ;
+                                        break;
+                                    case 126:
+                                        $errorMsg .= ': Permission denied. The user that the command was run with (' .
+                                            shell_exec('whoami') . ') does not have permission to execute that binary.';
+                                        break;
+                                    case 127:
+                                        $errorMsg .= '. The binary was not found! It ought to be here: ' . $binaryFile;
+                                        break;
+                                    default:
+                                        $errorMsg .= ' (exit code:' .  $returnCode . ').';
+                                }
                             }
                         }
                     }
                 } else {
-                    $errorMsg .= 'Supplied binary not found:' . $binaryFile;
+                    $errorMsg .= 'Supplied binary not found! It ought to be here:' . $binaryFile;
                 }
             } else {
                 $errorMsg .= 'No supplied binaries found for OS:' . PHP_OS;
@@ -727,6 +855,21 @@ class Ewww
         ConverterHelper::runConverter('ewww', $source, $destination, $options, true);
     }
 
+    // Took this parser from Drupal
+    private static function parseSize($size)
+    {
+
+        $unit = preg_replace('/[^bkmgtpezy]/i', '', $size); // Remove the non-unit characters from the size.
+            $size = preg_replace('/[^0-9\.]/', '', $size); // Remove the non-numeric characters from the size.
+        if ($unit) {
+            // Find the position of the unit in the ordered string which is the power
+            // of magnitude to multiply a kilobyte by.
+            return round($size * pow(1024, stripos('bkmgtpezy', $unit[0])));
+        } else {
+            return round($size);
+        }
+    }
+
     // Although this method is public, do not call directly.
     public static function doConvert($source, $destination, $options, $logger)
     {
@@ -750,6 +893,32 @@ class Ewww
                 throw new ConverterNotOperationalException('key is invalid');
                 break;
         }
+
+        $fileSize = @filesize($source);
+        if ($fileSize !== false) {
+            $uploadMaxSize = self::parseSize(ini_get('upload_max_filesize'));
+            if (($uploadMaxSize !== false) && ($uploadMaxSize < $fileSize)) {
+                throw new ConverterFailedException(
+                    'File is larger than your max upload (set in your php.ini). File size:' .
+                        round($fileSize/1024) . ' kb. ' .
+                        'upload_max_filesize in php.ini: ' . ini_get('upload_max_filesize') .
+                        ' (parsed as ' . round($uploadMaxSize/1024) . ' kb)'
+                );
+            }
+
+            $postMaxSize = self::parseSize(ini_get('post_max_size'));
+            if (($postMaxSize !== false) && ($postMaxSize < $fileSize)) {
+                throw new ConverterFailedException(
+                    'File is larger than your post_max_size limit (set in your php.ini). File size:' .
+                        round($fileSize/1024) . ' kb. ' .
+                        'post_max_size in php.ini: ' . ini_get('post_max_size') .
+                        ' (parsed as ' . round($postMaxSize/1024) . ' kb)'
+                );
+            }
+
+            // ini_get('memory_limit')
+        }
+
 
         $ch = ConverterHelper::initCurlForConverter();
 
@@ -996,10 +1165,12 @@ class Gd
 
         // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
 
-        $success = imagewebp($image, $destination, $options['_calculated_quality']);
+        $success = @imagewebp($image, $destination, $options['_calculated_quality']);
 
         if (!$success) {
-            throw new ConverterFailedException('Call to imagewebp() failed. Probably failed writing file');
+            throw new ConverterFailedException(
+                'Call to imagewebp() failed. Probably failed writing file. Check file permissions!'
+            );
         }
 
         /*
@@ -1007,12 +1178,100 @@ class Gd
          * See https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files
          *
          */
-
-        if (filesize($destination) % 2 == 1) {
-            file_put_contents($destination, "\0", FILE_APPEND);
+        if (@filesize($destination) % 2 == 1) {
+            @file_put_contents($destination, "\0", FILE_APPEND);
         }
 
         imagedestroy($image);
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Converters;
+
+use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
+use WebPConvert\Converters\Exceptions\ConverterFailedException;
+
+//use WebPConvert\Exceptions\TargetNotFoundException;
+
+class Gmagick
+{
+    public static $extraOptions = [];
+
+    public static function convert($source, $destination, $options = [])
+    {
+        ConverterHelper::runConverter('gmagick', $source, $destination, $options, true);
+    }
+
+    // Although this method is public, do not call directly.
+    public static function doConvert($source, $destination, $options, $logger)
+    {
+        if (!extension_loaded('Gmagick')) {
+            throw new ConverterNotOperationalException('Required Gmagick extension is not available.');
+        }
+
+        if (!class_exists('Gmagick')) {
+            throw new ConverterNotOperationalException(
+                'Gmagick is installed, but not correctly. The class Gmagick is not available'
+            );
+        }
+
+        // This might throw an exception.
+        // We let it...
+        $im = new \Gmagick($source);
+
+
+        // Throws an exception if Gmagick does not support WebP conversion
+        if (!in_array('WEBP', $im->queryformats())) {
+            throw new ConverterNotOperationalException('Gmagick was compiled without WebP support.');
+        }
+
+        $options = array_merge(ConverterHelper::$defaultOptions, $options);
+
+        // Force lossless option to true for PNG images
+        if (ConverterHelper::getExtension($source) == 'png') {
+            $options['lossless'] = true;
+        }
+
+
+        /*
+        Seems there are currently no way to set webp options
+        As noted in the following link, it should probably be done with a $im->addDefinition() method
+        - but that isn't exposed (yet)
+        (TODO: see if anyone has answered...)
+        https://stackoverflow.com/questions/47294962/how-to-write-lossless-webp-files-with-perlmagick
+        */
+        // The following two does not have any effect... How to set WebP options?
+        //$im->setimageoption('webp', 'webp:lossless', $options['lossless'] ? 'true' : 'false');
+        //$im->setimageoption('WEBP', 'method', strval($options['method']));
+
+        // It seems there is no COMPRESSION_WEBP...
+        // http://php.net/manual/en/imagick.setimagecompression.php
+        //$im->setImageCompression(Imagick::COMPRESSION_JPEG);
+        //$im->setImageCompression(Imagick::COMPRESSION_UNDEFINED);
+
+
+
+        $im->setimageformat('WEBP');
+
+        if ($options['metadata'] == 'none') {
+            // Strip metadata and profiles
+            $im->stripImage();
+        }
+
+        // Ps: Imagick automatically uses same quality as source, when no quality is set
+        // This feature is however not present in Gmagick
+        $im->setcompressionquality($options['_calculated_quality']);
+
+        //$success = $im->writeimagefile(fopen($destination, 'wb'));
+        $success = @file_put_contents($destination, $im->getImageBlob());
+
+        if (!$success) {
+            throw new ConverterFailedException('Failed writing file');
+        } else {
+            //$logger->logLn('sooms we made it!');
+        }
     }
 }
 
@@ -1047,7 +1306,12 @@ class Imagick
             );
         }
 
+        // This might throw an exception.
+        // Ie "ImagickException: no decode delegate for this image format `JPEG'"
+        // We let it...
         $im = new \Imagick($source);
+        //$im = new \Imagick();
+        //$im->readImage($source);
 
         // Throws an exception if iMagick does not support WebP conversion
         if (!in_array('WEBP', $im->queryFormats())) {
@@ -1071,13 +1335,43 @@ class Imagick
          */
 
         // TODO: We could easily support all webp options with a loop
+
+        /*
+        After using getImageBlob() to write image, the following setOption() calls
+        makes settings makes imagick fail. So can't use those. But its a small price
+        to get a converter that actually makes great quality conversions.
+
         $im->setOption('webp:method', strval($options['method']));
         $im->setOption('webp:low-memory', strval($options['low-memory']));
         $im->setOption('webp:lossless', strval($options['lossless']));
+        */
+
+        if ($options['metadata'] == 'none') {
+            // Strip metadata and profiles
+            $im->stripImage();
+        }
+
+        if (isset($options['_quality_could_not_be_detected'])) {
+            // quality was set to "auto", but we could not meassure the quality of the jpeg locally
+            // but luckily imagick is a big boy, and automatically converts with same quality as
+            // source, when the quality isn't set.
+            // So we simply do not set quality.
+            // This actually kills the max-height functionality. But I deem that this is more important
+            // because setting image quality to something higher than source generates bigger files,
+            // but gets you no extra quality. When failing to limit quality, you at least get something
+            // out of it
+        } else {
+            $im->setImageCompressionQuality($options['_calculated_quality']);
+        }
 
 
 
-        $im->setImageCompressionQuality($options['_calculated_quality']);
+        // https://stackoverflow.com/questions/29171248/php-imagick-jpeg-optimization
+        // setImageFormat
+
+        // TODO: Read up on
+        // https://www.smashingmagazine.com/2015/06/efficient-image-resizing-with-imagemagick/
+        // https://github.com/nwtn/php-respimg
 
         // TODO:
         // Should we set alpha channel for PNG's like suggested here:
@@ -1087,7 +1381,11 @@ class Imagick
         // TODO: Check out other iMagick methods, see http://php.net/manual/de/imagick.writeimage.php#114714
         // 1. file_put_contents($destination, $im)
         // 2. $im->writeImage($destination)
-        $success = $im->writeImageFile(fopen($destination, 'wb'));
+
+        // We used to use writeImageFile() method. But we now use getImageBlob(). See issue #43
+        //$success = $im->writeImageFile(fopen($destination, 'wb'));
+
+        $success = @file_put_contents($destination, $im->getImageBlob());
 
         if (!$success) {
             throw new ConverterFailedException('Failed writing file');
@@ -1124,6 +1422,21 @@ class Wpc
     public static function convert($source, $destination, $options = [])
     {
         ConverterHelper::runConverter('wpc', $source, $destination, $options, true);
+    }
+
+    // Took this parser from Drupal
+    private static function parseSize($size)
+    {
+
+        $unit = preg_replace('/[^bkmgtpezy]/i', '', $size); // Remove the non-unit characters from the size.
+            $size = preg_replace('/[^0-9\.]/', '', $size); // Remove the non-numeric characters from the size.
+        if ($unit) {
+            // Find the position of the unit in the ordered string which is the power
+            // of magnitude to multiply a kilobyte by.
+            return round($size * pow(1024, stripos('bkmgtpezy', $unit[0])));
+        } else {
+            return round($size);
+        }
     }
 
     // Although this method is public, do not call directly.
@@ -1165,6 +1478,31 @@ class Wpc
                     'contents. But the required md5_file() PHP function is not available.'
                 );
             }
+        }
+
+        $fileSize = @filesize($source);
+        if ($fileSize !== false) {
+            $uploadMaxSize = self::parseSize(ini_get('upload_max_filesize'));
+            if (($uploadMaxSize !== false) && ($uploadMaxSize < $fileSize)) {
+                throw new ConverterFailedException(
+                    'File is larger than your max upload (set in your php.ini). File size:' .
+                        round($fileSize/1024) . ' kb. ' .
+                        'upload_max_filesize in php.ini: ' . ini_get('upload_max_filesize') .
+                        ' (parsed as ' . round($uploadMaxSize/1024) . ' kb)'
+                );
+            }
+
+            $postMaxSize = self::parseSize(ini_get('post_max_size'));
+            if (($postMaxSize !== false) && ($postMaxSize < $fileSize)) {
+                throw new ConverterFailedException(
+                    'File is larger than your post_max_size limit (set in your php.ini). File size:' .
+                        round($fileSize/1024) . ' kb. ' .
+                        'post_max_size in php.ini: ' . ini_get('post_max_size') .
+                        ' (parsed as ' . round($postMaxSize/1024) . ' kb)'
+                );
+            }
+
+            // ini_get('memory_limit')
         }
 
         // Got some code here:
@@ -1252,17 +1590,22 @@ class Wpc
                 );
             }
 
-            $errorMsg = 'Error: Unexpected result. We did not receive an image. We received: "';
-            $errorMsg .= str_replace("\r", '', str_replace("\n", '', htmlentities(substr($response, 0, 400))));
-            throw new ConverterFailedException($errorMsg . '..."');
+            if (empty($response)) {
+                $errorMsg = 'Error: Unexpected result. We got nothing back. HTTP CODE: ' . $httpCode;
+                throw new ConverterFailedException($errorMsg);
+            } else {
+                $errorMsg = 'Error: Unexpected result. We did not receive an image. We received: "';
+                $errorMsg .= str_replace("\r", '', str_replace("\n", '', htmlentities(substr($response, 0, 400))));
+                throw new ConverterFailedException($errorMsg . '..."');
+            }
             //throw new ConverterNotOperationalException($response);
         }
 
-        $success = file_put_contents($destination, $response);
+        $success = @file_put_contents($destination, $response);
         curl_close($ch);
 
         if (!$success) {
-            throw new ConverterFailedException('Error saving file');
+            throw new ConverterFailedException('Error saving file. Check file permissions');
         }
         /*
                 $curlOptions = [
@@ -1478,283 +1821,6 @@ class VoidLogger extends BaseLogger
 namespace WebPConvert\Serve;
 
 use WebPConvert\WebPConvert;
-use WebPConvert\Loggers\BufferLogger;
-use WebPConvert\Converters\ConverterHelper;
-use WebPConvert\ServeExistingOrConvert;
-use WebPConvert\Serve\Report;
-
-//use WebPConvert\Loggers\EchoLogger;
-
-class ConvertAndServe
-{
-    public static $defaultOptions = [
-        'fail' => 'original',
-        'fail-when-original-unavailable' => '404',
-
-        'show-report' => false,
-        'reconvert' => false,
-        'serve-original' => false,
-        'add-x-header-status' => true,
-        'add-x-header-options' => false,
-        'add-vary-header' => true,
-        'converters' =>  ['cwebp', 'gd', 'imagick']
-    ];
-
-    private static function addHeadersPreventingCaching()
-    {
-        // Prevent caching
-        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-        header("Cache-Control: post-check=0, pre-check=0", false);
-        header("Pragma: no-cache");
-    }
-
-    private static function addXStatusHeader($text, $options)
-    {
-        if ($options['add-x-header-status']) {
-            header('X-WebP-Convert-Status: ' . $text);
-        }
-    }
-
-    private static function addXOptionsHeader($options)
-    {
-        if (!$options['add-x-header-options']) {
-            return;
-        }
-        header('X-WebP-Convert-Options:' . Report::getPrintableOptionsAsString($options));
-    }
-
-    protected static function serve404()
-    {
-        $protocol = isset($_SERVER["SERVER_PROTOCOL"]) ? $_SERVER["SERVER_PROTOCOL"] : 'HTTP/1.0';
-        header($protocol . " 404 Not Found");
-    }
-
-    protected static function serveOriginal($source)
-    {
-        $arr = explode('.', $source);
-        $ext = array_pop($arr);
-        switch (strtolower($ext)) {
-            case 'jpg':
-            case 'jpeg':
-                header('Content-type: image/jpeg');
-                break;
-            case 'png':
-                header('Content-type: image/png');
-                break;
-        }
-
-        if (@readfile($source) === false) {
-            header('X-WebP-Convert: Could not read file');
-            return false;
-        }
-        return true;
-    }
-
-    protected static function serveErrorMessageImage($msg)
-    {
-        // Generate image containing error message
-        header('Content-type: image/gif');
-
-        // Prevent caching image
-        self::addHeadersPreventingCaching();
-
-        // TODO: handle if this fails...
-        $image = imagecreatetruecolor(620, 200);
-        imagestring($image, 1, 5, 5, $msg, imagecolorallocate($image, 233, 214, 291));
-        // echo imagewebp($image);
-        echo imagegif($image);
-        imagedestroy($image);
-    }
-
-    protected static function fail($description, $failArgs, $critical = false)
-    {
-        $options = $failArgs['options'];
-        //print_r($options);
-        self::addXStatusHeader('Failed (' . $description . ')', $options);
-
-        $action = $critical ? $options['fail-when-original-unavailable'] : $options['fail'];
-
-        $title = 'Conversion failed';
-        switch ($action) {
-            case 'original':
-                if (!self::serveOriginal($source)) {
-                    self::serve404();
-                };
-                break;
-            case '404':
-                self::serve404();
-                break;
-            case 'report-as-image':
-                // todo: handle if this fails
-                self::serveErrorMessageImage($title . '. ' . $description);
-                break;
-            case 'report':
-                echo '<h1>' . $title . '</h1>' . $description;
-                break;
-        }
-    }
-
-    protected static function criticalFail($description, $failArgs)
-    {
-        return self::fail($description, $failArgs, true);
-    }
-
-
-    /**
-     * Main method
-     */
-    public static function convertAndServe($source, $destination, $options)
-    {
-        // For backward compatability:
-        if (isset($options['critical-fail']) && !isset($options['fail-when-original-unavailable'])) {
-            $options['fail-when-original-unavailable'] = $options['critical-fail'];
-        }
-
-        $options = array_merge(self::$defaultOptions, $options);
-
-        $failArgs = [
-            'source' => $source,
-            'destination' => $destination,
-            'options' => $options,
-        ];
-
-        self::addXOptionsHeader($options);
-
-        if (empty($source)) {
-            self::criticalFail('missing source argument', $failArgs);
-            return false;
-        }
-        if (@!file_exists($source)) {
-            self::criticalFail('source not found', $failArgs);
-            return false;
-        }
-        if (empty($destination)) {
-            self::fail('missing destination argument', $failArgs);
-            return false;
-        }
-//Report::convertAndReport($source, $destination, $options);
-        if ($options['show-report']) {
-            self::addXStatusHeader('Reporting...', $options);
-            Report::convertAndReport($source, $destination, $options);
-            return true;  // yeah, lets say that a report is always a success, even if conversion is a failure
-        }
-
-        if ($options['serve-original']) {
-            self::addXStatusHeader('Serving original image (was explicitly told to)', $options);
-            if (!self::serveOriginal($source)) {
-                self::criticalFail('could not read source file', $failArgs);
-                return false;
-            }
-            return true;
-        }
-
-
-        if (@file_exists($destination)) {
-            if (ServeExistingOrConvert::shouldWeServeExisting($source, $destination, $options)) {
-                return ServeExistingOrConvert::serveExisting($destination, $options);
-            }
-
-            // Serve source file if it is lighter than destination
-            $filesizeDestination = @filesize($destination);
-            $filesizeSource = @filesize($source);
-            if (($filesizeSource !== false) &&
-                ($filesizeDestination !== false) &&
-                ($filesizeDestination > $filesizeSource)) {
-                self::addXStatusHeader('Serving original image - because it is smaller than the converted!', $options);
-                return self::serveOriginal($source);
-            }
-        }
-
-        // Check if source file if it has been modified (we must check before doing the conversion...)
-        $originalHasChanged = false;
-        if (@file_exists($destination)) {
-            $timestampSource = @filemtime($source);
-            $timestampDestination = @filemtime($destination);
-            if (($timestampSource !== false) &&
-                ($timestampDestination !== false) &&
-                ($timestampSource > $timestampDestination)) {
-                $originalHasChanged = true;
-            }
-        }
-
-
-        $failAction = $options['fail'];
-        $criticalFailAction = $options['fail-when-original-unavailable'];
-
-        $criticalFail = false;
-        $success = false;
-        $bufferLogger = new BufferLogger();
-
-        try {
-            $success = WebPConvert::convert($source, $destination, $options, $bufferLogger);
-
-            if ($success) {
-                header('Content-type: image/webp');
-                if ($originalHasChanged) {
-                    self::addXStatusHeader('Serving freshly converted image (the original had changed)', $options);
-                } else {
-                    self::addXStatusHeader('Serving freshly converted image', $options);
-                }
-                ServeExistingOrConvert::addVaryHeader($options);
-
-                // Should we add Content-Length header?
-                // header('Content-Length: ' . filesize($file));
-                if (@readfile($destination)) {
-                    return true;
-                } else {
-                    self::fail('could not read the freshly converted file', $failArgs);
-                    return false;
-                }
-            } else {
-                $description = 'No converters are operational';
-                $msg = '';
-            }
-        } catch (\WebPConvert\Exceptions\InvalidFileExtensionException $e) {
-            $criticalFail = true;
-            $description = 'Failed (invalid file extension)';
-            $msg = $e->getMessage();
-        } catch (\WebPConvert\Exceptions\TargetNotFoundException $e) {
-            $criticalFail = true;
-            $description = 'Failed (source file not found)';
-            $msg = $e->getMessage();
-        } catch (\WebPConvert\Converters\Exceptions\ConverterFailedException $e) {
-            // No converters could convert the image. At least one converter failed, even though it appears to be
-            // operational
-            $description = 'Failure (no converters could convert the image)';
-            $msg = $e->getMessage();
-        } catch (\WebPConvert\Converters\Exceptions\ConversionDeclinedException $e) {
-            // (no converters could convert the image. At least one converter declined
-            $description = 'Failure (no converters could/wanted to convert the image)';
-            $msg = $e->getMessage();
-        } catch (\WebPConvert\Exceptions\ConverterNotFoundException $e) {
-            $description = 'Failure (a converter was not found!)';
-            $msg = $e->getMessage();
-        } catch (\WebPConvert\Exceptions\CreateDestinationFileException $e) {
-            $description = 'Failure (cannot create destination file)';
-            $msg = $e->getMessage();
-        } catch (\WebPConvert\Exceptions\CreateDestinationFolderException $e) {
-            $description = 'Failure (cannot create destination folder)';
-            $msg = $e->getMessage();
-        } catch (\Exception $e) {
-            $description = 'Failure (an unanticipated exception was thrown)';
-            $msg = $e->getMessage();
-        }
-
-
-        // Next line is commented out, because we need to be absolute sure that the details does not violate syntax
-        // We could either try to filter it, or we could change WebPConvert, such that it only provides safe texts.
-        // header('X-WebP-Convert-And-Serve-Details: ' . $bufferLogger->getText());
-
-        self::fail($description, $failArgs);
-        return false;
-        //echo '<p>This is how conversion process went:</p>' . $bufferLogger->getHtml();
-    }
-}
-
-?><?php
-namespace WebPConvert\Serve;
-
-use WebPConvert\WebPConvert;
 use WebPConvert\Converters\ConverterHelper;
 use WebPConvert\Loggers\EchoLogger;
 
@@ -1926,6 +1992,304 @@ class Report
     </body>
     </html>
         <?php
+    }
+}
+
+?><?php
+namespace WebPConvert\Serve;
+
+use WebPConvert\WebPConvert;
+use WebPConvert\Loggers\BufferLogger;
+use WebPConvert\Converters\ConverterHelper;
+use WebPConvert\Serve\Report;
+
+/**
+ * This class must serves a converted image (either a fresh convertion, the destionation, or
+ * the original). Upon failure, the fail action given in the options will be exectuted
+ */
+class ServeConverted extends ServeBase
+{
+
+    private function addXOptionsHeader()
+    {
+        if ($this->options['add-x-header-options']) {
+            $this->header('X-WebP-Convert-Options:' . Report::getPrintableOptionsAsString($this->options));
+        }
+    }
+
+    private function addHeadersPreventingCaching()
+    {
+        $this->header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+        $this->header("Cache-Control: post-check=0, pre-check=0", false);
+        $this->header("Pragma: no-cache");
+    }
+
+    public function serve404()
+    {
+        $protocol = isset($_SERVER["SERVER_PROTOCOL"]) ? $_SERVER["SERVER_PROTOCOL"] : 'HTTP/1.0';
+        $this->header($protocol . " 404 Not Found");
+    }
+
+    public function serveOriginal()
+    {
+        if (!$this->callAboutToServeImageCallBack('source')) {
+            return true;    // we shall not trigger the fail callback
+        }
+
+        if ($this->options['add-content-type-header']) {
+            $arr = explode('.', $this->source);
+            $ext = array_pop($arr);
+            switch (strtolower($ext)) {
+                case 'jpg':
+                case 'jpeg':
+                    $this->header('Content-type: image/jpeg');
+                    break;
+                case 'png':
+                    $this->header('Content-type: image/png');
+                    break;
+            }
+        }
+
+        $this->addVaryHeader();
+
+        if (@readfile($this->source) === false) {
+            $this->header('X-WebP-Convert: Could not read file');
+            return false;
+        }
+        return true;
+    }
+
+    public function serveFreshlyConverted($additionalInfo)
+    {
+
+        $criticalFail = false;
+        $success = false;
+        $bufferLogger = new BufferLogger();
+
+        try {
+            $success = WebPConvert::convert($this->source, $this->destination, $this->options, $bufferLogger);
+
+            if ($success) {
+                // Serve source if it is smaller than destination
+                $filesizeDestination = @filesize($this->destination);
+                $filesizeSource = @filesize($this->source);
+                if (($filesizeSource !== false) &&
+                    ($filesizeDestination !== false) &&
+                    ($filesizeDestination > $filesizeSource)) {
+                    return $this->serveOriginal();
+                }
+
+                if (!$this->callAboutToServeImageCallBack('fresh-conversion')) {
+                    return;
+                }
+
+                if ($this->options['add-content-type-header']) {
+                    $this->header('Content-type: image/webp');
+                }
+                if ($additionalInfo == 'explicitly-told-to') {
+                    $this->addXStatusHeader(
+                        'Serving freshly converted image (was explicitly told to reconvert)'
+                    );
+                } elseif ($additionalInfo == 'source-modified') {
+                    $this->addXStatusHeader(
+                        'Serving freshly converted image (the original had changed)'
+                    );
+                } elseif ($additionalInfo == 'no-existing') {
+                    $this->addXStatusHeader(
+                        'Serving freshly converted image (there were no existing to serve)'
+                    );
+                } else {
+                    $this->addXStatusHeader(
+                        'Serving freshly converted image (dont know why!)'
+                    );
+                }
+
+                if ($this->options['add-vary-header']) {
+                    $this->header('Vary: Accept');
+                }
+
+                // Should we add Content-Length header?
+                // $this->header('Content-Length: ' . filesize($file));
+                if (@readfile($this->destination)) {
+                    return true;
+                } else {
+                    $this->fail('Error', 'could not read the freshly converted file');
+                    return false;
+                }
+            } else {
+                $description = 'No converters are operational';
+                $msg = '';
+            }
+        } catch (\WebPConvert\Exceptions\InvalidFileExtensionException $e) {
+            $criticalFail = true;
+            $description = 'Invalid file extension';
+            $msg = $e->getMessage();
+        } catch (\WebPConvert\Exceptions\TargetNotFoundException $e) {
+            $criticalFail = true;
+            $description = 'Source file not found';
+            $msg = $e->getMessage();
+        } catch (\WebPConvert\Converters\Exceptions\ConverterFailedException $e) {
+            // No converters could convert the image. At least one converter failed, even though it appears to be
+            // operational
+            $description = 'No converters could convert the image';
+            $msg = $e->getMessage();
+        } catch (\WebPConvert\Converters\Exceptions\ConversionDeclinedException $e) {
+            // (no converters could convert the image. At least one converter declined
+            $description = 'No converters could/wanted to convert the image';
+            $msg = $e->getMessage();
+        } catch (\WebPConvert\Exceptions\ConverterNotFoundException $e) {
+            $description = 'A converter was not found!';
+            $msg = $e->getMessage();
+        } catch (\WebPConvert\Exceptions\CreateDestinationFileException $e) {
+            $description = 'Cannot create destination file';
+            $msg = $e->getMessage();
+        } catch (\WebPConvert\Exceptions\CreateDestinationFolderException $e) {
+            $description = 'Cannot create destination folder';
+            $msg = $e->getMessage();
+        } catch (\Exception $e) {
+            $description = 'An unanticipated exception was thrown';
+            $msg = $e->getMessage();
+        }
+
+        // Next line is commented out, because we need to be absolute sure that the details does not violate syntax
+        // We could either try to filter it, or we could change WebPConvert, such that it only provides safe texts.
+        // $this->header('X-WebP-Convert-And-Serve-Details: ' . $bufferLogger->getText());
+
+        $this->fail('Conversion failed', $description, $criticalFail);
+        return false;
+        //echo '<p>This is how conversion process went:</p>' . $bufferLogger->getHtml();
+    }
+
+    protected function serveErrorMessageImage($msg)
+    {
+        // Generate image containing error message
+        if ($this->options['add-content-type-header']) {
+            $this->header('Content-type: image/gif');
+        }
+
+        // TODO: handle if this fails...
+        $image = imagecreatetruecolor(620, 200);
+        imagestring($image, 1, 5, 5, $msg, imagecolorallocate($image, 233, 214, 291));
+        // echo imagewebp($image);
+        echo imagegif($image);
+        imagedestroy($image);
+    }
+
+    protected function fail($title, $description, $critical = false)
+    {
+        $action = $critical ? $this->options['fail-when-original-unavailable'] : $this->options['fail'];
+
+        if (!is_null($this->options['aboutToPerformFailActionCallback'])) {
+            if (call_user_func(
+                $this->options['aboutToPerformFailActionCallback'],
+                $title,
+                $description,
+                $action,
+                $this
+            ) === false) {
+                return;
+            }
+        }
+
+        $this->addXStatusHeader('Failed (' . $description . ')');
+
+        $this->addHeadersPreventingCaching();
+
+
+        $title = 'Conversion failed';
+        switch ($action) {
+            case 'serve-original':
+                if (!$this->serveOriginal()) {
+                    $this->serve404();
+                };
+                break;
+            case '404':
+                $this->serve404();
+                break;
+            case 'report-as-image':
+                // todo: handle if this fails
+                self::serveErrorMessageImage($title . '. ' . $description);
+                break;
+            case 'report':
+                echo '<h1>' . $title . '</h1>' . $description;
+                break;
+        }
+    }
+
+    protected function criticalFail($title, $description)
+    {
+        return $this->fail($title, $description, true);
+    }
+
+    /**
+     *  Serve the thing specified in $decisionArr
+     *  You can get a valid $decisionArr by calling the decideWhatToServe() method
+     *  You may for example do this in order to add your own headers based on
+     *  decideWhatToServe, before proccessing
+     */
+    public function serveThis($decisionArr)
+    {
+        list($whatToServe, $additionalInfo) = $decisionArr;
+        $this->whyServingThis = $additionalInfo;
+
+        $this->addXOptionsHeader();
+
+        switch ($whatToServe) {
+            case 'destination':
+                return $this->serveExisting();
+            case 'source':
+                if ($additionalInfo == 'explicitly-told-to') {
+                    $this->addXStatusHeader(
+                        'Serving original image (was explicitly told to)'
+                    );
+                } else {
+                    $this->addXStatusHeader(
+                        'Serving original image (it is smaller than the already converted)'
+                    );
+                }
+                if (!$this->serveOriginal()) {
+                    $this->criticalFail('Error', 'could not serve original');
+                    return false;
+                }
+                return true;
+            case 'fresh-conversion':
+                return $this->serveFreshlyConverted($additionalInfo);
+                break;
+            case 'critical-fail':
+                $this->criticalFail('Error', $additionalInfo);
+                return false;
+            case 'fail':
+                $this->fail('Error', $additionalInfo);
+                return false;
+            case 'report':
+                $this->addXStatusHeader('Reporting...');
+                Report::convertAndReport($this->source, $this->destination, $this->options);
+                return true;  // yeah, lets say that a report is always a success, even if conversion is a failure
+        }
+    }
+
+    public function decideWhatToServeAndServeIt()
+    {
+        $decisionArr = $this->decideWhatToServe();
+        return self::serveThis($decisionArr);
+    }
+
+    /**
+     * Main method
+     */
+    public static function serveConverted($source, $destination, $options)
+    {
+        if (isset($options['fail']) && ($options['fail'] == 'original')) {
+            $options['fail'] = 'serve-original';
+        }
+        // For backward compatability:
+        if (isset($options['critical-fail']) && !isset($options['fail-when-original-unavailable'])) {
+            $options['fail-when-original-unavailable'] = $options['critical-fail'];
+        }
+
+        $cs = new static($source, $destination, $options);
+
+        return $cs->decideWhatToServeAndServeIt();
     }
 }
 
