@@ -59,7 +59,7 @@ class PhpMerger
         $data = '';
         $data .= "<?php \n";
         foreach (self::$required as $path) {
-            $file = file_get_contents($path);
+            $file = file_get_contents(__DIR__ . '/' . $path);
             //$file = str_replace('<' . '?php', '', $file);
             //$file = str_replace('<' . '?php', '?' . '><?' . 'php', $file);
             // prepend closing php tag before php tag (only if php tag is in beginning of file)
@@ -70,7 +70,7 @@ class PhpMerger
 
         // generate file
         //$my_file = '../generated.inc';
-        $handle = fopen($conf['destination'], 'w') or die('Cannot open file:  '.$my_file);
+        $handle = fopen(__DIR__ . '/' . $conf['destination'], 'w') or die('Cannot open file:  ' . $conf['destination']);
         fwrite($handle, $data);
         echo "saved to '" . $conf['destination'] . "'\n";
     }
