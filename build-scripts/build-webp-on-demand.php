@@ -58,3 +58,32 @@ PhpMerger::generate([
         ],
     ]
 ]);
+
+// Build "webp-convert.inc", containing the entire library (for the lazy ones)
+PhpMerger::generate([
+    'destination' => '../build/webp-convert.inc',
+
+    'jobs' => [
+        [
+            'root' => '../src/',
+
+            'files' => [
+                // put base classes here
+                'Exceptions/WebPConvertBaseException.php',
+                'Loggers/BaseLogger.php'
+            ],
+            'dirs' => [
+                // dirs will be required in specified order. There is no recursion, so you need to specify subdirs as well.
+                //'.',
+                '.',
+                'Converters',
+                'Exceptions',
+                'Converters/Exceptions',
+                'Loggers',
+                'Serve',
+            ],
+            'exclude' => [
+            ]
+        ],
+    ]
+]);
