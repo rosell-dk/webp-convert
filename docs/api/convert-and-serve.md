@@ -123,7 +123,7 @@ function aboutToServeImageCallBack($servingWhat, $whyServingThis, $obj)
 }
 ```
 
-### *aboutToPerformFailAction*
+### *aboutToPerformFailActionCallback*
 
 
 
