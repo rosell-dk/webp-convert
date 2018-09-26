@@ -176,8 +176,8 @@ class ServeConverted extends ServeBase
     {
         $action = $critical ? $this->options['fail-when-original-unavailable'] : $this->options['fail'];
 
-        if (!is_null($this->options['aboutToPerformFailAction'])) {
-            if (call_user_func($this->options['aboutToPerformFailAction'], $title, $description, $action, $this) === false) {
+        if (!is_null($this->options['aboutToPerformFailActionCallback'])) {
+            if (call_user_func($this->options['aboutToPerformFailActionCallback'], $title, $description, $action, $this) === false) {
                 return;
             }
         }
@@ -270,7 +270,7 @@ class ServeConverted extends ServeBase
      */
     public static function serveConverted($source, $destination, $options)
     {
-        if ($options['fail'] == 'original') {
+        if (isset($options['fail']) && ($options['fail'] == 'original')) {
             $options['fail'] = 'serve-original';
         }
         // For backward compatability:
@@ -278,7 +278,7 @@ class ServeConverted extends ServeBase
             $options['fail-when-original-unavailable'] = $options['critical-fail'];
         }
 
-        $cs = new ServeConverted($source, $destination, $options);
+        $cs = new static($source, $destination, $options);
 
         return $cs->decideWhatToServeAndServeIt();
     }
