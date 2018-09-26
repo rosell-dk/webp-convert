@@ -15,7 +15,8 @@ PhpMerger::generate([
             'files' => [
                 // put base classes here
                 '../src/WebPConvert.php',
-                '../src/ServeExistingOrConvert.php',
+                '../src/Serve/ServeBase.php',
+                '../src/Serve/ServeExistingOrHandOver.php',
                 //'webp-on-demand-script.inc',
             ],
             'dirs' => [
@@ -50,7 +51,8 @@ PhpMerger::generate([
                 'Serve',
             ],
             'exclude' => [
-                '/ServeExistingOrConvert.php',
+                '/Serve/ServeBase.php',
+                '/Serve/ServeExistingOrHandOver.php',
                 '/WebPConvert.php'
             ]
         ],
