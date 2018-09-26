@@ -23,6 +23,7 @@ composer test
 Individual test files can be executed like this:
 ```
 composer test tests/Converters/WPCTest
+composer test tests/Serve/ServeConvertedTest
 ```
 
 ## Coding styles
