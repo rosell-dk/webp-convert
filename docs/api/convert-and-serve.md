@@ -66,6 +66,24 @@ Add a "Content-Type" header
 Default value: *true*
 If set, a Content-Type header will be added. It will be set to "image/webp" if a converted image is served, "image/jpeg" or "image/png", if the original is served or "image/gif", if an error message is served (as image). You can set it to false when debugging (to check if any errors are being outputted)
 
+### *cache-control-header*
+Specify a cache control header, which will be served when caching is appropriate.
+Default value: "public, max-age=86400" (1 day)
+Caching is "deemed appropriate", when destination is served, source is served, because it is lighter or a fresh conversion is made, due to there not being any converted image at the destination yet. Caching is not deemed appropriate when something fails, a report is requested, or the *serve-original* or *reconvert* options have been set. In those cases, standard headers will be used for preventing caching.
+For your convenience, here is a little table:
+
+| duration | max-age          |
+| -------- | ---------------- |
+| 1 second | max-age=1        |
+| 1 minute | max-age=60       |
+| 1 hour   | max-age=3600     |
+| 1 day    | max-age=86400    |
+| 1 week   | max-age=604800   |
+| 1 month  | max-age=2592000  |
+| 1 year   | max-age=31536000 |
+
+To learn about the options for the Cache-Control header, go [here](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)
+
 ### *error-reporting*
 Set error reporting
 Allowed values: *"auto"*, *"dont-mess"*, *true*, *false*
@@ -93,7 +111,7 @@ The first argument to the callback contains a string that tells what is about to
 
 The second argument tells you why that is served. It can be one of the following:
 for 'source':
-- "explicitly-told-to"     (when the "original" option is set)
+- "explicitly-told-to"     (when the "serve-original" option is set)
 - "source-lighter"         (when original image is actually smaller than the converted)
 
 for 'fresh-conversion':
@@ -103,7 +121,6 @@ for 'fresh-conversion':
 
 for 'destination':
 - "no-reason-not-to"       (it is lighter than source, its not older, and we were not told to do otherwise)
-
 
 ```
 function aboutToServeImageCallBack($servingWhat, $whyServingThis, $obj)
