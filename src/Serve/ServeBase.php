@@ -88,7 +88,6 @@ class ServeBase
     {
         if (!empty($this->options['cache-control-header'])) {
             $this->header('Cache-Control: ' . $this->options['cache-control-header'], true);
-
         }
     }
 
@@ -212,5 +211,4 @@ class ServeBase
             return ['fresh-conversion', 'no-existing'];
         }
     }
-
 }
