@@ -26,9 +26,8 @@ class ServeExistingOrHandOver extends ServeBase
     {
         $server = new ServeExistingOrHandOver($source, $destination, $options);
 
-        $decisionArr = $server->decideWhatToServe();
-        if ($decisionArr[0] == 'destination') {
-            $server->whyServingThis = 'no-reason-not-to';
+        $server->decideWhatToServe();
+        if ($server->whatToServe == 'destination') {
             return $server->serveExisting();
         } else {
             // Load extra php classes, if told to
