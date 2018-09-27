@@ -1167,7 +1167,7 @@ class Gd
                             'Required imagecreatefrompng() function is not available.'
                         );
                     }
-                    $image = imagecreatefrompng($source);
+                    $image = @imagecreatefrompng($source);
                     if (!$image) {
                         throw new ConverterFailedException(
                             'imagecreatefrompng("' . $source . '") failed'
@@ -1185,7 +1185,7 @@ class Gd
                         'Required imagecreatefromjpeg() function is not available.'
                     );
                 }
-                $image = imagecreatefromjpeg($source);
+                $image = @imagecreatefromjpeg($source);
                 if (!$image) {
                     throw new ConverterFailedException('imagecreatefromjpeg("' . $source . '") failed');
                 }
