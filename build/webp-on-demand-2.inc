@@ -2052,6 +2052,12 @@ class ServeConverted extends ServeBase
 
         $this->addVaryHeader();
 
+        if ($this->whyServingThis == 'source-lighter') {
+            $this->addCacheControlHeader();
+        } else {
+            $this->addHeadersPreventingCaching();
+        }
+
         if (@readfile($this->source) === false) {
             $this->header('X-WebP-Convert: Could not read file');
             return false;
@@ -2059,7 +2065,7 @@ class ServeConverted extends ServeBase
         return true;
     }
 
-    public function serveFreshlyConverted($additionalInfo)
+    public function serveFreshlyConverted()
     {
 
         $criticalFail = false;
@@ -2076,6 +2082,8 @@ class ServeConverted extends ServeBase
                 if (($filesizeSource !== false) &&
                     ($filesizeDestination !== false) &&
                     ($filesizeDestination > $filesizeSource)) {
+                    $this->whatToServe = 'original';
+                    $this->whyServingThis = 'source-lighter';
                     return $this->serveOriginal();
                 }
 
@@ -2086,15 +2094,15 @@ class ServeConverted extends ServeBase
                 if ($this->options['add-content-type-header']) {
                     $this->header('Content-type: image/webp');
                 }
-                if ($additionalInfo == 'explicitly-told-to') {
+                if ($this->whyServingThis == 'explicitly-told-to') {
                     $this->addXStatusHeader(
                         'Serving freshly converted image (was explicitly told to reconvert)'
                     );
-                } elseif ($additionalInfo == 'source-modified') {
+                } elseif ($this->whyServingThis == 'source-modified') {
                     $this->addXStatusHeader(
                         'Serving freshly converted image (the original had changed)'
                     );
-                } elseif ($additionalInfo == 'no-existing') {
+                } elseif ($this->whyServingThis == 'no-existing') {
                     $this->addXStatusHeader(
                         'Serving freshly converted image (there were no existing to serve)'
                     );
@@ -2106,6 +2114,12 @@ class ServeConverted extends ServeBase
 
                 if ($this->options['add-vary-header']) {
                     $this->header('Vary: Accept');
+                }
+
+                if ($this->whyServingThis == 'no-existing') {
+                    $this->addCacheControlHeader();
+                } else {
+                    $this->addHeadersPreventingCaching();
                 }
 
                 // Should we add Content-Length header?
@@ -2179,7 +2193,7 @@ class ServeConverted extends ServeBase
     {
         $action = $critical ? $this->options['fail-when-original-unavailable'] : $this->options['fail'];
 
-        if (!is_null($this->options['aboutToPerformFailActionCallback'])) {
+        if (isset($this->options['aboutToPerformFailActionCallback'])) {
             if (call_user_func(
                 $this->options['aboutToPerformFailActionCallback'],
                 $title,
@@ -2222,23 +2236,20 @@ class ServeConverted extends ServeBase
     }
 
     /**
-     *  Serve the thing specified in $decisionArr
-     *  You can get a valid $decisionArr by calling the decideWhatToServe() method
-     *  You may for example do this in order to add your own headers based on
-     *  decideWhatToServe, before proccessing
+     *  Serve the thing specified in $whatToServe and $whyServingThis
+     *  These are first set my the decideWhatToServe() method, but may later change, if a fresh
+     *  conversion is made
      */
-    public function serveThis($decisionArr)
+    public function serve()
     {
-        list($whatToServe, $additionalInfo) = $decisionArr;
-        $this->whyServingThis = $additionalInfo;
 
-        $this->addXOptionsHeader();
+        //$this->addXOptionsHeader();
 
-        switch ($whatToServe) {
+        switch ($this->whatToServe) {
             case 'destination':
                 return $this->serveExisting();
             case 'source':
-                if ($additionalInfo == 'explicitly-told-to') {
+                if ($this->whyServingThis == 'explicitly-told-to') {
                     $this->addXStatusHeader(
                         'Serving original image (was explicitly told to)'
                     );
@@ -2253,13 +2264,13 @@ class ServeConverted extends ServeBase
                 }
                 return true;
             case 'fresh-conversion':
-                return $this->serveFreshlyConverted($additionalInfo);
+                return $this->serveFreshlyConverted();
                 break;
             case 'critical-fail':
-                $this->criticalFail('Error', $additionalInfo);
+                $this->criticalFail('Error', $this->whyServingThis);
                 return false;
             case 'fail':
-                $this->fail('Error', $additionalInfo);
+                $this->fail('Error', $this->whyServingThis);
                 return false;
             case 'report':
                 $this->addXStatusHeader('Reporting...');
@@ -2270,8 +2281,8 @@ class ServeConverted extends ServeBase
 
     public function decideWhatToServeAndServeIt()
     {
-        $decisionArr = $this->decideWhatToServe();
-        return self::serveThis($decisionArr);
+        $this->decideWhatToServe();
+        return $this->serve();
     }
 
     /**

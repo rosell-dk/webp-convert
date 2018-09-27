@@ -37,10 +37,12 @@ class ServeBase
     public $source;
     public $destination;
     public $options;
-    private $aboutToServeImageCallBack;
-    private $aboutToPerformFailAction;
 
-    public $whatToServe;
+    // These two fellows are first set when decideWhatToServe is called
+    // However, if it is decided to serve a fresh conversion, they might get modified.
+    // If that for example results in a file larger than source, $whatToServe will change
+    // from 'fresh-conversion' to 'original', and $whyServingThis will change to 'source-lighter'
+    public $whatToServe = '';
     public $whyServingThis = '';
 
     public function __construct($source, $destination, $options)
@@ -54,20 +56,20 @@ class ServeBase
     }
 
     public static $defaultOptions = [
-        'fail' => 'original',
-        'fail-when-original-unavailable' => '404',
-
-        'show-report' => false,
-        'reconvert' => false,
-        'serve-original' => false,
+        'add-content-type-header' => true,
+        'add-vary-header' => true,
         'add-x-header-status' => true,
         'add-x-header-options' => false,
-        'add-vary-header' => true,
-        'add-content-type-header' => true,
-        'converters' =>  ['cwebp', 'gd', 'imagick'],
-        'error-reporting' => 'auto',
         'aboutToServeImageCallBack' => null,
         'aboutToPerformFailAction' => null,
+        'cache-control-header' => 'public, max-age=86400',
+        'converters' =>  ['cwebp', 'gd', 'imagick'],
+        'error-reporting' => 'auto',
+        'fail' => 'original',
+        'fail-when-original-unavailable' => '404',
+        'reconvert' => false,
+        'serve-original' => false,
+        'show-report' => false,
     ];
 
     protected function setErrorReporting()
@@ -111,6 +113,13 @@ class ServeBase
         }
     }
 
+    public function addCacheControlHeader()
+    {
+        if (!empty($this->options['cache-control-header'])) {
+            $this->header('Cache-Control: ' . $this->options['cache-control-header'], true);
+        }
+    }
+
     public function serveExisting()
     {
         if (!$this->callAboutToServeImageCallBack('destination')) {
@@ -120,6 +129,7 @@ class ServeBase
         $this->addXStatusHeader('Serving existing converted image');
         $this->addVaryHeader();
         $this->addContentTypeHeader('image/webp');
+        $this->addCacheControlHeader();
 
         if (@readfile($this->destination) === false) {
             $this->header('X-WebP-Convert-Error: Could not read file');
@@ -178,6 +188,13 @@ class ServeBase
      *  - "report"
      */
     public function decideWhatToServe()
+    {
+        $decisionArr = $this->doDecideWhatToServe();
+        $this->whatToServe = $decisionArr[0];
+        $this->whyServingThis = $decisionArr[1];
+    }
+
+    private function doDecideWhatToServe()
     {
         if (empty($this->source)) {
             return ['critical-fail', 'Missing source argument'];
@@ -253,9 +270,8 @@ class ServeExistingOrHandOver extends ServeBase
     {
         $server = new ServeExistingOrHandOver($source, $destination, $options);
 
-        $decisionArr = $server->decideWhatToServe();
-        if ($decisionArr[0] == 'destination') {
-            $server->whyServingThis = 'no-reason-not-to';
+        $server->decideWhatToServe();
+        if ($server->whatToServe == 'destination') {
             return $server->serveExisting();
         } else {
             // Load extra php classes, if told to
