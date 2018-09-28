@@ -29,11 +29,11 @@ class Gd
     public static function doConvert($source, $destination, $options, $logger)
     {
         if (!extension_loaded('gd')) {
-            throw new ConverterNotOperationalException('Required GD extension is not available.');
+            throw new ConverterNotOperationalException('Required Gd extension is not available.');
         }
 
         if (!function_exists('imagewebp')) {
-            throw new ConverterNotOperationalException('Required imagewebp() function is not available.');
+            throw new ConverterNotOperationalException('Required imagewebp() function is not available. It seems Gd has been compiled without webp support.');
         }
 
         switch (ConverterHelper::getExtension($source)) {
