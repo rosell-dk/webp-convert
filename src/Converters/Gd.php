@@ -33,7 +33,9 @@ class Gd
         }
 
         if (!function_exists('imagewebp')) {
-            throw new ConverterNotOperationalException('Required imagewebp() function is not available. It seems Gd has been compiled without webp support.');
+            throw new ConverterNotOperationalException(
+                'Required imagewebp() function is not available. It seems Gd has been compiled without webp support.'
+            );
         }
 
         switch (ConverterHelper::getExtension($source)) {
