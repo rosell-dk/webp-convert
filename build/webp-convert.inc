@@ -79,6 +79,9 @@ use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
 class ConverterHelper
 {
+    public static $availableConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'wpc', 'ewww'];
+    public static $localConverters = ['cwebp', 'gd', 'imagick', 'gmagick'];
+
     public static $allowedExtensions = ['jpg', 'jpeg', 'png'];
 
     public static $defaultOptions = [
@@ -105,7 +108,9 @@ class ConverterHelper
 
     /* Call the "convert" method on a converter, by id.
        - but also prepares options (merges in the $extraOptions of the converter),
-         prepares destination folder, and runs some standard validations */
+         prepares destination folder, and runs some standard validations
+       If it fails, it throws an exception. Otherwise it don't (there is no return value)
+         */
     public static function runConverter(
         $converterId,
         $source,
@@ -1152,11 +1157,13 @@ class Gd
     public static function doConvert($source, $destination, $options, $logger)
     {
         if (!extension_loaded('gd')) {
-            throw new ConverterNotOperationalException('Required GD extension is not available.');
+            throw new ConverterNotOperationalException('Required Gd extension is not available.');
         }
 
         if (!function_exists('imagewebp')) {
-            throw new ConverterNotOperationalException('Required imagewebp() function is not available.');
+            throw new ConverterNotOperationalException(
+                'Required imagewebp() function is not available. It seems Gd has been compiled without webp support.'
+            );
         }
 
         switch (ConverterHelper::getExtension($source)) {
@@ -1472,7 +1479,7 @@ class Wpc
     {
         if ($options['url'] == '') {
             throw new ConverterNotOperationalException(
-                'Missing URL. You must install WebpConvertCloudService on a server, and supply url'
+                'Missing URL. You must install Webp Convert Cloud Service on a server, and supply the url.'
             );
         }
 
