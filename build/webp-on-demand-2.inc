@@ -516,17 +516,17 @@ class Cwebp
             'required' => false
         ],
         [
-            'name' => 'autofilter',
-            'type' => 'boolean',
-            'sensitive' => false,
-            'default' => false,     // the -af option is very slow, and does not have much effect
-            'required' => false
-        ],
-        [
-            'name' => 'size-in-percent',
+            'name' => 'size-in-percentage',
             'type' => 'number',
             'sensitive' => false,
             'default' => null,
+            'required' => false
+        ],
+        [
+            'name' => 'command-line-options',
+            'type' => 'string',
+            'sensitive' => false,
+            'default' => '',
             'required' => false
         ],
     ];
@@ -596,8 +596,8 @@ class Cwebp
     {
         $command = ($useNice ? 'nice ' : '') . $binary . ' ' . $commandOptions;
 
+        //$logger->logLn('command options:' . $commandOptions);
         //$logger->logLn('Trying to execute binary:' . $binary);
-        //$logger->logLn();
         exec($command, $output, $returnCode);
         //$logger->logLn(self::msgForExitCode($returnCode));
         return intval($returnCode);
@@ -627,10 +627,10 @@ class Cwebp
         $commandOptionsArray[] = '-metadata ' . $options['metadata'];
 
         // Size
-        if (!is_null($options['size-in-percent'])) {
+        if (!is_null($options['size-in-percentage'])) {
             $sizeSource =  @filesize($source);
             if ($sizeSource !== false) {
-                $targetSize = floor($sizeSource * $options['size-in-percent'] / 100);
+                $targetSize = floor($sizeSource * $options['size-in-percentage'] / 100);
             }
         }
         if (isset($targetSize)) {
@@ -652,12 +652,31 @@ class Cwebp
             $commandOptionsArray[] = '-low_memory';
         }
 
-        // Autofilter
-        if ($options['autofilter']) {
-            $commandOptionsArray[] = '-af';
+        // command-line-options
+        if ($options['command-line-options']) {
+            $arr = explode(' -', ' ' . $options['command-line-options']);
+            foreach ($arr as $cmdOption) {
+                $pos = strpos($cmdOption, ' ');
+                $cName = '';
+                $cValue = '';
+                if (!$pos) {
+                    $cName = $cmdOption;
+                    if ($cName == '') {
+                        continue;
+                    }
+                    $commandOptionsArray[] = '-' . $cName;
+                } else {
+                    $cName = substr($cmdOption, 0, $pos);
+                    $cValues = substr($cmdOption, $pos + 1);
+                    $cValuesArr = explode(' ', $cValues);
+                    foreach ($cValuesArr as &$cArg) {
+                        $cArg = escapeshellarg($cArg);
+                    }
+                    $cValues = implode(' ', $cValuesArr);
+                    $commandOptionsArray[] = '-' . $cName . ' ' . $cValues;
+                }
+            }
         }
-
-        //
 
         // Source file
         $commandOptionsArray[] = self::escapeFilename($source);
@@ -674,6 +693,7 @@ class Cwebp
 
         $commandOptions = implode(' ', $commandOptionsArray);
 
+        $logger->logLn('cwebp options:' . $commandOptions);
 
         // Init with common system paths
         $cwebpPathsToTest = self::$cwebpDefaultPaths;
@@ -1755,7 +1775,7 @@ class BufferLogger extends BaseLogger
                 $html .= '<br>';
             } else {
                 list($msg, $style) = $entry;
-
+                $msg = htmlspecialchars($msg);
                 if ($style == 'bold') {
                     $html .= '<b>' . $msg . '</b>';
                 } elseif ($style == 'italic') {
@@ -1794,6 +1814,7 @@ class EchoLogger extends BaseLogger
 {
     public function log($msg, $style = '')
     {
+        $msg = htmlspecialchars($msg);
         if ($style == 'bold') {
             echo '<b>' . $msg . '</b>';
         } elseif ($style == 'italic') {
