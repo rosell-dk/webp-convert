@@ -67,7 +67,7 @@ Turns auto-filter on. This algorithm will spend additional time optimizing the f
 Reduce memory usage of lossy encoding at the cost of ~30% longer encoding time and marginally larger output size. Default: `false`. Read more in [the docs](https://developers.google.com/speed/webp/docs/cwebp)
 
 #### the `command-line-options` option
-This allows you to set any parameter available for cwebp in the same way as you would do when executing *cwebp*. You could ie set it to "-sharpness 5 -mt -crop 10 10 40 40". Read more about all the available parameters [the docs](https://developers.google.com/speed/webp/docs/cwebp)
+This allows you to set any parameter available for cwebp in the same way as you would do when executing *cwebp*. You could ie set it to "-sharpness 5 -mt -crop 10 10 40 40". Read more about all the available parameters in [the docs](https://developers.google.com/speed/webp/docs/cwebp)
 
 #### final words on cwebp
 The `cwebp` binary has more options than we cared to implement. They can however easily be implemented, if there is an interest. View the options [here](https://developers.google.com/speed/webp/docs/cwebp).
