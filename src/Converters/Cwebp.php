@@ -111,9 +111,8 @@ class Cwebp
     {
         $command = ($useNice ? 'nice ' : '') . $binary . ' ' . $commandOptions;
 
-        $logger->logLn('command options:' . $commandOptions);
+        //$logger->logLn('command options:' . $commandOptions);
         //$logger->logLn('Trying to execute binary:' . $binary);
-        //$logger->logLn();
         exec($command, $output, $returnCode);
         //$logger->logLn(self::msgForExitCode($returnCode));
         return intval($returnCode);
@@ -171,16 +170,16 @@ class Cwebp
         // command-line-options
         if ($options['command-line-options']) {
             $arr = explode(' -', ' ' . $options['command-line-options']);
-            print_r($arr);
             foreach ($arr as $cmdOption) {
                 $pos = strpos($cmdOption, ' ');
                 $cName = '';
                 $cValue = '';
                 if (!$pos) {
                     $cName = $cmdOption;
-                    if ($cName == '') continue;
+                    if ($cName == '') {
+                        continue;
+                    }
                     $commandOptionsArray[] = '-' . $cName;
-
                 } else {
                     $cName = substr($cmdOption, 0, $pos);
                     $cValues = substr($cmdOption, $pos + 1);
@@ -209,6 +208,7 @@ class Cwebp
 
         $commandOptions = implode(' ', $commandOptionsArray);
 
+        $logger->logLn('cwebp options:' . $commandOptions);
 
         // Init with common system paths
         $cwebpPathsToTest = self::$cwebpDefaultPaths;
