@@ -41,7 +41,6 @@ I guess it is a rare case having jpeg images in low quality. Even having middle 
 To determine if *webp-convert* is able to autodetect quality on your system, run a conversion with the *$logger* parameter set to `new EchoLogger()` (see api).
 
 #### More on the `converter-options` option
-***This option is available in master and will be part of the upcoming v1.2.0***
 You use this option to set options for the individual converters. Example:
 
 ```

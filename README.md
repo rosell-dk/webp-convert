@@ -6,7 +6,6 @@
 
 This library enables you to do webp conversion with PHP using *cwebp*, *gd*, *imagick*, *ewww* cloud converter or the open source *wpc* cloud converter. It also allows you to try a whole stack &ndash; useful if you do not have control over the environment, and simply want the library to do *everything it can* to convert the image to webp.
 
-**New. Only available in master:**
 In addition to converting, the library also has a method for *serving* converted images, and we have instructions here on how to set up a solution for automatically serving webp images to browsers that supports webp.
 
 ## Installation
@@ -39,8 +38,6 @@ $success = WebPConvert::convert($source, $destination, [
     'max-quality' => 80,
     'converters' => ['cwebp', 'gd', 'imagick', 'wpc', 'ewww'],  // Specify conversion methods to use, and their order
 
-    // Note: the next option is only available in master (will be available in v1.2.0)
-    // In pre 1.2.0, you set the options in the converters array (see docs)
     'converter-options' => [
         'ewww' => [
             'key' => 'your-api-key-here'
@@ -61,7 +58,6 @@ The conversion methods (aka "converters") are documented here:   [docs/converter
 
 
 ## Serving converted images
-**This feature is new and only available in master**
 The *convertAndServe* method tries to serve a converted image. If there already is an image at the destination, it will take that, unless the original is newer or smaller. If the method cannot serve a converted image, it will serve original image, a 404, or whatever the 'fail' option is set to - and return false. It also adds a *X-WebP-Convert-Status* header, which allows you to inspect what happened.
 
 Example:
