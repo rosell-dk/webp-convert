@@ -26,7 +26,7 @@ class BufferLogger extends BaseLogger
                 $html .= '<br>';
             } else {
                 list($msg, $style) = $entry;
-
+                $msg = htmlspecialchars($msg);
                 if ($style == 'bold') {
                     $html .= '<b>' . $msg . '</b>';
                 } elseif ($style == 'italic') {
