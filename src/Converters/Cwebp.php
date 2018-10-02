@@ -44,6 +44,13 @@ class Cwebp
             'default' => '',
             'required' => false
         ],
+        [
+            'name' => 'rel-path-to-precompiled-binaries',
+            'type' => 'string',
+            'sensitive' => false,
+            'default' => './Binaries',
+            'required' => false
+        ],
     ];
 
     public static function convert($source, $destination, $options = [])
@@ -294,7 +301,7 @@ class Cwebp
                 $file = $info[0];
                 $hash = $info[1];
 
-                $binaryFile = __DIR__ . '/Binaries/' . $file;
+                $binaryFile = __DIR__ . '/' . $options['rel-path-to-precompiled-binaries'] . '/' . $file;
 
                 // The file should exist, but may have been removed manually.
                 if (@file_exists($binaryFile)) {
