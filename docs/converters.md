@@ -1,7 +1,7 @@
 # The webp converters
 
 ## The converters at a glance
-When it comes to webp conversion, there is actually only one library in town: *libwebp* from Google. All conversion methods below ultimately uses that very same library for conversion. This means that it does not matter much, which conversion method you use. Whatever works. There is however one thing to take note of, if you set *quality* to *auto*, and your system cannot determine the quality of the source (this requires imagick or gmagick), and you do not have access to install those, then the only way to get quality-detection is to connect to a *wpc* cloud converter. However, with *cwebp*, you can specify the desired reduction (the *size-in-percent* option) - at the cost of doubling the conversion time. Read more about those considerations in the API.
+When it comes to webp conversion, there is actually only one library in town: *libwebp* from Google. All conversion methods below ultimately uses that very same library for conversion. This means that it does not matter much, which conversion method you use. Whatever works. There is however one thing to take note of, if you set *quality* to *auto*, and your system cannot determine the quality of the source (this requires imagick or gmagick), and you do not have access to install those, then the only way to get quality-detection is to connect to a *wpc* cloud converter. However, with *cwebp*, you can specify the desired reduction (the *size-in-percentage* option) - at the cost of doubling the conversion time. Read more about those considerations in the API.
 
 Speed-wise, there is not much difference. *cweb* is the fastest (with method=3). *gd* is right behind, merely 3% slower than *cwebp*. *gmagick* are third place, ~8% slower than *cwebp*. *imagick* comes in ~22% slower than *cwebp*. *ewww* depends on connection speed. On my *digital ocean* account, it takes ~2 seconds to upload, convert, and download a tiny image (10 times longer than the local *cwebp*). A 1MB image however only takes ~4.5 seconds to convert (1.5 seconds longer). A 2 MB image takes ~5 seconds to convert (only 16% longer than my *cwebp*). The *ewww* thus converts at a very decent speeds. Probably faster than an average shared host server.
 
@@ -17,7 +17,7 @@ Of course, as we here have to call a binary directly, *cwebp* requires the *exec
 
 [`wpc`](#wpc) is an open source cloud converter based on *WebPConvert*. Conversions will of course be slower than the local converters, as images need to go back and forth to the cloud converter. As images usually just needs to be converted once, the slower conversion speed is probably acceptable. To get going, you need to install the [WPC library](https://github.com/rosell-dk/webp-convert-cloud-service) on a server (or have someone do it for you). If this this is a problem, we suggest you turn to *ewww*. (PS: A Wordpress plugin is planned, making it easier to set up a WPC instance). Btw: Beware that upload limits will prevent conversion of big images. The converter checks your *php.ini* settings and abandons upload right away, if an image is larger than your *upload_max_filesize* or your *post_max_size* setting.
 
-[`ewww`](#ewww) is also a cloud service. Not free, but cheap enough to be considered *practically* free. It produces webp files a bit smalle than the rest. It seems to produce same size as *cwebp*, when method is set to 3. Unfortunately, *ewww* does not support quality=auto, like *wpc*, and it does not support *size-in-percent* like *cwebp*, either. I have requested such features, and he is considering... As with *wpc*, beware of upload limits.
+[`ewww`](#ewww) is also a cloud service. Not free, but cheap enough to be considered *practically* free. It produces webp files a bit smalle than the rest. It seems to produce same size as *cwebp*, when method is set to 3. Unfortunately, *ewww* does not support quality=auto, like *wpc*, and it does not support *size-in-percentage* like *cwebp*, either. I have requested such features, and he is considering... As with *wpc*, beware of upload limits.
 
 **Summary:**
 
@@ -42,7 +42,7 @@ Instructions regarding getting the individual converters to work are [on the wik
   <tr><th>Reliability</th><td>No problems detected so far!</td></tr>
   <tr><th>Availability</th><td>According to ewww docs, requirements are met on surprisingly many webhosts. Look <a href="https://docs.ewww.io/article/43-supported-web-hosts">here</a> for a list</td></tr>
   <tr><th>General options supported</th><td>All (`quality`, `metadata`, `method`, `low-memory`, `lossless`)</td></tr>
-  <tr><th>Extra options</th><td>`use-nice` (boolean)<br>`try-common-system-paths` (boolean)<br> `try-supplied-binary-for-os` (boolean)<br>`autofilter` (boolean)<br>`size-in-percent` (number / null)</td></tr>
+  <tr><th>Extra options</th><td>`use-nice` (boolean)<br>`try-common-system-paths` (boolean)<br> `try-supplied-binary-for-os` (boolean)<br>`autofilter` (boolean)<br>`size-in-percentage` (number / null)</td></tr>
 </table>
 
 [cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP conversion command line converter released by Google. Our implementation ships with precompiled binaries for Linux, FreeBSD, WinNT, Darwin and SunOS. If however a cwebp binary is found in a usual location, that binary will be preferred. It is executed with [exec()](http://php.net/manual/en/function.exec.php).
@@ -57,7 +57,7 @@ In more detail, the implementation does this:
 #### The `method` option
 This parameter controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. 0 is fastest. 6 results in best quality.
 
-#### The `size-in-percent` option
+#### The `size-in-percentage` option
 This option sets the file size, *cwebp* should aim for, in percentage of the original. If you for example set it to *45*, and the source file is 100 kb, *cwebp* will try to create a file with size 45 kb (we use the `-size` option). This is an excellent alternative to the "quality:auto" option. If the quality detection isn't working on your system (and you do not have the rights to install imagick or gmagick), you should consider using this options instead. *Cwebp* is generally able to create webp files with the same quality at about 45% the size. So *45* would be a good choice. The option overrides the quality option. And note that it slows down the conversion - it takes about 2.5 times longer to do a conversion this way, than when quality is specified. Default is *off* (null)
 
 #### the `autofilter` option

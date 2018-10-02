@@ -38,7 +38,7 @@ class Cwebp
             'required' => false
         ],
         [
-            'name' => 'size-in-percent',
+            'name' => 'size-in-percentage',
             'type' => 'number',
             'sensitive' => false,
             'default' => null,
@@ -142,10 +142,10 @@ class Cwebp
         $commandOptionsArray[] = '-metadata ' . $options['metadata'];
 
         // Size
-        if (!is_null($options['size-in-percent'])) {
+        if (!is_null($options['size-in-percentage'])) {
             $sizeSource =  @filesize($source);
             if ($sizeSource !== false) {
-                $targetSize = floor($sizeSource * $options['size-in-percent'] / 100);
+                $targetSize = floor($sizeSource * $options['size-in-percentage'] / 100);
             }
         }
         if (isset($targetSize)) {
