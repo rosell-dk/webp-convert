@@ -122,6 +122,7 @@ for 'fresh-conversion':
 for 'destination':
 - "no-reason-not-to"       (it is lighter than source, its not older, and we were not told to do otherwise)
 
+Example of callback:
 ```
 function aboutToServeImageCallBack($servingWhat, $whyServingThis, $obj)
 {
@@ -141,8 +142,24 @@ function aboutToServeImageCallBack($servingWhat, $whyServingThis, $obj)
 ```
 
 ### *aboutToPerformFailActionCallback*
+This callback is called right before doing the action specified in the `fail` option, or the  `fail-when-original-unavailable` option. You can stop the fail action from being executod by returning *false*.
 
+Documentation by example:
+```
+function aboutToPerformFailActionCallback($errorTitle, $errorDescription, $actionAboutToBeTaken, $serveConvertedObj)
+{
+    echo '<h1>' . $errorTitle . '</h1>';
+    echo $errorDescription;
+    if (actionAboutToBeTaken == '404') {
+        // handle 404 differently than webp-convert would
+        $protocol = isset($_SERVER["SERVER_PROTOCOL"]) ? $_SERVER["SERVER_PROTOCOL"] : 'HTTP/1.0';
+        $serveConvertedObj->header($protocol . " 404 Not Found. We take this very seriously. Heads will roll.");
 
+        return false;   // stop webp-convert from doing what it would do
+    }
+
+}
+```
 
 ### *require-for-conversion*
 If set, makes the library 'require in' a file just before doing an actual conversion with `ConvertAndServe::convertAndServe()`. This is not needed for composer projects, as composer takes care of autoloading classes when needed.
