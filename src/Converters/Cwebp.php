@@ -369,7 +369,7 @@ class Cwebp
 
             // Apply same permissions as parent folder but strip off the executable bits
             $permissions = $fileStatistics['mode'] & 0000666;
-            chmod($destination, $permissions);
+            @chmod($destination, $permissions);
         }
 
         if (!$success) {
