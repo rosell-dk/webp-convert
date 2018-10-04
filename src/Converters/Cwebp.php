@@ -365,11 +365,12 @@ class Cwebp
         // .. $destination's parent folder's permissions should be used (except executable bits)
         if ($success) {
             $destinationParent = dirname($destination);
-            $fileStatistics = stat($destinationParent);
-
-            // Apply same permissions as parent folder but strip off the executable bits
-            $permissions = $fileStatistics['mode'] & 0000666;
-            @chmod($destination, $permissions);
+            $fileStatistics = @stat($destinationParent);
+            if ($fileStatistics !== false) {
+                // Apply same permissions as parent folder but strip off the executable bits
+                $permissions = $fileStatistics['mode'] & 0000666;
+                @chmod($destination, $permissions);
+            }
         }
 
         if (!$success) {
