@@ -850,11 +850,12 @@ class Cwebp
         // .. $destination's parent folder's permissions should be used (except executable bits)
         if ($success) {
             $destinationParent = dirname($destination);
-            $fileStatistics = stat($destinationParent);
-
-            // Apply same permissions as parent folder but strip off the executable bits
-            $permissions = $fileStatistics['mode'] & 0000666;
-            chmod($destination, $permissions);
+            $fileStatistics = @stat($destinationParent);
+            if ($fileStatistics !== false) {
+                // Apply same permissions as parent folder but strip off the executable bits
+                $permissions = $fileStatistics['mode'] & 0000666;
+                @chmod($destination, $permissions);
+            }
         }
 
         if (!$success) {
@@ -1864,25 +1865,35 @@ use WebPConvert\Loggers\EchoLogger;
 class Report
 {
 
+    /**
+     *   Input: We have a converter array where the options are defined
+     *   Output:  the converter array is "flattened" to be just names.
+     *            and the options have been moved to the "converter-options" option.
+     */
     public static function flattenConvertersArray($options)
     {
         // TODO: If there are more of the same converters,
         // they should be added as ie 'wpc-2', 'wpc-3', etc
-        foreach ($options['converters'] as &$converter) {
+
+        $result = $options;
+        $result['converters'] = [];
+        foreach ($options['converters'] as $converter) {
             if (is_array($converter)) {
                 $converterName = $converter['converter'];
                 if (!isset($options['converter-options'][$converterName])) {
                     if (isset($converter['options'])) {
-                        if (!isset($options['converter-options'])) {
-                            $options['converter-options'] = [];
+                        if (!isset($result['converter-options'])) {
+                            $result['converter-options'] = [];
                         }
-                        $options['converter-options'][$converterName] = $converter['options'];
+                        $result['converter-options'][$converterName] = $converter['options'];
                     }
                 }
-                $converter = $converterName;
+                $result['converters'][] = $converterName;
+            } else {
+                $result['converters'][] = $converter;
             }
         }
-        return $options;
+        return $result;
     }
 
     /* Hides sensitive options */
