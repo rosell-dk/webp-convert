@@ -31,8 +31,6 @@ class Report
                             $result['converter-options'] = [];
                         }
                         $result['converter-options'][$converterName] = $converter['options'];
-                    } else {
-
                     }
                 }
                 $result['converters'][] = $converterName;
