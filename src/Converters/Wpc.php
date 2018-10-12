@@ -49,7 +49,8 @@ class Wpc
     {
         if ($options['url'] == '') {
             throw new ConverterNotOperationalException(
-                'Missing URL. You must install Webp Convert Cloud Service on a server, or the WebP Express plugin for Wordpress - and supply the url.'
+                'Missing URL. You must install Webp Convert Cloud Service on a server, ' .
+                'or the WebP Express plugin for Wordpress - and supply the url.'
             );
         }
 
@@ -140,7 +141,7 @@ class Wpc
                 'file' => curl_file_create($source),
                 'hash' => md5(md5_file($source) . $options['secret']),
                 'options' => json_encode($optionsToSend),
-                'servername' => $_SERVER['SERVER_NAME']
+                'servername' => (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '')
             ],
             CURLOPT_BINARYTRANSFER => true,
             CURLOPT_RETURNTRANSFER => true,
