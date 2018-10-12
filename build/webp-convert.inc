@@ -1633,16 +1633,16 @@ class Wpc
                     switch ($responseObj['errorCode']) {
                         case 0:
                             throw new ConverterFailedException(
-                                'WPC reported problems with server setup: "' .
+                                'There are problems with the server setup: "' .
                                 $responseObj['errorMessage'] . '"'
                             );
                         case 1:
                             throw new ConverterFailedException(
-                                'WPC denied us access to the service: "' . $responseObj['errorMessage'] . '"'
+                                'Access denied. ' . $responseObj['errorMessage']
                             );
                         default:
                             throw new ConverterFailedException(
-                                'WPC failed: "' . $responseObj['errorMessage'] . '"'
+                                'Conversion failed: "' . $responseObj['errorMessage'] . '"'
                             );
                     }
                 }
