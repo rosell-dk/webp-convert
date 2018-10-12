@@ -139,7 +139,8 @@ class Wpc
             CURLOPT_POSTFIELDS => [
                 'file' => curl_file_create($source),
                 'hash' => md5(md5_file($source) . $options['secret']),
-                'options' => json_encode($optionsToSend)
+                'options' => json_encode($optionsToSend),
+                'servername' => $_SERVER['SERVER_NAME']
             ],
             CURLOPT_BINARYTRANSFER => true,
             CURLOPT_RETURNTRANSFER => true,
