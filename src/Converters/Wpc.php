@@ -49,7 +49,7 @@ class Wpc
     {
         if ($options['url'] == '') {
             throw new ConverterNotOperationalException(
-                'Missing URL. You must install Webp Convert Cloud Service on a server, and supply the url.'
+                'Missing URL. You must install Webp Convert Cloud Service on a server, or the WebP Express plugin for Wordpress - and supply the url.'
             );
         }
 
