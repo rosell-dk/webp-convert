@@ -1,6 +1,6 @@
 # WebP on demand
 
-This is a solution for automatically serving WebP images instead of jpeg/pngs for browsers that supports WebP (Google Chrome, that is).
+This is a solution for automatically serving WebP images instead of jpeg/pngs [for browsers that supports WebP](https://caniuse.com/#feat=webp) (Google Chrome, that is).
 
 Once set up, it will automatically convert images, no matter how they are referenced. It for example also works on images referenced in CSS. As the solution does not require any change in the HTML, it can easily be integrated into any website / framework
 
@@ -12,6 +12,7 @@ A setup consists of a PHP script that serves converted images and some *redirect
 ## Requirements
 
 * *Apache* or *LiteSpeed* web server. Can be made to work with *NGINX* as well. Documentation is on the roadmap.
+* *mod_rewrite* module for Apache
 * PHP >= 5.6  (we are only testing down to 5.6. It should however work in 5.5 as well)
 * That one of the *webp-convert* converters are working (these have different requirements)
 
@@ -69,13 +70,13 @@ If you have placed *webp-on-demand.php* in a subfolder, you will need to change 
 
 ### 4. Validate that it works
 
-Browse to an JPEG image. Instead of an image, you should see a conversion report. Hopefully, you get a success. Otherwise, you need to hook up to a cloud converter or try to meet the requirements for cwebp, gd or imagick.
+Browse to a JPEG image. Instead of an image, you should see a conversion report. Hopefully, you get a success. Otherwise, you need to hook up to a cloud converter or try to meet the requirements for cwebp, gd or imagick.
 
 Once you get a successful conversion, you can uncomment the "show-report" option in the script.
 
 It should work now, but to be absolute sure:
 
-1. Visit a page on your site with an image on it, using *Google Chrome*.
+- Visit a page on your site with an image on it, using *Google Chrome*.
 - Right-click the page and choose "Inspect"
 - Click the "Network" tab
 - Reload the page
@@ -103,6 +104,7 @@ If images are neither routed to the converter or a 404, it means that the redire
 - Perhaps your site is on *Apache*, but it has been configured to use *Nginx* to serve image files. To find out which server that is handling the images, browse to an image and eximine the "Server" response header. In case *NGINX* are serving images, see if you can reconfigure your server setup. Alternatively, you can create *NGINX* rewrite rules. There are some [here](https://github.com/S1SYPHOS/kirby-webp#nginx) and [there](https://github.com/uhop/grunt-tight-sprite/wiki/Recipe:-serve-WebP-with-nginx-conditionally).
 - Perhaps the server isn't configured to allow *.htaccess* files? Try inserting rubbish in the top of the *.htaccess* file and refresh. You should now see an *Internal Server Error* error page. If you don't, your *.htaccess* file is ignored. Probably you will need to set *AllowOverride All* in your Virtual Host. [Look here for more help](
 https://docs.bolt.cm/3.4/howto/making-sure-htaccess-works#test-if-htaccess-is-working)
+- Perhaps the Apache *mod_rewrite* extension isn't enabled? Try removing both `<IfModule mod_rewrite.c>` and `</IfModule>` lines: if you get an *Internal Server Error* error page after this change, it's probably that it's indeed not enabled.
 
 
 ## Related
