@@ -1,6 +1,6 @@
 # WebP on demand
 
-This is a solution for automatically serving WebP images instead of jpeg/pngs [for browsers that supports WebP](https://caniuse.com/#feat=webp) (Google Chrome, that is).
+This is a solution for automatically serving WebP images instead of jpeg/pngs [for browsers that supports WebP](https://caniuse.com/#feat=webp) (At the time of writing, 78% of all mobile users and 72% of all desktop users uses browsers supporting webp)
 
 Once set up, it will automatically convert images, no matter how they are referenced. It for example also works on images referenced in CSS. As the solution does not require any change in the HTML, it can easily be integrated into any website / framework
 
