@@ -101,13 +101,6 @@ class Wpc
     // Although this method is public, do not call directly.
     public static function doConvert($source, $destination, $options, $logger)
     {
-        /*
-        if ($options['url'] == '') {
-            throw new ConverterNotOperationalException(
-                'Missing URL. You must install Webp Convert Cloud Service on a server, ' .
-                'or the WebP Express plugin for Wordpress - and supply the url.'
-            );
-        }*/
 
         if (!extension_loaded('curl')) {
             throw new ConverterNotOperationalException('Required cURL extension is not available.');
@@ -149,6 +142,13 @@ class Wpc
                 if (count($options['web-services']) == 0) {
                     throw new ConverterNotOperationalException('No remote host has been set up');
                 }*/
+        }
+
+        if ($options['url'] == '') {
+            throw new ConverterNotOperationalException(
+                'Missing URL. You must install Webp Convert Cloud Service on a server, ' .
+                'or the WebP Express plugin for Wordpress - and supply the url.'
+            );
         }
 
         $fileSize = @filesize($source);
