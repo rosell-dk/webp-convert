@@ -1467,21 +1467,21 @@ class Wpc
 {
     public static $extraOptions = [
         [
-            'name' => 'api-version',        /* Can be 1 or 2 */
+            'name' => 'api-version',        /* Can currently be 0 or 1 */
             'type' => 'number',
             'sensitive' => false,
-            'default' => 1,
+            'default' => 0,
             'required' => false
         ],
         [
-            'name' => 'secret',
+            'name' => 'secret',        /* only in api v.0 */
             'type' => 'string',
             'sensitive' => true,
             'default' => 'my dog is white',
             'required' => false
         ],
         [
-            'name' => 'api-key',        /* Api v2, renamed 'secret' to 'api-key' */
+            'name' => 'api-key',        /* new in api v.1 (renamed 'secret' to 'api-key') */
             'type' => 'string',
             'sensitive' => true,
             'default' => 'my dog is white',
@@ -1495,7 +1495,7 @@ class Wpc
             'required' => true
         ],
         [
-            'name' => 'crypt-api-key-in-transfer',
+            'name' => 'crypt-api-key-in-transfer',  /* new in api v.1 */
             'type' => 'boolean',
             'sensitive' => false,
             'default' => false,
@@ -1559,13 +1559,6 @@ class Wpc
     // Although this method is public, do not call directly.
     public static function doConvert($source, $destination, $options, $logger)
     {
-        /*
-        if ($options['url'] == '') {
-            throw new ConverterNotOperationalException(
-                'Missing URL. You must install Webp Convert Cloud Service on a server, ' .
-                'or the WebP Express plugin for Wordpress - and supply the url.'
-            );
-        }*/
 
         if (!extension_loaded('curl')) {
             throw new ConverterNotOperationalException('Required cURL extension is not available.');
@@ -1583,7 +1576,7 @@ class Wpc
             );
         }
 
-        if ($apiVersion == 1) {
+        if ($apiVersion == 0) {
             if (!empty($options['secret'])) {
                 // if secret is set, we need md5() and md5_file() functions
                 if (!function_exists('md5')) {
@@ -1602,11 +1595,18 @@ class Wpc
             }
         }
 
-        if ($apiVersion == 2) {
+        if ($apiVersion == 1) {
         /*
                 if (count($options['web-services']) == 0) {
                     throw new ConverterNotOperationalException('No remote host has been set up');
                 }*/
+        }
+
+        if ($options['url'] == '') {
+            throw new ConverterNotOperationalException(
+                'Missing URL. You must install Webp Convert Cloud Service on a server, ' .
+                'or the WebP Express plugin for Wordpress - and supply the url.'
+            );
         }
 
         $fileSize = @filesize($source);
@@ -1663,11 +1663,11 @@ class Wpc
             'servername' => (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '')
         ];
 
-        if ($apiVersion == 1) {
+        if ($apiVersion == 0) {
             $postData['hash'] = md5(md5_file($source) . $options['secret']);
         }
 
-        if ($apiVersion == 2) {
+        if ($apiVersion == 1) {
             $apiKey = $options['api-key'];
 
             if ($options['crypt-api-key-in-transfer']) {
