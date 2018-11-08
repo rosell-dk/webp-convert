@@ -1467,11 +1467,25 @@ class Wpc
 {
     public static $extraOptions = [
         [
+            'name' => 'api-version',        /* Can be 1 or 2 */
+            'type' => 'number',
+            'sensitive' => false,
+            'default' => 1,
+            'required' => false
+        ],
+        [
             'name' => 'secret',
             'type' => 'string',
             'sensitive' => true,
             'default' => 'my dog is white',
-            'required' => true
+            'required' => false
+        ],
+        [
+            'name' => 'api-key',        /* Api v2, renamed 'secret' to 'api-key' */
+            'type' => 'string',
+            'sensitive' => true,
+            'default' => 'my dog is white',
+            'required' => false
         ],
         [
             'name' => 'url',
@@ -1480,6 +1494,30 @@ class Wpc
             'default' => '',
             'required' => true
         ],
+        [
+            'name' => 'crypt-api-key-in-transfer',
+            'type' => 'boolean',
+            'sensitive' => false,
+            'default' => false,
+            'required' => false
+        ],
+
+        /*
+        [
+            'name' => 'web-services',
+            'type' => 'array',
+            'sensitive' => true,
+            'default' => [
+                [
+                    'label' => 'test',
+                    'api-key' => 'my dog is white',
+                    'url' => 'http://we0/wordpress/webp-express-server',
+                    'crypt-api-key-in-transfer' => true
+                ]
+            ],
+            'required' => true
+        ],
+        */
     ];
 
     public static function convert($source, $destination, $options = [])
@@ -1502,15 +1540,32 @@ class Wpc
         }
     }
 
+    private static function createRandomSaltForBlowfish()
+    {
+        $salt = '';
+        $validCharsForSalt = array_merge(
+            range('A', 'Z'),
+            range('a', 'z'),
+            range('0', '9'),
+            ['.', '/']
+        );
+
+        for ($i=0; $i<22; $i++) {
+            $salt .= $validCharsForSalt[array_rand($validCharsForSalt)];
+        }
+        return $salt;
+    }
+
     // Although this method is public, do not call directly.
     public static function doConvert($source, $destination, $options, $logger)
     {
+        /*
         if ($options['url'] == '') {
             throw new ConverterNotOperationalException(
                 'Missing URL. You must install Webp Convert Cloud Service on a server, ' .
                 'or the WebP Express plugin for Wordpress - and supply the url.'
             );
-        }
+        }*/
 
         if (!extension_loaded('curl')) {
             throw new ConverterNotOperationalException('Required cURL extension is not available.');
@@ -1520,6 +1575,7 @@ class Wpc
             throw new ConverterNotOperationalException('Required url_init() function is not available.');
         }
 
+        $apiVersion = $options['api-version'];
 
         if (!function_exists('curl_file_create')) {
             throw new ConverterNotOperationalException(
@@ -1527,21 +1583,30 @@ class Wpc
             );
         }
 
-        if (!empty($options['secret'])) {
-            // if secret is set, we need md5() and md5_file() functions
-            if (!function_exists('md5')) {
-                throw new ConverterNotOperationalException(
-                    'A secret has been set, which requires us to create a md5 hash from the secret and the file ' .
-                    'contents. ' .
-                    'But the required md5() PHP function is not available.'
-                );
+        if ($apiVersion == 1) {
+            if (!empty($options['secret'])) {
+                // if secret is set, we need md5() and md5_file() functions
+                if (!function_exists('md5')) {
+                    throw new ConverterNotOperationalException(
+                        'A secret has been set, which requires us to create a md5 hash from the secret and the file ' .
+                        'contents. ' .
+                        'But the required md5() PHP function is not available.'
+                    );
+                }
+                if (!function_exists('md5_file')) {
+                    throw new ConverterNotOperationalException(
+                        'A secret has been set, which requires us to create a md5 hash from the secret and the file ' .
+                        'contents. But the required md5_file() PHP function is not available.'
+                    );
+                }
             }
-            if (!function_exists('md5_file')) {
-                throw new ConverterNotOperationalException(
-                    'A secret has been set, which requires us to create a md5 hash from the secret and the file ' .
-                    'contents. But the required md5_file() PHP function is not available.'
-                );
-            }
+        }
+
+        if ($apiVersion == 2) {
+        /*
+                if (count($options['web-services']) == 0) {
+                    throw new ConverterNotOperationalException('No remote host has been set up');
+                }*/
         }
 
         $fileSize = @filesize($source);
@@ -1592,15 +1657,57 @@ class Wpc
         unset($optionsToSend['_quality_could_not_be_detected']);
         unset($optionsToSend['_calculated_quality']);
 
+        $postData = [
+            'file' => curl_file_create($source),
+            'options' => json_encode($optionsToSend),
+            'servername' => (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '')
+        ];
+
+        if ($apiVersion == 1) {
+            $postData['hash'] = md5(md5_file($source) . $options['secret']);
+        }
+
+        if ($apiVersion == 2) {
+            $apiKey = $options['api-key'];
+
+            if ($options['crypt-api-key-in-transfer']) {
+                if (CRYPT_BLOWFISH == 1) {
+                    $salt = self::createRandomSaltForBlowfish();
+                    $postData['salt'] = $salt;
+
+                    // Strip off the first 28 characters (the first 6 are always "$2y$10$". The next 22 is the salt)
+                    $postData['api-key-crypted'] = substr(crypt($apiKey, '$2y$10$' . $salt . '$'), 28);
+                } else {
+                    if (!function_exists('crypt')) {
+                        throw new ConverterNotOperationalException(
+                            'Configured to crypt the api-key, but crypt() function is not available.'
+                        );
+                    } else {
+                        throw new ConverterNotOperationalException(
+                            'Configured to crypt the api-key. ' .
+                            'That requires Blowfish encryption, which is not available on your current setup.'
+                        );
+                    }
+                }
+            } else {
+                $postData['api-key'] = $apiKey;
+            }
+        }
+
+
+        // Try one host at the time
+        // TODO: shuffle the array first
+        /*
+        foreach ($options['web-services'] as $webService) {
+
+        }
+        */
+
+
         curl_setopt_array($ch, [
             CURLOPT_URL => $options['url'],
             CURLOPT_POST => 1,
-            CURLOPT_POSTFIELDS => [
-                'file' => curl_file_create($source),
-                'hash' => md5(md5_file($source) . $options['secret']),
-                'options' => json_encode($optionsToSend),
-                'servername' => (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '')
-            ],
+            CURLOPT_POSTFIELDS => $postData,
             CURLOPT_BINARYTRANSFER => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER => false,
