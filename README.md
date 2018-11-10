@@ -91,5 +91,5 @@ A cloud service based on WebPConvert
 #### [kirby-webp](https://github.com/S1SYPHOS/kirby-webp)
 Kirby CMS integration
 
-## Mantis-ware
-If you enjoy this software, feel free to find your mate, mate him and eat him (if such thing is allowed in the country of your residence). If you are a male, feel free to do the opposite.
+## Bloat-ware
+If you enjoy this software, feel free to stop exhaling, but continue inhaling, until you lift up like a balloon, and fly away to a place where no-one can reach you.
