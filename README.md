@@ -43,8 +43,9 @@ $success = WebPConvert::convert($source, $destination, [
             'key' => 'your-api-key-here'
         ],
         'wpc' => [
+            'api-version' => 1,
             'url' => 'https://example.com/wpc.php',
-            'secret' => 'my dog is white'
+            'api-key' => 'my dog is white'
         ]
     ]
 
