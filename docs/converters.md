@@ -3,7 +3,7 @@
 ## The converters at a glance
 When it comes to webp conversion, there is actually only one library in town: *libwebp* from Google. All conversion methods below ultimately uses that very same library for conversion. This means that it does not matter much, which conversion method you use. Whatever works. There is however one thing to take note of, if you set *quality* to *auto*, and your system cannot determine the quality of the source (this requires imagick or gmagick), and you do not have access to install those, then the only way to get quality-detection is to connect to a *wpc* cloud converter. However, with *cwebp*, you can specify the desired reduction (the *size-in-percentage* option) - at the cost of doubling the conversion time. Read more about those considerations in the API.
 
-Speed-wise, there is not much difference. *cweb* is the fastest (with method=3). *gd* is right behind, merely 3% slower than *cwebp*. *gmagick* are third place, ~8% slower than *cwebp*. *imagick* comes in ~22% slower than *cwebp*. *ewww* depends on connection speed. On my *digital ocean* account, it takes ~2 seconds to upload, convert, and download a tiny image (10 times longer than the local *cwebp*). A 1MB image however only takes ~4.5 seconds to convert (1.5 seconds longer). A 2 MB image takes ~5 seconds to convert (only 16% longer than my *cwebp*). The *ewww* thus converts at a very decent speeds. Probably faster than an average shared host server.
+Speed-wise, there is too little difference for it to matter, considering that images usually needs to be converted just once. Anyway, here are the results: *cweb* is the fastest (with method=3). *gd* is right behind, merely 3% slower than *cwebp*. *gmagick* are third place, ~8% slower than *cwebp*. *imagick* comes in ~22% slower than *cwebp*. *ewww* depends on connection speed. On my *digital ocean* account, it takes ~2 seconds to upload, convert, and download a tiny image (10 times longer than the local *cwebp*). A 1MB image however only takes ~4.5 seconds to upload, convert and download (1.5 seconds longer). A 2 MB image takes ~5 seconds to convert (only 16% longer than my *cwebp*). The *ewww* thus converts at a very decent speeds. Probably faster than your average shared host. If multiple big images needs to be converted at the same time, *ewww* will probably perform much better than the local converters.
 
 [`cwebp`](#cwebp) works by executing the *cwebp* binary from Google, which is build upon the *libwebp* (also from Google). That library is actually the only library in town for generating webp images, which means that the other conversion methods ultimately uses that very same library. Which again means that the results using the different methods are very similar. However, with *cwebp*, we have more parameters to tweak than with the rest. We for example have the *method* option, which controls the trade off between encoding speed and the compressed file size and quality. Setting this to max, we can squeeze the images a few percent extra - without loosing quality (the converter is still pretty fast, so in most cases it is probably worth it).
 
@@ -15,7 +15,7 @@ Of course, as we here have to call a binary directly, *cwebp* requires the *exec
 
 [`gd`](#gd) uses the *Gd* extension to do the conversion. The *Gd* extension is pretty common, so the main feature of this converter is that it may work out of the box. It does not support any webp options, and does not support stripping metadata.
 
-[`wpc`](#wpc) is an open source cloud converter based on *WebPConvert*. Conversions will of course be slower than the local converters, as images need to go back and forth to the cloud converter. As images usually just needs to be converted once, the slower conversion speed is probably acceptable. To get going, you need to install the [WPC library](https://github.com/rosell-dk/webp-convert-cloud-service) on a server (or have someone do it for you). If this this is a problem, we suggest you turn to *ewww*. (PS: A Wordpress plugin is planned, making it easier to set up a WPC instance). Btw: Beware that upload limits will prevent conversion of big images. The converter checks your *php.ini* settings and abandons upload right away, if an image is larger than your *upload_max_filesize* or your *post_max_size* setting.
+[`wpc`](#wpc) is an open source cloud service for converting images to webp. To use it, you must either install [webp-convert-cloud-service](https://github.com/rosell-dk/webp-convert-cloud-service) directly on a remote server, or install the Wordpress plugin, [WebP Express](https://github.com/rosell-dk/webp-express) in Wordpress. Btw: Beware that upload limits will prevent conversion of big images. The converter checks your *php.ini* settings and abandons upload right away, if an image is larger than your *upload_max_filesize* or your *post_max_size* setting.
 
 [`ewww`](#ewww) is also a cloud service. Not free, but cheap enough to be considered *practically* free. It produces webp files a bit smalle than the rest. It seems to produce same size as *cwebp*, when method is set to 3. Unfortunately, *ewww* does not support quality=auto, like *wpc*, and it does not support *size-in-percentage* like *cwebp*, either. I have requested such features, and he is considering... As with *wpc*, beware of upload limits.
 
@@ -29,7 +29,7 @@ Of course, as we here have to call a binary directly, *cwebp* requires the *exec
 | [`imagick`](#imagick)                | Imagick extension (`ImageMagick` wrapper)        | Imagick PHP extension compiled with WebP support   |
 | [`gmagick`](#gmagick)                | Gmagick extension (`ImageMagick` wrapper)        | Gmagick PHP extension compiled with WebP support   |
 | [`gd`](#gd)                          | GD Graphics (Draw) extension (`LibGD` wrapper)   | GD PHP extension compiled with WebP support        |
-| [`wpc`](#wpc)                        | Connects to WPC cloud service                    | A working *WPC* installation                       |
+| [`wpc`](#wpc)                        | Connects to an open source cloud service                 | Access to a running service. The service can be installed  [directly](https://github.com/rosell-dk/webp-convert-cloud-service) or by using [this Wordpress plugin](https://wordpress.org/plugins/webp-express/).
 | [`ewww`](#ewww)                      | Connects to *EWWW Image Optimizer* cloud service | Purchasing a key                                   |
 
 ## Installation
@@ -83,24 +83,77 @@ See [the wiki](https://github.com/rosell-dk/webp-convert/wiki/Installing-cwebp--
   <tr><th>Reliability</th><td>Great (depends on the reliability on the server where it is set up)</td></tr>
   <tr><th>Availability</th><td>Should work on <em>almost</em> any webhost</td></tr>
   <tr><th>General options supported</th><td>All (`quality`, `metadata`, `method`, `low-memory`, `lossless`)</td></tr>
-  <tr><th>Extra options</th><td>`url`, `secret`</td></tr>
+  <tr><th>Extra options (old api)</th><td>`url`, `secret`</td></tr>
+  <tr><th>Extra options (new api)</th><td>`url`, `api-version`, `api-key`, `api-key-crypted`, `salt`</td></tr>
 </table>
 
-[wpc](https://github.com/rosell-dk/webp-convert-cloud-service) is an open source cloud service. You do not buy a key, you set it up on a server. As WebPConvert Cloud Service itself is based on WebPConvert, all options are supported.
+[wpc](https://github.com/rosell-dk/webp-convert-cloud-service) is an open source cloud service. You do not buy a key, you set it up on a server, or you set up [the Wordpress plugin](https://wordpress.org/plugins/webp-express/). As WebPConvert Cloud Service itself is based on WebPConvert, all options are supported.
 
-To use it, simply add it as extra converter with `url` option set to the correct endpoint, and `secret` set to match the secret set up on the server side.
+To use it, you need to set the `converter-options` (to add url etc).
 
-Example:
+#### Example, where api-key is not crypted, on new API:
 
 ```php
 WebPConvert::convert($source, $destination, [
-    'extra-converters' => [
-        [
-            'converter' => 'wpc',
-            'options' => [
-                'url' => 'http://example.com/wpc.php',
-                'secret' => 'my dog is white',
-            ],
+    'max-quality' => 80,
+    'converters' => ['cwebp', 'wpc'],
+    'converter-options' => [
+        'wpc' => [
+            'api-version' => 1,     /* from release 1.0.0 */
+            'url' => 'http://example.com/wpc.php',
+            'api-key' => 'my dog is white',
+        ]
+    ]    
+));
+```
+
+#### Example, where api-key is crypted:
+
+```php
+
+function createRandomSaltForBlowfish() {
+    $salt = '';
+    $validCharsForSalt = array_merge(
+        range('A', 'Z'),
+        range('a', 'z'),
+        range('0', '9'),
+        ['.', '/']
+    );
+
+    for ($i=0; $i<22; $i++) {createRandomSaltForBlowfish
+        $salt .= $validCharsForSalt[array_rand($validCharsForSalt)];
+    }
+    return $salt;
+}
+
+$apiKey = 'my dog is white';
+$salt = createRandomSaltForBlowfish();
+$apiKeyCrypted = substr(crypt($apiKey, '$2y$10$' . $salt . '$'), 28);
+
+WebPConvert::convert($source, $destination, [
+    'max-quality' => 80,
+    'converters' => ['cwebp', 'wpc'],
+    'converter-options' => [
+        'wpc' => [
+            'api-version' => 1,
+            'url' => 'http://example.com/wpc.php',
+            'salt' => $salt,
+            'api-key-crypted' => $apiKeyCrypted,
+        ],
+    ]
+));
+```
+
+#### Example, old API:
+
+```php
+WebPConvert::convert($source, $destination, [
+    'max-quality' => 80,
+    'converters' => ['cwebp', 'wpc'],
+    'converter-options' => [
+        'wpc' => [
+            'url' => 'http://example.com/wpc.php',
+            'secret' => 'my dog is white',
         ],
     ]
 ));
@@ -110,7 +163,7 @@ WebPConvert::convert($source, $destination, [
 ## ewww
 
 <table>
-  <tr><th>Requirements</th><td>Valid EWWW Image Optimizer <a href="https://ewww.io">API key</a>, <code>cURL</code> and PHP >= 5.5.0</td></tr>
+  <tr><th>Requirements</th><td>Valid EWWW Image Optimizer <a href="https://ewww.io/plans/">API key</a>, <code>cURL</code> and PHP >= 5.5.0</td></tr>
   <tr><th>Performance</th><td>~1300ms to convert a 40kb image</td></tr>
   <tr><th>Reliability</th><td>Great (but, as with any cloud service, there is a risk of downtime)</td></tr>
   <tr><th>Availability</th><td>Should work on <em>almost</em> any webhost</td></tr>
@@ -132,6 +185,20 @@ In more detail, the implementation does this:
 
 The converter could be improved by using `fsockopen` when `cURL` is not available - which is extremely rare. PHP >= 5.5.0 is also widely available (PHP 5.4.0 reached end of life [more than two years ago!](http://php.net/supported-versions.php)).
 </details>
+
+#### Example:
+
+```php
+WebPConvert::convert($source, $destination, [
+    'max-quality' => 80,
+    'converters' => ['gd', 'ewww'],
+    'converter-options' => [
+        'ewww' => [
+            'key' => 'your-api-key-here'
+        ],
+    ]
+));
+```
 
 ## gd
 
