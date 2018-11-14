@@ -15,8 +15,8 @@ use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
 class ConverterHelper
 {
-    public static $availableConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'wpc', 'ewww'];
-    public static $localConverters = ['cwebp', 'gd', 'imagick', 'gmagick'];
+    public static $availableConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'wpc', 'ewww'];
+    public static $localConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'];
 
     public static $allowedExtensions = ['jpg', 'jpeg', 'png'];
 

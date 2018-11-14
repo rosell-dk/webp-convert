@@ -8,6 +8,7 @@ require_once __DIR__  . "/Converters/Ewww.php";
 require_once __DIR__  . "/Converters/Gd.php";
 require_once __DIR__  . "/Converters/Gmagick.php";
 require_once __DIR__  . "/Converters/Imagick.php";
+require_once __DIR__  . "/Converters/Imagickbinary.php";
 require_once __DIR__  . "/Converters/Wpc.php";
 require_once __DIR__  . "/Exceptions/ConverterNotFoundException.php";
 require_once __DIR__  . "/Exceptions/CreateDestinationFileException.php";
