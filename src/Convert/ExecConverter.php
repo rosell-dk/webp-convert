@@ -45,4 +45,13 @@ class ExecConverter extends BaseConverter
             return false;
         }
     }
+
+
+    public function runBasicValidations() {
+        parent::runBasicValidations();
+
+        if (!function_exists('exec')) {
+            throw new ConverterNotOperationalException('exec() is not enabled.');
+        }
+    }
 }
