@@ -130,7 +130,7 @@ class ConverterHelper
         try {
             self::runConverter($converterId, $source, $destination, $options, $prepareDestinationFolder, $logger);
             $logger->logLn(
-                'Successfully converted test image in ' .
+                'Successfully converted image in ' .
                 round((microtime(true) - $beginTime) * 1000) . ' ms'
             );
         } catch (\Exception $e) {
