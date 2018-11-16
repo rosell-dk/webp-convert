@@ -258,8 +258,8 @@ class ConverterHelper
     public static function detectQualityOfJpg($filename)
     {
         // Try Imagick extension
-        if (extension_loaded('imagick') && class_exists('Imagick')) {
-            $img = new Imagick($filename);
+        if (extension_loaded('imagick') && class_exists('\\Imagick')) {
+            $img = new \Imagick($filename);
 
             // The required function is available as from PECL imagick v2.2.2
             if (method_exists($img, 'getImageCompressionQuality')) {
