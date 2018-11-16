@@ -131,13 +131,13 @@ https://phpunit.readthedocs.io/en/7.1/writing-tests-for-phpunit.html#testing-exc
     */
     public function testConvertWithNoConverters()
     {
-        //$this->expectException(\WebPConvert\Exceptions\NoOperationalConvertersException::class);
+        $this->expectException(\WebPConvert\Converters\Exceptions\ConverterNotOperationalException::class);
         $source = __DIR__ . '/test.jpg';
         $destination = __DIR__ . '/test.jpg.webp';
         $result = WebPConvert::convert($source, $destination, array(
             'converters' => array()
         ));
-        $this->assertFalse($result);
+        //$this->assertFalse($result);
     }
 
 

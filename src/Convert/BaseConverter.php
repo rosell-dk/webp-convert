@@ -10,6 +10,7 @@ use WebPConvert\Exceptions\TargetNotFoundException;
 
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
+use WebPConvert\Converters\Exceptions\ConversionDeclinedException;
 
 class BaseConverter
 {
