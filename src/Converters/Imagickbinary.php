@@ -1,20 +1,29 @@
 <?php
 
+// TODO: Quality option
+
 namespace WebPConvert\Converters;
 
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
+use WebPConvert\Convert\ExecConverter;
 
 //use WebPConvert\Exceptions\TargetNotFoundException;
 
-class ImagickBinary
+class ImagickBinary extends ExecConverter
 {
-    public static $extraOptions = [];
+    public static $extraOptions = [
+        [
+            'name' => 'use-nice',
+            'type' => 'boolean',
+            'sensitive' => false,
+            'default' => true,
+            'required' => false
+        ],
+    ];
 
-    public static function convert($source, $destination, $options = [])
-    {
-        ConverterHelper::runConverter('imagickbinary', $source, $destination, $options, true);
-    }
+
+    //public $id = 'imagickbinary';
 
     public static function imagickInstalled()
     {
@@ -42,29 +51,10 @@ class ImagickBinary
         return false;
     }
 
-
-    public static function escapeFilename($string)
-    {
-        // Escaping whitespace
-        $string = preg_replace('/\s/', '\\ ', $string);
-
-        // filter_var() is should normally be available, but it is not always
-        // - https://stackoverflow.com/questions/11735538/call-to-undefined-function-filter-var
-        if (function_exists('filter_var')) {
-            // Sanitize quotes
-            $string = filter_var($string, FILTER_SANITIZE_MAGIC_QUOTES);
-
-            // Stripping control characters
-            // see https://stackoverflow.com/questions/12769462/filter-flag-strip-low-vs-filter-flag-strip-high
-            $string = filter_var($string, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW);
-        }
-
-        return $string;
-    }
-
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options, $logger)
+    public function doConvert()
     {
+
         if (!function_exists('exec')) {
             throw new ConverterNotOperationalException('exec() is not enabled.');
         }
@@ -77,11 +67,20 @@ class ImagickBinary
             throw new ConverterNotOperationalException('webp delegate missing');
         }
 
+        //$this->logLn('Using quality:' . $this->getCalculatedQuality());
+
         // Should we use "magick" or "convert" command?
         // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
         // Should we perhaps try both?
         // For now, we just go with "convert"
-        $command = 'convert ' . self::escapeFilename($source) . ' webp:' . self::escapeFilename($destination);
+        $command = 'convert ' . self::escapeFilename($this->source) . ' webp:' . self::escapeFilename($this->destination);
+
+        $useNice = (($this->options['use-nice']) && self::hasNiceSupport()) ? true : false;
+        if ($useNice) {
+            $this->logLn('using nice');
+            $command = 'nice ' . $command;
+        }
+
         exec($command, $output, $returnCode);
 
         if ($returnCode == 127) {
@@ -89,9 +88,9 @@ class ImagickBinary
         }
 
         if ($returnCode != 0) {
-            $logger->logLn('command:' . $command);
-            $logger->logLn('return code:' . $returnCode);
-            $logger->logLn('output:' . print_r(implode("\n", $output), true));
+            $this->logLn('command:' . $command);
+            $this->logLn('return code:' . $returnCode);
+            $this->logLn('output:' . print_r(implode("\n", $output), true));
 
             throw new ConverterNotOperationalException('The exec call failed');
         }

@@ -5,10 +5,9 @@ namespace WebPConvert\Converters;
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
 use WebPConvert\Converters\Exceptions\ConversionDeclinedException;
+use WebPConvert\Convert\BaseConverter;
 
-use WebPConvert\Converters\ConverterHelper;
-
-class Gd
+class Gd extends BaseConverter
 {
     public static $extraOptions = [
         [
@@ -20,13 +19,10 @@ class Gd
         ],
     ];
 
-    public static function convert($source, $destination, $options = [])
-    {
-        ConverterHelper::runConverter('gd', $source, $destination, $options, true);
-    }
-
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options, $logger)
+    // You should rather call the static convert() function, defined in BaseConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    public function doConvert()
     {
         if (!extension_loaded('gd')) {
             throw new ConverterNotOperationalException('Required Gd extension is not available.');
@@ -38,23 +34,17 @@ class Gd
             );
         }
 
-        switch (ConverterHelper::getExtension($source)) {
+        switch ($this->getSourceExtension()) {
             case 'png':
-                if (!$options['skip-pngs']) {
-                    if (!function_exists('imagecreatefrompng')) {
-                        throw new ConverterNotOperationalException(
-                            'Required imagecreatefrompng() function is not available.'
-                        );
-                    }
-                    $image = @imagecreatefrompng($source);
-                    if (!$image) {
-                        throw new ConverterFailedException(
-                            'imagecreatefrompng("' . $source . '") failed'
-                        );
-                    }
-                } else {
-                    throw new ConversionDeclinedException(
-                        'PNG file skipped. GD is configured not to convert PNGs'
+                if (!function_exists('imagecreatefrompng')) {
+                    throw new ConverterNotOperationalException(
+                        'Required imagecreatefrompng() function is not available.'
+                    );
+                }
+                $image = @imagecreatefrompng($this->source);
+                if (!$image) {
+                    throw new ConverterFailedException(
+                        'imagecreatefrompng() failed'
                     );
                 }
                 break;
@@ -64,15 +54,15 @@ class Gd
                         'Required imagecreatefromjpeg() function is not available.'
                     );
                 }
-                $image = @imagecreatefromjpeg($source);
+                $image = @imagecreatefromjpeg($this->source);
                 if (!$image) {
-                    throw new ConverterFailedException('imagecreatefromjpeg("' . $source . '") failed');
+                    throw new ConverterFailedException('imagecreatefromjpeg() failed');
                 }
         }
 
         // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
 
-        $success = @imagewebp($image, $destination, $options['_calculated_quality']);
+        $success = @imagewebp($image, $this->destination, $this->options['_calculated_quality']);
 
         if (!$success) {
             throw new ConverterFailedException(
@@ -85,8 +75,8 @@ class Gd
          * See https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files
          *
          */
-        if (@filesize($destination) % 2 == 1) {
-            @file_put_contents($destination, "\0", FILE_APPEND);
+        if (@filesize($this->destination) % 2 == 1) {
+            @file_put_contents($this->destination, "\0", FILE_APPEND);
         }
 
         imagedestroy($image);

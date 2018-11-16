@@ -4,8 +4,9 @@ namespace WebPConvert\Converters;
 
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
+use WebPConvert\Convert\ExecConverter;
 
-class Cwebp
+class Cwebp extends ExecConverter
 {
     public static $extraOptions = [
         [
@@ -74,45 +75,6 @@ class Cwebp
         'FreeBSD' => [ 'cwebp-fbsd', 'e5cbea11c97fadffe221fdf57c093c19af2737e4bbd2cb3cd5e908de64286573'],
         'Linux' => [ 'cwebp-linux', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568']
     ];
-
-    private static function escapeFilename($string)
-    {
-        // Escaping whitespace
-        $string = preg_replace('/\s/', '\\ ', $string);
-
-        // filter_var() is should normally be available, but it is not always
-        // - https://stackoverflow.com/questions/11735538/call-to-undefined-function-filter-var
-        if (function_exists('filter_var')) {
-            // Sanitize quotes
-            $string = filter_var($string, FILTER_SANITIZE_MAGIC_QUOTES);
-
-            // Stripping control characters
-            // see https://stackoverflow.com/questions/12769462/filter-flag-strip-low-vs-filter-flag-strip-high
-            $string = filter_var($string, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW);
-        }
-
-        return $string;
-    }
-
-    // Checks if 'Nice' is available
-    private static function hasNiceSupport()
-    {
-        exec("nice 2>&1", $niceOutput);
-
-        if (is_array($niceOutput) && isset($niceOutput[0])) {
-            if (preg_match('/usage/', $niceOutput[0]) || (preg_match('/^\d+$/', $niceOutput[0]))) {
-                /*
-                 * Nice is available - default niceness (+10)
-                 * https://www.lifewire.com/uses-of-commands-nice-renice-2201087
-                 * https://www.computerhope.com/unix/unice.htm
-                 */
-
-                return true;
-            }
-
-            return false;
-        }
-    }
 
     private static function executeBinary($binary, $commandOptions, $useNice, $logger)
     {

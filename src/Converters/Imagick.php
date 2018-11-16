@@ -4,48 +4,43 @@ namespace WebPConvert\Converters;
 
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
+use WebPConvert\Convert\BaseConverter;
 
 //use WebPConvert\Exceptions\TargetNotFoundException;
 
-class Imagick
+class Imagick extends BaseConverter
 {
     public static $extraOptions = [];
 
-    public static function convert($source, $destination, $options = [])
-    {
-        ConverterHelper::runConverter('imagick', $source, $destination, $options, true);
-    }
 
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options, $logger)
+    // You should rather call the static convert() function, defined in BaseConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    public function doConvert()
     {
+
         if (!extension_loaded('imagick')) {
             throw new ConverterNotOperationalException('Required iMagick extension is not available.');
         }
 
-        if (!class_exists('Imagick')) {
+        if (!class_exists('\\Imagick')) {
             throw new ConverterNotOperationalException(
                 'iMagick is installed, but not correctly. The class Imagick is not available'
             );
         }
 
+        $options = $this->options;
+
         // This might throw an exception.
         // Ie "ImagickException: no decode delegate for this image format `JPEG'"
         // We let it...
-        $im = new \Imagick($source);
+        $im = new \Imagick($this->source);
         //$im = new \Imagick();
-        //$im->readImage($source);
+        //$im->readImage($this->source);
 
         // Throws an exception if iMagick does not support WebP conversion
         if (!in_array('WEBP', $im->queryFormats())) {
             throw new ConverterNotOperationalException('iMagick was compiled without WebP support.');
-        }
-
-        $options = array_merge(ConverterHelper::$defaultOptions, $options);
-
-        // Force lossless option to true for PNG images
-        if (ConverterHelper::getExtension($source) == 'png') {
-            $options['lossless'] = true;
         }
 
         $im->setImageFormat('WEBP');
@@ -74,17 +69,16 @@ class Imagick
             $im->stripImage();
         }
 
-        if (isset($options['_quality_could_not_be_detected'])) {
-            // quality was set to "auto", but we could not meassure the quality of the jpeg locally
-            // but luckily imagick is a big boy, and automatically converts with same quality as
+        if ($this->isQualitySetToAutoAndDidQualityDetectionFail()) {
+            // Luckily imagick is a big boy, and automatically converts with same quality as
             // source, when the quality isn't set.
             // So we simply do not set quality.
-            // This actually kills the max-height functionality. But I deem that this is more important
+            // This actually kills the max-quality functionality. But I deem that this is more important
             // because setting image quality to something higher than source generates bigger files,
             // but gets you no extra quality. When failing to limit quality, you at least get something
             // out of it
         } else {
-            $im->setImageCompressionQuality($options['_calculated_quality']);
+            $im->setImageCompressionQuality($this->getCalculatedQuality());
         }
 
 
@@ -108,7 +102,7 @@ class Imagick
         // We used to use writeImageFile() method. But we now use getImageBlob(). See issue #43
         //$success = $im->writeImageFile(fopen($destination, 'wb'));
 
-        $success = @file_put_contents($destination, $im->getImageBlob());
+        $success = @file_put_contents($this->destination, $im->getImageBlob());
 
         if (!$success) {
             throw new ConverterFailedException('Failed writing file');
