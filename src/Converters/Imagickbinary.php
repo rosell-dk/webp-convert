@@ -56,11 +56,6 @@ class ImagickBinary extends ExecConverter
     // takes care of preparing stuff before calling doConvert, and validating after.
     public function doConvert()
     {
-
-        if (!function_exists('exec')) {
-            throw new ConverterNotOperationalException('exec() is not enabled.');
-        }
-
         if (!self::imagickInstalled()) {
             throw new ConverterNotOperationalException('imagick is not installed');
         }
