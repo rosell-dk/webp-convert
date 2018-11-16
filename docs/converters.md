@@ -84,7 +84,7 @@ See [the wiki](https://github.com/rosell-dk/webp-convert/wiki/Installing-cwebp--
   <tr><th>Availability</th><td>Should work on <em>almost</em> any webhost</td></tr>
   <tr><th>General options supported</th><td>All (`quality`, `metadata`, `method`, `low-memory`, `lossless`)</td></tr>
   <tr><th>Extra options (old api)</th><td>`url`, `secret`</td></tr>
-  <tr><th>Extra options (new api)</th><td>`url`, `api-version`, `api-key`, `api-key-crypted`, `salt`</td></tr>
+  <tr><th>Extra options (new api)</th><td>`url`, `api-version`, `api-key`, `crypt-api-key-in-transfer`</td></tr>
 </table>
 
 [wpc](https://github.com/rosell-dk/webp-convert-cloud-service) is an open source cloud service. You do not buy a key, you set it up on a server, or you set up [the Wordpress plugin](https://wordpress.org/plugins/webp-express/). As WebPConvert Cloud Service itself is based on WebPConvert, all options are supported.
@@ -99,9 +99,10 @@ WebPConvert::convert($source, $destination, [
     'converters' => ['cwebp', 'wpc'],
     'converter-options' => [
         'wpc' => [
-            'api-version' => 1,     /* from release 1.0.0 */
+            'api-version' => 1,     /* from wpc release 1.0.0 */
             'url' => 'http://example.com/wpc.php',
             'api-key' => 'my dog is white',
+            'crypt-api-key-in-transfer' => false
         ]
     ]    
 ));
@@ -111,25 +112,6 @@ WebPConvert::convert($source, $destination, [
 
 ```php
 
-function createRandomSaltForBlowfish() {
-    $salt = '';
-    $validCharsForSalt = array_merge(
-        range('A', 'Z'),
-        range('a', 'z'),
-        range('0', '9'),
-        ['.', '/']
-    );
-
-    for ($i=0; $i<22; $i++) {createRandomSaltForBlowfish
-        $salt .= $validCharsForSalt[array_rand($validCharsForSalt)];
-    }
-    return $salt;
-}
-
-$apiKey = 'my dog is white';
-$salt = createRandomSaltForBlowfish();
-$apiKeyCrypted = substr(crypt($apiKey, '$2y$10$' . $salt . '$'), 28);
-
 WebPConvert::convert($source, $destination, [
     'max-quality' => 80,
     'converters' => ['cwebp', 'wpc'],
@@ -137,8 +119,8 @@ WebPConvert::convert($source, $destination, [
         'wpc' => [
             'api-version' => 1,
             'url' => 'http://example.com/wpc.php',
-            'salt' => $salt,
-            'api-key-crypted' => $apiKeyCrypted,
+            'api-key' => 'my dog is white',
+            'crypt-api-key-in-transfer' => true
         ],
     ]
 ));
