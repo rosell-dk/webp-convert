@@ -22,6 +22,13 @@ class Stack extends BaseConverter
             'default' => ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'],
             'required' => false
         ],
+        [
+            'name' => 'skip-pngs',
+            'type' => 'boolean',
+            'sensitive' => false,
+            'default' => true,
+            'required' => false
+        ],
     ];
 
     public static $availableConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'wpc', 'ewww'];

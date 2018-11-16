@@ -9,15 +9,7 @@ use WebPConvert\Convert\BaseConverter;
 
 class Gd extends BaseConverter
 {
-    public static $extraOptions = [
-        [
-            'name' => 'skip-pngs',
-            'type' => 'boolean',
-            'sensitive' => false,
-            'default' => true,
-            'required' => false
-        ],
-    ];
+    public static $extraOptions = [];
 
     // Although this method is public, do not call directly.
     // You should rather call the static convert() function, defined in BaseConverter, which
