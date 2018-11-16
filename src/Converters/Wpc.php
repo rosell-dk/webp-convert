@@ -4,8 +4,9 @@ namespace WebPConvert\Converters;
 
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
+use WebPConvert\Convert\CloudConverter;
 
-class Wpc
+class Wpc extends CloudConverter
 {
     public static $extraOptions = [
         [
@@ -62,11 +63,6 @@ class Wpc
         */
     ];
 
-    public static function convert($source, $destination, $options = [])
-    {
-        ConverterHelper::runConverter('wpc', $source, $destination, $options, true);
-    }
-
     // Took this parser from Drupal
     private static function parseSize($size)
     {
@@ -99,16 +95,13 @@ class Wpc
     }
 
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options, $logger)
+    // You should rather call the static convert() function, defined in BaseConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    public function doConvert()
     {
+        $options = $this->options;
 
-        if (!extension_loaded('curl')) {
-            throw new ConverterNotOperationalException('Required cURL extension is not available.');
-        }
-
-        if (!function_exists('curl_init')) {
-            throw new ConverterNotOperationalException('Required url_init() function is not available.');
-        }
+        self::testCurlRequirements();
 
         $apiVersion = $options['api-version'];
 
@@ -151,7 +144,7 @@ class Wpc
             );
         }
 
-        $fileSize = @filesize($source);
+        $fileSize = @filesize($this->source);
         if ($fileSize !== false) {
             $uploadMaxSize = self::parseSize(ini_get('upload_max_filesize'));
             if (($uploadMaxSize !== false) && ($uploadMaxSize < $fileSize)) {
@@ -179,10 +172,7 @@ class Wpc
         // Got some code here:
         // https://coderwall.com/p/v4ps1a/send-a-file-via-post-with-curl-and-php
 
-        $ch = curl_init();
-        if (!$ch) {
-            throw new ConverterNotOperationalException('Could not initialise cURL.');
-        }
+        $ch = self::initCurl();
 
         $optionsToSend = $options;
 
@@ -200,13 +190,13 @@ class Wpc
         unset($optionsToSend['_calculated_quality']);
 
         $postData = [
-            'file' => curl_file_create($source),
+            'file' => curl_file_create($this->source),
             'options' => json_encode($optionsToSend),
             'servername' => (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '')
         ];
 
         if ($apiVersion == 0) {
-            $postData['hash'] = md5(md5_file($source) . $options['secret']);
+            $postData['hash'] = md5(md5_file($this->source) . $options['secret']);
         }
 
         if ($apiVersion == 1) {
@@ -315,7 +305,7 @@ class Wpc
             //throw new ConverterNotOperationalException($response);
         }
 
-        $success = @file_put_contents($destination, $response);
+        $success = @file_put_contents($this->destination, $response);
         curl_close($ch);
 
         if (!$success) {
@@ -325,7 +315,7 @@ class Wpc
                 $curlOptions = [
                     'api_key' => $options['key'],
                     'webp' => '1',
-                    'file' => curl_file_create($source),
+                    'file' => curl_file_create($this->source),
                     'domain' => $_SERVER['HTTP_HOST'],
                     'quality' => $options['quality'],
                     'metadata' => ($options['metadata'] == 'none' ? '0' : '1')
