@@ -37,7 +37,7 @@ class Imagick
         //$im->readImage($source);
 
         // Throws an exception if iMagick does not support WebP conversion
-        if (!in_array('WEBP', $im->queryFormats())) {
+        if (!in_array('WEBP', $im::queryFormats())) {
             throw new ConverterNotOperationalException('iMagick was compiled without WebP support.');
         }
 
