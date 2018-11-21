@@ -26,6 +26,9 @@ class Gd extends BaseConverter
             );
         }
 
+        // Btw: Check out processWebp here:
+        // https://github.com/Intervention/image/blob/master/src/Intervention/Image/Gd/Encoder.php
+
         switch ($this->getSourceExtension()) {
             case 'png':
                 if (!function_exists('imagecreatefrompng')) {

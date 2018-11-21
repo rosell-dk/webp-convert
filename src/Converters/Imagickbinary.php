@@ -10,6 +10,9 @@ use WebPConvert\Convert\ExecConverter;
 
 //use WebPConvert\Exceptions\TargetNotFoundException;
 
+// To futher improve this converter, I could check out:
+// https://github.com/Orbitale/ImageMagickPHP
+
 class ImagickBinary extends ExecConverter
 {
     public static $extraOptions = [
@@ -71,6 +74,9 @@ class ImagickBinary extends ExecConverter
         // Should we perhaps try both?
         // For now, we just go with "convert"
         $command = 'convert ' . self::escapeFilename($this->source) . ' webp:' . self::escapeFilename($this->destination);
+
+        // TODO:
+        // quality. Like this: 'convert -quality 100 small.jpg small.webp'
 
         $useNice = (($this->options['use-nice']) && self::hasNiceSupport()) ? true : false;
         if ($useNice) {

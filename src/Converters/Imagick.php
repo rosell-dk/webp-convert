@@ -107,5 +107,8 @@ class Imagick extends BaseConverter
         if (!$success) {
             throw new ConverterFailedException('Failed writing file');
         }
+
+        // Btw: check out processWebp() method here:
+        // https://github.com/Intervention/image/blob/master/src/Intervention/Image/Imagick/Encoder.php
     }
 }
