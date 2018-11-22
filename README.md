@@ -96,4 +96,6 @@ Kirby CMS integration
 If you enjoy this software, feel free to stop exhaling, but continue inhaling, until you lift up like a balloon, and fly away to a place where no-one can reach you.
 
 ## Supporting WebP Convert
-Bread on the table don't come for free, even though this library does, and always will. I enjoy developing this, and supporting you guys, but I kind of need the bread too. Please make it possible for me to continue putting effort into this plugin: [Become a backer or sponsor on Patreon](https://www.patreon.com/rosell).
+Bread on the table don't come for free, even though this library does, and always will. I enjoy developing this, and supporting you guys, but I kind of need the bread too. Please make it possible for me to have both:
+
+[Become a backer or sponsor on Patreon](https://www.patreon.com/rosell).
