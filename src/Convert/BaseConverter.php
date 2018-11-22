@@ -101,10 +101,22 @@ class BaseConverter
         }
 
         // Prepare options
+        $this->runValidations();
+
+        // Prepare options
         $this->prepareOptions();
     }
 
-    public function runBasicValidations()
+    // The individual converters can override this...
+    public function runValidations() {
+
+    }
+
+    /**
+     *  Note: As the "basic" validations are only run one time in a stack,
+     *  this method is not overridable
+     */
+    private function runBasicValidations()
     {
         // Check if source exists
         if (!@file_exists($this->source)) {
@@ -145,6 +157,8 @@ class BaseConverter
             $this->options['lossless'] = true;
         }
 
+        // TODO: Here we could test if quality is 0-100 or auto.
+        //       and if not, throw something extending InvalidArgumentException (which is a LogicException)
 
     }
 

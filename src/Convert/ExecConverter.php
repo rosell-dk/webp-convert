@@ -46,9 +46,8 @@ class ExecConverter extends BaseConverter
         }
     }
 
-
-    public function runBasicValidations() {
-        parent::runBasicValidations();
+    public function runValidations() {
+        //parent::runValidations();
 
         if (!function_exists('exec')) {
             throw new ConverterNotOperationalException('exec() is not enabled.');
