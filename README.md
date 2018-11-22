@@ -92,9 +92,6 @@ A cloud service based on WebPConvert
 #### [kirby-webp](https://github.com/S1SYPHOS/kirby-webp)
 Kirby CMS integration
 
-## Bloat-ware
-If you enjoy this software, feel free to stop exhaling, but continue inhaling, until you lift up like a balloon, and fly away to a place where no-one can reach you.
-
 ## Supporting WebP Convert
 Bread on the table don't come for free, even though this library does, and always will. I enjoy developing this, and supporting you guys, but I kind of need the bread too. Please make it possible for me to have both:
 
