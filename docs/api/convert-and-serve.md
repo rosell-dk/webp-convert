@@ -64,7 +64,12 @@ Default value: *true*
 ### *add-content-type-header*
 Add a "Content-Type" header
 Default value: *true*
-If set, a Content-Type header will be added. It will be set to "image/webp" if a converted image is served, "image/jpeg" or "image/png", if the original is served or "image/gif", if an error message is served (as image). You can set it to false when debugging (to check if any errors are being outputted)
+If set, a *Content-Type* header will be added. It will be set to "image/webp" if a converted image is served, "image/jpeg" or "image/png", if the original is served or "image/gif", if an error message is served (as image). You can set it to false when debugging (to check if any errors are being outputted)
+
+### *add-last-modified-header*
+Add a "Last-Modified" header
+Default value: *true*
+If set, a *Last-Modified* header will be added. When a cached image is served, it will be set to the modified time of the converted file. When a fresh image is served, it is set to current time.
 
 ### *cache-control-header*
 Specify a cache control header, which will be served when caching is appropriate.

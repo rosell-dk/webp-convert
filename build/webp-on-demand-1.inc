@@ -57,6 +57,7 @@ class ServeBase
 
     public static $defaultOptions = [
         'add-content-type-header' => true,
+        'add-last-modified-header' => true,
         'add-vary-header' => true,
         'add-x-header-status' => true,
         'add-x-header-options' => false,
@@ -113,6 +114,14 @@ class ServeBase
         }
     }
 
+    /* $timestamp  Unix timestamp */
+    public function addLastModifiedHeader($timestamp)
+    {
+        if ($this->options['add-last-modified-header']) {
+            $this->header("Last-Modified: " . gmdate("D, d M Y H:i:s", $timestamp) ." GMT", true);
+        }
+    }
+
     public function addCacheControlHeader()
     {
         if (!empty($this->options['cache-control-header'])) {
@@ -130,6 +139,7 @@ class ServeBase
         $this->addVaryHeader();
         $this->addContentTypeHeader('image/webp');
         $this->addCacheControlHeader();
+        $this->addLastModifiedHeader(@filemtime($this->destination));
 
         if (@readfile($this->destination) === false) {
             $this->header('X-WebP-Convert-Error: Could not read file');

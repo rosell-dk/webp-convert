@@ -92,7 +92,7 @@ class ConverterHelper
         'method' => 6,
         'low-memory' => false,
         'lossless' => false,
-        'converters' =>  ['cwebp', 'gd', 'imagick'],
+        'converters' =>  ['cwebp', 'gd', 'imagick', 'gmagick'],
         'converter-options' => []
     ];
 
@@ -194,7 +194,7 @@ class ConverterHelper
         try {
             self::runConverter($converterId, $source, $destination, $options, $prepareDestinationFolder, $logger);
             $logger->logLn(
-                'Successfully converted test image in ' .
+                'Successfully converted image in ' .
                 round((microtime(true) - $beginTime) * 1000) . ' ms'
             );
         } catch (\Exception $e) {
@@ -322,8 +322,8 @@ class ConverterHelper
     public static function detectQualityOfJpg($filename)
     {
         // Try Imagick extension
-        if (extension_loaded('imagick') && class_exists('Imagick')) {
-            $img = new Imagick($filename);
+        if (extension_loaded('imagick') && class_exists('\\Imagick')) {
+            $img = new \Imagick($filename);
 
             // The required function is available as from PECL imagick v2.2.2
             if (method_exists($img, 'getImageCompressionQuality')) {
@@ -1377,7 +1377,7 @@ class Imagick
         //$im->readImage($source);
 
         // Throws an exception if iMagick does not support WebP conversion
-        if (!in_array('WEBP', $im->queryFormats())) {
+        if (!in_array('WEBP', $im::queryFormats())) {
             throw new ConverterNotOperationalException('iMagick was compiled without WebP support.');
         }
 
@@ -2308,6 +2308,7 @@ class ServeBase
 
     public static $defaultOptions = [
         'add-content-type-header' => true,
+        'add-last-modified-header' => true,
         'add-vary-header' => true,
         'add-x-header-status' => true,
         'add-x-header-options' => false,
@@ -2364,6 +2365,14 @@ class ServeBase
         }
     }
 
+    /* $timestamp  Unix timestamp */
+    public function addLastModifiedHeader($timestamp)
+    {
+        if ($this->options['add-last-modified-header']) {
+            $this->header("Last-Modified: " . gmdate("D, d M Y H:i:s", $timestamp) ." GMT", true);
+        }
+    }
+
     public function addCacheControlHeader()
     {
         if (!empty($this->options['cache-control-header'])) {
@@ -2381,6 +2390,7 @@ class ServeBase
         $this->addVaryHeader();
         $this->addContentTypeHeader('image/webp');
         $this->addCacheControlHeader();
+        $this->addLastModifiedHeader(@filemtime($this->destination));
 
         if (@readfile($this->destination) === false) {
             $this->header('X-WebP-Convert-Error: Could not read file');
@@ -2552,6 +2562,7 @@ class ServeConverted extends ServeBase
 
         if ($this->whyServingThis == 'source-lighter') {
             $this->addCacheControlHeader();
+            $this->addLastModifiedHeader(@filemtime($this->source));
         } else {
             $this->addHeadersPreventingCaching();
         }
@@ -2588,7 +2599,6 @@ class ServeConverted extends ServeBase
                 if (!$this->callAboutToServeImageCallBack('fresh-conversion')) {
                     return;
                 }
-
                 if ($this->options['add-content-type-header']) {
                     $this->header('Content-type: image/webp');
                 }
@@ -2619,6 +2629,7 @@ class ServeConverted extends ServeBase
                 } else {
                     $this->addHeadersPreventingCaching();
                 }
+                $this->addLastModifiedHeader(time());
 
                 // Should we add Content-Length header?
                 // $this->header('Content-Length: ' . filesize($file));

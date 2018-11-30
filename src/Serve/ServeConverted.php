@@ -57,6 +57,7 @@ class ServeConverted extends ServeBase
 
         if ($this->whyServingThis == 'source-lighter') {
             $this->addCacheControlHeader();
+            $this->addLastModifiedHeader(@filemtime($this->source));
         } else {
             $this->addHeadersPreventingCaching();
         }
@@ -93,7 +94,6 @@ class ServeConverted extends ServeBase
                 if (!$this->callAboutToServeImageCallBack('fresh-conversion')) {
                     return;
                 }
-
                 if ($this->options['add-content-type-header']) {
                     $this->header('Content-type: image/webp');
                 }
@@ -124,6 +124,7 @@ class ServeConverted extends ServeBase
                 } else {
                     $this->addHeadersPreventingCaching();
                 }
+                $this->addLastModifiedHeader(time());
 
                 // Should we add Content-Length header?
                 // $this->header('Content-Length: ' . filesize($file));
