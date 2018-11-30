@@ -29,6 +29,7 @@ Of course, as we here have to call a binary directly, *cwebp* requires the *exec
 | [`imagick`](#imagick)                | Imagick extension (`ImageMagick` wrapper)        | Imagick PHP extension compiled with WebP support   |
 | [`gmagick`](#gmagick)                | Gmagick extension (`ImageMagick` wrapper)        | Gmagick PHP extension compiled with WebP support   |
 | [`gd`](#gd)                          | GD Graphics (Draw) extension (`LibGD` wrapper)   | GD PHP extension compiled with WebP support        |
+| [`imagickbinary`](#imagickbinary)    | Calls imagick binary directly                    | exec() and imagick installed and compiled with WebP support   |
 | [`wpc`](#wpc)                        | Connects to an open source cloud service                 | Access to a running service. The service can be installed  [directly](https://github.com/rosell-dk/webp-convert-cloud-service) or by using [this Wordpress plugin](https://wordpress.org/plugins/webp-express/).
 | [`ewww`](#ewww)                      | Connects to *EWWW Image Optimizer* cloud service | Purchasing a key                                   |
 
@@ -219,3 +220,17 @@ Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes c
 WebP conversion with `imagick` is fast and [exposes many WebP options](http://www.imagemagick.org/script/webp.php). Unfortunately, WebP support for the `imagick` extension is pretty uncommon. At least not on the systems I have tried (Ubuntu 16.04 and Ubuntu 17.04). But if installed, it works great and has several WebP options.
 
 See [this page](https://github.com/rosell-dk/webp-convert/wiki/Installing-Imagick-extension) in the Wiki for instructions on installing the extension.
+
+## imagickbinary
+<table>
+  <tr><th>Requirements</th><td><code>exec()</code> function and that imagick is installed on webserver, compiled with webp support</td></tr>
+  <tr><th>Performance</th><td>just fine</td></tr>
+  <tr><th>Reliability</th><td>No problems detected so far!</td></tr>
+  <tr><th>Availability</th><td>Not sure</td></tr>
+  <tr><th>General options supported</th><td>`quality`</td></tr>
+  <tr><th>Extra options</th><td>`use-nice` (boolean)</td></tr>
+</table>
+
+This converter tryes to execute `convert source.jpg webp:destination.jpg.webp`.
+
+#### The `method` option
