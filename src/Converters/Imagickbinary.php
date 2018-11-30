@@ -69,13 +69,11 @@ class ImagickBinary
             throw new ConverterNotOperationalException('exec() is not enabled.');
         }
 
+
         if (!self::imagickInstalled()) {
             throw new ConverterNotOperationalException('imagick is not installed');
         }
 
-        if (!self::webPDelegateInstalled()) {
-            throw new ConverterNotOperationalException('webp delegate missing');
-        }
 
         // Should we use "magick" or "convert" command?
         // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
@@ -89,6 +87,10 @@ class ImagickBinary
         }
 
         if ($returnCode != 0) {
+            if (!self::webPDelegateInstalled()) {
+                throw new ConverterNotOperationalException('webp delegate missing');
+            }
+            
             $logger->logLn('command:' . $command);
             $logger->logLn('return code:' . $returnCode);
             $logger->logLn('output:' . print_r(implode("\n", $output), true));
