@@ -63,6 +63,7 @@ class ServeBase
         'aboutToServeImageCallBack' => null,
         'aboutToPerformFailAction' => null,
         'cache-control-header' => 'public, max-age=86400',
+        'last-modified-header' => true,
         'converters' =>  ['cwebp', 'gd', 'imagick'],
         'error-reporting' => 'auto',
         'fail' => 'original',
@@ -119,6 +120,13 @@ class ServeBase
             $this->header('Cache-Control: ' . $this->options['cache-control-header'], true);
         }
     }
+    
+    public function addLastModifiedHeader()
+    {
+        if (!empty($this->options['last-modified-header'])) {
+            $this->header('Last-Modified: ' . gmdate("D, d M Y H:i:s", filemtime($this->destination))." GMT");
+        }
+    }
 
     public function serveExisting()
     {
@@ -130,6 +138,7 @@ class ServeBase
         $this->addVaryHeader();
         $this->addContentTypeHeader('image/webp');
         $this->addCacheControlHeader();
+        $this->addLastModifiedHeader();
 
         if (@readfile($this->destination) === false) {
             $this->header('X-WebP-Convert-Error: Could not read file');
