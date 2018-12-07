@@ -262,13 +262,16 @@ class ConverterHelper
             $img = new \Imagick($filename);
 
             // The required function is available as from PECL imagick v2.2.2
+            // (you can see your version like this: phpversion("imagick"))
             if (method_exists($img, 'getImageCompressionQuality')) {
                 return $img->getImageCompressionQuality();
             }
         }
 
-        // Gmagick extension doesn't seem to support this (yet):
+        // Gmagick extension doesn't support dectecting image quality (yet):
         // https://bugs.php.net/bug.php?id=63939
+        // It is not supported in 2.0.5RC1. But perhaps there is a new version out now?
+        // Check here: https://pecl.php.net/package-changelog.php?package=gmagick
 
         if (function_exists('shell_exec')) {
             // Try Imagick
