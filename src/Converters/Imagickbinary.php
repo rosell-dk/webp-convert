@@ -9,7 +9,15 @@ use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
 class ImagickBinary
 {
-    public static $extraOptions = [];
+    public static $extraOptions = [
+        [
+            'name' => 'use-nice',
+            'type' => 'boolean',
+            'sensitive' => false,
+            'default' => true,
+            'required' => false
+        ],
+    ];
 
     public static function convert($source, $destination, $options = [])
     {
@@ -42,6 +50,25 @@ class ImagickBinary
         return false;
     }
 
+    // Checks if 'Nice' is available
+    private static function hasNiceSupport()
+    {
+        exec("nice 2>&1", $niceOutput);
+
+        if (is_array($niceOutput) && isset($niceOutput[0])) {
+            if (preg_match('/usage/', $niceOutput[0]) || (preg_match('/^\d+$/', $niceOutput[0]))) {
+                /*
+                 * Nice is available - default niceness (+10)
+                 * https://www.lifewire.com/uses-of-commands-nice-renice-2201087
+                 * https://www.computerhope.com/unix/unice.htm
+                 */
+
+                return true;
+            }
+
+            return false;
+        }
+    }
 
     public static function escapeFilename($string)
     {
@@ -75,11 +102,35 @@ class ImagickBinary
         }
 
 
+        // TODO:
+        // quality. Like this: 'convert -quality 100 small.jpg small.webp'
+        $qualityOption = '';
+        //$this->logLn('Using quality:' . $this->getCalculatedQuality());
+        if (isset($options['_quality_could_not_be_detected'])) {
+            // quality was set to "auto", but we could not meassure the quality of the jpeg locally
+            // but luckily imagick is a big boy, and automatically converts with same quality as
+            // source, when the quality isn't set.
+        } else {
+            $qualityOption = '-quality ' . $options['_calculated_quality'] . ' ';
+        }
+
+
         // Should we use "magick" or "convert" command?
         // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
         // Should we perhaps try both?
         // For now, we just go with "convert"
-        $command = 'convert ' . self::escapeFilename($source) . ' webp:' . self::escapeFilename($destination);
+
+        $command = 'convert ' . $qualityOption . self::escapeFilename($source) . ' webp:' . self::escapeFilename($destination);
+
+
+        // Nice
+        $useNice = (($options['use-nice']) && self::hasNiceSupport()) ? true : false;
+        if ($useNice) {
+            $logger->logLn('using nice');
+            $command = 'nice ' . $command;
+        }
+
+        $logger->logLn('command:' . $command);
         exec($command, $output, $returnCode);
 
         if ($returnCode == 127) {
@@ -90,12 +141,13 @@ class ImagickBinary
             if (!self::webPDelegateInstalled()) {
                 throw new ConverterNotOperationalException('webp delegate missing');
             }
-            
+
             $logger->logLn('command:' . $command);
             $logger->logLn('return code:' . $returnCode);
             $logger->logLn('output:' . print_r(implode("\n", $output), true));
 
             throw new ConverterNotOperationalException('The exec call failed');
         }
+
     }
 }
