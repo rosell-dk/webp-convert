@@ -326,13 +326,16 @@ class ConverterHelper
             $img = new \Imagick($filename);
 
             // The required function is available as from PECL imagick v2.2.2
+            // (you can see your version like this: phpversion("imagick"))
             if (method_exists($img, 'getImageCompressionQuality')) {
                 return $img->getImageCompressionQuality();
             }
         }
 
-        // Gmagick extension doesn't seem to support this (yet):
+        // Gmagick extension doesn't support dectecting image quality (yet):
         // https://bugs.php.net/bug.php?id=63939
+        // It is not supported in 2.0.5RC1. But perhaps there is a new version out now?
+        // Check here: https://pecl.php.net/package-changelog.php?package=gmagick
 
         if (function_exists('shell_exec')) {
             // Try Imagick
@@ -1423,8 +1426,14 @@ class Imagick
             // because setting image quality to something higher than source generates bigger files,
             // but gets you no extra quality. When failing to limit quality, you at least get something
             // out of it
+            $logger->logLn('Converting without setting quality, to achieve auto quality');
         } else {
-            $im->setImageCompressionQuality($options['_calculated_quality']);
+            // _calculated_quality is always set, actually - also when quality is set to a number
+            if (isset($options['_calculated_quality'])) {
+                $logger->logLn('Converting with quality:' . $options['_calculated_quality']);
+                $im->setImageCompressionQuality($options['_calculated_quality']);
+                //$im->setImageCompressionQuality(55);
+            }
         }
 
 
@@ -1467,7 +1476,15 @@ use WebPConvert\Converters\Exceptions\ConverterFailedException;
 
 class ImagickBinary
 {
-    public static $extraOptions = [];
+    public static $extraOptions = [
+        [
+            'name' => 'use-nice',
+            'type' => 'boolean',
+            'sensitive' => false,
+            'default' => true,
+            'required' => false
+        ],
+    ];
 
     public static function convert($source, $destination, $options = [])
     {
@@ -1500,6 +1517,25 @@ class ImagickBinary
         return false;
     }
 
+    // Checks if 'Nice' is available
+    private static function hasNiceSupport()
+    {
+        exec("nice 2>&1", $niceOutput);
+
+        if (is_array($niceOutput) && isset($niceOutput[0])) {
+            if (preg_match('/usage/', $niceOutput[0]) || (preg_match('/^\d+$/', $niceOutput[0]))) {
+                /*
+                 * Nice is available - default niceness (+10)
+                 * https://www.lifewire.com/uses-of-commands-nice-renice-2201087
+                 * https://www.computerhope.com/unix/unice.htm
+                 */
+
+                return true;
+            }
+
+            return false;
+        }
+    }
 
     public static function escapeFilename($string)
     {
@@ -1527,19 +1563,44 @@ class ImagickBinary
             throw new ConverterNotOperationalException('exec() is not enabled.');
         }
 
+
         if (!self::imagickInstalled()) {
             throw new ConverterNotOperationalException('imagick is not installed');
         }
 
-        if (!self::webPDelegateInstalled()) {
-            throw new ConverterNotOperationalException('webp delegate missing');
+
+        // TODO:
+        // quality. Like this: 'convert -quality 100 small.jpg small.webp'
+        $qualityOption = '';
+        //$this->logLn('Using quality:' . $this->getCalculatedQuality());
+        if (isset($options['_quality_could_not_be_detected'])) {
+            // quality was set to "auto", but we could not meassure the quality of the jpeg locally
+            // but luckily imagick is a big boy, and automatically converts with same quality as
+            // source, when the quality isn't set.
+        } else {
+            $qualityOption = '-quality ' . $options['_calculated_quality'] . ' ';
         }
+
 
         // Should we use "magick" or "convert" command?
         // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
         // Should we perhaps try both?
         // For now, we just go with "convert"
-        $command = 'convert ' . self::escapeFilename($source) . ' webp:' . self::escapeFilename($destination);
+
+        $command = 'convert '
+            . $qualityOption
+            . self::escapeFilename($source)
+            . ' webp:'
+            . self::escapeFilename($destination);
+
+        // Nice
+        $useNice = (($options['use-nice']) && self::hasNiceSupport()) ? true : false;
+        if ($useNice) {
+            $logger->logLn('using nice');
+            $command = 'nice ' . $command;
+        }
+
+        $logger->logLn('command:' . $command);
         exec($command, $output, $returnCode);
 
         if ($returnCode == 127) {
@@ -1547,6 +1608,10 @@ class ImagickBinary
         }
 
         if ($returnCode != 0) {
+            if (!self::webPDelegateInstalled()) {
+                throw new ConverterNotOperationalException('webp delegate missing');
+            }
+
             $logger->logLn('command:' . $command);
             $logger->logLn('return code:' . $returnCode);
             $logger->logLn('output:' . print_r(implode("\n", $output), true));
