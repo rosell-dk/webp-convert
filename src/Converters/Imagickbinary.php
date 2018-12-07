@@ -120,8 +120,11 @@ class ImagickBinary
         // Should we perhaps try both?
         // For now, we just go with "convert"
 
-        $command = 'convert ' . $qualityOption . self::escapeFilename($source) . ' webp:' . self::escapeFilename($destination);
-
+        $command = 'convert '
+            . $qualityOption
+            . self::escapeFilename($source)
+            . ' webp:'
+            . self::escapeFilename($destination);
 
         // Nice
         $useNice = (($options['use-nice']) && self::hasNiceSupport()) ? true : false;
@@ -148,6 +151,5 @@ class ImagickBinary
 
             throw new ConverterNotOperationalException('The exec call failed');
         }
-
     }
 }
