@@ -100,6 +100,8 @@ class Report
                     $glueMe[] = '(' . $converter . ': (' . implode($opt, ', ') . '))';
                 }
                 $printValue = implode(',', $glueMe);
+            } elseif ($optionName == 'web-service') {
+                $printValue = 'sensitive, so not displaying here...';
             } else {
                 switch (gettype($optionValue)) {
                     case 'boolean':
