@@ -333,23 +333,25 @@ class Cwebp
                             if ($options['try-common-system-paths'] && ($majorFailCode > 0)) {
                                 $errorMsg .= ' (same error)';
                             } else {
-                                switch ($returnCode) {
-                                    case 0:
-                                        $success = true;
-                                        ;
-                                        break;
-                                    case 126:
-                                        $errorMsg .= ': Permission denied. The user that the command was run with (' .
-                                            shell_exec('whoami') . ') does not have permission to execute that binary.';
-                                        break;
-                                    case 127:
-                                        $errorMsg .= '. The binary was not found! It ought to be here: ' . $binaryFile;
-                                        break;
-                                    case 139:
-                                        $errorMsg .= '. The binary did not work (segmentation violation). Check out https://github.com/rosell-dk/webp-convert/issues/92';
-                                        break;
-                                    default:
-                                        $errorMsg .= ' (exit code:' .  $returnCode . ').';
+                                if ($returnCode > 128) {
+                                    $errorMsg .= '. The binary did not work (exit code: ' . $returnCode . '). Check out https://github.com/rosell-dk/webp-convert/issues/92';                                    
+                                } else {
+                                    switch ($returnCode) {
+                                        case 0:
+                                            $success = true;
+                                            ;
+                                            break;
+                                        case 126:
+                                            $errorMsg .= ': Permission denied. The user that the command was run with (' .
+                                                shell_exec('whoami') . ') does not have permission to execute that binary.';
+                                            break;
+                                        case 127:
+                                            $errorMsg .= '. The binary was not found! It ought to be here: ' . $binaryFile;
+                                            break;
+                                        default:
+                                            $errorMsg .= ' (exit code:' .  $returnCode . ').';
+                                    }
+
                                 }
                             }
                         }
