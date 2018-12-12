@@ -345,6 +345,9 @@ class Cwebp
                                     case 127:
                                         $errorMsg .= '. The binary was not found! It ought to be here: ' . $binaryFile;
                                         break;
+                                    case 139:
+                                        $errorMsg .= '. The binary did not work (segmentation violation). Check out https://github.com/rosell-dk/webp-convert/issues/92';
+                                        break;
                                     default:
                                         $errorMsg .= ' (exit code:' .  $returnCode . ').';
                                 }
