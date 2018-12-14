@@ -295,12 +295,18 @@ class ConverterHelper
     {
         // Try Imagick extension
         if (extension_loaded('imagick') && class_exists('\\Imagick')) {
-            $img = new \Imagick($filename);
+            // Do not risk uncaught ImagickException when trying to detect quality of jpeg
+            // (it can happen in the rare case, there is no jpeg delegate)
+            try {
+                $img = new \Imagick($filename);
 
-            // The required function is available as from PECL imagick v2.2.2
-            // (you can see your version like this: phpversion("imagick"))
-            if (method_exists($img, 'getImageCompressionQuality')) {
-                return $img->getImageCompressionQuality();
+                // The required function is available as from PECL imagick v2.2.2
+                // (you can see your version like this: phpversion("imagick"))
+                if (method_exists($img, 'getImageCompressionQuality')) {
+                    return $img->getImageCompressionQuality();
+                }
+            } catch (ImagickException $e) {
+                // do nothing.
             }
         }
 
@@ -329,6 +335,7 @@ class ConverterHelper
         if (isset($options['_calculated_quality'])) {
             return;
         }
+        
         if ($options['quality'] == 'auto') {
             $q = self::detectQualityOfJpg($source);
             //$logger->log('Quality set to auto... Quality of source: ');
@@ -821,20 +828,27 @@ class Cwebp
                             if ($options['try-common-system-paths'] && ($majorFailCode > 0)) {
                                 $errorMsg .= ' (same error)';
                             } else {
-                                switch ($returnCode) {
-                                    case 0:
-                                        $success = true;
-                                        ;
-                                        break;
-                                    case 126:
-                                        $errorMsg .= ': Permission denied. The user that the command was run with (' .
-                                            shell_exec('whoami') . ') does not have permission to execute that binary.';
-                                        break;
-                                    case 127:
-                                        $errorMsg .= '. The binary was not found! It ought to be here: ' . $binaryFile;
-                                        break;
-                                    default:
-                                        $errorMsg .= ' (exit code:' .  $returnCode . ').';
+                                if ($returnCode > 128) {
+                                    $errorMsg .= '. The binary did not work (exit code: ' . $returnCode . '). ' .
+                                        'Check out https://github.com/rosell-dk/webp-convert/issues/92';
+                                } else {
+                                    switch ($returnCode) {
+                                        case 0:
+                                            $success = true;
+                                            ;
+                                            break;
+                                        case 126:
+                                            $errorMsg .= ': Permission denied. The user that the command was run' .
+                                                ' with (' . shell_exec('whoami') . ') does not have permission to ' .
+                                                'execute that binary.';
+                                            break;
+                                        case 127:
+                                            $errorMsg .= '. The binary was not found! ' .
+                                                'It ought to be here: ' . $binaryFile;
+                                            break;
+                                        default:
+                                            $errorMsg .= ' (exit code:' .  $returnCode . ').';
+                                    }
                                 }
                             }
                         }
