@@ -259,8 +259,7 @@ class ConverterHelper
     {
         // Try Imagick extension
         if (extension_loaded('imagick') && class_exists('\\Imagick')) {
-
-            // Do not risk uncaught ImagickException when trying to detect quality of jpeg 
+            // Do not risk uncaught ImagickException when trying to detect quality of jpeg
             // (it can happen in the rare case, there is no jpeg delegate)
             try {
                 $img = new \Imagick($filename);
@@ -270,9 +269,8 @@ class ConverterHelper
                 if (method_exists($img, 'getImageCompressionQuality')) {
                     return $img->getImageCompressionQuality();
                 }
-            }
-            catch (ImagickException $e) {
-
+            } catch (ImagickException $e) {
+                // do nothing.
             }
         }
 
@@ -301,8 +299,8 @@ class ConverterHelper
         if (isset($options['_calculated_quality'])) {
             return;
         }
+        
         if ($options['quality'] == 'auto') {
-
             $q = self::detectQualityOfJpg($source);
             //$logger->log('Quality set to auto... Quality of source: ');
             if (!$q) {
