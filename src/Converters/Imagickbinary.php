@@ -72,8 +72,6 @@ class ImagickBinary
 
     public static function escapeFilename($string)
     {
-        // Escaping whitespace
-        $string = preg_replace('/\s/', '\\ ', $string);
 
         // filter_var() is should normally be available, but it is not always
         // - https://stackoverflow.com/questions/11735538/call-to-undefined-function-filter-var
@@ -85,6 +83,9 @@ class ImagickBinary
             // see https://stackoverflow.com/questions/12769462/filter-flag-strip-low-vs-filter-flag-strip-high
             $string = filter_var($string, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW);
         }
+
+        // Escaping whitespace. Must be done *after* filter_var!
+        $string = preg_replace('/\s/', '\\ ', $string);
 
         return $string;
     }
