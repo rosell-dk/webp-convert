@@ -259,12 +259,20 @@ class ConverterHelper
     {
         // Try Imagick extension
         if (extension_loaded('imagick') && class_exists('\\Imagick')) {
-            $img = new \Imagick($filename);
 
-            // The required function is available as from PECL imagick v2.2.2
-            // (you can see your version like this: phpversion("imagick"))
-            if (method_exists($img, 'getImageCompressionQuality')) {
-                return $img->getImageCompressionQuality();
+            // Do not risk uncaught ImagickException when trying to detect quality of jpeg 
+            // (it can happen in the rare case, there is no jpeg delegate)
+            try {
+                $img = new \Imagick($filename);
+
+                // The required function is available as from PECL imagick v2.2.2
+                // (you can see your version like this: phpversion("imagick"))
+                if (method_exists($img, 'getImageCompressionQuality')) {
+                    return $img->getImageCompressionQuality();
+                }
+            }
+            catch (ImagickException $e) {
+
             }
         }
 
@@ -294,6 +302,7 @@ class ConverterHelper
             return;
         }
         if ($options['quality'] == 'auto') {
+
             $q = self::detectQualityOfJpg($source);
             //$logger->log('Quality set to auto... Quality of source: ');
             if (!$q) {
