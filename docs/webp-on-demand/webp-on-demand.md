@@ -60,6 +60,7 @@ Place the following rewrite rules in a *.htaccess* file in the directory where y
 
     # Redirect images to webp-on-demand.php (if browser supports webp)
     RewriteCond %{HTTP_ACCEPT} image/webp
+    RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^(.*)\.(jpe?g|png)$ webp-on-demand.php?source=%{SCRIPT_FILENAME} [NC,L]
 </IfModule>
 
@@ -67,6 +68,7 @@ AddType image/webp .webp
 ```
 If you have placed *webp-on-demand.php* in a subfolder, you will need to change the rewrite rule accordingly.
 
+The `RewriteCond %{REQUEST_FILENAME} -f` is not strictly necessary, but there to be sure that we got an existing file, and it could perhaps also prevent some undiscovered way of misuse.
 
 ### 4. Validate that it works
 
@@ -83,8 +85,27 @@ It should work now, but to be absolute sure:
 - Find a jpeg or png image in the list. In the "type" column, it should say "webp". There should also be a *X-WebP-Convert-Status* header on the image that provides some insights on how things went.
 
 
+### 5. Try this improvement and see if it works
 
-### 5. Customizing and tweaking
+It seems that it is not necessary to pass the filename in the query string.
+
+Try replacing `$source = $_GET['source'];` in the script with the following:
+
+```php
+$docRoot = rtrim($_SERVER["DOCUMENT_ROOT"], '/');
+$requestUriNoQS = explode('?', $_SERVER['REQUEST_URI'])[0];
+$source = $docRoot . urldecode($requestUriNoQS);
+```
+
+And you can then remove `?source=%{SCRIPT_FILENAME}` from the `.htaccess` file.
+
+There are some benefits of not passing in query string:
+1. Passing a path in the query string may be blocked by a firewall, as it looks suspicious.
+2. The script called to convert arbitrary files
+3. One person experienced problems with spaces in filenames passed in the query string. See [this issue](https://github.com/rosell-dk/webp-convert/issues/95)
+
+
+### 6. Customizing and tweaking
 
 Basic customizing is done by setting options in the `$options` array. Check out the [docs on convert()](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert.md) and the [docs on convertAndServe()](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert-and-serve.md)
 
