@@ -148,6 +148,7 @@ That condition will always be met. The side effect is that it stores the match (
 
 AddType image/webp .webp
 ```
+
 Of course, in order to *do* something with that querystring, you must use them in your *webp-on-demand.php* script. You could for example use them directly in the options array sent to the *convertAndServe()* method. To achieve the mentioned "debug" and "reconvert" features, do this:
 ```php
 $options = [
@@ -155,4 +156,11 @@ $options = [
     'reconvert' => isset($_GET['reconvert']),
     'serve-original' => isset($_GET['original']),
 ];
+```
+
+*EDIT:*
+I have just discovered a simpler way to achieve the querystring forward: The [QSA flag](https://httpd.apache.org/docs/trunk/rewrite/flags.html).
+So, simply set the QSA flag in the RewriteRule, and nothing more:
+```
+RewriteRule ^(.*)\.(jpe?g|png)$ webp-on-demand.php?source=%{SCRIPT_FILENAME} [NC,QSA,L]
 ```
