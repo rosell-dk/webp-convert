@@ -272,7 +272,12 @@ class Cwebp
                                 'All failed (exit code: ' . $majorFailCode . '). ';
                     }
                 } else {
-                    $failureCodesBesides127 = array_diff($failureCodes, [127]);
+                    /**
+                     * $failureCodesBesides127 is used to check first position ($failureCodesBesides127[0])
+                     * however position can vary as index can be 1 or something else. array_values() would
+                     * always start from 0.
+                     */
+                    $failureCodesBesides127 = array_values(array_diff($failureCodes, [127]));
 
                     if (count($failureCodesBesides127) == 1) {
                         $majorFailCode = $failureCodesBesides127[0];
