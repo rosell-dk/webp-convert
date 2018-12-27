@@ -1,11 +1,11 @@
 
 # Backers
 
-WebP Convert is an MIT-licensed open source project. It is free and always will be. 
+WebP Convert is an MIT-licensed open source project. It is free and always will be.
 
-How is it financed then? Well, it isn't exactly. However, some people choose to support the development by buying the developer a cup of coffee, and some go even further, by becoming backers. Backers are nice folks making recurring monthly donations, and by doing this, they give me an excuse to put more work into the plugin than I really should.
+How is it financed then? Well, it isn't exactly. However, some people choose to support the development by buying the developer a cup of coffee, and some go even further, by becoming backers. Backers are nice folks making recurring monthly donations, and by doing this, they give me an excuse to put more work into the library than I really should.
 
-To become a backer, yourself, visit [my page at patreon](https://www.patreon.com/rosell)
+To become a backer yourself, visit [my page at patreon](https://www.patreon.com/rosell)
 
 
 ## Backers via Patron
