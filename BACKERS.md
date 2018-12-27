@@ -18,16 +18,9 @@ To become a backer yourself, visit [my page at patreon](https://www.patreon.com/
 
 ## Generous backers via Patron
 
-There are no generous backers yet. [Be the first!](https://www.patreon.com/rosell)
-
 Generous backers will get their names listed here, along with a message - max 100 chars, and it may contain one link (the link url does not count any chars).
 
-Examples:
-
-| Name                  | Date       | Message (70 chars limit, one link allowed)     |
-| --------------------- | ---------- | ----------------------------------------------------------------------- |
-| John Doe              | 2018-11-23 | I have a similar plugin. <a href="https://example.com/plugin">Check it out!</a> |
-| John Doe 2            | 2018-11-23 | I do in fact sell shoes - with WebP Express logo! |
+There are no generous backers yet. [Be the first!](https://www.patreon.com/rosell)
 
 <sub>
 I reserve the right to disallow inappropriate messages and links. No xxx sites or anything freaky or fishy, please. You may however advertise non-freaky-or-fishy things, if you wish. Just remember the audience. No point in trying to sell shoes here</sub>
