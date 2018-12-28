@@ -2648,11 +2648,14 @@ class ServeConverted extends ServeBase
 
         $this->addVaryHeader();
 
-        if ($this->whyServingThis == 'source-lighter') {
-            $this->addCacheControlHeader();
-            $this->addLastModifiedHeader(@filemtime($this->source));
-        } else {
-            $this->addHeadersPreventingCaching();
+        switch ($this->whyServingThis) {
+            case 'source-lighter':
+            case 'explicitly-told-to':
+                $this->addCacheControlHeader();
+                $this->addLastModifiedHeader(@filemtime($this->source));
+                break;
+            default:
+                $this->addHeadersPreventingCaching();
         }
 
         if (@readfile($this->source) === false) {

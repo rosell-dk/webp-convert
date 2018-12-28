@@ -74,7 +74,7 @@ If set, a *Last-Modified* header will be added. When a cached image is served, i
 ### *cache-control-header*
 Specify a cache control header, which will be served when caching is appropriate.
 Default value: "public, max-age=86400" (1 day)
-Caching is "deemed appropriate", when destination is served, source is served, because it is lighter or a fresh conversion is made, due to there not being any converted image at the destination yet. Caching is not deemed appropriate when something fails, a report is requested, or the *serve-original* or *reconvert* options have been set. In those cases, standard headers will be used for preventing caching.
+Caching is "deemed appropriate", when destination is served, source is served, because it is lighter or a fresh conversion is made, due to there not being any converted image at the destination yet. Caching is not deemed appropriate when something fails, a report is requested, or the *reconvert* option have been set. Note: in version 1.3.2 and below, the *serve-original* option also prevented caching, but it no longer does. previous In those cases, standard headers will be used for preventing caching.
 For your convenience, here is a little table:
 
 | duration | max-age          |
