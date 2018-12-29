@@ -133,7 +133,7 @@ function aboutToServeImageCallBack($servingWhat, $whyServingThis, $obj)
 {
     echo 'about to serve: ' . $servingWhat . '<br>';
     echo 'Why? - because: ' . $whyServingThis;
-    return false;   // Do not serve!
+    return false;   // Do not serve! (this also prevents any response headers from being added)
 }
 ```
 
