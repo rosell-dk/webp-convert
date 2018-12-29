@@ -109,7 +109,7 @@ If set to "auto", errors will be turned off, unless the `show-report` option is 
 If set to "dont-mess", error reporting will not be touched.
 
 ### *aboutToServeImageCallBack*
-This callback is called right before an image is served. This is a great chance to adding headers. You can stop the image from being served by returning *false*.
+This callback is called right before response headers and image is served. This is a great chance to adding headers. You can stop the image and the headers from being served by returning *false*.
 
 **Arguments:**
 The first argument to the callback contains a string that tells what is about to be served. It can be 'fresh-conversion', 'destination' or 'source'.
@@ -131,15 +131,6 @@ Example of callback:
 ```
 function aboutToServeImageCallBack($servingWhat, $whyServingThis, $obj)
 {
-    $messages = [
-        'source' => [
-            'explicitly-told-to'
-        ]
-    ]
-    switch ($servingWhat) {
-        case 'destination':
-            break;
-    }
     echo 'about to serve: ' . $servingWhat . '<br>';
     echo 'Why? - because: ' . $whyServingThis;
     return false;   // Do not serve!
