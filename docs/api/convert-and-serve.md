@@ -37,7 +37,7 @@ Force a conversion, discarding existing converted image (if any).
 Default value: *false*
 
 ### *serve-original*
-Forces serving original image.  
+Forces serving original image. This will skip conversion.
 Default value: *false*
 
 ### *add-x-header-status*
