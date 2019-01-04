@@ -269,7 +269,7 @@ class ConverterHelper
                 if (method_exists($img, 'getImageCompressionQuality')) {
                     return $img->getImageCompressionQuality();
                 }
-            } catch (ImagickException $e) {
+            } catch (\Exception $e) {
                 // do nothing.
             }
         }
@@ -299,7 +299,7 @@ class ConverterHelper
         if (isset($options['_calculated_quality'])) {
             return;
         }
-        
+
         if ($options['quality'] == 'auto') {
             $q = self::detectQualityOfJpg($source);
             //$logger->log('Quality set to auto... Quality of source: ');
