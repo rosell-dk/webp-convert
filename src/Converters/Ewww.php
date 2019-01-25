@@ -157,6 +157,64 @@ class Ewww
         }
     }
 
+    /**
+     *  Keep subscription alive by optimizing a jpeg
+     *  (ewww closes accounts after 6 months of inactivity - and webp conversions seems not to be counted? )
+     */
+    public static function keepSubscriptionAlive($source, $key)
+    {
+        try {
+            $ch = curl_init();
+        } catch (\Exception $e) {
+            return 'curl is not installed';
+        }
+        curl_setopt_array(
+            $ch,
+            [
+            CURLOPT_URL => "https://optimize.exactlywww.com/v2/",
+            CURLOPT_HTTPHEADER => [
+                'User-Agent: WebPConvert',
+                'Accept: image/*'
+            ],
+            CURLOPT_POSTFIELDS => [
+                'api_key' => $key,
+                'webp' => '0',
+                'file' => curl_file_create($source),
+                'domain' => $_SERVER['HTTP_HOST'],
+                'quality' => 60,
+                'metadata' => 0
+            ],
+            CURLOPT_BINARYTRANSFER => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HEADER => false,
+            CURLOPT_SSL_VERIFYPEER => false
+            ]
+        );
+
+        $response = curl_exec($ch);
+        if (curl_errno($ch)) {
+            return 'curl error' . curl_error($ch);
+        }
+        if (curl_getinfo($ch, CURLINFO_CONTENT_TYPE) != 'application/octet-stream') {
+            curl_close($ch);
+
+            /* May return this: {"error":"invalid","t":"exceeded"} */
+            $responseObj = json_decode($response);
+            if (isset($responseObj->error)) {
+                return 'The key is invalid';
+            }
+
+            return 'ewww api did not return an image. It could be that the key is invalid. Response: ' . $response;
+        }
+
+        // Not sure this can happen. So just in case
+        if ($response == '') {
+            return 'ewww api did not return anything';
+        }
+
+        return true;
+    }
+
     /*
         public static function blacklistKey($key)
         {
