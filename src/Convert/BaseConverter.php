@@ -32,7 +32,8 @@ class BaseConverter
         'lossless' => false,
     ];
 
-    function __construct($source, $destination, $options = [], $logger = null) {
+    public function __construct($source, $destination, $options = [], $logger = null)
+    {
         if (!isset($logger)) {
             $logger = new \WebPConvert\Loggers\VoidLogger();
         }
@@ -84,7 +85,8 @@ class BaseConverter
         return strtolower($fileExtension);
     }
 
-    public function getSourceExtension() {
+    public function getSourceExtension()
+    {
         return self::getExtension($this->source);
     }
 
@@ -108,8 +110,8 @@ class BaseConverter
     }
 
     // The individual converters can override this...
-    public function runValidations() {
-
+    public function runValidations()
+    {
     }
 
     /**
@@ -145,7 +147,6 @@ class BaseConverter
 
         $fileExtension = $this->getSourceExtension();
         if ($fileExtension == 'png') {
-
             // skip png's ?
             if ($this->options['skip-pngs']) {
                 throw new ConversionDeclinedException(
@@ -159,7 +160,6 @@ class BaseConverter
 
         // TODO: Here we could test if quality is 0-100 or auto.
         //       and if not, throw something extending InvalidArgumentException (which is a LogicException)
-
     }
 
     // Creates folder in provided path & sets correct permissions
@@ -347,7 +347,5 @@ class BaseConverter
                 }
             }
         }
-
     }
-
 }
