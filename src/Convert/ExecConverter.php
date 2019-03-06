@@ -46,7 +46,8 @@ class ExecConverter extends BaseConverter
         }
     }
 
-    public function runValidations() {
+    public function runValidations()
+    {
         //parent::runValidations();
 
         if (!function_exists('exec')) {

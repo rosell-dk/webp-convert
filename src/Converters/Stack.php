@@ -120,11 +120,9 @@ class Stack extends BaseConverter
                 return true;
             } catch (\WebPConvert\Converters\Exceptions\ConverterNotOperationalException $e) {
                 $this->logLn($e->getMessage());
-
             } catch (\WebPConvert\Converters\Exceptions\ConverterFailedException $e) {
                 $this->logLn($e->getMessage());
                 $anyRuntimeErrors = true;
-
             } catch (\WebPConvert\Converters\Exceptions\ConversionDeclinedException $e) {
                 $this->logLn($e->getMessage());
             }
@@ -134,12 +132,13 @@ class Stack extends BaseConverter
 
         if ($anyRuntimeErrors) {
             // At least one converter failed
-            throw new ConverterFailedException('None of the converters in the stack could convert the image. At least one failed, even though its requirements seemed to be met.');
-
+            throw new ConverterFailedException(
+                'None of the converters in the stack could convert the image. ' .
+                'At least one failed, even though its requirements seemed to be met.'
+            );
         } else {
             // All converters threw a ConverterNotOperationalException
             throw new ConverterNotOperationalException('None of the converters in the stack are operational');
         }
-
     }
 }

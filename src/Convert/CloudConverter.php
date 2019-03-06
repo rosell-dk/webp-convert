@@ -23,7 +23,6 @@ class CloudConverter extends BaseConverter
                 'Required curl_file_create() function is not available (requires PHP > 5.5).'
             );
         }
-
     }
 
     public static function initCurl()
