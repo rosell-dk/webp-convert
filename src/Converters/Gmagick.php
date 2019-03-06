@@ -4,20 +4,18 @@ namespace WebPConvert\Converters;
 
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
+use WebPConvert\Convert\BaseConverter;
 
 //use WebPConvert\Exceptions\TargetNotFoundException;
 
-class Gmagick
+class Gmagick extends BaseConverter
 {
     public static $extraOptions = [];
 
-    public static function convert($source, $destination, $options = [])
-    {
-        ConverterHelper::runConverter('gmagick', $source, $destination, $options, true);
-    }
-
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options, $logger)
+    // You should rather call the static convert() function, defined in BaseConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    public function doConvert()
     {
         if (!extension_loaded('Gmagick')) {
             throw new ConverterNotOperationalException('Required Gmagick extension is not available.');
@@ -29,23 +27,17 @@ class Gmagick
             );
         }
 
+        $options = $this->options;
+
         // This might throw an exception.
         // We let it...
-        $im = new \Gmagick($source);
+        $im = new \Gmagick($this->source);
 
 
         // Throws an exception if Gmagick does not support WebP conversion
         if (!in_array('WEBP', $im->queryformats())) {
             throw new ConverterNotOperationalException('Gmagick was compiled without WebP support.');
         }
-
-        $options = array_merge(ConverterHelper::$defaultOptions, $options);
-
-        // Force lossless option to true for PNG images
-        if (ConverterHelper::getExtension($source) == 'png') {
-            $options['lossless'] = true;
-        }
-
 
         /*
         Seems there are currently no way to set webp options
@@ -74,10 +66,10 @@ class Gmagick
 
         // Ps: Imagick automatically uses same quality as source, when no quality is set
         // This feature is however not present in Gmagick
-        $im->setcompressionquality($options['_calculated_quality']);
+        $im->setcompressionquality($this->getCalculatedQuality());
 
         //$success = $im->writeimagefile(fopen($destination, 'wb'));
-        $success = @file_put_contents($destination, $im->getImageBlob());
+        $success = @file_put_contents($this->destination, $im->getImageBlob());
 
         if (!$success) {
             throw new ConverterFailedException('Failed writing file');

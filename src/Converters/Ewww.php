@@ -4,8 +4,9 @@ namespace WebPConvert\Converters;
 
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
+use WebPConvert\Convert\CloudConverter;
 
-class Ewww
+class Ewww extends CloudConverter
 {
     public static $extraOptions = [
         [
@@ -17,29 +18,15 @@ class Ewww
         ],
     ];
 
-    public static function convert($source, $destination, $options = [])
-    {
-        ConverterHelper::runConverter('ewww', $source, $destination, $options, true);
-    }
-
-    // Took this parser from Drupal
-    private static function parseSize($size)
-    {
-
-        $unit = preg_replace('/[^bkmgtpezy]/i', '', $size); // Remove the non-unit characters from the size.
-            $size = preg_replace('/[^0-9\.]/', '', $size); // Remove the non-numeric characters from the size.
-        if ($unit) {
-            // Find the position of the unit in the ordered string which is the power
-            // of magnitude to multiply a kilobyte by.
-            return round($size * pow(1024, stripos('bkmgtpezy', $unit[0])));
-        } else {
-            return round($size);
-        }
-    }
-
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options, $logger)
+    // You should rather call the static convert() function, defined in BaseConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    public function doConvert()
     {
+        self::testCurlRequirements();
+
+        $options = $this->options;
+
         if ($options['key'] == '') {
             throw new ConverterNotOperationalException('Missing API key.');
         }
@@ -61,38 +48,13 @@ class Ewww
                 break;
         }
 
-        $fileSize = @filesize($source);
-        if ($fileSize !== false) {
-            $uploadMaxSize = self::parseSize(ini_get('upload_max_filesize'));
-            if (($uploadMaxSize !== false) && ($uploadMaxSize < $fileSize)) {
-                throw new ConverterFailedException(
-                    'File is larger than your max upload (set in your php.ini). File size:' .
-                        round($fileSize/1024) . ' kb. ' .
-                        'upload_max_filesize in php.ini: ' . ini_get('upload_max_filesize') .
-                        ' (parsed as ' . round($uploadMaxSize/1024) . ' kb)'
-                );
-            }
-
-            $postMaxSize = self::parseSize(ini_get('post_max_size'));
-            if (($postMaxSize !== false) && ($postMaxSize < $fileSize)) {
-                throw new ConverterFailedException(
-                    'File is larger than your post_max_size limit (set in your php.ini). File size:' .
-                        round($fileSize/1024) . ' kb. ' .
-                        'post_max_size in php.ini: ' . ini_get('post_max_size') .
-                        ' (parsed as ' . round($postMaxSize/1024) . ' kb)'
-                );
-            }
-
-            // ini_get('memory_limit')
-        }
-
-
-        $ch = ConverterHelper::initCurlForConverter();
+        $this->testFilesizeRequirements();
+        $ch = self::initCurl();
 
         $curlOptions = [
             'api_key' => $options['key'],
             'webp' => '1',
-            'file' => curl_file_create($source),
+            'file' => curl_file_create($this->source),
             'domain' => $_SERVER['HTTP_HOST'],
             'quality' => $options['_calculated_quality'],
             'metadata' => ($options['metadata'] == 'none' ? '0' : '1')
@@ -229,7 +191,7 @@ class Ewww
      */
     public static function getKeyStatus($key)
     {
-        $ch = ConverterHelper::initCurlForConverter();
+        $ch = self::initCurl();
 
         curl_setopt($ch, CURLOPT_URL, "https://optimize.exactlywww.com/verify/");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -294,7 +256,7 @@ class Ewww
 
     public static function getQuota($key)
     {
-        $ch = ConverterHelper::initCurlForConverter();
+        $ch = self::initCurl();
 
         curl_setopt($ch, CURLOPT_URL, "https://optimize.exactlywww.com/quota/");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

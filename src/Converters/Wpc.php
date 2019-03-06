@@ -4,8 +4,9 @@ namespace WebPConvert\Converters;
 
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
+use WebPConvert\Convert\CloudConverter;
 
-class Wpc
+class Wpc extends CloudConverter
 {
     public static $extraOptions = [
         [
@@ -62,26 +63,6 @@ class Wpc
         */
     ];
 
-    public static function convert($source, $destination, $options = [])
-    {
-        ConverterHelper::runConverter('wpc', $source, $destination, $options, true);
-    }
-
-    // Took this parser from Drupal
-    private static function parseSize($size)
-    {
-
-        $unit = preg_replace('/[^bkmgtpezy]/i', '', $size); // Remove the non-unit characters from the size.
-            $size = preg_replace('/[^0-9\.]/', '', $size); // Remove the non-numeric characters from the size.
-        if ($unit) {
-            // Find the position of the unit in the ordered string which is the power
-            // of magnitude to multiply a kilobyte by.
-            return round($size * pow(1024, stripos('bkmgtpezy', $unit[0])));
-        } else {
-            return round($size);
-        }
-    }
-
     private static function createRandomSaltForBlowfish()
     {
         $salt = '';
@@ -99,16 +80,13 @@ class Wpc
     }
 
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options, $logger)
+    // You should rather call the static convert() function, defined in BaseConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    public function doConvert()
     {
+        $options = $this->options;
 
-        if (!extension_loaded('curl')) {
-            throw new ConverterNotOperationalException('Required cURL extension is not available.');
-        }
-
-        if (!function_exists('curl_init')) {
-            throw new ConverterNotOperationalException('Required url_init() function is not available.');
-        }
+        self::testCurlRequirements();
 
         $apiVersion = $options['api-version'];
 
@@ -151,38 +129,12 @@ class Wpc
             );
         }
 
-        $fileSize = @filesize($source);
-        if ($fileSize !== false) {
-            $uploadMaxSize = self::parseSize(ini_get('upload_max_filesize'));
-            if (($uploadMaxSize !== false) && ($uploadMaxSize < $fileSize)) {
-                throw new ConverterFailedException(
-                    'File is larger than your max upload (set in your php.ini). File size:' .
-                        round($fileSize/1024) . ' kb. ' .
-                        'upload_max_filesize in php.ini: ' . ini_get('upload_max_filesize') .
-                        ' (parsed as ' . round($uploadMaxSize/1024) . ' kb)'
-                );
-            }
-
-            $postMaxSize = self::parseSize(ini_get('post_max_size'));
-            if (($postMaxSize !== false) && ($postMaxSize < $fileSize)) {
-                throw new ConverterFailedException(
-                    'File is larger than your post_max_size limit (set in your php.ini). File size:' .
-                        round($fileSize/1024) . ' kb. ' .
-                        'post_max_size in php.ini: ' . ini_get('post_max_size') .
-                        ' (parsed as ' . round($postMaxSize/1024) . ' kb)'
-                );
-            }
-
-            // ini_get('memory_limit')
-        }
+        $this->testFilesizeRequirements();
 
         // Got some code here:
         // https://coderwall.com/p/v4ps1a/send-a-file-via-post-with-curl-and-php
 
-        $ch = curl_init();
-        if (!$ch) {
-            throw new ConverterNotOperationalException('Could not initialise cURL.');
-        }
+        $ch = self::initCurl();
 
         $optionsToSend = $options;
 
@@ -200,13 +152,13 @@ class Wpc
         unset($optionsToSend['_calculated_quality']);
 
         $postData = [
-            'file' => curl_file_create($source),
+            'file' => curl_file_create($this->source),
             'options' => json_encode($optionsToSend),
             'servername' => (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '')
         ];
 
         if ($apiVersion == 0) {
-            $postData['hash'] = md5(md5_file($source) . $options['secret']);
+            $postData['hash'] = md5(md5_file($this->source) . $options['secret']);
         }
 
         if ($apiVersion == 1) {
@@ -315,7 +267,7 @@ class Wpc
             //throw new ConverterNotOperationalException($response);
         }
 
-        $success = @file_put_contents($destination, $response);
+        $success = @file_put_contents($this->destination, $response);
         curl_close($ch);
 
         if (!$success) {
@@ -325,7 +277,7 @@ class Wpc
                 $curlOptions = [
                     'api_key' => $options['key'],
                     'webp' => '1',
-                    'file' => curl_file_create($source),
+                    'file' => curl_file_create($this->source),
                     'domain' => $_SERVER['HTTP_HOST'],
                     'quality' => $options['quality'],
                     'metadata' => ($options['metadata'] == 'none' ? '0' : '1')

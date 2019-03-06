@@ -4,8 +4,9 @@ namespace WebPConvert\Converters;
 
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
+use WebPConvert\Convert\ExecConverter;
 
-class Cwebp
+class Cwebp extends ExecConverter
 {
     public static $extraOptions = [
         [
@@ -53,11 +54,6 @@ class Cwebp
         ],
     ];
 
-    public static function convert($source, $destination, $options = [])
-    {
-        ConverterHelper::runConverter('cwebp', $source, $destination, $options, true);
-    }
-
     // System paths to look for cwebp binary
     private static $cwebpDefaultPaths = [
         '/usr/bin/cwebp',
@@ -75,46 +71,6 @@ class Cwebp
         'Linux' => [ 'cwebp-linux', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568']
     ];
 
-    private static function escapeFilename($string)
-    {
-
-        // filter_var() is should normally be available, but it is not always
-        // - https://stackoverflow.com/questions/11735538/call-to-undefined-function-filter-var
-        if (function_exists('filter_var')) {
-            // Sanitize quotes
-            $string = filter_var($string, FILTER_SANITIZE_MAGIC_QUOTES);
-
-            // Stripping control characters
-            // see https://stackoverflow.com/questions/12769462/filter-flag-strip-low-vs-filter-flag-strip-high
-            $string = filter_var($string, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW);
-        }
-
-        // Escaping whitespace. Must be done *after* filter_var!
-        $string = preg_replace('/\s/', '\\ ', $string);
-
-        return $string;
-    }
-
-    // Checks if 'Nice' is available
-    private static function hasNiceSupport()
-    {
-        exec("nice 2>&1", $niceOutput);
-
-        if (is_array($niceOutput) && isset($niceOutput[0])) {
-            if (preg_match('/usage/', $niceOutput[0]) || (preg_match('/^\d+$/', $niceOutput[0]))) {
-                /*
-                 * Nice is available - default niceness (+10)
-                 * https://www.lifewire.com/uses-of-commands-nice-renice-2201087
-                 * https://www.computerhope.com/unix/unice.htm
-                 */
-
-                return true;
-            }
-
-            return false;
-        }
-    }
-
     private static function executeBinary($binary, $commandOptions, $useNice, $logger)
     {
         $command = ($useNice ? 'nice ' : '') . $binary . ' ' . $commandOptions;
@@ -127,17 +83,12 @@ class Cwebp
     }
 
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options, $logger)
+    // You should rather call the static convert() function, defined in BaseConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    public function doConvert()
     {
         $errorMsg = '';
-        // Force lossless option to true for PNG images
-        if (ConverterHelper::getExtension($source) == 'png') {
-            $options['lossless'] = true;
-        }
-
-        if (!function_exists('exec')) {
-            throw new ConverterNotOperationalException('exec() is not enabled.');
-        }
+        $options = $this->options;
 
         /*
          * Prepare cwebp options
@@ -151,7 +102,7 @@ class Cwebp
 
         // Size
         if (!is_null($options['size-in-percentage'])) {
-            $sizeSource =  @filesize($source);
+            $sizeSource =  @filesize($this->source);
             if ($sizeSource !== false) {
                 $targetSize = floor($sizeSource * $options['size-in-percentage'] / 100);
             }
@@ -202,10 +153,10 @@ class Cwebp
         }
 
         // Source file
-        $commandOptionsArray[] = self::escapeFilename($source);
+        $commandOptionsArray[] = self::escapeFilename($this->source);
 
         // Output
-        $commandOptionsArray[] = '-o ' . self::escapeFilename($destination);
+        $commandOptionsArray[] = '-o ' . self::escapeFilename($this->destination);
 
         // Redirect stderr to same place as stdout
         // https://www.brianstorti.com/understanding-shell-script-idiom-redirect/
@@ -216,7 +167,7 @@ class Cwebp
 
         $commandOptions = implode(' ', $commandOptionsArray);
 
-        $logger->logLn('cwebp options:' . $commandOptions);
+        $this->logLn('cwebp options:' . $commandOptions);
 
         // Init with common system paths
         $cwebpPathsToTest = self::$cwebpDefaultPaths;
@@ -242,9 +193,9 @@ class Cwebp
 
         if ($options['try-common-system-paths']) {
             foreach ($cwebpPathsToTest as $index => $binary) {
-                $returnCode = self::executeBinary($binary, $commandOptions, $useNice, $logger);
+                $returnCode = self::executeBinary($binary, $commandOptions, $useNice, $this);
                 if ($returnCode == 0) {
-                    $logger->logLn('Successfully executed binary: ' . $binary);
+                    $this->logLn('Successfully executed binary: ' . $binary);
                     $success = true;
                     break;
                 } else {
@@ -330,7 +281,7 @@ class Cwebp
                         }
                     }
                     if ($proceedAfterHashCheck) {
-                        $returnCode = self::executeBinary($binaryFile, $commandOptions, $useNice, $logger);
+                        $returnCode = self::executeBinary($binaryFile, $commandOptions, $useNice, $this);
                         if ($returnCode == 0) {
                             $success = true;
                         } else {
@@ -377,12 +328,12 @@ class Cwebp
         // cwebp sets file permissions to 664 but instead ..
         // .. $destination's parent folder's permissions should be used (except executable bits)
         if ($success) {
-            $destinationParent = dirname($destination);
+            $destinationParent = dirname($this->destination);
             $fileStatistics = @stat($destinationParent);
             if ($fileStatistics !== false) {
                 // Apply same permissions as parent folder but strip off the executable bits
                 $permissions = $fileStatistics['mode'] & 0000666;
-                @chmod($destination, $permissions);
+                @chmod($this->destination, $permissions);
             }
         }
 
