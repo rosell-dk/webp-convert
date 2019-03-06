@@ -3,8 +3,8 @@
 
 namespace WebPConvert;
 
-use WebPConvert\Converters\ConverterHelper;
-use WebPConvert\ServeExistingOrConvert;
+//use WebPConvert\Converters\ConverterHelper;
+use WebPConvert\Converters\Stack;
 use WebPConvert\Serve\ServeExistingOrHandOver;
 
 class WebPConvert
@@ -17,12 +17,13 @@ class WebPConvert
     */
     public static function convert($source, $destination, $options = [], $logger = null)
     {
-        return ConverterHelper::runConverterStack($source, $destination, $options, $logger);
+        //return ConverterHelper::runConverterStack($source, $destination, $options, $logger);
+        //return Convert::runConverterStack($source, $destination, $options, $logger);
+        return Stack::convert($source, $destination, $options, $logger);
     }
 
     public static function convertAndServe($source, $destination, $options = [])
     {
-        //return ServeExistingOrConvert::serveExistingOrConvert($source, $destination, $options);
         return ServeExistingOrHandOver::serveConverted($source, $destination, $options);
     }
 }

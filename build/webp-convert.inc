@@ -38,8 +38,8 @@ abstract class BaseLogger
 
 namespace WebPConvert;
 
-use WebPConvert\Converters\ConverterHelper;
-use WebPConvert\ServeExistingOrConvert;
+//use WebPConvert\Converters\ConverterHelper;
+use WebPConvert\Converters\Stack;
 use WebPConvert\Serve\ServeExistingOrHandOver;
 
 class WebPConvert
@@ -52,12 +52,13 @@ class WebPConvert
     */
     public static function convert($source, $destination, $options = [], $logger = null)
     {
-        return ConverterHelper::runConverterStack($source, $destination, $options, $logger);
+        //return ConverterHelper::runConverterStack($source, $destination, $options, $logger);
+        //return Convert::runConverterStack($source, $destination, $options, $logger);
+        return Stack::convert($source, $destination, $options, $logger);
     }
 
     public static function convertAndServe($source, $destination, $options = [])
     {
-        //return ServeExistingOrConvert::serveExistingOrConvert($source, $destination, $options);
         return ServeExistingOrHandOver::serveConverted($source, $destination, $options);
     }
 }
@@ -66,469 +67,11 @@ class WebPConvert
 
 namespace WebPConvert\Converters;
 
-//use WebPConvert\Converters\Cwebp;
-
-use WebPConvert\Exceptions\ConverterNotFoundException;
-use WebPConvert\Exceptions\CreateDestinationFileException;
-use WebPConvert\Exceptions\CreateDestinationFolderException;
-use WebPConvert\Exceptions\InvalidFileExtensionException;
-use WebPConvert\Exceptions\TargetNotFoundException;
-
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
+use WebPConvert\Convert\ExecConverter;
 
-class ConverterHelper
-{
-    public static $availableConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'wpc', 'ewww'];
-    public static $localConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'];
-
-    public static $allowedExtensions = ['jpg', 'jpeg', 'png'];
-
-    public static $defaultOptions = [
-        'quality' => 'auto',
-        'max-quality' => 85,
-        'default-quality' => 75,
-        'metadata' => 'none',
-        'method' => 6,
-        'low-memory' => false,
-        'lossless' => false,
-        'converters' =>  ['cwebp', 'gd', 'imagick', 'gmagick'],
-        'converter-options' => []
-    ];
-
-    public static function mergeOptions($options, $extraOptions)
-    {
-        return $options;
-    }
-
-    public static function getClassNameOfConverter($converterId)
-    {
-        return 'WebPConvert\\Converters\\' . ucfirst($converterId);
-    }
-
-    /* Call the "convert" method on a converter, by id.
-       - but also prepares options (merges in the $extraOptions of the converter),
-         prepares destination folder, and runs some standard validations
-       If it fails, it throws an exception. Otherwise it don't (there is no return value)
-         */
-    public static function runConverter(
-        $converterId,
-        $source,
-        $destination,
-        $options = [],
-        $prepareDestinationFolder = true,
-        $logger = null
-    ) {
-
-
-        if ($prepareDestinationFolder) {
-            self::prepareDestinationFolderAndRunCommonValidations($source, $destination);
-        }
-
-        if (!isset($logger)) {
-            $logger = new \WebPConvert\Loggers\VoidLogger();
-        }
-
-        $className = self::getClassNameOfConverter($converterId);
-        if (!is_callable([$className, 'convert'])) {
-            throw new ConverterNotFoundException();
-        }
-
-        // Prepare options.
-        // -  Remove 'converters'
-        $defaultOptions = self::$defaultOptions;
-        unset($defaultOptions['converters']);
-
-        // -  Merge defaults of the converters extra options into the standard default options.
-        $defaultOptions = array_merge($defaultOptions, array_column($className::$extraOptions, 'default', 'name'));
-
-        // -  Merge $defaultOptions into provided options
-        $options = array_merge($defaultOptions, $options);
-
-        // Individual converters do not accept quality = auto. They need a number.
-        // Change $options['quality'] to number, based on quality of source and several settings
-
-        self::processQualityOption($source, $options, $logger);
-
-        call_user_func(
-            [$className, 'doConvert'],
-            $source,
-            $destination,
-            $options,
-            $logger
-        );
-
-        if (!@file_exists($destination)) {
-            throw new ConverterFailedException('Destination file is not there');
-        } else {
-            $sourceSize = @filesize($source);
-            if ($sourceSize !== false) {
-                $msg = 'Success. ';
-                $msg .= 'Reduced file size with ' .
-                    round((filesize($source) - filesize($destination))/filesize($source) * 100) . '% ';
-
-                if ($sourceSize < 10000) {
-                    $msg .= '(went from ' . round(filesize($source)) . ' bytes to ';
-                    $msg .= round(filesize($destination)) . ' bytes)';
-                } else {
-                    $msg .= '(went from ' . round(filesize($source)/1024) . ' kb to ';
-                    $msg .= round(filesize($destination)/1024) . ' kb)';
-                }
-                $logger->logLn($msg);
-            }
-        }
-    }
-
-    public static function runConverterWithTiming(
-        $converterId,
-        $source,
-        $destination,
-        $options = [],
-        $prepareDestinationFolder = true,
-        $logger = null
-    ) {
-        $beginTime = microtime(true);
-        if (!isset($logger)) {
-            $logger = new \WebPConvert\Loggers\VoidLogger();
-        }
-        try {
-            self::runConverter($converterId, $source, $destination, $options, $prepareDestinationFolder, $logger);
-            $logger->logLn(
-                'Successfully converted image in ' .
-                round((microtime(true) - $beginTime) * 1000) . ' ms'
-            );
-        } catch (\Exception $e) {
-            $logger->logLn('Failed in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
-            throw $e;
-        }
-    }
-
-    /*
-      @param (string) $source: Absolute path to image to be converted (no backslashes). Image must be jpeg or png
-      @param (string) $destination: Absolute path (no backslashes)
-      @param (object) $options: Array of named options, such as 'quality' and 'metadata'
-    */
-    public static function runConverterStack($source, $destination, $options = [], $logger = null)
-    {
-        if (!isset($logger)) {
-            $logger = new \WebPConvert\Loggers\VoidLogger();
-        }
-        self::prepareDestinationFolderAndRunCommonValidations($source, $destination);
-
-        $options = array_merge(self::$defaultOptions, $options);
-
-        self::processQualityOption($source, $options, $logger);
-
-        // Force lossless option to true for PNG images
-        if (self::getExtension($source) == 'png') {
-            $options['lossless'] = true;
-        }
-
-        $defaultConverterOptions = $options;
-        $defaultConverterOptions['converters'] = null;
-
-        $firstFailException = null;
-
-        // If we have set converter options for a converter, which is not in the converter array,
-        // then we add it to the array
-        if (isset($options['converter-options'])) {
-            foreach ($options['converter-options'] as $converterName => $converterOptions) {
-                if (!in_array($converterName, $options['converters'])) {
-                    $options['converters'][] = $converterName;
-                }
-            }
-        }
-
-        foreach ($options['converters'] as $converter) {
-            if (is_array($converter)) {
-                $converterId = $converter['converter'];
-                $converterOptions = $converter['options'];
-            } else {
-                $converterId = $converter;
-                $converterOptions = [];
-                if (isset($options['converter-options'][$converterId])) {
-                    // Note: right now, converter-options are not meant to be used,
-                    //       when you have several converters of the same type
-                    $converterOptions = $options['converter-options'][$converterId];
-                }
-            }
-
-            $converterOptions = array_merge($defaultConverterOptions, $converterOptions);
-
-            try {
-                $logger->logLn('Trying:' . $converterId, 'italic');
-
-                // If quality is different, we must recalculate
-                if ($converterOptions['quality'] != $defaultConverterOptions['quality']) {
-                    unset($converterOptions['_calculated_quality']);
-                    self::processQualityOption($source, $converterOptions, $logger);
-                }
-
-                self::runConverterWithTiming($converterId, $source, $destination, $converterOptions, false, $logger);
-
-                $logger->logLn('ok', 'bold');
-                return true;
-            } catch (\WebPConvert\Converters\Exceptions\ConverterNotOperationalException $e) {
-//                $logger->logLnLn($e->description . ' : ' . $e->getMessage());
-                $logger->logLnLn($e->getMessage());
-
-                // The converter is not operational.
-                // Well, well, we will just have to try the next, then
-            } catch (\WebPConvert\Converters\Exceptions\ConverterFailedException $e) {
-                $logger->logLnLn($e->getMessage());
-
-                // Converter failed in an anticipated, yet somewhat surprising fashion.
-                // The converter seemed operational - requirements was in order - but it failed anyway.
-                // This is moderately bad.
-                // If some other converter can handle the conversion, we will let this one go.
-                // But if not, we shall throw the exception
-
-                if (!$firstFailException) {
-                    $firstFailException = $e;
-                }
-            } catch (\WebPConvert\Converters\Exceptions\ConversionDeclinedException $e) {
-                $logger->logLnLn($e->getMessage());
-
-                // The converter declined.
-                // Gd is for example throwing this, when asked to convert a PNG, but configured not to
-                // We also possibly rethrow this, because it may have come as a surprise to the user
-                // who perhaps only tested jpg
-                if (!$firstFailException) {
-                    $firstFailException = $e;
-                }
-            }
-        }
-
-        if ($firstFailException) {
-            // At least one converter failed or declined.
-            $logger->logLn('Conversion failed. None of the tried converters could convert the image', 'bold');
-        } else {
-            // All converters threw a ConverterNotOperationalException
-            $logger->logLn('Conversion failed. None of the tried converters are operational', 'bold');
-        }
-
-        // No converters could do the job.
-        // If one of them failed moderately bad, rethrow that exception.
-        if ($firstFailException) {
-            throw $firstFailException;
-        }
-
-        return false;
-    }
-
-    /* Try to detect quality of jpeg.
-       If not possible, nothing is returned (null). Otherwise quality is returned (int)
-        */
-    public static function detectQualityOfJpg($filename)
-    {
-        // Try Imagick extension
-        if (extension_loaded('imagick') && class_exists('\\Imagick')) {
-            // Do not risk uncaught ImagickException when trying to detect quality of jpeg
-            // (it can happen in the rare case, there is no jpeg delegate)
-            try {
-                $img = new \Imagick($filename);
-
-                // The required function is available as from PECL imagick v2.2.2
-                // (you can see your version like this: phpversion("imagick"))
-                if (method_exists($img, 'getImageCompressionQuality')) {
-                    return $img->getImageCompressionQuality();
-                }
-            } catch (ImagickException $e) {
-                // do nothing.
-            }
-        }
-
-        // Gmagick extension doesn't support dectecting image quality (yet):
-        // https://bugs.php.net/bug.php?id=63939
-        // It is not supported in 2.0.5RC1. But perhaps there is a new version out now?
-        // Check here: https://pecl.php.net/package-changelog.php?package=gmagick
-
-        if (function_exists('shell_exec')) {
-            // Try Imagick
-            $quality = shell_exec("identify -format '%Q' " . $filename);
-            if ($quality) {
-                return intval($quality);
-            }
-
-            // Try GraphicsMagick
-            $quality = shell_exec("gm identify -format '%Q' " . $filename);
-            if ($quality) {
-                return intval($quality);
-            }
-        }
-    }
-
-    public static function processQualityOption($source, &$options, $logger)
-    {
-        if (isset($options['_calculated_quality'])) {
-            return;
-        }
-        
-        if ($options['quality'] == 'auto') {
-            $q = self::detectQualityOfJpg($source);
-            //$logger->log('Quality set to auto... Quality of source: ');
-            if (!$q) {
-                $q = $options['default-quality'];
-                $logger->logLn(
-                    'Quality of source could not be established (Imagick or GraphicsMagick is required)' .
-                    ' - Using default instead (' . $options['default-quality'] . ').'
-                );
-
-                // this allows the wpc converter to know
-                $options['_quality_could_not_be_detected'] = true;
-            } else {
-                if ($q > $options['max-quality']) {
-                    $logger->log(
-                        'Quality of source is ' . $q . '. ' .
-                        'This is higher than max-quality, so using that instead (' . $options['max-quality'] . ')'
-                    );
-                } else {
-                    $logger->log('Quality set to same as source: ' . $q);
-                }
-            }
-            $logger->ln();
-            $q = min($q, $options['max-quality']);
-
-            $options['_calculated_quality'] = $q;
-        //$logger->logLn('Using quality: ' . $options['quality']);
-        } else {
-            $logger->logLn(
-                'Quality: ' . $options['quality'] . '. ' .
-                'Consider setting quality to "auto" instead. It is generally a better idea'
-            );
-            $options['_calculated_quality'] = $options['quality'];
-        }
-        $logger->ln();
-    }
-
-
-    public static function getExtension($filePath)
-    {
-        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
-        return strtolower($fileExtension);
-    }
-
-    // Throws an exception if the provided file doesn't exist
-    public static function isValidTarget($filePath)
-    {
-        if (!@file_exists($filePath)) {
-            throw new TargetNotFoundException('File or directory not found: ' . $filePath);
-        }
-
-        return true;
-    }
-
-    // Throws an exception if the provided file's extension is invalid
-    public static function isAllowedExtension($filePath)
-    {
-        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
-        if (!in_array(strtolower($fileExtension), self::$allowedExtensions)) {
-            throw new InvalidFileExtensionException('Unsupported file extension: ' . $fileExtension);
-        }
-
-        return true;
-    }
-
-    // Creates folder in provided path & sets correct permissions
-    // also deletes the file at filePath (if it already exists)
-    public static function createWritableFolder($filePath)
-    {
-        $folder = dirname($filePath);
-        if (!@file_exists($folder)) {
-            // TODO: what if this is outside open basedir?
-            // see http://php.net/manual/en/ini.core.php#ini.open-basedir
-
-            // First, we have to figure out which permissions to set.
-            // We want same permissions as parent folder
-            // But which parent? - the parent to the first missing folder
-
-            $parentFolders = explode('/', $folder);
-            $poppedFolders = [];
-
-            while (!(@file_exists(implode('/', $parentFolders))) && count($parentFolders) > 0) {
-                array_unshift($poppedFolders, array_pop($parentFolders));
-            }
-
-            // Retrieving permissions of closest existing folder
-            $closestExistingFolder = implode('/', $parentFolders);
-            $permissions = @fileperms($closestExistingFolder) & 000777;
-            $stat = @stat($closestExistingFolder);
-
-            // Trying to create the given folder (recursively)
-            if (!@mkdir($folder, $permissions, true)) {
-                throw new CreateDestinationFolderException('Failed creating folder: ' . $folder);
-            }
-
-            // `mkdir` doesn't always respect permissions, so we have to `chmod` each created subfolder
-            foreach ($poppedFolders as $subfolder) {
-                $closestExistingFolder .= '/' . $subfolder;
-                // Setting directory permissions
-                if ($permissions !== false) {
-                    @chmod($folder, $permissions);
-                }
-                if ($stat !== false) {
-                    if (isset($stat['uid'])) {
-                        @chown($folder, $stat['uid']);
-                    }
-                    if (isset($stat['gid'])) {
-                        @chgrp($folder, $stat['gid']);
-                    }
-                }
-            }
-        }
-
-        if (@file_exists($filePath)) {
-            // A file already exists in this folder...
-            // We delete it, to make way for a new webp
-            if (!@unlink($filePath)) {
-                throw new CreateDestinationFileException(
-                    'Existing file cannot be removed: ' . basename($filePath)
-                );
-            }
-        }
-
-        return true;
-    }
-
-    public static function prepareDestinationFolderAndRunCommonValidations($source, $destination)
-    {
-        self::isValidTarget($source);
-        self::isAllowedExtension($source);
-        self::createWritableFolder($destination);
-    }
-
-    public static function initCurlForConverter()
-    {
-        if (!extension_loaded('curl')) {
-            throw new ConverterNotOperationalException('Required cURL extension is not available.');
-        }
-
-        if (!function_exists('curl_init')) {
-            throw new ConverterNotOperationalException('Required url_init() function is not available.');
-        }
-
-        if (!function_exists('curl_file_create')) {
-            throw new ConverterNotOperationalException(
-                'Required curl_file_create() function is not available (requires PHP > 5.5).'
-            );
-        }
-
-        $ch = curl_init();
-        if (!$ch) {
-            throw new ConverterNotOperationalException('Could not initialise cURL.');
-        }
-        return $ch;
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Converters;
-
-use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
-use WebPConvert\Converters\Exceptions\ConverterFailedException;
-
-class Cwebp
+class Cwebp extends ExecConverter
 {
     public static $extraOptions = [
         [
@@ -576,11 +119,6 @@ class Cwebp
         ],
     ];
 
-    public static function convert($source, $destination, $options = [])
-    {
-        ConverterHelper::runConverter('cwebp', $source, $destination, $options, true);
-    }
-
     // System paths to look for cwebp binary
     private static $cwebpDefaultPaths = [
         '/usr/bin/cwebp',
@@ -598,46 +136,6 @@ class Cwebp
         'Linux' => [ 'cwebp-linux', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568']
     ];
 
-    private static function escapeFilename($string)
-    {
-
-        // filter_var() is should normally be available, but it is not always
-        // - https://stackoverflow.com/questions/11735538/call-to-undefined-function-filter-var
-        if (function_exists('filter_var')) {
-            // Sanitize quotes
-            $string = filter_var($string, FILTER_SANITIZE_MAGIC_QUOTES);
-
-            // Stripping control characters
-            // see https://stackoverflow.com/questions/12769462/filter-flag-strip-low-vs-filter-flag-strip-high
-            $string = filter_var($string, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW);
-        }
-
-        // Escaping whitespace. Must be done *after* filter_var!
-        $string = preg_replace('/\s/', '\\ ', $string);
-
-        return $string;
-    }
-
-    // Checks if 'Nice' is available
-    private static function hasNiceSupport()
-    {
-        exec("nice 2>&1", $niceOutput);
-
-        if (is_array($niceOutput) && isset($niceOutput[0])) {
-            if (preg_match('/usage/', $niceOutput[0]) || (preg_match('/^\d+$/', $niceOutput[0]))) {
-                /*
-                 * Nice is available - default niceness (+10)
-                 * https://www.lifewire.com/uses-of-commands-nice-renice-2201087
-                 * https://www.computerhope.com/unix/unice.htm
-                 */
-
-                return true;
-            }
-
-            return false;
-        }
-    }
-
     private static function executeBinary($binary, $commandOptions, $useNice, $logger)
     {
         $command = ($useNice ? 'nice ' : '') . $binary . ' ' . $commandOptions;
@@ -650,17 +148,12 @@ class Cwebp
     }
 
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options, $logger)
+    // You should rather call the static convert() function, defined in BaseConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    public function doConvert()
     {
         $errorMsg = '';
-        // Force lossless option to true for PNG images
-        if (ConverterHelper::getExtension($source) == 'png') {
-            $options['lossless'] = true;
-        }
-
-        if (!function_exists('exec')) {
-            throw new ConverterNotOperationalException('exec() is not enabled.');
-        }
+        $options = $this->options;
 
         /*
          * Prepare cwebp options
@@ -674,7 +167,7 @@ class Cwebp
 
         // Size
         if (!is_null($options['size-in-percentage'])) {
-            $sizeSource =  @filesize($source);
+            $sizeSource =  @filesize($this->source);
             if ($sizeSource !== false) {
                 $targetSize = floor($sizeSource * $options['size-in-percentage'] / 100);
             }
@@ -725,10 +218,10 @@ class Cwebp
         }
 
         // Source file
-        $commandOptionsArray[] = self::escapeFilename($source);
+        $commandOptionsArray[] = self::escapeFilename($this->source);
 
         // Output
-        $commandOptionsArray[] = '-o ' . self::escapeFilename($destination);
+        $commandOptionsArray[] = '-o ' . self::escapeFilename($this->destination);
 
         // Redirect stderr to same place as stdout
         // https://www.brianstorti.com/understanding-shell-script-idiom-redirect/
@@ -739,7 +232,7 @@ class Cwebp
 
         $commandOptions = implode(' ', $commandOptionsArray);
 
-        $logger->logLn('cwebp options:' . $commandOptions);
+        $this->logLn('cwebp options:' . $commandOptions);
 
         // Init with common system paths
         $cwebpPathsToTest = self::$cwebpDefaultPaths;
@@ -765,9 +258,9 @@ class Cwebp
 
         if ($options['try-common-system-paths']) {
             foreach ($cwebpPathsToTest as $index => $binary) {
-                $returnCode = self::executeBinary($binary, $commandOptions, $useNice, $logger);
+                $returnCode = self::executeBinary($binary, $commandOptions, $useNice, $this);
                 if ($returnCode == 0) {
-                    $logger->logLn('Successfully executed binary: ' . $binary);
+                    $this->logLn('Successfully executed binary: ' . $binary);
                     $success = true;
                     break;
                 } else {
@@ -853,7 +346,7 @@ class Cwebp
                         }
                     }
                     if ($proceedAfterHashCheck) {
-                        $returnCode = self::executeBinary($binaryFile, $commandOptions, $useNice, $logger);
+                        $returnCode = self::executeBinary($binaryFile, $commandOptions, $useNice, $this);
                         if ($returnCode == 0) {
                             $success = true;
                         } else {
@@ -900,12 +393,12 @@ class Cwebp
         // cwebp sets file permissions to 664 but instead ..
         // .. $destination's parent folder's permissions should be used (except executable bits)
         if ($success) {
-            $destinationParent = dirname($destination);
+            $destinationParent = dirname($this->destination);
             $fileStatistics = @stat($destinationParent);
             if ($fileStatistics !== false) {
                 // Apply same permissions as parent folder but strip off the executable bits
                 $permissions = $fileStatistics['mode'] & 0000666;
-                @chmod($destination, $permissions);
+                @chmod($this->destination, $permissions);
             }
         }
 
@@ -921,8 +414,9 @@ namespace WebPConvert\Converters;
 
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
+use WebPConvert\Convert\CloudConverter;
 
-class Ewww
+class Ewww extends CloudConverter
 {
     public static $extraOptions = [
         [
@@ -934,29 +428,15 @@ class Ewww
         ],
     ];
 
-    public static function convert($source, $destination, $options = [])
-    {
-        ConverterHelper::runConverter('ewww', $source, $destination, $options, true);
-    }
-
-    // Took this parser from Drupal
-    private static function parseSize($size)
-    {
-
-        $unit = preg_replace('/[^bkmgtpezy]/i', '', $size); // Remove the non-unit characters from the size.
-            $size = preg_replace('/[^0-9\.]/', '', $size); // Remove the non-numeric characters from the size.
-        if ($unit) {
-            // Find the position of the unit in the ordered string which is the power
-            // of magnitude to multiply a kilobyte by.
-            return round($size * pow(1024, stripos('bkmgtpezy', $unit[0])));
-        } else {
-            return round($size);
-        }
-    }
-
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options, $logger)
+    // You should rather call the static convert() function, defined in BaseConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    public function doConvert()
     {
+        self::testCurlRequirements();
+
+        $options = $this->options;
+
         if ($options['key'] == '') {
             throw new ConverterNotOperationalException('Missing API key.');
         }
@@ -978,38 +458,13 @@ class Ewww
                 break;
         }
 
-        $fileSize = @filesize($source);
-        if ($fileSize !== false) {
-            $uploadMaxSize = self::parseSize(ini_get('upload_max_filesize'));
-            if (($uploadMaxSize !== false) && ($uploadMaxSize < $fileSize)) {
-                throw new ConverterFailedException(
-                    'File is larger than your max upload (set in your php.ini). File size:' .
-                        round($fileSize/1024) . ' kb. ' .
-                        'upload_max_filesize in php.ini: ' . ini_get('upload_max_filesize') .
-                        ' (parsed as ' . round($uploadMaxSize/1024) . ' kb)'
-                );
-            }
-
-            $postMaxSize = self::parseSize(ini_get('post_max_size'));
-            if (($postMaxSize !== false) && ($postMaxSize < $fileSize)) {
-                throw new ConverterFailedException(
-                    'File is larger than your post_max_size limit (set in your php.ini). File size:' .
-                        round($fileSize/1024) . ' kb. ' .
-                        'post_max_size in php.ini: ' . ini_get('post_max_size') .
-                        ' (parsed as ' . round($postMaxSize/1024) . ' kb)'
-                );
-            }
-
-            // ini_get('memory_limit')
-        }
-
-
-        $ch = ConverterHelper::initCurlForConverter();
+        $this->testFilesizeRequirements();
+        $ch = self::initCurl();
 
         $curlOptions = [
             'api_key' => $options['key'],
             'webp' => '1',
-            'file' => curl_file_create($source),
+            'file' => curl_file_create($this->source),
             'domain' => $_SERVER['HTTP_HOST'],
             'quality' => $options['_calculated_quality'],
             'metadata' => ($options['metadata'] == 'none' ? '0' : '1')
@@ -1074,6 +529,64 @@ class Ewww
         }
     }
 
+    /**
+     *  Keep subscription alive by optimizing a jpeg
+     *  (ewww closes accounts after 6 months of inactivity - and webp conversions seems not to be counted? )
+     */
+    public static function keepSubscriptionAlive($source, $key)
+    {
+        try {
+            $ch = curl_init();
+        } catch (\Exception $e) {
+            return 'curl is not installed';
+        }
+        curl_setopt_array(
+            $ch,
+            [
+            CURLOPT_URL => "https://optimize.exactlywww.com/v2/",
+            CURLOPT_HTTPHEADER => [
+                'User-Agent: WebPConvert',
+                'Accept: image/*'
+            ],
+            CURLOPT_POSTFIELDS => [
+                'api_key' => $key,
+                'webp' => '0',
+                'file' => curl_file_create($source),
+                'domain' => $_SERVER['HTTP_HOST'],
+                'quality' => 60,
+                'metadata' => 0
+            ],
+            CURLOPT_BINARYTRANSFER => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HEADER => false,
+            CURLOPT_SSL_VERIFYPEER => false
+            ]
+        );
+
+        $response = curl_exec($ch);
+        if (curl_errno($ch)) {
+            return 'curl error' . curl_error($ch);
+        }
+        if (curl_getinfo($ch, CURLINFO_CONTENT_TYPE) != 'application/octet-stream') {
+            curl_close($ch);
+
+            /* May return this: {"error":"invalid","t":"exceeded"} */
+            $responseObj = json_decode($response);
+            if (isset($responseObj->error)) {
+                return 'The key is invalid';
+            }
+
+            return 'ewww api did not return an image. It could be that the key is invalid. Response: ' . $response;
+        }
+
+        // Not sure this can happen. So just in case
+        if ($response == '') {
+            return 'ewww api did not return anything';
+        }
+
+        return true;
+    }
+
     /*
         public static function blacklistKey($key)
         {
@@ -1088,7 +601,7 @@ class Ewww
      */
     public static function getKeyStatus($key)
     {
-        $ch = ConverterHelper::initCurlForConverter();
+        $ch = self::initCurl();
 
         curl_setopt($ch, CURLOPT_URL, "https://optimize.exactlywww.com/verify/");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -1153,7 +666,7 @@ class Ewww
 
     public static function getQuota($key)
     {
-        $ch = ConverterHelper::initCurlForConverter();
+        $ch = self::initCurl();
 
         curl_setopt($ch, CURLOPT_URL, "https://optimize.exactlywww.com/quota/");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -1184,28 +697,16 @@ namespace WebPConvert\Converters;
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
 use WebPConvert\Converters\Exceptions\ConversionDeclinedException;
+use WebPConvert\Convert\BaseConverter;
 
-use WebPConvert\Converters\ConverterHelper;
-
-class Gd
+class Gd extends BaseConverter
 {
-    public static $extraOptions = [
-        [
-            'name' => 'skip-pngs',
-            'type' => 'boolean',
-            'sensitive' => false,
-            'default' => true,
-            'required' => false
-        ],
-    ];
-
-    public static function convert($source, $destination, $options = [])
-    {
-        ConverterHelper::runConverter('gd', $source, $destination, $options, true);
-    }
+    public static $extraOptions = [];
 
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options, $logger)
+    // You should rather call the static convert() function, defined in BaseConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    public function doConvert()
     {
         if (!extension_loaded('gd')) {
             throw new ConverterNotOperationalException('Required Gd extension is not available.');
@@ -1217,23 +718,20 @@ class Gd
             );
         }
 
-        switch (ConverterHelper::getExtension($source)) {
+        // Btw: Check out processWebp here:
+        // https://github.com/Intervention/image/blob/master/src/Intervention/Image/Gd/Encoder.php
+
+        switch ($this->getSourceExtension()) {
             case 'png':
-                if (!$options['skip-pngs']) {
-                    if (!function_exists('imagecreatefrompng')) {
-                        throw new ConverterNotOperationalException(
-                            'Required imagecreatefrompng() function is not available.'
-                        );
-                    }
-                    $image = @imagecreatefrompng($source);
-                    if (!$image) {
-                        throw new ConverterFailedException(
-                            'imagecreatefrompng("' . $source . '") failed'
-                        );
-                    }
-                } else {
-                    throw new ConversionDeclinedException(
-                        'PNG file skipped. GD is configured not to convert PNGs'
+                if (!function_exists('imagecreatefrompng')) {
+                    throw new ConverterNotOperationalException(
+                        'Required imagecreatefrompng() function is not available.'
+                    );
+                }
+                $image = @imagecreatefrompng($this->source);
+                if (!$image) {
+                    throw new ConverterFailedException(
+                        'imagecreatefrompng() failed'
                     );
                 }
                 break;
@@ -1243,15 +741,15 @@ class Gd
                         'Required imagecreatefromjpeg() function is not available.'
                     );
                 }
-                $image = @imagecreatefromjpeg($source);
+                $image = @imagecreatefromjpeg($this->source);
                 if (!$image) {
-                    throw new ConverterFailedException('imagecreatefromjpeg("' . $source . '") failed');
+                    throw new ConverterFailedException('imagecreatefromjpeg() failed');
                 }
         }
 
         // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
 
-        $success = @imagewebp($image, $destination, $options['_calculated_quality']);
+        $success = @imagewebp($image, $this->destination, $this->options['_calculated_quality']);
 
         if (!$success) {
             throw new ConverterFailedException(
@@ -1264,8 +762,8 @@ class Gd
          * See https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files
          *
          */
-        if (@filesize($destination) % 2 == 1) {
-            @file_put_contents($destination, "\0", FILE_APPEND);
+        if (@filesize($this->destination) % 2 == 1) {
+            @file_put_contents($this->destination, "\0", FILE_APPEND);
         }
 
         imagedestroy($image);
@@ -1278,20 +776,18 @@ namespace WebPConvert\Converters;
 
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
+use WebPConvert\Convert\BaseConverter;
 
 //use WebPConvert\Exceptions\TargetNotFoundException;
 
-class Gmagick
+class Gmagick extends BaseConverter
 {
     public static $extraOptions = [];
 
-    public static function convert($source, $destination, $options = [])
-    {
-        ConverterHelper::runConverter('gmagick', $source, $destination, $options, true);
-    }
-
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options, $logger)
+    // You should rather call the static convert() function, defined in BaseConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    public function doConvert()
     {
         if (!extension_loaded('Gmagick')) {
             throw new ConverterNotOperationalException('Required Gmagick extension is not available.');
@@ -1303,23 +799,17 @@ class Gmagick
             );
         }
 
+        $options = $this->options;
+
         // This might throw an exception.
         // We let it...
-        $im = new \Gmagick($source);
+        $im = new \Gmagick($this->source);
 
 
         // Throws an exception if Gmagick does not support WebP conversion
         if (!in_array('WEBP', $im->queryformats())) {
             throw new ConverterNotOperationalException('Gmagick was compiled without WebP support.');
         }
-
-        $options = array_merge(ConverterHelper::$defaultOptions, $options);
-
-        // Force lossless option to true for PNG images
-        if (ConverterHelper::getExtension($source) == 'png') {
-            $options['lossless'] = true;
-        }
-
 
         /*
         Seems there are currently no way to set webp options
@@ -1348,10 +838,10 @@ class Gmagick
 
         // Ps: Imagick automatically uses same quality as source, when no quality is set
         // This feature is however not present in Gmagick
-        $im->setcompressionquality($options['_calculated_quality']);
+        $im->setcompressionquality($this->getCalculatedQuality());
 
         //$success = $im->writeimagefile(fopen($destination, 'wb'));
-        $success = @file_put_contents($destination, $im->getImageBlob());
+        $success = @file_put_contents($this->destination, $im->getImageBlob());
 
         if (!$success) {
             throw new ConverterFailedException('Failed writing file');
@@ -1367,48 +857,43 @@ namespace WebPConvert\Converters;
 
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
+use WebPConvert\Convert\BaseConverter;
 
 //use WebPConvert\Exceptions\TargetNotFoundException;
 
-class Imagick
+class Imagick extends BaseConverter
 {
     public static $extraOptions = [];
 
-    public static function convert($source, $destination, $options = [])
-    {
-        ConverterHelper::runConverter('imagick', $source, $destination, $options, true);
-    }
 
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options, $logger)
+    // You should rather call the static convert() function, defined in BaseConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    public function doConvert()
     {
+
         if (!extension_loaded('imagick')) {
             throw new ConverterNotOperationalException('Required iMagick extension is not available.');
         }
 
-        if (!class_exists('Imagick')) {
+        if (!class_exists('\\Imagick')) {
             throw new ConverterNotOperationalException(
                 'iMagick is installed, but not correctly. The class Imagick is not available'
             );
         }
 
+        $options = $this->options;
+
         // This might throw an exception.
         // Ie "ImagickException: no decode delegate for this image format `JPEG'"
         // We let it...
-        $im = new \Imagick($source);
+        $im = new \Imagick($this->source);
         //$im = new \Imagick();
-        //$im->readImage($source);
+        //$im->readImage($this->source);
 
         // Throws an exception if iMagick does not support WebP conversion
         if (!in_array('WEBP', $im->queryFormats())) {
             throw new ConverterNotOperationalException('iMagick was compiled without WebP support.');
-        }
-
-        $options = array_merge(ConverterHelper::$defaultOptions, $options);
-
-        // Force lossless option to true for PNG images
-        if (ConverterHelper::getExtension($source) == 'png') {
-            $options['lossless'] = true;
         }
 
         $im->setImageFormat('WEBP');
@@ -1437,23 +922,17 @@ class Imagick
             $im->stripImage();
         }
 
-        if (isset($options['_quality_could_not_be_detected'])) {
-            // quality was set to "auto", but we could not meassure the quality of the jpeg locally
-            // but luckily imagick is a big boy, and automatically converts with same quality as
+        if ($this->isQualitySetToAutoAndDidQualityDetectionFail()) {
+            // Luckily imagick is a big boy, and automatically converts with same quality as
             // source, when the quality isn't set.
             // So we simply do not set quality.
-            // This actually kills the max-height functionality. But I deem that this is more important
+            // This actually kills the max-quality functionality. But I deem that this is more important
             // because setting image quality to something higher than source generates bigger files,
             // but gets you no extra quality. When failing to limit quality, you at least get something
             // out of it
             $logger->logLn('Converting without setting quality, to achieve auto quality');
         } else {
-            // _calculated_quality is always set, actually - also when quality is set to a number
-            if (isset($options['_calculated_quality'])) {
-                $logger->logLn('Converting with quality:' . $options['_calculated_quality']);
-                $im->setImageCompressionQuality($options['_calculated_quality']);
-                //$im->setImageCompressionQuality(55);
-            }
+            $im->setImageCompressionQuality($this->getCalculatedQuality());
         }
 
 
@@ -1477,24 +956,29 @@ class Imagick
         // We used to use writeImageFile() method. But we now use getImageBlob(). See issue #43
         //$success = $im->writeImageFile(fopen($destination, 'wb'));
 
-        $success = @file_put_contents($destination, $im->getImageBlob());
+        $success = @file_put_contents($this->destination, $im->getImageBlob());
 
         if (!$success) {
             throw new ConverterFailedException('Failed writing file');
         }
+
+        // Btw: check out processWebp() method here:
+        // https://github.com/Intervention/image/blob/master/src/Intervention/Image/Imagick/Encoder.php
     }
 }
 
 ?><?php
-
+// TODO: Quality option
 namespace WebPConvert\Converters;
 
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
-
 //use WebPConvert\Exceptions\TargetNotFoundException;
+use WebPConvert\Convert\ExecConverter;
 
-class ImagickBinary
+// To futher improve this converter, I could check out:
+// https://github.com/Orbitale/ImageMagickPHP
+class ImagickBinary extends ExecConverter
 {
     public static $extraOptions = [
         [
@@ -1505,18 +989,12 @@ class ImagickBinary
             'required' => false
         ],
     ];
-
-    public static function convert($source, $destination, $options = [])
-    {
-        ConverterHelper::runConverter('imagickbinary', $source, $destination, $options, true);
-    }
-
+    //public $id = 'imagickbinary';
     public static function imagickInstalled()
     {
         exec('convert -version', $output, $returnCode);
         return ($returnCode == 0);
     }
-
     // Check if webp delegate is installed
     public static function webPDelegateInstalled()
     {
@@ -1525,7 +1003,6 @@ class ImagickBinary
         exec($command, $output, $returnCode);
         return (count($output) > 0);
         */
-
         $command = 'convert -version';
         exec($command, $output, $returnCode);
         $hasDelegate = false;
@@ -1536,109 +1013,188 @@ class ImagickBinary
         }
         return false;
     }
-
-    // Checks if 'Nice' is available
-    private static function hasNiceSupport()
-    {
-        exec("nice 2>&1", $niceOutput);
-
-        if (is_array($niceOutput) && isset($niceOutput[0])) {
-            if (preg_match('/usage/', $niceOutput[0]) || (preg_match('/^\d+$/', $niceOutput[0]))) {
-                /*
-                 * Nice is available - default niceness (+10)
-                 * https://www.lifewire.com/uses-of-commands-nice-renice-2201087
-                 * https://www.computerhope.com/unix/unice.htm
-                 */
-
-                return true;
-            }
-
-            return false;
-        }
-    }
-
-    public static function escapeFilename($string)
-    {
-
-        // filter_var() is should normally be available, but it is not always
-        // - https://stackoverflow.com/questions/11735538/call-to-undefined-function-filter-var
-        if (function_exists('filter_var')) {
-            // Sanitize quotes
-            $string = filter_var($string, FILTER_SANITIZE_MAGIC_QUOTES);
-
-            // Stripping control characters
-            // see https://stackoverflow.com/questions/12769462/filter-flag-strip-low-vs-filter-flag-strip-high
-            $string = filter_var($string, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW);
-        }
-
-        // Escaping whitespace. Must be done *after* filter_var!
-        $string = preg_replace('/\s/', '\\ ', $string);
-
-        return $string;
-    }
-
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options, $logger)
+    // You should rather call the static convert() function, defined in BaseConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    public function doConvert()
     {
-        if (!function_exists('exec')) {
-            throw new ConverterNotOperationalException('exec() is not enabled.');
-        }
-
-
         if (!self::imagickInstalled()) {
             throw new ConverterNotOperationalException('imagick is not installed');
         }
-
-
-        // TODO:
-        // quality. Like this: 'convert -quality 100 small.jpg small.webp'
-        $qualityOption = '';
-        //$this->logLn('Using quality:' . $this->getCalculatedQuality());
-        if (isset($options['_quality_could_not_be_detected'])) {
-            // quality was set to "auto", but we could not meassure the quality of the jpeg locally
-            // but luckily imagick is a big boy, and automatically converts with same quality as
-            // source, when the quality isn't set.
-        } else {
-            $qualityOption = '-quality ' . $options['_calculated_quality'] . ' ';
+        if (!self::webPDelegateInstalled()) {
+            throw new ConverterNotOperationalException('webp delegate missing');
         }
-
-
+        //$this->logLn('Using quality:' . $this->getCalculatedQuality());
         // Should we use "magick" or "convert" command?
         // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
         // Should we perhaps try both?
         // For now, we just go with "convert"
+        $command = 'convert ' .
+            self::escapeFilename($this->source) . ' webp:' . self::escapeFilename($this->destination);
 
-        $command = 'convert '
-            . $qualityOption
-            . self::escapeFilename($source)
-            . ' webp:'
-            . self::escapeFilename($destination);
-
-        // Nice
-        $useNice = (($options['use-nice']) && self::hasNiceSupport()) ? true : false;
+        // TODO:
+        // quality. Like this: 'convert -quality 100 small.jpg small.webp'
+        $useNice = (($this->options['use-nice']) && self::hasNiceSupport()) ? true : false;
         if ($useNice) {
-            $logger->logLn('using nice');
+            $this->logLn('using nice');
             $command = 'nice ' . $command;
         }
-
-        $logger->logLn('command:' . $command);
         exec($command, $output, $returnCode);
-
         if ($returnCode == 127) {
             throw new ConverterNotOperationalException('imagick is not installed');
         }
-
         if ($returnCode != 0) {
-            if (!self::webPDelegateInstalled()) {
-                throw new ConverterNotOperationalException('webp delegate missing');
-            }
-
-            $logger->logLn('command:' . $command);
-            $logger->logLn('return code:' . $returnCode);
-            $logger->logLn('output:' . print_r(implode("\n", $output), true));
-
+            $this->logLn('command:' . $command);
+            $this->logLn('return code:' . $returnCode);
+            $this->logLn('output:' . print_r(implode("\n", $output), true));
             throw new ConverterNotOperationalException('The exec call failed');
         }
+    }
+}
+
+?><?php
+
+// TODO: Quality option
+
+namespace WebPConvert\Converters;
+
+use WebPConvert\Exceptions\ConverterNotFoundException;
+use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
+use WebPConvert\Converters\Exceptions\ConverterFailedException;
+
+use WebPConvert\Convert\BaseConverter;
+
+//use WebPConvert\Exceptions\TargetNotFoundException;
+
+class Stack extends BaseConverter
+{
+    public static $extraOptions = [
+        [
+            'name' => 'converters',
+            'type' => 'array',
+            'sensitive' => true,
+            'default' => ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'],
+            'required' => false
+        ],
+        [
+            'name' => 'skip-pngs',
+            'type' => 'boolean',
+            'sensitive' => false,
+            'default' => true,
+            'required' => false
+        ],
+        /*[
+            'name' => 'quality',
+            'type' => 'quality',
+            'sensitive' => false,
+            'default' => 'auto',
+            'required' => false
+        ],*/
+    ];
+
+    public static $availableConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'wpc', 'ewww'];
+    public static $localConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'];
+
+
+    public static function getClassNameOfConverter($converterId)
+    {
+        return 'WebPConvert\\Converters\\' . ucfirst($converterId);
+    }
+
+    // Although this method is public, do not call directly.
+    // You should rather call the static convert() function, defined in BaseConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    public function doConvert()
+    {
+        $options = $this->options;
+
+        // If we have set converter options for a converter, which is not in the converter array,
+        // then we add it to the array
+        if (isset($options['converter-options'])) {
+            foreach ($options['converter-options'] as $converterName => $converterOptions) {
+                if (!in_array($converterName, $options['converters'])) {
+                    $options['converters'][] = $converterName;
+                }
+            }
+        }
+
+        //$this->logLn('converters: ' . print_r($options['converters'], true));
+
+        $defaultConverterOptions = $options;
+
+        unset($defaultConverterOptions['converters']);
+        unset($defaultConverterOptions['converter-options']);
+        $defaultConverterOptions['_skip_basic_validations'] = true;
+        $defaultConverterOptions['_suppress_success_message'] = true;
+
+        $anyRuntimeErrors = false;
+        foreach ($options['converters'] as $converter) {
+            if (is_array($converter)) {
+                $converterId = $converter['converter'];
+                $converterOptions = $converter['options'];
+            } else {
+                $converterId = $converter;
+                $converterOptions = [];
+                if (isset($options['converter-options'][$converterId])) {
+                    // Note: right now, converter-options are not meant to be used,
+                    //       when you have several converters of the same type
+                    $converterOptions = $options['converter-options'][$converterId];
+                }
+            }
+
+            $converterOptions = array_merge($defaultConverterOptions, $converterOptions);
+
+            // If quality is different, we must recalculate
+            if ($converterOptions['quality'] != $defaultConverterOptions['quality']) {
+                unset($converterOptions['_calculated_quality']);
+            }
+
+            $beginTime = microtime(true);
+
+            try {
+                $this->ln();
+                $this->logLn('Trying:' . $converterId, 'italic');
+
+                $className = self::getClassNameOfConverter($converterId);
+                if (!is_callable([$className, 'convert'])) {
+                    throw new ConverterNotFoundException();
+                }
+
+                call_user_func(
+                    [$className, 'convert'],
+                    $this->source,
+                    $this->destination,
+                    $converterOptions,
+                    $this->logger
+                );
+
+                //self::runConverterWithTiming($converterId, $source, $destination, $converterOptions, false, $logger);
+
+                $this->logLnLn('success');
+                return true;
+            } catch (\WebPConvert\Converters\Exceptions\ConverterNotOperationalException $e) {
+                $this->logLn($e->getMessage());
+
+            } catch (\WebPConvert\Converters\Exceptions\ConverterFailedException $e) {
+                $this->logLn($e->getMessage());
+                $anyRuntimeErrors = true;
+
+            } catch (\WebPConvert\Converters\Exceptions\ConversionDeclinedException $e) {
+                $this->logLn($e->getMessage());
+            }
+
+            $this->logLn('Failed in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
+        }
+
+        if ($anyRuntimeErrors) {
+            // At least one converter failed
+            throw new ConverterFailedException('None of the converters in the stack could convert the image. At least one failed, even though its requirements seemed to be met.');
+
+        } else {
+            // All converters threw a ConverterNotOperationalException
+            throw new ConverterNotOperationalException('None of the converters in the stack are operational');
+        }
+
     }
 }
 
@@ -1648,8 +1204,9 @@ namespace WebPConvert\Converters;
 
 use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
+use WebPConvert\Convert\CloudConverter;
 
-class Wpc
+class Wpc extends CloudConverter
 {
     public static $extraOptions = [
         [
@@ -1706,26 +1263,6 @@ class Wpc
         */
     ];
 
-    public static function convert($source, $destination, $options = [])
-    {
-        ConverterHelper::runConverter('wpc', $source, $destination, $options, true);
-    }
-
-    // Took this parser from Drupal
-    private static function parseSize($size)
-    {
-
-        $unit = preg_replace('/[^bkmgtpezy]/i', '', $size); // Remove the non-unit characters from the size.
-            $size = preg_replace('/[^0-9\.]/', '', $size); // Remove the non-numeric characters from the size.
-        if ($unit) {
-            // Find the position of the unit in the ordered string which is the power
-            // of magnitude to multiply a kilobyte by.
-            return round($size * pow(1024, stripos('bkmgtpezy', $unit[0])));
-        } else {
-            return round($size);
-        }
-    }
-
     private static function createRandomSaltForBlowfish()
     {
         $salt = '';
@@ -1743,16 +1280,13 @@ class Wpc
     }
 
     // Although this method is public, do not call directly.
-    public static function doConvert($source, $destination, $options, $logger)
+    // You should rather call the static convert() function, defined in BaseConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    public function doConvert()
     {
+        $options = $this->options;
 
-        if (!extension_loaded('curl')) {
-            throw new ConverterNotOperationalException('Required cURL extension is not available.');
-        }
-
-        if (!function_exists('curl_init')) {
-            throw new ConverterNotOperationalException('Required url_init() function is not available.');
-        }
+        self::testCurlRequirements();
 
         $apiVersion = $options['api-version'];
 
@@ -1795,38 +1329,12 @@ class Wpc
             );
         }
 
-        $fileSize = @filesize($source);
-        if ($fileSize !== false) {
-            $uploadMaxSize = self::parseSize(ini_get('upload_max_filesize'));
-            if (($uploadMaxSize !== false) && ($uploadMaxSize < $fileSize)) {
-                throw new ConverterFailedException(
-                    'File is larger than your max upload (set in your php.ini). File size:' .
-                        round($fileSize/1024) . ' kb. ' .
-                        'upload_max_filesize in php.ini: ' . ini_get('upload_max_filesize') .
-                        ' (parsed as ' . round($uploadMaxSize/1024) . ' kb)'
-                );
-            }
-
-            $postMaxSize = self::parseSize(ini_get('post_max_size'));
-            if (($postMaxSize !== false) && ($postMaxSize < $fileSize)) {
-                throw new ConverterFailedException(
-                    'File is larger than your post_max_size limit (set in your php.ini). File size:' .
-                        round($fileSize/1024) . ' kb. ' .
-                        'post_max_size in php.ini: ' . ini_get('post_max_size') .
-                        ' (parsed as ' . round($postMaxSize/1024) . ' kb)'
-                );
-            }
-
-            // ini_get('memory_limit')
-        }
+        $this->testFilesizeRequirements();
 
         // Got some code here:
         // https://coderwall.com/p/v4ps1a/send-a-file-via-post-with-curl-and-php
 
-        $ch = curl_init();
-        if (!$ch) {
-            throw new ConverterNotOperationalException('Could not initialise cURL.');
-        }
+        $ch = self::initCurl();
 
         $optionsToSend = $options;
 
@@ -1844,13 +1352,13 @@ class Wpc
         unset($optionsToSend['_calculated_quality']);
 
         $postData = [
-            'file' => curl_file_create($source),
+            'file' => curl_file_create($this->source),
             'options' => json_encode($optionsToSend),
             'servername' => (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '')
         ];
 
         if ($apiVersion == 0) {
-            $postData['hash'] = md5(md5_file($source) . $options['secret']);
+            $postData['hash'] = md5(md5_file($this->source) . $options['secret']);
         }
 
         if ($apiVersion == 1) {
@@ -1959,7 +1467,7 @@ class Wpc
             //throw new ConverterNotOperationalException($response);
         }
 
-        $success = @file_put_contents($destination, $response);
+        $success = @file_put_contents($this->destination, $response);
         curl_close($ch);
 
         if (!$success) {
@@ -1969,7 +1477,7 @@ class Wpc
                 $curlOptions = [
                     'api_key' => $options['key'],
                     'webp' => '1',
-                    'file' => curl_file_create($source),
+                    'file' => curl_file_create($this->source),
                     'domain' => $_SERVER['HTTP_HOST'],
                     'quality' => $options['quality'],
                     'metadata' => ($options['metadata'] == 'none' ? '0' : '1')
