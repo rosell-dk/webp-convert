@@ -30,6 +30,7 @@ class BaseConverter
         'method' => 6,
         'low-memory' => false,
         'lossless' => false,
+        'skip-pngs' => false,
     ];
 
     public function __construct($source, $destination, $options = [], $logger = null)
@@ -55,7 +56,7 @@ class BaseConverter
         $instance->prepareConvert();
         $instance->doConvert();
         $instance->finalizeConvert();
-
+        return true;
         //echo $instance->id;
     }
 
