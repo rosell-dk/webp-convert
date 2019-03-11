@@ -22,13 +22,14 @@ class Stack extends BaseConverter
             'default' => ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'],
             'required' => false
         ],
+        /*
         [
             'name' => 'skip-pngs',
             'type' => 'boolean',
             'sensitive' => false,
-            'default' => true,
+            'default' => false,
             'required' => false
-        ],
+        ],*/
         /*[
             'name' => 'quality',
             'type' => 'quality',
