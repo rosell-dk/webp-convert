@@ -54,7 +54,8 @@ class BaseConverter
      *
      *
      */
-    public function errorHandler($errno, $errstr, $errfile, $errline) {
+    public function errorHandler($errno, $errstr, $errfile, $errline)
+    {
 
         /*
         We do not do the following on purpose.
@@ -137,7 +138,6 @@ class BaseConverter
         $instance->doConvert();
         $instance->finalizeConvert();
 
-        return true;
         //echo $instance->id;
     }
 
