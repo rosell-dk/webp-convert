@@ -11,6 +11,48 @@ class Gd extends BaseConverter
 {
     public static $extraOptions = [];
 
+    private static function functionsExist($functionNamesArr) {
+        foreach ($functionNamesArr as $functionName) {
+            if (!function_exists($functionName)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     *
+     *  @return Returns TRUE if the convertion was complete, or if the source image already is a true color image, otherwise FALSE is returned.
+     */
+    public static function makeTrueColor(&$image) {
+        if (function_exists('imagepalettetotruecolor')) {
+            return imagepalettetotruecolor($image);
+        } else {
+            // Got the workaround here: https://secure.php.net/manual/en/function.imagepalettetotruecolor.php
+            if ((function_exists('imageistruecolor') && !imageistruecolor($image)) || !function_exists('imageistruecolor')) {
+                if (self::functionsExist(['imagecreatetruecolor', 'imagealphablending', 'imagecolorallocatealpha',
+                        'imagefilledrectangle', 'imagecopy', 'imagedestroy', 'imagesx', 'imagesy'])) {
+
+                    $dst = imagecreatetruecolor(imagesx($image), imagesy($image));
+
+                    imagealphablending($dst, false);    //prevent blending with default black
+                    $transparent = imagecolorallocatealpha($dst, 255, 255, 255, 127);   //change the RGB values if you need, but leave alpha at 127
+                    imagefilledrectangle($dst, 0, 0, imagesx($image), imagesy($image), $transparent);   //simpler than flood fill
+                    imagealphablending($dst, true);     //restore default blending
+
+                    imagecopy($dst, $image, 0, 0, 0, 0, imagesx($image), imagesy($image));
+                    imagedestroy($image);
+
+                    $image = $dst;
+                    return true;
+                }
+            } else {
+                return false;
+            }
+        }
+
+    }
+
     // Although this method is public, do not call directly.
     // You should rather call the static convert() function, defined in BaseConverter, which
     // takes care of preparing stuff before calling doConvert, and validating after.
@@ -56,6 +98,52 @@ class Gd extends BaseConverter
         }
 
         // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
+
+        $mustMakeTrueColor = false;
+        if (function_exists('imageistruecolor')) {
+            if (imageistruecolor($image)) {
+                $this->logLn('image is true color');
+            } else {
+                $this->logLn('image is not true color');
+                $mustMakeTrueColor = true;
+            }
+        } else {
+            $this->logLn('It can not be determined if image is true color');
+            $mustMakeTrueColor = true;
+        }
+
+        if ($mustMakeTrueColor) {
+            $this->logLn('converting color palette to true color');
+            $success = $this->makeTrueColor($image);
+            if (!$success) {
+                $this->logLn('Warning: FAILED converting color palette to true color. Continuing, but this does not look good.');
+            }
+        }
+
+        if ($this->getSourceExtension() == 'png') {
+            if (function_exists('imagealphablending')) {
+                if (!imagealphablending($image, true)) {
+                    $this->logLn('Warning: imagealphablending() failed');
+                }
+            } else {
+                $this->logLn('Warning: imagealphablending() is not available on your system. Converting PNGs with transparency might fail on some systems');
+            }
+
+            if (function_exists('imagesavealpha')) {
+                if (!imagesavealpha($image, true)) {
+                    $this->logLn('Warning: imagesavealpha() failed');
+                }
+            } else {
+                $this->logLn('Warning: imagesavealpha() is not available on your system. Converting PNGs with transparency might fail on some systems');
+            }
+        }
+
+        // We suppress warnings.
+        // The reason we do this is that output might be sent to browser as an image.
+        // But the downside is that we loose good information this way.
+        // For expample, we might otherwise get stuff like this:
+        // Warning: imagewebp(): Palette image not supported by webp in /var/www/wc/wc0/webp-convert/src/Converters/Gd.php on line 142
+        // TODO: implement error handler in BaseConverter and stop suppressing errors and warnings here
 
         $success = @imagewebp($image, $this->destination, $this->options['_calculated_quality']);
 
