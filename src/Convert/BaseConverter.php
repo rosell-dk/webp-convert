@@ -49,22 +49,45 @@ class BaseConverter
         return new static($source, $destination, $options, $logger);
     }
 
+    /**
+     *
+     *
+     */
     public function errorHandler($errno, $errstr, $errfile, $errline) {
+
+        /*
+        We do not do the following on purpose.
+        We want to log all warnings and errors (also the ones that was suppressed with @)
+        https://secure.php.net/manual/en/language.operators.errorcontrol.php
+
+        if (!(error_reporting() & $errno)) {
+            // This error code is not included in error_reporting, so let it fall
+            // through to the standard PHP error handler
+            return false;
+        }
+
+
+        */
 
         $errorTypes = [
             E_WARNING =>             "Warning",
-            E_PARSE =>               "Parse Error",
             E_NOTICE =>              "Notice",
-            E_CORE_ERROR =>          "Core Error",
-            E_CORE_WARNING =>        "Core Warning",
-            E_COMPILE_ERROR =>       "Compile Error",
-            E_COMPILE_WARNING =>     "Compile Warning",
             E_USER_ERROR =>          "User Error",
             E_USER_WARNING =>        "User Warning",
             E_USER_NOTICE =>         "User Notice",
             E_STRICT =>              "Strict Notice",
             E_DEPRECATED =>          "Deprecated",
             E_USER_DEPRECATED =>     "User Deprecated",
+
+            /*
+            The following can never be catched by a custom error handler:
+            E_PARSE =>               "Parse Error",
+            E_ERROR =>               "Error",
+            E_CORE_ERROR =>          "Core Error",
+            E_CORE_WARNING =>        "Core Warning",
+            E_COMPILE_ERROR =>       "Compile Error",
+            E_COMPILE_WARNING =>     "Compile Warning",
+            */
         ];
 
         if (isset($errorTypes[$errno])) {
@@ -73,10 +96,8 @@ class BaseConverter
             $errType = "Unknown error ($errno)";
         }
 
-        $this->logLn($errType . ': ' . $errstr . ' in ' . $errfile . ', line ' . $errline . ', PHP ' . PHP_VERSION . ' (' . PHP_OS . ')');
-
-        // TODO:
-        // We should probably throw an exception on errors.
+        $msg = $errType . ': ' . $errstr . ' in ' . $errfile . ', line ' . $errline . ', PHP ' . PHP_VERSION . ' (' . PHP_OS . ')';
+        //$this->logLn($msg);
 
         /*
         if(function_exists('debug_backtrace')){
@@ -91,8 +112,22 @@ class BaseConverter
                 $this->logLn($msg);
 
             }
-        }*/
+        }
+        */
+        if ($errno == E_USER_ERROR) {
+            // trigger error.
+            // unfortunately, we can only catch user errors
+            throw new ConverterFailedException($msg);
+        } else {
+            $this->logLn($msg);
+        }
+
+
+        // We do not return false, because we want to keep this little secret.
+        //
+        //return false;   // let PHP handle the error from here
     }
+
 
     public static function convert($source, $destination, $options = [], $logger = null)
     {
