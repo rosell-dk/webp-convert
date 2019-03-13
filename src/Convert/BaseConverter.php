@@ -98,7 +98,8 @@ class BaseConverter
             $errType = "Unknown error ($errno)";
         }
 
-        $msg = $errType . ': ' . $errstr . ' in ' . $errfile . ', line ' . $errline . ', PHP ' . PHP_VERSION . ' (' . PHP_OS . ')';
+        $msg = $errType . ': ' . $errstr . ' in ' . $errfile . ', line ' . $errline . ', PHP ' . PHP_VERSION .
+            ' (' . PHP_OS . ')';
         //$this->logLn($msg);
 
         /*
