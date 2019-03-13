@@ -49,6 +49,51 @@ class BaseConverter
         return new static($source, $destination, $options, $logger);
     }
 
+    public function errorHandler($errno, $errstr, $errfile, $errline) {
+
+        $errorTypes = [
+            E_WARNING =>             "Warning",
+            E_PARSE =>               "Parse Error",
+            E_NOTICE =>              "Notice",
+            E_CORE_ERROR =>          "Core Error",
+            E_CORE_WARNING =>        "Core Warning",
+            E_COMPILE_ERROR =>       "Compile Error",
+            E_COMPILE_WARNING =>     "Compile Warning",
+            E_USER_ERROR =>          "User Error",
+            E_USER_WARNING =>        "User Warning",
+            E_USER_NOTICE =>         "User Notice",
+            E_STRICT =>              "Strict Notice",
+            E_DEPRECATED =>          "Deprecated",
+            E_USER_DEPRECATED =>     "User Deprecated",
+        ];
+
+        if (isset($errorTypes[$errno])) {
+            $errType = $errorTypes[$errno];
+        } else {
+            $errType = "Unknown error ($errno)";
+        }
+
+        $this->logLn($errType . ': ' . $errstr . ' in ' . $errfile . ', line ' . $errline . ', PHP ' . PHP_VERSION . ' (' . PHP_OS . ')');
+
+        // TODO:
+        // We should probably throw an exception on errors.
+
+        /*
+        if(function_exists('debug_backtrace')){
+            //print "backtrace:\n";
+            $backtrace = debug_backtrace();
+            array_shift($backtrace);
+            foreach($backtrace as $i=>$l){
+                $msg = '';
+                $msg .= "[$i] in function <b>{$l['class']}{$l['type']}{$l['function']}</b>";
+                if($l['file']) $msg .= " in <b>{$l['file']}</b>";
+                if($l['line']) $msg .= " on line <b>{$l['line']}</b>";
+                $this->logLn($msg);
+
+            }
+        }*/
+    }
+
     public static function convert($source, $destination, $options = [], $logger = null)
     {
         $instance = self::createInstance($source, $destination, $options, $logger);
@@ -56,6 +101,7 @@ class BaseConverter
         $instance->prepareConvert();
         $instance->doConvert();
         $instance->finalizeConvert();
+
         return true;
         //echo $instance->id;
     }
@@ -94,6 +140,9 @@ class BaseConverter
     public function prepareConvert()
     {
         $this->beginTime = microtime(true);
+
+        //set_error_handler(array($this, "warningHandler"), E_WARNING);
+        set_error_handler(array($this, "errorHandler"));
 
         if (!isset($this->options['_skip_basic_validations'])) {
             // Run basic validations (if source exists and if file extension is valid)
@@ -320,6 +369,8 @@ class BaseConverter
 
     public function finalizeConvert()
     {
+        restore_error_handler();
+
         $source = $this->source;
         $destination = $this->destination;
 

@@ -138,14 +138,9 @@ class Gd extends BaseConverter
             }
         }
 
-        // We suppress warnings.
-        // The reason we do this is that output might be sent to browser as an image.
-        // But the downside is that we loose good information this way.
-        // For expample, we might otherwise get stuff like this:
-        // Warning: imagewebp(): Palette image not supported by webp in /var/www/wc/wc0/webp-convert/src/Converters/Gd.php on line 142
-        // TODO: implement error handler in BaseConverter and stop suppressing errors and warnings here
-
-        $success = @imagewebp($image, $this->destination, $this->options['_calculated_quality']);
+        // No longer suppress errors or warnings with @imagewebp.
+        // The error handler in BaseConverter will handle these
+        $success = imagewebp($image, $this->destination, $this->options['_calculated_quality']);
 
         if (!$success) {
             throw new ConverterFailedException(
