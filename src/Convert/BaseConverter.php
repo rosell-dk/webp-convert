@@ -21,6 +21,7 @@ class BaseConverter
     public $beginTime;
 
     public static $allowedExtensions = ['jpg', 'jpeg', 'png'];
+    public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
 
     public static $defaultOptions = [
         'quality' => 'auto',
@@ -128,7 +129,6 @@ class BaseConverter
         //return false;   // let PHP handle the error from here
     }
 
-
     public static function convert($source, $destination, $options = [], $logger = null)
     {
         $instance = self::createInstance($source, $destination, $options, $logger);
@@ -172,6 +172,28 @@ class BaseConverter
         return self::getExtension($this->source);
     }
 
+    public static function getMimeType($filePath)
+    {
+        if (function_exists('mime_content_type')) {
+            $result = mime_content_type($filePath);
+            if ($result !== false) {
+                return $result;
+            }
+        }
+
+        // fallback to using pathinfo.
+        $fileExtension = self::getExtension($filePath);
+        if ($fileExtension == 'jpg') {
+            $fileExtension = 'jpeg';
+        }
+        return 'image/' . $fileExtension;
+    }
+
+    public function getMimeTypeOfSource()
+    {
+        return self::getMimeType($this->source);
+    }
+
     public function prepareConvert()
     {
         $this->beginTime = microtime(true);
@@ -211,9 +233,17 @@ class BaseConverter
         }
 
         // Check if the provided file's extension is valid
+        /*
         $fileExtension = $this->getSourceExtension();
         if (!in_array(strtolower($fileExtension), self::$allowedExtensions)) {
             throw new InvalidFileExtensionException('Unsupported file extension: ' . $fileExtension);
+        }*/
+
+        // Check if the provided file's mime type is valid
+
+        $fileMimeType = $this->getMimeTypeOfSource();
+        if (!in_array($fileMimeType, self::$allowedMimeTypes)) {
+            throw new InvalidFileExtensionException('Unsupported mime type: ' . $fileMimeType);
         }
     }
 

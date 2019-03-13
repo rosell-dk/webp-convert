@@ -71,8 +71,8 @@ class Gd extends BaseConverter
         // Btw: Check out processWebp here:
         // https://github.com/Intervention/image/blob/master/src/Intervention/Image/Gd/Encoder.php
 
-        switch ($this->getSourceExtension()) {
-            case 'png':
+        switch ($this->getMimeTypeOfSource()) {
+            case 'image/png':
                 if (!function_exists('imagecreatefrompng')) {
                     throw new ConverterNotOperationalException(
                         'Required imagecreatefrompng() function is not available.'
@@ -85,7 +85,8 @@ class Gd extends BaseConverter
                     );
                 }
                 break;
-            default:
+
+            case 'image/jpeg':
                 if (!function_exists('imagecreatefromjpeg')) {
                     throw new ConverterNotOperationalException(
                         'Required imagecreatefromjpeg() function is not available.'
@@ -138,9 +139,7 @@ class Gd extends BaseConverter
             }
         }
 
-        // No longer suppress errors or warnings with @imagewebp.
-        // The error handler in BaseConverter will handle these
-        $success = imagewebp($image, $this->destination, $this->options['_calculated_quality']);
+        $success = @imagewebp($image, $this->destination, $this->options['_calculated_quality']);
 
         if (!$success) {
             throw new ConverterFailedException(
