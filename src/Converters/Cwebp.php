@@ -63,6 +63,8 @@ class Cwebp extends ExecConverter
     ];
 
     // OS-specific binaries included in this library, along with hashes
+    // If other binaries are going to be added, notice that the first argument is what PHP_OS returns.
+    // (possible values, see here: https://stackoverflow.com/questions/738823/possible-values-for-php-os)
     private static $suppliedBinariesInfo = [
         'WINNT' => [ 'cwebp.exe', '49e9cb98db30bfa27936933e6fd94d407e0386802cb192800d9fd824f6476873'],
         'Darwin' => [ 'cwebp-mac12', 'a06a3ee436e375c89dbc1b0b2e8bd7729a55139ae072ed3f7bd2e07de0ebb379'],
