@@ -19,6 +19,9 @@ Of course, as we here have to call a binary directly, *cwebp* requires the *exec
 
 [`ewww`](#ewww) is also a cloud service. Not free, but cheap enough to be considered *practically* free. It produces webp files a bit smalle than the rest. It seems to produce same size as *cwebp*, when method is set to 3. Unfortunately, *ewww* does not support quality=auto, like *wpc*, and it does not support *size-in-percentage* like *cwebp*, either. I have requested such features, and he is considering... As with *wpc*, beware of upload limits.
 
+[`stack`](#stack) takes a stack of converters and tries it from the top, until success. The main convert method actually calls this converter. Stacks within stacks are supported (not really needed, though).
+
+
 **Summary:**
 
 *WebPConvert* currently supports the following converters:
@@ -233,4 +236,13 @@ See [this page](https://github.com/rosell-dk/webp-convert/wiki/Installing-Imagic
 
 This converter tryes to execute `convert source.jpg webp:destination.jpg.webp`.
 
-#### The `method` option
+## stack
+
+<table>
+  <tr><th>General options supported</th><td>all (passed to the converters in the stack )</td></tr>
+  <tr><th>Extra options</th><td>`converters` (array) and `converter-options` (array)</td></tr>
+</table>
+
+Stack implements the functionality you know from `WebPConvert::convert`. In fact, all `WebPConvert::convert` does is to call `Stack::convert($source, $destination, $options, $logger);`
+
+It has two special options: `converters` and `converter-options`. You can read about those in `docs/api/convert.md`
