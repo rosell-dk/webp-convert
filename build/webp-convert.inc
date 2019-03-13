@@ -128,8 +128,10 @@ class Cwebp extends ExecConverter
     ];
 
     // OS-specific binaries included in this library, along with hashes
+    // If other binaries are going to be added, notice that the first argument is what PHP_OS returns.
+    // (possible values, see here: https://stackoverflow.com/questions/738823/possible-values-for-php-os)
     private static $suppliedBinariesInfo = [
-        'WinNT' => [ 'cwebp.exe', '49e9cb98db30bfa27936933e6fd94d407e0386802cb192800d9fd824f6476873'],
+        'WINNT' => [ 'cwebp.exe', '49e9cb98db30bfa27936933e6fd94d407e0386802cb192800d9fd824f6476873'],
         'Darwin' => [ 'cwebp-mac12', 'a06a3ee436e375c89dbc1b0b2e8bd7729a55139ae072ed3f7bd2e07de0ebb379'],
         'SunOS' => [ 'cwebp-sol', '1febaffbb18e52dc2c524cda9eefd00c6db95bc388732868999c0f48deb73b4f'],
         'FreeBSD' => [ 'cwebp-fbsd', 'e5cbea11c97fadffe221fdf57c093c19af2737e4bbd2cb3cd5e908de64286573'],
@@ -703,6 +705,56 @@ class Gd extends BaseConverter
 {
     public static $extraOptions = [];
 
+    private static function functionsExist($functionNamesArr)
+    {
+        foreach ($functionNamesArr as $functionName) {
+            if (!function_exists($functionName)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     *
+     *  @return Returns TRUE if the convertion was complete, or if the source image already is a true color image,
+     *          otherwise FALSE is returned.
+     */
+    public static function makeTrueColor(&$image)
+    {
+        if (function_exists('imagepalettetotruecolor')) {
+            return imagepalettetotruecolor($image);
+        } else {
+            // Got the workaround here: https://secure.php.net/manual/en/function.imagepalettetotruecolor.php
+            if ((function_exists('imageistruecolor') && !imageistruecolor($image))
+                || !function_exists('imageistruecolor')
+            ) {
+                if (self::functionsExist(['imagecreatetruecolor', 'imagealphablending', 'imagecolorallocatealpha',
+                        'imagefilledrectangle', 'imagecopy', 'imagedestroy', 'imagesx', 'imagesy'])) {
+                    $dst = imagecreatetruecolor(imagesx($image), imagesy($image));
+
+                    //prevent blending with default black
+                    imagealphablending($dst, false);
+
+                     //change the RGB values if you need, but leave alpha at 127
+                    $transparent = imagecolorallocatealpha($dst, 255, 255, 255, 127);
+
+                     //simpler than flood fill
+                    imagefilledrectangle($dst, 0, 0, imagesx($image), imagesy($image), $transparent);
+                    imagealphablending($dst, true);     //restore default blending
+
+                    imagecopy($dst, $image, 0, 0, 0, 0, imagesx($image), imagesy($image));
+                    imagedestroy($image);
+
+                    $image = $dst;
+                    return true;
+                }
+            } else {
+                return false;
+            }
+        }
+    }
+
     // Although this method is public, do not call directly.
     // You should rather call the static convert() function, defined in BaseConverter, which
     // takes care of preparing stuff before calling doConvert, and validating after.
@@ -721,8 +773,8 @@ class Gd extends BaseConverter
         // Btw: Check out processWebp here:
         // https://github.com/Intervention/image/blob/master/src/Intervention/Image/Gd/Encoder.php
 
-        switch ($this->getSourceExtension()) {
-            case 'png':
+        switch ($this->getMimeTypeOfSource()) {
+            case 'image/png':
                 if (!function_exists('imagecreatefrompng')) {
                     throw new ConverterNotOperationalException(
                         'Required imagecreatefrompng() function is not available.'
@@ -735,7 +787,8 @@ class Gd extends BaseConverter
                     );
                 }
                 break;
-            default:
+
+            case 'image/jpeg':
                 if (!function_exists('imagecreatefromjpeg')) {
                     throw new ConverterNotOperationalException(
                         'Required imagecreatefromjpeg() function is not available.'
@@ -748,6 +801,54 @@ class Gd extends BaseConverter
         }
 
         // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
+
+        $mustMakeTrueColor = false;
+        if (function_exists('imageistruecolor')) {
+            if (imageistruecolor($image)) {
+                $this->logLn('image is true color');
+            } else {
+                $this->logLn('image is not true color');
+                $mustMakeTrueColor = true;
+            }
+        } else {
+            $this->logLn('It can not be determined if image is true color');
+            $mustMakeTrueColor = true;
+        }
+
+        if ($mustMakeTrueColor) {
+            $this->logLn('converting color palette to true color');
+            $success = $this->makeTrueColor($image);
+            if (!$success) {
+                $this->logLn(
+                    'Warning: FAILED converting color palette to true color. ' .
+                    'Continuing, but this does not look good.'
+                );
+            }
+        }
+
+        if ($this->getSourceExtension() == 'png') {
+            if (function_exists('imagealphablending')) {
+                if (!imagealphablending($image, true)) {
+                    $this->logLn('Warning: imagealphablending() failed');
+                }
+            } else {
+                $this->logLn(
+                    'Warning: imagealphablending() is not available on your system.' .
+                    ' Converting PNGs with transparency might fail on some systems'
+                );
+            }
+
+            if (function_exists('imagesavealpha')) {
+                if (!imagesavealpha($image, true)) {
+                    $this->logLn('Warning: imagesavealpha() failed');
+                }
+            } else {
+                $this->logLn(
+                    'Warning: imagesavealpha() is not available on your system. ' .
+                    'Converting PNGs with transparency might fail on some systems'
+                );
+            }
+        }
 
         $success = @imagewebp($image, $this->destination, $this->options['_calculated_quality']);
 
@@ -1076,13 +1177,14 @@ class Stack extends BaseConverter
             'default' => ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'],
             'required' => false
         ],
+        /*
         [
             'name' => 'skip-pngs',
             'type' => 'boolean',
             'sensitive' => false,
-            'default' => true,
+            'default' => false,
             'required' => false
-        ],
+        ],*/
         /*[
             'name' => 'quality',
             'type' => 'quality',
@@ -1174,11 +1276,9 @@ class Stack extends BaseConverter
                 return true;
             } catch (\WebPConvert\Converters\Exceptions\ConverterNotOperationalException $e) {
                 $this->logLn($e->getMessage());
-
             } catch (\WebPConvert\Converters\Exceptions\ConverterFailedException $e) {
                 $this->logLn($e->getMessage());
                 $anyRuntimeErrors = true;
-
             } catch (\WebPConvert\Converters\Exceptions\ConversionDeclinedException $e) {
                 $this->logLn($e->getMessage());
             }
@@ -1188,13 +1288,14 @@ class Stack extends BaseConverter
 
         if ($anyRuntimeErrors) {
             // At least one converter failed
-            throw new ConverterFailedException('None of the converters in the stack could convert the image. At least one failed, even though its requirements seemed to be met.');
-
+            throw new ConverterFailedException(
+                'None of the converters in the stack could convert the image. ' .
+                'At least one failed, even though its requirements seemed to be met.'
+            );
         } else {
             // All converters threw a ConverterNotOperationalException
             throw new ConverterNotOperationalException('None of the converters in the stack are operational');
         }
-
     }
 }
 
