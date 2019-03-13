@@ -26,7 +26,7 @@ Many options correspond to options of *cwebp*. These are documented [here](https
 | low-memory        | Boolean | false                       | Reduce memory usage of lossy encoding by saving four times the compressed size (typically) |
 | lossless          | Boolean | false                       | Encode the image without any loss. The option is ignored for PNG's (forced true) |
 | converters        | Array   | ['cwebp', 'gd', 'imagick']  | Specify conversion methods to use, and their order. Also optionally set converter options (see below) |
-| converter-options | Array   | []                          | <b>Upcoming in v1.2.0</b>. Set options of the individual converters (see below) |
+| converter-options | Array   | []                          | Set options of the individual converters (see below) |
 
 #### More on quality=auto
 Unfortunately, *libwebp* does not provide a way to use the same quality for the converted image, as for source. This feature is implemented by *imagick* and *gmagick*. No matter which conversion method you choose, if you set *quality* to *auto*, our library will try to detect the quality of the source file using one of these libraries. If this isn't available, it will revert to the value set in the *default-quality* option (75 per default). *However*, with the *wpc* converter you have a second chance: If quality cannot be detected locally, it will send quality="auto" to *wpc*.
