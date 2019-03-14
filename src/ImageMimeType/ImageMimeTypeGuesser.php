@@ -34,7 +34,10 @@ class ImageMimeTypeGuesser
         // is this a security risk? - By setting file extension to "jpg", one can
         // lure our library into trying to convert a file, which isn't a jpg.
         // hm, seems very unlikely, though not unthinkable that one of the converters could be exploited
-        $fileExtension = self::getExtension($filePath);
+
+        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
+        $fileExtension = strtolower($fileExtension);
+
         if ($fileExtension == 'jpg') {
             $fileExtension = 'jpeg';
         }
@@ -48,7 +51,7 @@ class ImageMimeTypeGuesser
             return $detectionResult;
         }
 
-        // fall back to the unreliable 
+        // fall back to the unreliable
         return self::guessMimeTypeFromExtension($filePath);
     }
 
