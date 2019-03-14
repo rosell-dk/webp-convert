@@ -12,6 +12,8 @@ use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
 use WebPConvert\Converters\Exceptions\ConversionDeclinedException;
 
+use WebPConvert\ImageMimeType\ImageMimeTypeGuesser;
+
 class BaseConverter
 {
     public $source;
@@ -173,21 +175,22 @@ class BaseConverter
         return self::getExtension($this->source);
     }
 
+    /**
+     *  Get mime type for image.
+     *  Our function only needs to identify the following mime types:
+     *  - "image/jpeg"
+     *  - "image/png"
+     *
+     *  Anything else may or may not result in false being returned.
+     */
     public static function getMimeType($filePath)
     {
-        if (function_exists('mime_content_type')) {
-            $result = mime_content_type($filePath);
-            if ($result !== false) {
-                return $result;
-            }
-        }
+        // fallback to using pathinfo
+        // is this a security risk? - By setting file extension to "jpg", one can
+        // lure our library into trying to convert a file, which isn't a jpg.
+        // hm, seems very unlikely, though not unthinkable that one of the converters could be exploited
 
-        // fallback to using pathinfo.
-        $fileExtension = self::getExtension($filePath);
-        if ($fileExtension == 'jpg') {
-            $fileExtension = 'jpeg';
-        }
-        return 'image/' . $fileExtension;
+        return ImageMimeTypeGuesser::guessMimeTypeImage($filePath);
     }
 
     public function getMimeTypeOfSource()
