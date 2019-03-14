@@ -18,14 +18,13 @@ class GetImageSize extends BaseDetector
     {
         // getimagesize is slower than exif_imagetype
         // It may not return "mime". In that case we can rely on that the file is not an image (and return false)
-		if (function_exists('getimagesize')) {
+        if (function_exists('getimagesize')) {
             try {
-    			$imageSize = getimagesize($filePath);
-    			return (isset($imageSize['mime']) ? $imageSize['mime'] : false);
+                $imageSize = getimagesize($filePath);
+                return (isset($imageSize['mime']) ? $imageSize['mime'] : false);
             } catch (\Exception $e) {
-        		// well well, don't let this stop us either
-        	}
-    	}
+                // well well, don't let this stop us either
+            }
+        }
     }
-
 }

@@ -32,5 +32,4 @@ class FInfo extends BaseDetector
             return $type;
         }
     }
-
 }

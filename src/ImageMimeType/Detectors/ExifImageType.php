@@ -20,15 +20,14 @@ class ExifImageType extends BaseDetector
     {
         // exif_imagetype is fast, however not available on all systems,
         // It may return false. In that case we can rely on that the file is not an image (and return false)
-		if (function_exists('exif_imagetype')) {
+        if (function_exists('exif_imagetype')) {
             try {
-    			$imageType = exif_imagetype($filePath);
-    			return ($imageType ? image_type_to_mime_type($imageType) : false);
+                $imageType = exif_imagetype($filePath);
+                return ($imageType ? image_type_to_mime_type($imageType) : false);
             } catch (\Exception $e) {
-        		// well well, don't let this stop us
-        	}
+                // well well, don't let this stop us
+            }
         }
         return;
     }
-
 }

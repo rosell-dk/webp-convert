@@ -29,9 +29,8 @@ class MimeContentType extends BaseDetector
                     }
                 }
             } catch (\Exception $e) {
-        		// we are unstoppable!
-        	}
+                // we are unstoppable!
+            }
         }
     }
-
 }

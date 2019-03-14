@@ -26,5 +26,4 @@ class BaseDetector
         }
         return self::createInstance()->doDetect($filePath);
     }
-
 }

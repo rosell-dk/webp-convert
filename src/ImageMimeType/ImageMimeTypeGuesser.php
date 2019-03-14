@@ -54,6 +54,4 @@ class ImageMimeTypeGuesser
         // fall back to the unreliable
         return self::guessMimeTypeFromExtension($filePath);
     }
-
-
 }

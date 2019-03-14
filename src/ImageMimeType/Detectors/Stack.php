@@ -23,7 +23,10 @@ class Stack extends BaseDetector
         ];
 
         foreach ($detectors as $className) {
-            $result = call_user_func(array("\\WebPConvert\\ImageMimeType\\Detectors\\" . $className, 'detect'), $filePath);
+            $result = call_user_func(
+                array("\\WebPConvert\\ImageMimeType\\Detectors\\" . $className, 'detect'),
+                $filePath
+            );
             if (!is_null($result)) {
                 return $result;
             }
@@ -31,5 +34,4 @@ class Stack extends BaseDetector
 
         return;     // undetermined
     }
-
 }
