@@ -12,7 +12,7 @@ use WebPConvert\Converters\Exceptions\ConverterNotOperationalException;
 use WebPConvert\Converters\Exceptions\ConverterFailedException;
 use WebPConvert\Converters\Exceptions\ConversionDeclinedException;
 
-use WebPConvert\ImageMimeType\ImageMimeTypeGuesser;
+use \ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 
 class BaseConverter
 {
@@ -190,7 +190,7 @@ class BaseConverter
         // lure our library into trying to convert a file, which isn't a jpg.
         // hm, seems very unlikely, though not unthinkable that one of the converters could be exploited
 
-        return ImageMimeTypeGuesser::guessMimeTypeImage($filePath);
+        return ImageMimeTypeGuesser::guess($filePath);
     }
 
     public function getMimeTypeOfSource()
