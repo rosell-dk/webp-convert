@@ -364,13 +364,13 @@ class BaseConverter
 
         if (function_exists('shell_exec')) {
             // Try Imagick
-            $quality = shell_exec("identify -format '%Q' " . $filename);
+            $quality = shell_exec("identify -format '%Q' '" . $filename . "'");
             if ($quality) {
                 return intval($quality);
             }
 
             // Try GraphicsMagick
-            $quality = shell_exec("gm identify -format '%Q' " . $filename);
+            $quality = shell_exec("gm identify -format '%Q' '" . $filename . "'");
             if ($quality) {
                 return intval($quality);
             }
