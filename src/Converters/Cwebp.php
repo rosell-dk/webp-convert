@@ -155,10 +155,13 @@ class Cwebp extends ExecConverter
         }
 
         // Source file
-        $commandOptionsArray[] = self::escapeFilename($this->source);
+        //$commandOptionsArray[] = self::escapeFilename($this->source);
+        $commandOptionsArray[] = escapeshellarg($this->source);
 
         // Output
-        $commandOptionsArray[] = '-o ' . self::escapeFilename($this->destination);
+        //$commandOptionsArray[] = '-o ' . self::escapeFilename($this->destination);
+        $commandOptionsArray[] = '-o ' . escapeshellarg($this->destination);
+
 
         // Redirect stderr to same place as stdout
         // https://www.brianstorti.com/understanding-shell-script-idiom-redirect/

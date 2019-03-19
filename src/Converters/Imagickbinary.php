@@ -61,7 +61,8 @@ class ImagickBinary extends ExecConverter
         // Should we perhaps try both?
         // For now, we just go with "convert"
         $command = 'convert ' .
-            self::escapeFilename($this->source) . ' webp:' . self::escapeFilename($this->destination);
+            escapeshellarg($this->source) . ' ' . escapeshellarg('webp:' . $this->destination);
+            //self::escapeFilename($this->source) . ' webp:' . self::escapeFilename($this->destination);
 
         // TODO:
         // quality. Like this: 'convert -quality 100 small.jpg small.webp'
