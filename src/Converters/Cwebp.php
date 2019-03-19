@@ -202,10 +202,11 @@ class Cwebp
         }
 
         // Source file
-        $commandOptionsArray[] = self::escapeFilename($source);
+        //$commandOptionsArray[] = self::escapeFilename($source);
+        $commandOptionsArray[] = escapeshellarg($source);
 
         // Output
-        $commandOptionsArray[] = '-o ' . self::escapeFilename($destination);
+        $commandOptionsArray[] = '-o ' . escapeshellarg($destination);
 
         // Redirect stderr to same place as stdout
         // https://www.brianstorti.com/understanding-shell-script-idiom-redirect/

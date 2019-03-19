@@ -123,9 +123,8 @@ class ImagickBinary
 
         $command = 'convert '
             . $qualityOption
-            . self::escapeFilename($source)
-            . ' webp:'
-            . self::escapeFilename($destination);
+            . escapeshellarg($source)
+            . ' ' . escapeshellarg('webp:' . $destination);
 
         // Nice
         $useNice = (($options['use-nice']) && self::hasNiceSupport()) ? true : false;
