@@ -240,16 +240,16 @@ class Cwebp extends ExecConverter
                         switch ($returnCode) {
                             case 126:
                                 $errorMsg = 'Permission denied. The user that the command was run with (' .
-                                    shell_exec('whoami') . ') does not have permission to execute any of the cweb ' .
-                                    'binaries found in common system locations. ';
+                                shell_exec('whoami') . ') does not have permission to execute any of the cweb ' .
+                                'binaries found in common system locations. ';
                                 break;
                             default:
                                 $errorMsg .= 'Tried executing cwebp binaries in common system locations. ' .
-                                    'All failed (exit code: ' . $majorFailCode . '). ';
+                                'All failed (exit code: ' . $majorFailCode . '). ';
                         }
                     } else {
                         $errorMsg .= 'None of the cwebp binaries in the common system locations could be executed ' .
-                            '(mixed results - got the following exit codes: ' . implode(',', $failureCodes) . '). ';
+                        '(mixed results - got the following exit codes: ' . implode(',', $failureCodes) . '). ';
                     }
                 }
             }
