@@ -305,7 +305,7 @@ class ConverterHelper
                 if (method_exists($img, 'getImageCompressionQuality')) {
                     return $img->getImageCompressionQuality();
                 }
-            } catch (ImagickException $e) {
+            } catch (\Exception $e) {
                 // do nothing.
             }
         }
@@ -317,13 +317,13 @@ class ConverterHelper
 
         if (function_exists('shell_exec')) {
             // Try Imagick
-            $quality = shell_exec("identify -format '%Q' " . $filename);
+            $quality = shell_exec("identify -format '%Q' " . escapeshellarg($filename));
             if ($quality) {
                 return intval($quality);
             }
 
             // Try GraphicsMagick
-            $quality = shell_exec("gm identify -format '%Q' " . $filename);
+            $quality = shell_exec("gm identify -format '%Q' " . escapeshellarg($filename));
             if ($quality) {
                 return intval($quality);
             }
@@ -335,7 +335,7 @@ class ConverterHelper
         if (isset($options['_calculated_quality'])) {
             return;
         }
-        
+
         if ($options['quality'] == 'auto') {
             $q = self::detectQualityOfJpg($source);
             //$logger->log('Quality set to auto... Quality of source: ');
@@ -697,10 +697,11 @@ class Cwebp
         }
 
         // Source file
-        $commandOptionsArray[] = self::escapeFilename($source);
+        //$commandOptionsArray[] = self::escapeFilename($source);
+        $commandOptionsArray[] = escapeshellarg($source);
 
         // Output
-        $commandOptionsArray[] = '-o ' . self::escapeFilename($destination);
+        $commandOptionsArray[] = '-o ' . escapeshellarg($destination);
 
         // Redirect stderr to same place as stdout
         // https://www.brianstorti.com/understanding-shell-script-idiom-redirect/
@@ -1046,6 +1047,64 @@ class Ewww
         }
     }
 
+    /**
+     *  Keep subscription alive by optimizing a jpeg
+     *  (ewww closes accounts after 6 months of inactivity - and webp conversions seems not to be counted? )
+     */
+    public static function keepSubscriptionAlive($source, $key)
+    {
+        try {
+            $ch = curl_init();
+        } catch (\Exception $e) {
+            return 'curl is not installed';
+        }
+        curl_setopt_array(
+            $ch,
+            [
+            CURLOPT_URL => "https://optimize.exactlywww.com/v2/",
+            CURLOPT_HTTPHEADER => [
+                'User-Agent: WebPConvert',
+                'Accept: image/*'
+            ],
+            CURLOPT_POSTFIELDS => [
+                'api_key' => $key,
+                'webp' => '0',
+                'file' => curl_file_create($source),
+                'domain' => $_SERVER['HTTP_HOST'],
+                'quality' => 60,
+                'metadata' => 0
+            ],
+            CURLOPT_BINARYTRANSFER => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HEADER => false,
+            CURLOPT_SSL_VERIFYPEER => false
+            ]
+        );
+
+        $response = curl_exec($ch);
+        if (curl_errno($ch)) {
+            return 'curl error' . curl_error($ch);
+        }
+        if (curl_getinfo($ch, CURLINFO_CONTENT_TYPE) != 'application/octet-stream') {
+            curl_close($ch);
+
+            /* May return this: {"error":"invalid","t":"exceeded"} */
+            $responseObj = json_decode($response);
+            if (isset($responseObj->error)) {
+                return 'The key is invalid';
+            }
+
+            return 'ewww api did not return an image. It could be that the key is invalid. Response: ' . $response;
+        }
+
+        // Not sure this can happen. So just in case
+        if ($response == '') {
+            return 'ewww api did not return anything';
+        }
+
+        return true;
+    }
+
     /*
         public static function blacklistKey($key)
         {
@@ -1176,6 +1235,34 @@ class Gd
         ConverterHelper::runConverter('gd', $source, $destination, $options, true);
     }
 
+    /**
+     *
+     *  @return Returns TRUE if the convertion was complete, or if the source image already is a true color image, otherwise FALSE is returned.
+     */
+    public static function makeTrueColor(&$image) {
+        if (function_exists('imagepalettetotruecolor')) {
+            return imagepalettetotruecolor($image);
+        } else {
+            // Got the workaround here: https://secure.php.net/manual/en/function.imagepalettetotruecolor.php
+            if ((function_exists('imageistruecolor') && !imageistruecolor($image)) || !function_exists('imageistruecolor')) {
+                if (self::functionsExist(['imagecreatetruecolor', 'imagealphablending', 'imagecolorallocatealpha',
+                        'imagefilledrectangle', 'imagecopy', 'imagedestroy', 'imagesx', 'imagesy'])) {
+                    $dst = imagecreatetruecolor(imagesx($image), imagesy($image));
+                    imagealphablending($dst, false);    //prevent blending with default black
+                    $transparent = imagecolorallocatealpha($dst, 255, 255, 255, 127);   //change the RGB values if you need, but leave alpha at 127
+                    imagefilledrectangle($dst, 0, 0, imagesx($image), imagesy($image), $transparent);   //simpler than flood fill
+                    imagealphablending($dst, true);     //restore default blending
+                    imagecopy($dst, $image, 0, 0, 0, 0, imagesx($image), imagesy($image));
+                    imagedestroy($image);
+                    $image = $dst;
+                    return true;
+                }
+            } else {
+                return false;
+            }
+        }
+    }
+
     // Although this method is public, do not call directly.
     public static function doConvert($source, $destination, $options, $logger)
     {
@@ -1221,7 +1308,41 @@ class Gd
                 }
         }
 
-        // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
+        $mustMakeTrueColor = false;
+        if (function_exists('imageistruecolor')) {
+            if (imageistruecolor($image)) {
+                $logger->logLn('image is true color');
+            } else {
+                $logger->logLn('image is not true color');
+                $mustMakeTrueColor = true;
+            }
+        } else {
+            $logger->logLn('It can not be determined if image is true color');
+            $mustMakeTrueColor = true;
+        }
+        if ($mustMakeTrueColor) {
+            $logger->logLn('converting color palette to true color');
+            $success = self::makeTrueColor($image);
+            if (!$success) {
+                $logger->logLn('Warning: FAILED converting color palette to true color. Continuing, but this does not look good.');
+            }
+        }
+        if (ConverterHelper::getExtension($source) == 'png') {
+            if (function_exists('imagealphablending')) {
+                if (!imagealphablending($image, true)) {
+                    $logger->logLn('Warning: imagealphablending() failed');
+                }
+            } else {
+                $logger->logLn('Warning: imagealphablending() is not available on your system. Converting PNGs with transparency might fail on some systems');
+            }
+            if (function_exists('imagesavealpha')) {
+                if (!imagesavealpha($image, true)) {
+                    $logger->logLn('Warning: imagesavealpha() failed');
+                }
+            } else {
+                $logger->logLn('Warning: imagesavealpha() is not available on your system. Converting PNGs with transparency might fail on some systems');
+            }
+        }
 
         $success = @imagewebp($image, $destination, $options['_calculated_quality']);
 
@@ -1582,9 +1703,8 @@ class ImagickBinary
 
         $command = 'convert '
             . $qualityOption
-            . self::escapeFilename($source)
-            . ' webp:'
-            . self::escapeFilename($destination);
+            . escapeshellarg($source)
+            . ' ' . escapeshellarg('webp:' . $destination);
 
         // Nice
         $useNice = (($options['use-nice']) && self::hasNiceSupport()) ? true : false;
