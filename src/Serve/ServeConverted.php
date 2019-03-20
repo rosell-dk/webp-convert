@@ -82,6 +82,16 @@ class ServeConverted extends ServeBase
         try {
             $success = WebPConvert::convert($this->source, $this->destination, $this->options, $bufferLogger);
 
+            if (!file_exists($this->destination)){
+                $success = false;
+            }elseif(filesize($this->destination)==0){
+                @unlink($this->destination);
+                $success = false;
+                $this->whatToServe = 'original';
+                $this->whyServingThis = 'explicitly-told-to';
+                return $this->serveOriginal();
+            }
+
             if ($success) {
                 // Serve source if it is smaller than destination
                 $filesizeDestination = @filesize($this->destination);
