@@ -25,6 +25,34 @@ class Gd
         ConverterHelper::runConverter('gd', $source, $destination, $options, true);
     }
 
+    /**
+     *
+     *  @return Returns TRUE if the convertion was complete, or if the source image already is a true color image, otherwise FALSE is returned.
+     */
+    public static function makeTrueColor(&$image) {
+        if (function_exists('imagepalettetotruecolor')) {
+            return imagepalettetotruecolor($image);
+        } else {
+            // Got the workaround here: https://secure.php.net/manual/en/function.imagepalettetotruecolor.php
+            if ((function_exists('imageistruecolor') && !imageistruecolor($image)) || !function_exists('imageistruecolor')) {
+                if (self::functionsExist(['imagecreatetruecolor', 'imagealphablending', 'imagecolorallocatealpha',
+                        'imagefilledrectangle', 'imagecopy', 'imagedestroy', 'imagesx', 'imagesy'])) {
+                    $dst = imagecreatetruecolor(imagesx($image), imagesy($image));
+                    imagealphablending($dst, false);    //prevent blending with default black
+                    $transparent = imagecolorallocatealpha($dst, 255, 255, 255, 127);   //change the RGB values if you need, but leave alpha at 127
+                    imagefilledrectangle($dst, 0, 0, imagesx($image), imagesy($image), $transparent);   //simpler than flood fill
+                    imagealphablending($dst, true);     //restore default blending
+                    imagecopy($dst, $image, 0, 0, 0, 0, imagesx($image), imagesy($image));
+                    imagedestroy($image);
+                    $image = $dst;
+                    return true;
+                }
+            } else {
+                return false;
+            }
+        }
+    }
+
     // Although this method is public, do not call directly.
     public static function doConvert($source, $destination, $options, $logger)
     {
@@ -70,7 +98,41 @@ class Gd
                 }
         }
 
-        // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
+        $mustMakeTrueColor = false;
+        if (function_exists('imageistruecolor')) {
+            if (imageistruecolor($image)) {
+                $logger->logLn('image is true color');
+            } else {
+                $logger->logLn('image is not true color');
+                $mustMakeTrueColor = true;
+            }
+        } else {
+            $logger->logLn('It can not be determined if image is true color');
+            $mustMakeTrueColor = true;
+        }
+        if ($mustMakeTrueColor) {
+            $logger->logLn('converting color palette to true color');
+            $success = self::makeTrueColor($image);
+            if (!$success) {
+                $logger->logLn('Warning: FAILED converting color palette to true color. Continuing, but this does not look good.');
+            }
+        }
+        if (ConverterHelper::getExtension($source) == 'png') {
+            if (function_exists('imagealphablending')) {
+                if (!imagealphablending($image, true)) {
+                    $logger->logLn('Warning: imagealphablending() failed');
+                }
+            } else {
+                $logger->logLn('Warning: imagealphablending() is not available on your system. Converting PNGs with transparency might fail on some systems');
+            }
+            if (function_exists('imagesavealpha')) {
+                if (!imagesavealpha($image, true)) {
+                    $logger->logLn('Warning: imagesavealpha() failed');
+                }
+            } else {
+                $logger->logLn('Warning: imagesavealpha() is not available on your system. Converting PNGs with transparency might fail on some systems');
+            }
+        }
 
         $success = @imagewebp($image, $destination, $options['_calculated_quality']);
 
