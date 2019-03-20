@@ -156,6 +156,13 @@ class Gd extends BaseConverter
             }
         }
 
+
+         // Solve this error -> Fatal error: Paletter image not supported by webp (Error 500 in admin-ajax.php of WordPress)
+        if( function_exists('imagepalettetotruecolor') ){
+            
+            imagepalettetotruecolor($image);
+        }
+
         $success = @imagewebp($image, $this->destination, $this->options['_calculated_quality']);
 
         if (!$success) {
