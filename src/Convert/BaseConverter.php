@@ -445,6 +445,9 @@ class BaseConverter
 
         if (!@file_exists($this->destination)) {
             throw new ConverterFailedException('Destination file is not there');
+        } elseif (@filesize($destination) === 0){
+            @unlink($destination);
+            throw new ConverterFailedException('Destination file was completely empty');
         } else {
             if (!isset($this->options['_suppress_success_message'])) {
                 $this->logLn(

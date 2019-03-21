@@ -176,13 +176,6 @@ class Report
             exit;
         }
 
-        if (!file_exists($destination)){
-            $success = false;
-        }elseif(filesize($destination)==0){
-            @unlink($destination);
-            $success = false;
-        }
-
         if ($success) {
             //echo 'ok';
         } else {
