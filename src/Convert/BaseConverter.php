@@ -443,7 +443,7 @@ class BaseConverter
         $source = $this->source;
         $destination = $this->destination;
 
-        if (!@file_exists($this->destination)) {
+        if (!@file_exists($destination)) {
             throw new ConverterFailedException('Destination file is not there');
         } elseif (@filesize($destination) === 0){
             @unlink($destination);
