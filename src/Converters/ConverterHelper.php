@@ -96,6 +96,9 @@ class ConverterHelper
 
         if (!@file_exists($destination)) {
             throw new ConverterFailedException('Destination file is not there');
+        } elseif (@filesize($destination) === 0) {
+            @unlink($destination);
+            throw new ConverterFailedException('Destination file was completely empty');
         } else {
             $sourceSize = @filesize($source);
             if ($sourceSize !== false) {

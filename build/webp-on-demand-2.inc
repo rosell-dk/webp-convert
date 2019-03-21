@@ -132,6 +132,9 @@ class ConverterHelper
 
         if (!@file_exists($destination)) {
             throw new ConverterFailedException('Destination file is not there');
+        } elseif (@filesize($destination) === 0) {
+            @unlink($destination);
+            throw new ConverterFailedException('Destination file was completely empty');
         } else {
             $sourceSize = @filesize($source);
             if ($sourceSize !== false) {
@@ -1237,20 +1240,31 @@ class Gd
 
     /**
      *
-     *  @return Returns TRUE if the convertion was complete, or if the source image already is a true color image, otherwise FALSE is returned.
+     *  @return Returns TRUE if the convertion was complete, or if the source image already is a true color image,
+     *          otherwise FALSE is returned.
      */
-    public static function makeTrueColor(&$image) {
+    public static function makeTrueColor(&$image)
+    {
         if (function_exists('imagepalettetotruecolor')) {
             return imagepalettetotruecolor($image);
         } else {
             // Got the workaround here: https://secure.php.net/manual/en/function.imagepalettetotruecolor.php
-            if ((function_exists('imageistruecolor') && !imageistruecolor($image)) || !function_exists('imageistruecolor')) {
+            if ((function_exists('imageistruecolor') && !imageistruecolor($image))
+                || !function_exists('imageistruecolor')
+            ) {
                 if (self::functionsExist(['imagecreatetruecolor', 'imagealphablending', 'imagecolorallocatealpha',
                         'imagefilledrectangle', 'imagecopy', 'imagedestroy', 'imagesx', 'imagesy'])) {
                     $dst = imagecreatetruecolor(imagesx($image), imagesy($image));
-                    imagealphablending($dst, false);    //prevent blending with default black
-                    $transparent = imagecolorallocatealpha($dst, 255, 255, 255, 127);   //change the RGB values if you need, but leave alpha at 127
-                    imagefilledrectangle($dst, 0, 0, imagesx($image), imagesy($image), $transparent);   //simpler than flood fill
+
+                    //prevent blending with default black
+                    imagealphablending($dst, false);
+
+                    //change the RGB values if you need, but leave alpha at 127
+                    $transparent = imagecolorallocatealpha($dst, 255, 255, 255, 127);
+
+                    //simpler than flood fill
+                    imagefilledrectangle($dst, 0, 0, imagesx($image), imagesy($image), $transparent);
+
                     imagealphablending($dst, true);     //restore default blending
                     imagecopy($dst, $image, 0, 0, 0, 0, imagesx($image), imagesy($image));
                     imagedestroy($image);
@@ -1324,7 +1338,9 @@ class Gd
             $logger->logLn('converting color palette to true color');
             $success = self::makeTrueColor($image);
             if (!$success) {
-                $logger->logLn('Warning: FAILED converting color palette to true color. Continuing, but this does not look good.');
+                $logger->logLn(
+                    'Warning: FAILED converting color palette to true color. Continuing, but this does not look good.'
+                );
             }
         }
         if (ConverterHelper::getExtension($source) == 'png') {
@@ -1333,14 +1349,20 @@ class Gd
                     $logger->logLn('Warning: imagealphablending() failed');
                 }
             } else {
-                $logger->logLn('Warning: imagealphablending() is not available on your system. Converting PNGs with transparency might fail on some systems');
+                $logger->logLn(
+                    'Warning: imagealphablending() is not available on your system. ' .
+                    'Converting PNGs with transparency might fail on some systems'
+                );
             }
             if (function_exists('imagesavealpha')) {
                 if (!imagesavealpha($image, true)) {
                     $logger->logLn('Warning: imagesavealpha() failed');
                 }
             } else {
-                $logger->logLn('Warning: imagesavealpha() is not available on your system. Converting PNGs with transparency might fail on some systems');
+                $logger->logLn(
+                    'Warning: imagesavealpha() is not available on your system. ' .
+                    'Converting PNGs with transparency might fail on some systems'
+                );
             }
         }
 
