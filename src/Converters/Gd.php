@@ -76,6 +76,8 @@ class Gd extends BaseConverter
             );
         }
 
+        $this->logLn('GD Version: ' . gd_info()["GD Version"]);
+
         // Btw: Check out processWebp here:
         // https://github.com/Intervention/image/blob/master/src/Intervention/Image/Gd/Encoder.php
 
