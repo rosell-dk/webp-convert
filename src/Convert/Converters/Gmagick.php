@@ -71,7 +71,11 @@ class Gmagick extends AbstractConverter
         try {
             $imageBlob = $im->getImageBlob();
         } catch (\ImagickException $e) {
-            throw new ConversionFailedException('Gmagick failed converting - getImageBlob() threw an exception)', 0, $e);
+            throw new ConversionFailedException(
+                'Gmagick failed converting - getImageBlob() threw an exception)',
+                0,
+                $e
+            );
         }
 
 

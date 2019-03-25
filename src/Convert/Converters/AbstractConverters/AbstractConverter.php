@@ -353,7 +353,9 @@ class AbstractConverter
         // Try to create a dummy file here, with that name, just to see if it is possible (we delete it again)
         @file_put_contents($filePath, '');
         if (@file_put_contents($filePath, '') === false) {
-            throw new CreateDestinationFileException('Cannot create file: ' . basename($filePath) . ' in dir:' . $folder);
+            throw new CreateDestinationFileException(
+                'Cannot create file: ' . basename($filePath) . ' in dir:' . $folder
+            );
         }
         @unlink($filePath);
 
@@ -461,7 +463,7 @@ class AbstractConverter
 
         if (!@file_exists($destination)) {
             throw new ConversionFailedException('Destination file is not there');
-        } elseif (@filesize($destination) === 0){
+        } elseif (@filesize($destination) === 0) {
             @unlink($destination);
             throw new ConversionFailedException('Destination file was completely empty');
         } else {

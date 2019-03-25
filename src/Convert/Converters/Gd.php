@@ -104,7 +104,9 @@ class Gd extends AbstractConverter
                 }
                 $image = imagecreatefromjpeg($this->source);
                 if (!$image) {
-                    throw new ConversionFailedException('Gd failed when trying to load/create image (imagecreatefromjpeg() failed)');
+                    throw new ConversionFailedException(
+                        'Gd failed when trying to load/create image (imagecreatefromjpeg() failed)'
+                    );
                 }
         }
 
@@ -162,7 +164,8 @@ class Gd extends AbstractConverter
 
         if (!$success) {
             throw new ConversionFailedException(
-                'Gd failed when trying to save the image as webp (call to imagewebp() failed). It probably failed writing file. Check file permissions!'
+                'Gd failed when trying to save the image as webp (call to imagewebp() failed). ' .
+                'It probably failed writing file. Check file permissions!'
             );
         }
 
