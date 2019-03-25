@@ -44,7 +44,7 @@ class ConverterTestHelper
         }
     }
 */
-    private function callConvert($converterClassName, $source, $destination, $converterOptions)
+    private static function callConvert($converterClassName, $source, $destination, $converterOptions)
     {
         return call_user_func(
             ['WebPConvert\\Convert\\Converters\\' . $converterClassName, 'convert'],
@@ -61,7 +61,7 @@ class ConverterTestHelper
         */
     }
 
-    public function testInvalidDestinationFolder($testCase, $converterClassName, $converterOptions)
+    public static function testInvalidDestinationFolder($testCase, $converterClassName, $converterOptions)
     {
         $testCase->expectException(CreateDestinationFolderException::class);
 
@@ -99,7 +99,7 @@ class ConverterTestHelper
         }*/
     }
 
-    public function testTargetNotFound($testCase, $converterClassName, $converterOptions)
+    public static function testTargetNotFound($testCase, $converterClassName, $converterOptions)
     {
         $testCase->expectException(TargetNotFoundException::class);
 
@@ -119,7 +119,7 @@ class ConverterTestHelper
      * - It must not return anything (as of 2.0, there is no return value)
      * - If conversion is successful, there must be a file at the destination
      */
-    public function testConvert($testCase, $converterClassName, $converterOptions)
+    public static function testConvert($testCase, $converterClassName, $converterOptions)
     {
 
         try {
@@ -159,7 +159,7 @@ class ConverterTestHelper
         }
     }
 
-    public function runAllConvertTests($testCase, $converterClassName, $converterOptions = [])
+    public static function runAllConvertTests($testCase, $converterClassName, $converterOptions = [])
     {
         self::testConvert($testCase, $converterClassName, $converterOptions);
         self::testTargetNotFound($testCase, $converterClassName, $converterOptions);
