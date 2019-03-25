@@ -2,8 +2,15 @@
 namespace WebPConvert\Serve;
 
 use WebPConvert\WebPConvert;
+use WebPConvert\Convert\Exceptions\ConversionFailedException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFileException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFolderException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFoundException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidFileExtensionException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
+
 use WebPConvert\Loggers\BufferLogger;
-use WebPConvert\Converters\ConverterHelper;
 use WebPConvert\Serve\Report;
 
 /**
@@ -141,30 +148,30 @@ class ServeConverted extends ServeBase
                 $description = 'No converters are operational';
                 $msg = '';
             }
-        } catch (\WebPConvert\Exceptions\InvalidFileExtensionException $e) {
+        } catch (InvalidFileExtensionException $e) {
             $criticalFail = true;
             $description = 'Invalid file extension';
             $msg = $e->getMessage();
-        } catch (\WebPConvert\Exceptions\TargetNotFoundException $e) {
+        } catch (TargetNotFoundException $e) {
             $criticalFail = true;
             $description = 'Source file not found';
             $msg = $e->getMessage();
-        } catch (\WebPConvert\Converters\Exceptions\ConverterFailedException $e) {
+        } catch (ConversionFailedException $e) {
             // No converters could convert the image. At least one converter failed, even though it appears to be
             // operational
             $description = 'No converters could convert the image';
             $msg = $e->getMessage();
-        } catch (\WebPConvert\Converters\Exceptions\ConversionDeclinedException $e) {
+        } catch (ConversionDeclinedException $e) {
             // (no converters could convert the image. At least one converter declined
             $description = 'No converters could/wanted to convert the image';
             $msg = $e->getMessage();
-        } catch (\WebPConvert\Exceptions\ConverterNotFoundException $e) {
+        } catch (ConverterNotFoundException $e) {
             $description = 'A converter was not found!';
             $msg = $e->getMessage();
-        } catch (\WebPConvert\Exceptions\CreateDestinationFileException $e) {
+        } catch (CreateDestinationFileException $e) {
             $description = 'Cannot create destination file';
             $msg = $e->getMessage();
-        } catch (\WebPConvert\Exceptions\CreateDestinationFolderException $e) {
+        } catch (CreateDestinationFolderException $e) {
             $description = 'Cannot create destination folder';
             $msg = $e->getMessage();
         } catch (\Exception $e) {

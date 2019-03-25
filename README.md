@@ -8,6 +8,9 @@ This library enables you to do webp conversion with PHP using *cwebp*, *gd*, *im
 
 In addition to converting, the library also has a method for *serving* converted images, and we have instructions here on how to set up a solution for automatically serving webp images to browsers that supports webp.
 
+**NOTE: This master branch contains code for the upcoming 2.0 release. It is not stable at all.**
+
+
 ## Installation
 Require the library with *Composer*, like this:
 
@@ -52,6 +55,9 @@ $success = WebPConvert::convert($source, $destination, [
     // more options available! - see the api
 ]);
 ```
+
+**NOTE: In 2.0.0, WebPConvert will not return any value. Failure is handled purely by exceptions (1.3, also throws exceptions, but not when the failure is that no converters were operational)**
+
 
 To convert using a specific conversion method, simply set the *converters* option so it only has that method.
 

@@ -2,7 +2,7 @@
 namespace WebPConvert\Serve;
 
 use WebPConvert\WebPConvert;
-use WebPConvert\Converters\ConverterHelper;
+use WebPConvert\Convert\Converters\ConverterHelper;
 use WebPConvert\Loggers\EchoLogger;
 
 //use WebPConvert\Loggers\EchoLogger;

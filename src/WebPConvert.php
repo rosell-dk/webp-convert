@@ -2,8 +2,8 @@
 
 namespace WebPConvert;
 
-//use WebPConvert\Converters\ConverterHelper;
-use WebPConvert\Converters\Stack;
+//use WebPConvert\Convert\Converters\ConverterHelper;
+use WebPConvert\Convert\Converters\Stack;
 use WebPConvert\Serve\ServeExistingOrHandOver;
 
 class WebPConvert
