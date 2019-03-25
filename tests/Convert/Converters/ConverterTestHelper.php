@@ -46,18 +46,19 @@ class ConverterTestHelper
 */
     private function callConvert($converterClassName, $source, $destination, $converterOptions)
     {
+        return call_user_func(
+            ['WebPConvert\\Convert\\Converters\\' . $converterClassName, 'convert'],
+            $source,
+            $destination,
+            $converterOptions
+        );
+        //$logger
+
         /*
         TODO: Consider using mikey179/vfsStream
         https://github.com/mikey179/vfsStream
         https://phpunit.de/manual/6.5/en/test-doubles.html#test-doubles.mocking-the-filesystem
         */
-        return call_user_func(
-            ['WebPConvert\\Convert\\Converters\\' . $converterClassName, 'convert'],
-            $source,
-            $destination,
-            $converterOptions,
-            //$logger
-        );
     }
 
     public function testInvalidDestinationFolder($testCase, $converterClassName, $converterOptions)
