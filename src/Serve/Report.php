@@ -166,7 +166,7 @@ class Report
 
         try {
             $echoLogger = new EchoLogger();
-            $success = WebPConvert::convert($source, $destination, $options, $echoLogger);
+            WebPConvert::convert($source, $destination, $options, $echoLogger);
         } catch (\Exception $e) {
             $success = false;
 
@@ -174,12 +174,6 @@ class Report
 
             echo '<b>' . $msg . '</b>';
             exit;
-        }
-
-        if ($success) {
-            //echo 'ok';
-        } else {
-            echo '<b>Conversion failed. None of the tried converters are operational</b>';
         }
         ?>
     </body>

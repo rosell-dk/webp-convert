@@ -68,15 +68,19 @@ RequireGenerator::generate([
     'destination' => '../src/require-all.inc',
     'files' => [
         // put base classes here
-        'Exceptions/WebPConvertBaseException.php',
-        'Loggers/BaseLogger.php'
+        'Convert/Exceptions/ConversionFailedException.php',
+        'Convert/Exceptions/ConversionFailed/ConverterNotOperationalException.php',
+        'Convert/Exceptions/ConversionFailed/FileSystemProblemsException.php',
+        'Convert/Exceptions/ConversionFailed/InvalidInputException.php',
+        'Loggers/BaseLogger.php',
+        'Convert/Converters/AbstractConverters/AbstractConverter',
     ],
     'dirs' => [
         // dirs will be required in specified order. There is no recursion, so you need to specify subdirs as well.
         '.',
-        'Converters',
-        'Exceptions',
-        'Converters/Exceptions',
+        'Convert/Converters/AbstractConverters',
+        'Convert/Converters',
+        'Convert/Exceptions',
         'Loggers',
         'Serve',
     ]

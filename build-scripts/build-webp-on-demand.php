@@ -5,20 +5,22 @@ ini_set("display_errors", 1);
 require_once('PHPMerger.php');
 //use PHPMerger;
 
+
+$filesInWod1 = [
+    '/Serve/ServeBase.php',
+    '/Serve/ServeExistingOrHandOver.php',
+    '/WebPConvert.php'
+];
+
 // Build "webp-on-demand-1.php" (for non-composer projects)
+
 PhpMerger::generate([
     'destination' => '../build/webp-on-demand-1.inc',
 
     'jobs' => [
         [
-            'root' => './',
-            'files' => [
-                // put base classes here
-                '../src/WebPConvert.php',
-                '../src/Serve/ServeBase.php',
-                '../src/Serve/ServeExistingOrHandOver.php',
-                //'webp-on-demand-script.inc',
-            ],
+            'root' => '../src/',
+            'files' => $filesInWod1,
             'dirs' => [
                 // dirs will be required in specified order. There is no recursion, so you need to specify subdirs as well.
                 //'.',
@@ -27,63 +29,61 @@ PhpMerger::generate([
     ]
 ]);
 
-// Build "webp-on-demand-2.inc"
-PhpMerger::generate([
-    'destination' => '../build/webp-on-demand-2.inc',
+$jobsEverything = [
+    [
+        'root' => '../src/',
 
-    'jobs' => [
-        [
-            'root' => '../src/',
-
-            'files' => [
-                // put base classes here
-                'Exceptions/WebPConvertBaseException.php',
-                'Loggers/BaseLogger.php'
-            ],
-            'dirs' => [
-                // dirs will be required in specified order. There is no recursion, so you need to specify subdirs as well.
-                //'.',
-                '.',
-                'Converters',
-                'Exceptions',
-                'Converters/Exceptions',
-                'Loggers',
-                'Serve',
-            ],
-            'exclude' => [
-                '/Serve/ServeBase.php',
-                '/Serve/ServeExistingOrHandOver.php',
-                '/WebPConvert.php'
-            ]
+        'files' => [
+            // put base classes here
+            'Convert/Converters/AbstractConverters',
+            'Convert/Converters',
+            'Convert/Exceptions',
+            'Loggers',
+            'Serve',
         ],
-    ]
-]);
+        'dirs' => [
+            // dirs will be required in specified order. There is no recursion, so you need to specify subdirs as well.
+            //'.',
+            '.',
+            'Convert/Converters/AbstractConverters',
+            'Convert/Converters',
+            'Convert/Exceptions',
+            'Loggers',
+            'Serve',
+        ],
+        'exclude' => [
+        ]
+    ],
+    [
+        'root' => '../vendor/rosell-dk/image-mime-type-guesser/src/',
+
+        'files' => [
+            // put base classes here
+            'Detectors/BaseDetector.php',
+        ],
+        'dirs' => [
+            // dirs will be required in specified order. There is no recursion, so you need to specify subdirs as well.
+            //'.',
+            '.',
+            'Detectors',
+        ],
+        'exclude' => [
+        ]
+    ],
+];
 
 // Build "webp-convert.inc", containing the entire library (for the lazy ones)
 PhpMerger::generate([
     'destination' => '../build/webp-convert.inc',
+    'jobs' => $jobsEverything
+]);
 
-    'jobs' => [
-        [
-            'root' => '../src/',
+$jobsWod2 = $jobsEverything;
+$jobsWod2[0]['exclude'] = $filesInWod1;
 
-            'files' => [
-                // put base classes here
-                'Exceptions/WebPConvertBaseException.php',
-                'Loggers/BaseLogger.php'
-            ],
-            'dirs' => [
-                // dirs will be required in specified order. There is no recursion, so you need to specify subdirs as well.
-                //'.',
-                '.',
-                'Converters',
-                'Exceptions',
-                'Converters/Exceptions',
-                'Loggers',
-                'Serve',
-            ],
-            'exclude' => [
-            ]
-        ],
-    ]
+// Build "webp-on-demand-2.inc"
+// It must contain everything EXCEPT those classes that were included in 'webp-on-demand-1.inc'
+PhpMerger::generate([
+    'destination' => '../build/webp-on-demand-2.inc',
+    'jobs' => $jobsWod2
 ]);

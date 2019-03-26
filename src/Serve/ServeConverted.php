@@ -87,66 +87,63 @@ class ServeConverted extends ServeBase
         $bufferLogger = new BufferLogger();
 
         try {
-            $success = WebPConvert::convert($this->source, $this->destination, $this->options, $bufferLogger);
+            WebPConvert::convert($this->source, $this->destination, $this->options, $bufferLogger);
 
-            if ($success) {
-                // Serve source if it is smaller than destination
-                $filesizeDestination = @filesize($this->destination);
-                $filesizeSource = @filesize($this->source);
-                if (($filesizeSource !== false) &&
-                    ($filesizeDestination !== false) &&
-                    ($filesizeDestination > $filesizeSource)) {
-                    $this->whatToServe = 'original';
-                    $this->whyServingThis = 'source-lighter';
-                    return $this->serveOriginal();
-                }
+            // We are here, so it was successful :)
 
-                if (!$this->callAboutToServeImageCallBack('fresh-conversion')) {
-                    return;
-                }
-                if ($this->options['add-content-type-header']) {
-                    $this->header('Content-type: image/webp');
-                }
-                if ($this->whyServingThis == 'explicitly-told-to') {
-                    $this->addXStatusHeader(
-                        'Serving freshly converted image (was explicitly told to reconvert)'
-                    );
-                } elseif ($this->whyServingThis == 'source-modified') {
-                    $this->addXStatusHeader(
-                        'Serving freshly converted image (the original had changed)'
-                    );
-                } elseif ($this->whyServingThis == 'no-existing') {
-                    $this->addXStatusHeader(
-                        'Serving freshly converted image (there were no existing to serve)'
-                    );
-                } else {
-                    $this->addXStatusHeader(
-                        'Serving freshly converted image (dont know why!)'
-                    );
-                }
+            // Serve source if it is smaller than destination
+            $filesizeDestination = @filesize($this->destination);
+            $filesizeSource = @filesize($this->source);
+            if (($filesizeSource !== false) &&
+                ($filesizeDestination !== false) &&
+                ($filesizeDestination > $filesizeSource)) {
+                $this->whatToServe = 'original';
+                $this->whyServingThis = 'source-lighter';
+                return $this->serveOriginal();
+            }
 
-                if ($this->options['add-vary-header']) {
-                    $this->header('Vary: Accept');
-                }
-
-                if ($this->whyServingThis == 'no-existing') {
-                    $this->addCacheControlHeader();
-                } else {
-                    $this->addHeadersPreventingCaching();
-                }
-                $this->addLastModifiedHeader(time());
-
-                // Should we add Content-Length header?
-                // $this->header('Content-Length: ' . filesize($file));
-                if (@readfile($this->destination)) {
-                    return true;
-                } else {
-                    $this->fail('Error', 'could not read the freshly converted file');
-                    return false;
-                }
+            if (!$this->callAboutToServeImageCallBack('fresh-conversion')) {
+                return;
+            }
+            if ($this->options['add-content-type-header']) {
+                $this->header('Content-type: image/webp');
+            }
+            if ($this->whyServingThis == 'explicitly-told-to') {
+                $this->addXStatusHeader(
+                    'Serving freshly converted image (was explicitly told to reconvert)'
+                );
+            } elseif ($this->whyServingThis == 'source-modified') {
+                $this->addXStatusHeader(
+                    'Serving freshly converted image (the original had changed)'
+                );
+            } elseif ($this->whyServingThis == 'no-existing') {
+                $this->addXStatusHeader(
+                    'Serving freshly converted image (there were no existing to serve)'
+                );
             } else {
-                $description = 'No converters are operational';
-                $msg = '';
+                $this->addXStatusHeader(
+                    'Serving freshly converted image (dont know why!)'
+                );
+            }
+
+            if ($this->options['add-vary-header']) {
+                $this->header('Vary: Accept');
+            }
+
+            if ($this->whyServingThis == 'no-existing') {
+                $this->addCacheControlHeader();
+            } else {
+                $this->addHeadersPreventingCaching();
+            }
+            $this->addLastModifiedHeader(time());
+
+            // Should we add Content-Length header?
+            // $this->header('Content-Length: ' . filesize($file));
+            if (@readfile($this->destination)) {
+                return true;
+            } else {
+                $this->fail('Error', 'could not read the freshly converted file');
+                return false;
             }
         } catch (InvalidFileExtensionException $e) {
             $criticalFail = true;
