@@ -16,6 +16,12 @@ use \ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 
 abstract class AbstractConverter
 {
+    /**
+     *  The actual conversion must be done by a concrete class.
+     *
+     */
+    abstract protected function doConvert();
+
     public $source;
     public $destination;
     public $options;
@@ -36,8 +42,7 @@ abstract class AbstractConverter
         'skip-pngs' => false,
     ];
 
-    abstract protected function doConvert();
-    
+
     public function __construct($source, $destination, $options = [], $logger = null)
     {
         if (!isset($logger)) {
@@ -47,6 +52,16 @@ abstract class AbstractConverter
         $this->destination = $destination;
         $this->options = $options;
         $this->logger = $logger;
+    }
+
+    /**
+     *  Default display name is simply the class name (short).
+     *  Converters can override this.
+     */
+    protected static function getConverterDisplayName()
+    {
+        // https://stackoverflow.com/questions/19901850/how-do-i-get-an-objects-unqualified-short-class-name/25308464
+        return substr(strrchr('\\' . static::class, '\\'), 1);
     }
 
     public static function createInstance($source, $destination, $options, $logger)
@@ -139,6 +154,8 @@ abstract class AbstractConverter
     {
         $instance = self::createInstance($source, $destination, $options, $logger);
 
+        //$instance->logLn($instance->getConverterDisplayName() . ' converter ignited');
+        $instance->logLn(self::getConverterDisplayName() . ' converter ignited');
         $instance->prepareConvert();
         try {
             $instance->doConvert();
@@ -464,20 +481,19 @@ abstract class AbstractConverter
         $destination = $this->destination;
 
         if (!@file_exists($destination)) {
-            throw new ConversionFailedException('Destination file is not there');
+            throw new ConversionFailedException('Destination file is not there: ' . $destination);
         } elseif (@filesize($destination) === 0) {
             @unlink($destination);
             throw new ConversionFailedException('Destination file was completely empty');
         } else {
             if (!isset($this->options['_suppress_success_message'])) {
-                $this->logLn(
-                    'Successfully converted image in ' .
-                    round((microtime(true) - $this->beginTime) * 1000) . ' ms'
-                );
+                $this->ln();
+                $msg = 'Successfully converted image in ' .
+                    round((microtime(true) - $this->beginTime) * 1000) . ' ms';
 
                 $sourceSize = @filesize($source);
                 if ($sourceSize !== false) {
-                    $msg = 'Reduced file size with ' .
+                    $msg .= ', reducing file size with ' .
                         round((filesize($source) - filesize($destination))/filesize($source) * 100) . '% ';
 
                     if ($sourceSize < 10000) {
@@ -487,8 +503,8 @@ abstract class AbstractConverter
                         $msg .= '(went from ' . round(filesize($source)/1024) . ' kb to ';
                         $msg .= round(filesize($destination)/1024) . ' kb)';
                     }
-                    $this->logLn($msg);
                 }
+                $this->logLn($msg);
             }
         }
     }

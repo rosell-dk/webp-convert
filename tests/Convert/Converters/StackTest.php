@@ -20,10 +20,27 @@ class StackTest extends TestCase
     {
         $this->expectException(ConverterNotFoundException::class);
 
-        Stack::convert(__DIR__ . '/../../test.jpg', __DIR__ . '/../../test.webp', [
-            'converters' => ['invalid-id']
-        ]);
+        Stack::convert(
+            __DIR__ . '/../../test.jpg',
+            __DIR__ . '/../../test.webp',
+            [
+                'converters' => ['invalid-id']
+            ]
+        );
+    }
 
+    public function testCustomConverter()
+    {
+        Stack::convert(
+            __DIR__ . '/../../test.jpg',
+            __DIR__ . '/../../test.webp',
+            [
+                'converters' => [
+                    '\\WebPConvert\\Tests\\Convert\\Converters\\SuccessGuaranteedConverter'
+                ]
+            ]
+        );
+        $this->addToAssertionCount(1);
     }
 
 }

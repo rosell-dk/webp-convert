@@ -74,7 +74,7 @@ WebPConvert::convert($source, $destination, [
     ];
 )
 ```
-
+In 2.0, it will be possible to use your own custom converter. Instead of the "converter id" (ie "ewww"), specify the full class name of your custom converter. Ie '\\MyProject\\BraveConverter'. The converter must extend `\WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter` and you must implement `doConvert()` and the define the extra options it takes (check out how it is done in the build-in converters).
 
 ### More on the `$logger` parameter
 WebPConvert and the individual converters can provide information regarding the conversion process. Per default (when the parameter isn't provided), they write this to `\WebPConvert\Loggers\VoidLogger`, which does nothing with it.

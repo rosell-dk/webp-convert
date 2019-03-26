@@ -45,7 +45,16 @@ class Stack extends AbstractConverter
 
     public static function getClassNameOfConverter($converterId)
     {
-        return 'WebPConvert\\Convert\\Converters\\' . ucfirst($converterId);
+        $className = 'WebPConvert\\Convert\\Converters\\' . ucfirst($converterId);
+        if (!is_callable([$className, 'convert'])) {
+            $className = $converterId;
+        }
+
+        if (!is_callable([$className, 'convert'])) {
+            throw new ConverterNotFoundException('There is no converter with id:' . $converterId);
+        }
+
+        return $className;
     }
 
     // Although this method is public, do not call directly.
@@ -102,12 +111,20 @@ class Stack extends AbstractConverter
             // However, such an error should be corrected, so we decided to fail in that case (and skip rest of queue)
             $className = self::getClassNameOfConverter($converterId);
             if (!is_callable([$className, 'convert'])) {
-                throw new ConverterNotFoundException('There is no converter with id:' . $converterId);
+                throw new ConverterNotFoundException(
+                    'There is no converter with id:' . $converterId .
+                    ' (and it is not a class either)'
+                );
             }
 
+
             try {
+                $converterDisplayName = call_user_func(
+                    [$className, 'getConverterDisplayName']
+                );
+
                 $this->ln();
-                $this->logLn('Trying:' . $converterId, 'italic');
+                $this->logLn('Trying: ' . $converterId, 'italic');
 
                 call_user_func(
                     [$className, 'convert'],
@@ -119,19 +136,29 @@ class Stack extends AbstractConverter
 
                 //self::runConverterWithTiming($converterId, $source, $destination, $converterOptions, false, $logger);
 
-                $this->logLnLn('success');
-                return true;
+                $this->logLn($converterDisplayName . ' succeeded :)');
+                return;
             } catch (\WebPConvert\Convert\Exceptions\ConverterNotOperationalException $e) {
                 $this->logLn($e->getMessage());
             } catch (\WebPConvert\Convert\Exceptions\ConversionFailedException $e) {
-                $this->logLn($e->getMessage());
+                $this->logLn($e->getMessage(), 'italic');
+                $prev = $e->getPrevious();
+                if (!is_null($prev)) {
+                    $this->logLn($prev->getMessage(), 'italic');
+                    $this->logLn(' in ' . $prev->getFile() . ', line ' . $prev->getLine(), 'italic');
+                    $this->ln();
+                }
+                //$this->logLn($e->getTraceAsString());
                 $anyRuntimeErrors = true;
             } catch (\WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException $e) {
                 $this->logLn($e->getMessage());
             }
 
-            $this->logLn('Failed in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
+            $this->logLn($converterDisplayName . ' failed in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
         }
+
+        $this->ln();
+        $this->logLn('Stack failed in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
 
         if ($anyRuntimeErrors) {
             // At least one converter failed
