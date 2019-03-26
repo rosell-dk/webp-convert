@@ -7,7 +7,7 @@ use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
-class AbstractExecConverter extends AbstractConverter
+abstract class AbstractExecConverter extends AbstractConverter
 {
     public static function escapeFilename($string)
     {

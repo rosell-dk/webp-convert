@@ -6,7 +6,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
 
-class AbstractCloudConverter extends AbstractConverter
+abstract class AbstractCloudConverter extends AbstractConverter
 {
     public static function testCurlRequirements()
     {

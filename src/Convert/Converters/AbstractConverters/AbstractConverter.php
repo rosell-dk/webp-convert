@@ -14,7 +14,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 use \ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 
-class AbstractConverter
+abstract class AbstractConverter
 {
     public $source;
     public $destination;
@@ -36,6 +36,8 @@ class AbstractConverter
         'skip-pngs' => false,
     ];
 
+    abstract protected function doConvert();
+    
     public function __construct($source, $destination, $options = [], $logger = null)
     {
         if (!isset($logger)) {
