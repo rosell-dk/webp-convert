@@ -15,7 +15,7 @@ class Gmagick extends AbstractConverter
     // Although this method is public, do not call directly.
     // You should rather call the static convert() function, defined in AbstractConverter, which
     // takes care of preparing stuff before calling doConvert, and validating after.
-    public function doConvert()
+    protected function doConvert()
     {
         if (!extension_loaded('Gmagick')) {
             throw new SystemRequirementsNotMetException('Required Gmagick extension is not available.');
