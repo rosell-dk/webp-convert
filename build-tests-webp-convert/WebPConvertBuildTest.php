@@ -35,6 +35,7 @@ class WebPConvertBuildTest extends TestCase
                 }
             ]
         );
+        $this->addToAssertionCount(1);
 
     }
 

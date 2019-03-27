@@ -96,5 +96,6 @@ class WodBuildTest extends TestCase
                 }
             ]
         );
+        $this->addToAssertionCount(1);
     }
 }
