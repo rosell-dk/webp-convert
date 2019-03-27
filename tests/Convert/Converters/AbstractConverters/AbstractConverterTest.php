@@ -25,5 +25,16 @@ class AbstractConverterTest extends TestCase
     {
         $this->assertEquals('image/jpeg', AbstractConverter::getMimeType(self::$imgDir . '/test.jpg'));
         $this->assertEquals('image/png', AbstractConverter::getMimeType(self::$imgDir . '/test.png'));
+
+        $mimeTypeMaybeDetected = AbstractConverter::getMimeType(self::$imgDir . '/png-without-extension');
+        if ($mimeTypeMaybeDetected === false) {
+            // It was not detected, and that is ok!
+            // - it is not possible to detect mime type on all platforms. In case it could not be detected,
+            // - and file extension could not be mapped either, the method returns false.
+            $this->addToAssertionCount(1);
+        } else {
+            $this->assertEquals('image/png', $mimeTypeMaybeDetected);
+        }
+
     }
 }
