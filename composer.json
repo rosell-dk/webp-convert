@@ -7,13 +7,17 @@
   "scripts": {
     "ci": [
       "@build",
-      "@test",
+      "@test-all",
       "@phpcs-all",
       "@composer validate --no-check-all --strict"
     ],
+    "test-all": [
+      "@test build-tests-wod",
+      "@test build-tests-webp-convert",
+      "@test"
+    ],
     "build": [
       "@build-wod",
-      "@build-require-all"
     ],
     "cs-fix-all": [
       "php-cs-fixer fix src"
@@ -25,7 +29,6 @@
     "phpcs-all": "phpcs --standard=PSR2 src",
     "phpcbf": "phpcbf --standard=PSR2",
     "build-wod": "php build-scripts/build-webp-on-demand.php",
-    "build-require-all": "php build-scripts/generate-require-all.php"
   },
   "extra": {
       "scripts-descriptions": {
@@ -56,7 +59,7 @@
     }
   ],
   "require": {
-      "rosell-dk/image-mime-type-guesser": "^0.1"
+      "rosell-dk/image-mime-type-guesser": "^0.2"
   },
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^2.11",

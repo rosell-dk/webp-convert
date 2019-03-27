@@ -26,8 +26,7 @@ class WebPConvertBuildTest extends TestCase
             $source . '.webp',
             [
                 'reconvert' => true,
-                'require-for-conversion' => __DIR__ . '/../build/webp-on-demand-2.inc',
-                'converters' => ['imagick'],
+                //'converters' => ['imagick'],
                 'aboutToServeImageCallBack' => function($servingWhat, $whyServingThis, $obj) {
                     return false;
                 },
