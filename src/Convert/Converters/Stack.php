@@ -45,13 +45,17 @@ class Stack extends AbstractConverter
 
     public static function getClassNameOfConverter($converterId)
     {
-        $className = 'WebPConvert\\Convert\\Converters\\' . ucfirst($converterId);
-        if (!is_callable([$className, 'convert'])) {
-            $className = $converterId;
+        if (strtolower($converterId) == $converterId) {
+            $className = 'WebPConvert\\Convert\\Converters\\' . ucfirst($converterId);
+            if (is_callable([$className, 'convert'])) {
+                return $className;
+            } else {
+                throw new ConverterNotFoundException('There is no converter with id:' . $converterId);
+            }
         }
-
+        $className = $converterId;
         if (!is_callable([$className, 'convert'])) {
-            throw new ConverterNotFoundException('There is no converter with id:' . $converterId);
+            throw new ConverterNotFoundException('There is no converter with class name:' . $className);
         }
 
         return $className;
