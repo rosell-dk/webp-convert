@@ -10,11 +10,12 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDes
 use PHPUnit\Framework\TestCase;
 
 /**
- *  Test the builds (webp-convert.inc, webp-on-demand-1.inc and webp-on-demand-2.inc)
+ *  Test the complete build (webp-convert.inc)
  */
 class WebPConvertBuildTest extends TestCase
 {
-    public function testWebPConvertBuild()
+
+    public function testWebPConvertBuildNotCompletelyBroken()
     {
         require __DIR__ . '/../build/webp-convert.inc';
 

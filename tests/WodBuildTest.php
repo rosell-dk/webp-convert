@@ -7,11 +7,11 @@ use WebPConvert\WebPConvert;
 use PHPUnit\Framework\TestCase;
 
 /**
- *  Test the builds (webp-convert.inc, webp-on-demand-1.inc and webp-on-demand-2.inc)
+ *  Test the webp-on-demand builds (webp-on-demand-1.inc and webp-on-demand-2.inc)
  */
 class WodBuildTest extends TestCase
 {
-    public function testWodBuild()
+    public function testWodBuildNotCompletelyBroken()
     {
 
         require __DIR__ . '/../build/webp-on-demand-1.inc';
