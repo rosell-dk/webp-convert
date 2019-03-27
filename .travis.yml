@@ -16,5 +16,3 @@ before_script:
 
 script:
   - composer test
-  - composer test build-tests-wod
-  - composer test build-tests-webp-convert
