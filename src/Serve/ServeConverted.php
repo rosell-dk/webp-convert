@@ -7,7 +7,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFileException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFolderException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFoundException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidFileExtensionException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
 use WebPConvert\Loggers\BufferLogger;
@@ -145,7 +145,7 @@ class ServeConverted extends ServeBase
                 $this->fail('Error', 'could not read the freshly converted file');
                 return false;
             }
-        } catch (InvalidFileExtensionException $e) {
+        } catch (InvalidImageTypeException $e) {
             $criticalFail = true;
             $description = 'Invalid file extension';
             $msg = $e->getMessage();

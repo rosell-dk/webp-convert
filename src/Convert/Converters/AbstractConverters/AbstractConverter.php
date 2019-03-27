@@ -8,7 +8,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\UnhandledException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFileException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFolderException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFoundException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidFileExtensionException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
@@ -27,8 +27,8 @@ abstract class AbstractConverter
     public $options;
     public $logger;
     public $beginTime;
+    public $sourceMimeType;
 
-    public static $allowedExtensions = ['jpg', 'jpeg', 'png'];
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
 
     public static $defaultOptions = [
@@ -192,41 +192,29 @@ abstract class AbstractConverter
         $this->logger->log($msg);
     }
 
-    public static function getExtension($filePath)
-    {
-        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
-        return strtolower($fileExtension);
-    }
-
-    public function getSourceExtension()
-    {
-        return self::getExtension($this->source);
-    }
-
     /**
-     *  Get mime type for image.
-     *  Our function only needs to identify the following mime types:
-     *  - "image/jpeg"
-     *  - "image/png"
+     *  Get mime type for image (best guess)
+     *  It falls back to using file extension.
+     *  If that fails too, false is returned
      *
-     *  Anything else may or may not result in false being returned.
+     *  PS: Is it a security risk to fall back on file extension?
+     *  - By setting file extension to "jpg", one can lure our library into trying to convert a file, which isn't a jpg.
+     *    hmm, seems very unlikely, though not unthinkable that one of the converters could be exploited
      */
     public static function getMimeType($filePath)
     {
-        // fallback to using pathinfo
-        // is this a security risk? - By setting file extension to "jpg", one can
-        // lure our library into trying to convert a file, which isn't a jpg.
-        // hm, seems very unlikely, though not unthinkable that one of the converters could be exploited
-
-        return ImageMimeTypeGuesser::guess($filePath);
+        return ImageMimeTypeGuesser::lenientGuess($filePath);
     }
 
-    public function getMimeTypeOfSource()
+    protected function getMimeTypeOfSource()
     {
-        return self::getMimeType($this->source);
+        if (!isset($this->sourceMimeType)) {
+            $this->sourceMimeType = self::getMimeType($this->source);
+        }
+        return $this->sourceMimeType;
     }
 
-    public function prepareConvert()
+    private function prepareConvert()
     {
         $this->beginTime = microtime(true);
 
@@ -264,22 +252,19 @@ abstract class AbstractConverter
             throw new TargetNotFoundException('File or directory not found: ' . $this->source);
         }
 
-        // Check if the provided file's extension is valid
-        /*
-        $fileExtension = $this->getSourceExtension();
-        if (!in_array(strtolower($fileExtension), self::$allowedExtensions)) {
-            throw new InvalidFileExtensionException('Unsupported file extension: ' . $fileExtension);
-        }*/
-
         // Check if the provided file's mime type is valid
-
         $fileMimeType = $this->getMimeTypeOfSource();
-        if (!in_array($fileMimeType, self::$allowedMimeTypes)) {
-            throw new InvalidFileExtensionException('Unsupported mime type: ' . $fileMimeType);
+        if ($fileMimeType === false) {
+            throw new InvalidImageTypeException('Image type could not be detected');
+        } elseif (!in_array($fileMimeType, self::$allowedMimeTypes)) {
+            throw new InvalidImageTypeException('Unsupported mime type: ' . $fileMimeType);
         }
     }
 
-    public function prepareOptions()
+    /**
+     * Prepare options.
+     */
+    private function prepareOptions()
     {
         $defaultOptions = self::$defaultOptions;
 
@@ -292,8 +277,7 @@ abstract class AbstractConverter
         // Prepare quality option (sets "_calculated_quality" option)
         $this->processQualityOption();
 
-        $fileExtension = $this->getSourceExtension();
-        if ($fileExtension == 'png') {
+        if ($this->getMimeTypeOfSource() == 'png') {
             // skip png's ?
             if ($this->options['skip-pngs']) {
                 throw new ConversionDeclinedException(

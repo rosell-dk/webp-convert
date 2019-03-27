@@ -81,7 +81,8 @@ class Gd extends AbstractConverter
         // Btw: Check out processWebp here:
         // https://github.com/Intervention/image/blob/master/src/Intervention/Image/Gd/Encoder.php
 
-        switch ($this->getMimeTypeOfSource()) {
+        $mimeType = $this->getMimeTypeOfSource();
+        switch ($mimeType) {
             case 'image/png':
                 if (!function_exists('imagecreatefrompng')) {
                     throw new SystemRequirementsNotMetException(
@@ -136,7 +137,7 @@ class Gd extends AbstractConverter
             }
         }
 
-        if ($this->getSourceExtension() == 'png') {
+        if ($mimeType == 'png') {
             if (function_exists('imagealphablending')) {
                 if (!imagealphablending($image, true)) {
                     $this->logLn('Warning: imagealphablending() failed');
