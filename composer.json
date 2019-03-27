@@ -28,7 +28,7 @@
     "phpcs": "phpcs --standard=PSR2",
     "phpcs-all": "phpcs --standard=PSR2 src",
     "phpcbf": "phpcbf --standard=PSR2",
-    "build-wod": "php build-scripts/build-webp-on-demand.php",
+    "build-wod": "php build-scripts/build-webp-on-demand.php"
   },
   "extra": {
       "scripts-descriptions": {
