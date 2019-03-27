@@ -288,7 +288,7 @@ abstract class AbstractConverter
      *  - By setting file extension to "jpg", one can lure our library into trying to convert a file, which isn't a jpg.
      *    hmm, seems very unlikely, though not unthinkable that one of the converters could be exploited
      */
-    public static function getMimeType($filePath)
+    protected static function getMimeType($filePath)
     {
         return ImageMimeTypeGuesser::lenientGuess($filePath);
     }
@@ -1812,13 +1812,17 @@ class Stack extends AbstractConverter
 
     public static function getClassNameOfConverter($converterId)
     {
-        $className = 'WebPConvert\\Convert\\Converters\\' . ucfirst($converterId);
-        if (!is_callable([$className, 'convert'])) {
-            $className = $converterId;
+        if (strtolower($converterId) == $converterId) {
+            $className = 'WebPConvert\\Convert\\Converters\\' . ucfirst($converterId);
+            if (is_callable([$className, 'convert'])) {
+                return $className;
+            } else {
+                throw new ConverterNotFoundException('There is no converter with id:' . $converterId);
+            }
         }
-
+        $className = $converterId;
         if (!is_callable([$className, 'convert'])) {
-            throw new ConverterNotFoundException('There is no converter with id:' . $converterId);
+            throw new ConverterNotFoundException('There is no converter with class name:' . $className);
         }
 
         return $className;
@@ -2250,6 +2254,143 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 class ConversionFailedException extends \Exception
 {
     public $description = 'The converter failed converting, although requirements seemed to be met';
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Exceptions\ConversionFailed;
+
+use WebPConvert\Convert\Exceptions\ConversionFailedException;
+
+class ConversionDeclinedException extends ConversionFailedException
+{
+    public $description = 'The converter declined converting';
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Exceptions\ConversionFailed;
+
+use WebPConvert\Convert\Exceptions\ConversionFailedException;
+
+class ConverterNotOperationalException extends ConversionFailedException
+{
+    public $description = 'The converter is not operational';
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Exceptions\ConversionFailed;
+
+use WebPConvert\Convert\Exceptions\ConversionFailedException;
+
+class FileSystemProblemsException extends ConversionFailedException
+{
+    public $description = 'Filesystem problems';
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Exceptions\ConversionFailed;
+
+use WebPConvert\Convert\Exceptions\ConversionFailedException;
+
+class InvalidInputException extends ConversionFailedException
+{
+    public $description = 'Invalid input';
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Exceptions\ConversionFailed;
+
+use WebPConvert\Convert\Exceptions\ConversionFailedException;
+
+class UnhandledException extends ConversionFailedException
+{
+    public $description = 'The converter failed due to uncaught exception';
+
+    /*
+    Nah, do not add message of the uncaught exception to this.
+    - because it might be long and contain characters which consumers for example cannot put inside a
+    x-webpconvert-error header
+    The messages we throw are guaranteed to be short
+
+    public function __construct($message="", $code=0, $previous)
+    {
+        parent::__construct(
+            'The converter failed due to uncaught exception: ' . $previous->getMessage(),
+            $code,
+            $previous
+        );
+        //$this->$message = 'hello.' . $message . ' ' . $previous->getMessage();
+    }*/
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
+
+class SystemRequirementsNotMetException extends ConverterNotOperationalException
+{
+    public $description = 'The converter is not operational (system requirements not met)';
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblemsException;
+
+class CreateDestinationFileException extends FileSystemProblemsException
+{
+    public $description = 'The converter could not create destination file. Check file permisions!';
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblemsException;
+
+class CreateDestinationFolderException extends FileSystemProblemsException
+{
+    public $description = 'The converter could not create destination folder. Check file permisions!';
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInputException;
+
+class ConverterNotFoundException extends InvalidInputException
+{
+    public $description = 'The converter does not exist.';
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInputException;
+
+class InvalidImageTypeException extends InvalidInputException
+{
+    public $description = 'The converter does not handle the supplied image type';
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInputException;
+
+class TargetNotFoundException extends InvalidInputException
+{
+    public $description = 'The converter could not locate source file';
 }
 
 ?><?php
@@ -2878,6 +3019,37 @@ class ServeConverted extends ServeBase
     }
 }
 
+?><?php
+
+namespace ImageMimeTypeGuesser\Detectors;
+
+abstract class AbstractDetector
+{
+
+    abstract protected function doDetect($filePath);
+
+    public static function createInstance()
+    {
+        return new static();
+    }
+
+    /**
+     *
+     *
+     *  Like all detectors, it returns:
+     *  - null  (if it cannot be determined)
+     *  - false (if it can be determined that this is not an image)
+     *  - mime  (if it is in fact an image, and type could be determined)
+     *  @return  mime | null | false.
+     */
+    public static function detect($filePath)
+    {
+        if (!@file_exists($filePath)) {
+            return false;
+        }
+        return self::createInstance()->doDetect($filePath);
+    }
+}
 
 ?><?php
 
@@ -3030,38 +3202,6 @@ class ImageMimeTypeGuesser
     public static function lenientGuessIsIn($filePath, $mimeTypes)
     {
         return in_array(self::lenientGuess($filePath), $mimeTypes);
-    }
-}
-
-?><?php
-
-namespace ImageMimeTypeGuesser\Detectors;
-
-abstract class AbstractDetector
-{
-
-    abstract protected function doDetect($filePath);
-
-    public static function createInstance()
-    {
-        return new static();
-    }
-
-    /**
-     *
-     *
-     *  Like all detectors, it returns:
-     *  - null  (if it cannot be determined)
-     *  - false (if it can be determined that this is not an image)
-     *  - mime  (if it is in fact an image, and type could be determined)
-     *  @return  mime | null | false.
-     */
-    public static function detect($filePath)
-    {
-        if (!@file_exists($filePath)) {
-            return false;
-        }
-        return self::createInstance()->doDetect($filePath);
     }
 }
 
