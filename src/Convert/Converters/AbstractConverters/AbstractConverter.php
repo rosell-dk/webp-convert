@@ -201,7 +201,7 @@ abstract class AbstractConverter
      *  - By setting file extension to "jpg", one can lure our library into trying to convert a file, which isn't a jpg.
      *    hmm, seems very unlikely, though not unthinkable that one of the converters could be exploited
      */
-    public static function getMimeType($filePath)
+    protected static function getMimeType($filePath)
     {
         return ImageMimeTypeGuesser::lenientGuess($filePath);
     }

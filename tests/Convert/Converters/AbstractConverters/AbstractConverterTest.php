@@ -3,6 +3,7 @@
 namespace WebPConvert\Tests\Convert\Converters\AbstractConverters;
 
 use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
+use WebPConvert\Tests\Convert\Converters\ExposedConverter;
 use WebPConvert\Tests\Convert\Converters\SuccessGuaranteedConverter;
 
 use PHPUnit\Framework\TestCase;
@@ -23,10 +24,10 @@ class AbstractConverterTest extends TestCase
 
     public function testMimeTypeGuesser()
     {
-        $this->assertEquals('image/jpeg', AbstractConverter::getMimeType(self::$imgDir . '/test.jpg'));
-        $this->assertEquals('image/png', AbstractConverter::getMimeType(self::$imgDir . '/test.png'));
+        $this->assertEquals('image/jpeg', ExposedConverter::exposedGetMimeType(self::$imgDir . '/test.jpg'));
+        $this->assertEquals('image/png', ExposedConverter::exposedGetMimeType(self::$imgDir . '/test.png'));
 
-        $mimeTypeMaybeDetected = AbstractConverter::getMimeType(self::$imgDir . '/png-without-extension');
+        $mimeTypeMaybeDetected = ExposedConverter::exposedGetMimeType(self::$imgDir . '/png-without-extension');
         if ($mimeTypeMaybeDetected === false) {
             // It was not detected, and that is ok!
             // - it is not possible to detect mime type on all platforms. In case it could not be detected,
