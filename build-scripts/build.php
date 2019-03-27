@@ -48,6 +48,10 @@ $jobsEverything = [
             'Convert/Converters/AbstractConverters',
             'Convert/Converters',
             'Convert/Exceptions',
+            'Convert/Exceptions/ConversionFailed',
+            'Convert/Exceptions/ConversionFailed/ConverterNotOperational',
+            'Convert/Exceptions/ConversionFailed/FileSystemProblems',
+            'Convert/Exceptions/ConversionFailed/InvalidInput',
             'Loggers',
             'Serve',
         ],
@@ -59,7 +63,7 @@ $jobsEverything = [
 
         'files' => [
             // put base classes here
-            'Detectors/BaseDetector.php',
+            'Detectors/AbstractDetector.php',
         ],
         'dirs' => [
             // dirs will be required in specified order. There is no recursion, so you need to specify subdirs as well.

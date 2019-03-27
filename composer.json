@@ -7,28 +7,34 @@
   "scripts": {
     "ci": [
       "@build",
-      "@test-all",
+      "@test",
       "@phpcs-all",
       "@composer validate --no-check-all --strict"
     ],
-    "test-all": [
-      "@test build-tests-wod",
-      "@test build-tests-webp-convert",
-      "@test"
+    "test": [
+      "@test-wod-build",
+      "@test-webp-convert-build",
+      "@test-src"
     ],
-    "build": [
-      "@build-wod"
+    "test-wod-build": [
+      "phpunit build-tests-wod",
+      "phpunit --bootstrap tests/bootstrap-wod-test.php tests"
     ],
+    "test-webp-convert-build": [
+      "phpunit build-tests-webp-convert",
+      "phpunit --bootstrap tests/bootstrap-webp-convert-test.php tests"
+    ],
+    "test-src": "phpunit",
+    "phpunit": "phpunit",
     "cs-fix-all": [
       "php-cs-fixer fix src"
     ],
     "cs-fix": "php-cs-fixer fix",
     "cs-dry": "php-cs-fixer fix --dry-run --diff",
-    "test": "phpunit",
     "phpcs": "phpcs --standard=PSR2",
     "phpcs-all": "phpcs --standard=PSR2 src",
     "phpcbf": "phpcbf --standard=PSR2",
-    "build-wod": "php build-scripts/build-webp-on-demand.php"
+    "build": "php build-scripts/build.php"
   },
   "extra": {
       "scripts-descriptions": {
