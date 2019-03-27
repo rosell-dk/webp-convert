@@ -24,6 +24,8 @@
             <exclude>
                 <directory>./vendor</directory>
                 <directory>./tests</directory>
+                <directory>./build-tests-wod</directory>
+                <directory>./build-tests-complete</directory>
             </exclude>
         </whitelist>
     </filter>
