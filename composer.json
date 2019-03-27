@@ -17,7 +17,7 @@
       "@test"
     ],
     "build": [
-      "@build-wod",
+      "@build-wod"
     ],
     "cs-fix-all": [
       "php-cs-fixer fix src"
