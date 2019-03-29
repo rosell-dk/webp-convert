@@ -2,7 +2,6 @@
 namespace WebPConvert\Serve;
 
 use WebPConvert\WebPConvert;
-use WebPConvert\Convert\Converters\ConverterHelper;
 use WebPConvert\Loggers\EchoLogger;
 
 //use WebPConvert\Loggers\EchoLogger;
@@ -46,7 +45,8 @@ class Report
     {
         $printable_options = [];
 
-        // (psst: the is_callable check is needed in order to work with WebPConvert v1.0)
+        /*
+        TODO: This piece of code should be "translated" to work in 2.0
         if (is_callable('ConverterHelper', 'getClassNameOfConverter')) {
             $printable_options = self::flattenConvertersArray($options);
             if (isset($printable_options['converter-options'])) {
@@ -66,6 +66,7 @@ class Report
                 }
             }
         }
+        */
         return $printable_options;
     }
 
