@@ -69,6 +69,12 @@ class Gmagick extends AbstractConverter
         $im->setcompressionquality($this->getCalculatedQuality());
 
         try {
+            // We call getImageBlob().
+            // That method is undocumented, but it is there!
+            // - just like it is in imagick, as pointed out here:
+            //   https://www.php.net/manual/ru/gmagick.readimageblob.php
+
+            /** @scrutinizer ignore-call */
             $imageBlob = $im->getImageBlob();
         } catch (\ImagickException $e) {
             throw new ConversionFailedException(
