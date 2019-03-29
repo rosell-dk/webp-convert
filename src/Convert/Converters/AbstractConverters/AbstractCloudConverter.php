@@ -27,8 +27,9 @@ abstract class AbstractCloudConverter extends AbstractConverter
 
     public static function initCurl()
     {
+        // Get curl handle
         $ch = curl_init();
-        if (!$ch) {
+        if ($ch === false) {
             throw new SystemRequirementsNotMetException('Could not initialise cURL.');
         }
         return $ch;
