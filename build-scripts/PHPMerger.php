@@ -54,7 +54,7 @@ class PhpMerger
 
 
         echo "included: \n" . implode("\n", self::$required) . "\n";
-//exit;
+
         // generate file content
         $data = '';
         $data .= "<?php \n";
