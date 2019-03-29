@@ -365,9 +365,12 @@ abstract class AbstractConverter
         return true;
     }
 
-    /* Try to detect quality of jpeg.
-       If not possible, nothing is returned (null). Otherwise quality is returned (int)
-        */
+    /**
+     * Try to detect quality of jpeg.
+     *
+     * @param  string  $filename  A complete file path to file to be examined
+     * @return int|null  Quality, or null if it was not possible to detect quality
+     */
     public static function detectQualityOfJpg($filename)
     {
         // Try Imagick extension
@@ -422,7 +425,7 @@ abstract class AbstractConverter
         if ($this->options['quality'] == 'auto') {
             $q = self::detectQualityOfJpg($this->source);
             //$this->log('Quality set to auto... Quality of source: ');
-            if (!$q) {
+            if (is_null($q)) {
                 $q = $this->options['default-quality'];
                 $this->logLn(
                     'Quality of source could not be established (Imagick or GraphicsMagick is required)' .
