@@ -8,7 +8,7 @@ use WebPConvert\Tests\Convert\Converters\SuccessGuaranteedConverter;
 
 use PHPUnit\Framework\TestCase;
 
-class AbstractConverterTest extends TestCase
+class AbstractCloudConverterTest extends TestCase
 {
 
     private static $imgDir = __DIR__ . '/../../..';
