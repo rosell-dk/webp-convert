@@ -11,6 +11,11 @@ class Gd extends AbstractConverter
 {
     public static $extraOptions = [];
 
+    /**
+     * Find out if all functions exists.
+     *
+     * @return boolean
+     */
     private static function functionsExist($functionNamesArr)
     {
         foreach ($functionNamesArr as $functionName) {
@@ -22,8 +27,13 @@ class Gd extends AbstractConverter
     }
 
     /**
+     * Try to convert image pallette to true color.
      *
-     *  @return Returns TRUE if the convertion was complete, or if the source image already is a true color image,
+     * Try to convert image pallette to true color. If imageistruecolor() exists, that is used (available from
+     * PHP >= 5.5.0). Otherwise using workaround found on the net.
+     *
+     * @param  \GImage  &$image
+     * @return boolean  TRUE if the convertion was complete, or if the source image already is a true color image,
      *          otherwise FALSE is returned.
      */
     public static function makeTrueColor(&$image)
