@@ -14,6 +14,12 @@ use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
 
 abstract class AbstractCloudConverter extends AbstractConverter
 {
+    /**
+     *  Test if basic requirements are met for using curl.
+     *
+     *  @throws SystemRequirementsNotMetException  if requirements are not met.
+     *  @return void
+     */
     public static function testCurlRequirements()
     {
         if (!extension_loaded('curl')) {
@@ -31,37 +37,90 @@ abstract class AbstractCloudConverter extends AbstractConverter
         }
     }
 
+    /**
+     *  Init curl.
+     *
+     * @throws  SystemRequirementsNotMetException  if curl could not be initialized
+     * @return  resource  curl handle
+     */
     public static function initCurl()
     {
+        // Get curl handle
         $ch = curl_init();
-        if (!$ch) {
+        if ($ch === false) {
             throw new SystemRequirementsNotMetException('Could not initialise cURL.');
         }
         return $ch;
     }
 
-    // Parse size found in php.ini
-    // Took the parser from Drupal
-    public static function parseSize($size)
+    /**
+     * Parse a shordhandsize string as the ones returned by ini_get()
+     *
+     * Parse a shorthandsize string having the syntax allowed in php.ini and returned by ini_get().
+     * Ie "1K" => 1024.
+     * Strings without units are also accepted.
+     * The shorthandbytes syntax is described here: https://www.php.net/manual/en/faq.using.php#faq.using.shorthandbytes
+     *
+     * @param  string  $size  A size string of the type returned by ini_get()
+     * @return float|false  The parsed size (beware: it is float, do not check high numbers for equality),
+     *                      or false if parse error
+     */
+    public static function parseShortHandSize($shortHandSize)
     {
 
-        $unit = preg_replace('/[^bkmgtpezy]/i', '', $size); // Remove the non-unit characters from the size.
-            $size = preg_replace('/[^0-9\.]/', '', $size); // Remove the non-numeric characters from the size.
-        if ($unit) {
+        $result = preg_match("#^\\s*(\\d+(?:\\.\\d+)?)([bkmgtpezy]?)\\s*$#i", $shortHandSize, $matches);
+        if ($result !== 1) {
+            return false;
+        }
+
+        // Truncate, because that is what php does.
+        $digitsValue = floor($matches[1]);
+
+        if ((count($matches) >= 3) && ($matches[2] != '')) {
+            $unit = $matches[2];
+
             // Find the position of the unit in the ordered string which is the power
             // of magnitude to multiply a kilobyte by.
-            return round($size * pow(1024, stripos('bkmgtpezy', $unit[0])));
+            $position = stripos('bkmgtpezy', $unit);
+
+            return floatval($digitsValue * pow(1024, $position));
         } else {
-            return round($size);
+            return $digitsValue;
         }
     }
 
+    /*
+    * Get the size of an php.ini option.
+    *
+    * Calls ini_get() and parses the size to a number.
+    * If the configuration option is null, does not exist, or cannot be parsed as a shorthandsize, false is returned
+    *
+    * @param  string  $varname  The configuration option name.
+    * @return float|false  The parsed size or false if the configuration option does not exist
+    */
+    public static function getIniBytes($iniVarName)
+    {
+        $iniVarValue = ini_get($iniVarName);
+        if (($iniVarValue == '') || $iniVarValue === false) {
+            return false;
+        }
+        return self::parseShortHandSize($iniVarValue);
+    }
+
+    /**
+     *  Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini
+     *
+     * @throws  ConversionFailedException  if filesize is too large
+     * @return  void
+     */
     public function testFilesizeRequirements()
     {
         $fileSize = @filesize($this->source);
         if ($fileSize !== false) {
-            $uploadMaxSize = self::parseSize(ini_get('upload_max_filesize'));
-            if (($uploadMaxSize !== false) && ($uploadMaxSize < $fileSize)) {
+            $uploadMaxSize = self::getIniBytes('upload_max_filesize');
+            if ($uploadMaxSize === false) {
+                // Not sure if we should throw an exception here, or not...
+            } elseif ($uploadMaxSize < $fileSize) {
                 throw new ConversionFailedException(
                     'File is larger than your max upload (set in your php.ini). File size:' .
                         round($fileSize/1024) . ' kb. ' .
@@ -70,8 +129,10 @@ abstract class AbstractCloudConverter extends AbstractConverter
                 );
             }
 
-            $postMaxSize = self::parseSize(ini_get('post_max_size'));
-            if (($postMaxSize !== false) && ($postMaxSize < $fileSize)) {
+            $postMaxSize = self::getIniBytes(ini_get('post_max_size'));
+            if ($postMaxSize === false) {
+                // Not sure if we should throw an exception here, or not...
+            } elseif ($postMaxSize < $fileSize) {
                 throw new ConversionFailedException(
                     'File is larger than your post_max_size limit (set in your php.ini). File size:' .
                         round($fileSize/1024) . ' kb. ' .
@@ -80,6 +141,7 @@ abstract class AbstractCloudConverter extends AbstractConverter
                 );
             }
 
+            // Should we worry about memory limit as well?
             // ini_get('memory_limit')
         }
     }
@@ -452,9 +514,12 @@ abstract class AbstractConverter
         return true;
     }
 
-    /* Try to detect quality of jpeg.
-       If not possible, nothing is returned (null). Otherwise quality is returned (int)
-        */
+    /**
+     * Try to detect quality of jpeg.
+     *
+     * @param  string  $filename  A complete file path to file to be examined
+     * @return int|null  Quality, or null if it was not possible to detect quality
+     */
     public static function detectQualityOfJpg($filename)
     {
         // Try Imagick extension
@@ -509,7 +574,7 @@ abstract class AbstractConverter
         if ($this->options['quality'] == 'auto') {
             $q = self::detectQualityOfJpg($this->source);
             //$this->log('Quality set to auto... Quality of source: ');
-            if (!$q) {
+            if (is_null($q)) {
                 $q = $this->options['default-quality'];
                 $this->logLn(
                     'Quality of source could not be established (Imagick or GraphicsMagick is required)' .
@@ -1284,6 +1349,11 @@ class Gd extends AbstractConverter
 {
     public static $extraOptions = [];
 
+    /**
+     * Find out if all functions exists.
+     *
+     * @return boolean
+     */
     private static function functionsExist($functionNamesArr)
     {
         foreach ($functionNamesArr as $functionName) {
@@ -1295,8 +1365,13 @@ class Gd extends AbstractConverter
     }
 
     /**
+     * Try to convert image pallette to true color.
      *
-     *  @return Returns TRUE if the convertion was complete, or if the source image already is a true color image,
+     * Try to convert image pallette to true color. If imageistruecolor() exists, that is used (available from
+     * PHP >= 5.5.0). Otherwise using workaround found on the net.
+     *
+     * @param  resource  &$image
+     * @return boolean  TRUE if the convertion was complete, or if the source image already is a true color image,
      *          otherwise FALSE is returned.
      */
     public static function makeTrueColor(&$image)
@@ -1527,6 +1602,12 @@ class Gmagick extends AbstractConverter
         $im->setcompressionquality($this->getCalculatedQuality());
 
         try {
+            // We call getImageBlob().
+            // That method is undocumented, but it is there!
+            // - just like it is in imagick, as pointed out here:
+            //   https://www.php.net/manual/ru/gmagick.readimageblob.php
+
+            /** @scrutinizer ignore-call */
             $imageBlob = $im->getImageBlob();
         } catch (\ImagickException $e) {
             throw new ConversionFailedException(
@@ -1554,7 +1635,7 @@ namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\CreateDestinationFileException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFileException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
@@ -1776,6 +1857,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFou
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -1909,9 +1991,9 @@ class Stack extends AbstractConverter
 
                 $this->logLn($converterDisplayName . ' succeeded :)');
                 return;
-            } catch (\WebPConvert\Convert\Exceptions\ConverterNotOperationalException $e) {
+            } catch (ConverterNotOperationalException $e) {
                 $this->logLn($e->getMessage());
-            } catch (\WebPConvert\Convert\Exceptions\ConversionFailedException $e) {
+            } catch (ConversionFailedException $e) {
                 $this->logLn($e->getMessage(), 'italic');
                 $prev = $e->getPrevious();
                 if (!is_null($prev)) {
@@ -1921,7 +2003,7 @@ class Stack extends AbstractConverter
                 }
                 //$this->logLn($e->getTraceAsString());
                 $anyRuntimeErrors = true;
-            } catch (\WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException $e) {
+            } catch (ConversionDeclinedException $e) {
                 $this->logLn($e->getMessage());
             }
 
@@ -2522,7 +2604,6 @@ class VoidLogger extends BaseLogger
 namespace WebPConvert\Serve;
 
 use WebPConvert\WebPConvert;
-use WebPConvert\Convert\Converters\ConverterHelper;
 use WebPConvert\Loggers\EchoLogger;
 
 //use WebPConvert\Loggers\EchoLogger;
@@ -2566,7 +2647,8 @@ class Report
     {
         $printable_options = [];
 
-        // (psst: the is_callable check is needed in order to work with WebPConvert v1.0)
+        /*
+        TODO: This piece of code should be "translated" to work in 2.0
         if (is_callable('ConverterHelper', 'getClassNameOfConverter')) {
             $printable_options = self::flattenConvertersArray($options);
             if (isset($printable_options['converter-options'])) {
@@ -2586,6 +2668,7 @@ class Report
                 }
             }
         }
+        */
         return $printable_options;
     }
 
