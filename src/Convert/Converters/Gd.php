@@ -32,7 +32,7 @@ class Gd extends AbstractConverter
      * Try to convert image pallette to true color. If imageistruecolor() exists, that is used (available from
      * PHP >= 5.5.0). Otherwise using workaround found on the net.
      *
-     * @param  \GImage  &$image
+     * @param  resource  &$image
      * @return boolean  TRUE if the convertion was complete, or if the source image already is a true color image,
      *          otherwise FALSE is returned.
      */

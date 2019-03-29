@@ -71,7 +71,11 @@ class PhpMerger
         // generate file
         //$my_file = '../generated.inc';
         $handle = fopen(__DIR__ . '/' . $conf['destination'], 'w') or die('Cannot open file:  ' . $conf['destination']);
-        fwrite($handle, $data);
-        echo "saved to '" . $conf['destination'] . "'\n";
+        if ($handle !== false) {
+            fwrite($handle, $data);
+            echo "saved to '" . $conf['destination'] . "'\n";
+        } else {
+            echo 'OH NO! - failed saving!!!';
+        }
     }
 }
