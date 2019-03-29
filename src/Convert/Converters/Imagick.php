@@ -4,7 +4,7 @@ namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\CreateDestinationFileException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFileException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
