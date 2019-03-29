@@ -9,6 +9,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFou
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -142,9 +143,9 @@ class Stack extends AbstractConverter
 
                 $this->logLn($converterDisplayName . ' succeeded :)');
                 return;
-            } catch (\WebPConvert\Convert\Exceptions\ConverterNotOperationalException $e) {
+            } catch (ConverterNotOperationalException $e) {
                 $this->logLn($e->getMessage());
-            } catch (\WebPConvert\Convert\Exceptions\ConversionFailedException $e) {
+            } catch (ConversionFailedException $e) {
                 $this->logLn($e->getMessage(), 'italic');
                 $prev = $e->getPrevious();
                 if (!is_null($prev)) {
@@ -154,7 +155,7 @@ class Stack extends AbstractConverter
                 }
                 //$this->logLn($e->getTraceAsString());
                 $anyRuntimeErrors = true;
-            } catch (\WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException $e) {
+            } catch (ConversionDeclinedException $e) {
                 $this->logLn($e->getMessage());
             }
 
