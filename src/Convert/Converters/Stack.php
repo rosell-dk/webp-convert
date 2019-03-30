@@ -69,6 +69,8 @@ class Stack extends AbstractConverter
     {
         $options = $this->options;
 
+        $beginTimeStack = microtime(true);
+
         // If we have set converter options for a converter, which is not in the converter array,
         // then we add it to the array
         if (isset($options['converter-options'])) {
@@ -163,7 +165,7 @@ class Stack extends AbstractConverter
         }
 
         $this->ln();
-        $this->logLn('Stack failed in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
+        $this->logLn('Stack failed in ' . round((microtime(true) - $beginTimeStack) * 1000) . ' ms');
 
         if ($anyRuntimeErrors) {
             // At least one converter failed
