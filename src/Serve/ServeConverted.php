@@ -20,12 +20,15 @@ use WebPConvert\Serve\Report;
 class ServeConverted extends ServeBase
 {
 
+    /*
+    Not used, currently...
     private function addXOptionsHeader()
     {
         if ($this->options['add-x-header-options']) {
             $this->header('X-WebP-Convert-Options:' . Report::getPrintableOptionsAsString($this->options));
         }
     }
+    */
 
     private function addHeadersPreventingCaching()
     {
@@ -83,7 +86,6 @@ class ServeConverted extends ServeBase
     {
 
         $criticalFail = false;
-        $success = false;
         $bufferLogger = new BufferLogger();
 
         try {
@@ -192,14 +194,34 @@ class ServeConverted extends ServeBase
             $this->header('Content-type: image/gif');
         }
 
-        // TODO: handle if this fails...
-        $image = imagecreatetruecolor(620, 200);
-        imagestring($image, 1, 5, 5, $msg, imagecolorallocate($image, 233, 214, 291));
-        // echo imagewebp($image);
-        echo imagegif($image);
-        imagedestroy($image);
+        try {
+            if (
+                function_exists('imagecreatetruecolor') &&
+                function_exists('imagestring') &&
+                function_exists('imagecolorallocate') &&
+                function_exists('imagegif')
+            ) {
+                $image = imagecreatetruecolor(620, 200);
+                if ($image !== false) {
+                    imagestring($image, 1, 5, 5, $msg, imagecolorallocate($image, 233, 214, 291));
+                    // echo imagewebp($image);
+                    echo imagegif($image);
+                    imagedestroy($image);
+                    return;
+                }
+            }
+        } catch (\Exception $e) {
+            //
+        }
+
+        // Above failed.
+        // TODO: what to do?
     }
 
+    /**
+     *
+     * @return  void
+     */
     protected function fail($title, $description, $critical = false)
     {
         $action = $critical ? $this->options['fail-when-original-unavailable'] : $this->options['fail'];
@@ -219,7 +241,6 @@ class ServeConverted extends ServeBase
         $this->addXStatusHeader('Failed (' . $description . ')');
 
         $this->addHeadersPreventingCaching();
-
 
         $title = 'Conversion failed';
         switch ($action) {
@@ -241,9 +262,13 @@ class ServeConverted extends ServeBase
         }
     }
 
+    /**
+     *
+     * @return  void
+     */
     protected function criticalFail($title, $description)
     {
-        return $this->fail($title, $description, true);
+        $this->fail($title, $description, true);
     }
 
     /**
