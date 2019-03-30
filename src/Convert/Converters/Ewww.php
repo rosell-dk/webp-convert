@@ -131,6 +131,9 @@ class Ewww extends AbstractCloudConverter
         } catch (\Exception $e) {
             return 'curl is not installed';
         }
+        if ($ch === false) {
+            return 'curl could not be initialized';
+        }
         curl_setopt_array(
             $ch,
             [
