@@ -11,16 +11,44 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFou
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Loggers\BaseLogger;
 
-use \ImageMimeTypeGuesser\ImageMimeTypeGuesser;
+use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 
 abstract class AbstractConverter
 {
     /**
-     *  The actual conversion must be done by a concrete class.
+     * The actual conversion must be done by a concrete class.
      *
      */
     abstract protected function doConvert();
+
+    /**
+     * Converters may override this method for the purpose of performing basic operationaly checks.
+     *
+     * Run general operation checks for a conversion method and throw ConverterNotOperationalException if
+     * some requirement is not met.
+     * The method is called internally right before calling doConvert() method.
+     * - It SHOULD take options into account when relevant. For example, a missing api key for a
+     *   cloud converter should be detected here
+     * - It should NOT take the actual filename into consideration, as the purpose is *general*
+     *   For that pupose, converters should override checkConvertability
+     *   Also note that doConvert method is allowed to throw ConverterNotOperationalException too.
+     *
+     */
+    protected function checkOperationality()
+    {
+    }
+
+    /**
+     * Converters may override this for the purpose of performing checks on the concrete file.
+     *
+     * This can for example be used for rejecting big uploads in cloud converters or rejecting unsupported
+     * image types.
+     */
+    protected function checkConvertability()
+    {
+    }
 
     public $source;
     public $destination;
@@ -150,6 +178,15 @@ abstract class AbstractConverter
         //return false;   // let PHP handle the error from here
     }
 
+    /**
+     * Convert an image to webp.
+     *
+     * @param   string  $source              path to source file
+     * @param   string  $destination         path to destination
+     * @param   array   $options (optional)  options for conversion
+     * @param   WebPConvert\Loggers\BaseLogger $logger (optional)
+     * @return  void
+     */
     public static function convert($source, $destination, $options = [], $logger = null)
     {
         $instance = self::createInstance($source, $destination, $options, $logger);
@@ -158,6 +195,8 @@ abstract class AbstractConverter
         $instance->logLn(self::getConverterDisplayName() . ' converter ignited');
         $instance->prepareConvert();
         try {
+            $instance->checkOperationality();
+            $instance->checkConvertability();
             $instance->doConvert();
         } catch (ConversionFailedException $e) {
             throw $e;
@@ -230,15 +269,7 @@ abstract class AbstractConverter
         }
 
         // Prepare options
-        $this->runValidations();
-
-        // Prepare options
         $this->prepareOptions();
-    }
-
-    // The individual converters can override this...
-    public function runValidations()
-    {
     }
 
     /**

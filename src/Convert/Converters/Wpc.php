@@ -2,12 +2,12 @@
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractCloudConverter;
+use WebPConvert\Convert\Converters\AbstractConverters\AbstractCloudCurlConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
-class Wpc extends AbstractCloudConverter
+class Wpc extends AbstractCloudCurlConverter
 {
     public static $extraOptions = [
         [
@@ -87,8 +87,6 @@ class Wpc extends AbstractCloudConverter
     {
         $options = $this->options;
 
-        self::testCurlRequirements();
-
         $apiVersion = $options['api-version'];
 
         if (!function_exists('curl_file_create')) {
@@ -129,8 +127,6 @@ class Wpc extends AbstractCloudConverter
                 'or the WebP Express plugin for Wordpress - and supply the url.'
             );
         }
-
-        $this->testFilesizeRequirements();
 
         // Got some code here:
         // https://coderwall.com/p/v4ps1a/send-a-file-via-post-with-curl-and-php

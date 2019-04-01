@@ -12,10 +12,16 @@ class Gmagick extends AbstractConverter
 {
     public static $extraOptions = [];
 
-    // Although this method is public, do not call directly.
-    // You should rather call the static convert() function, defined in AbstractConverter, which
-    // takes care of preparing stuff before calling doConvert, and validating after.
-    protected function doConvert()
+    /**
+     * Check (general) operationality of Gmagick converter.
+     *
+     * Note:
+     * It may be that Gd has been compiled without jpeg support or png support.
+     * We do not check for this here, as the converter could still be used for the other.
+     *
+     * @throws SystemRequirementsNotMetException  if system requirements are not met
+     */
+    protected function checkOperationality()
     {
         if (!extension_loaded('Gmagick')) {
             throw new SystemRequirementsNotMetException('Required Gmagick extension is not available.');
@@ -27,16 +33,55 @@ class Gmagick extends AbstractConverter
             );
         }
 
-        $options = $this->options;
-
-        // This might throw an exception.
-        // We let it...
         $im = new \Gmagick($this->source);
 
-
-        // Throws an exception if Gmagick does not support WebP conversion
         if (!in_array('WEBP', $im->queryformats())) {
             throw new SystemRequirementsNotMetException('Gmagick was compiled without WebP support.');
+        }
+    }
+
+    /**
+     * Check if specific file is convertable with current converter / converter settings.
+     *
+     * @throws SystemRequirementsNotMetException  if Gmagick does not support image type
+     */
+    protected function checkConvertability()
+    {
+        $im = new \Gmagick();
+        $mimeType = $this->getMimeTypeOfSource();
+        switch ($mimeType) {
+            case 'image/png':
+                if (!in_array('PNG', $im->queryFormats())) {
+                    throw new SystemRequirementsNotMetException(
+                        'Imagick has been compiled without PNG support and can therefore not convert this PNG image.'
+                    );
+                }
+            case 'image/jpeg':
+                if (!in_array('PNG', $im->queryFormats())) {
+                    throw new SystemRequirementsNotMetException(
+                        'Imagick has been compiled without Jpeg support and can therefore not convert this Jpeg image.'
+                    );
+                }
+                break;
+        }
+    }
+
+    // Although this method is public, do not call directly.
+    // You should rather call the static convert() function, defined in AbstractConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    protected function doConvert()
+    {
+
+        $options = $this->options;
+
+        try {
+            $im = new \Gmagick($this->source);
+        } catch (\Exception $e) {
+            throw new ConversionFailedException(
+                'Failed creating Gmagick object of file',
+                'Failed creating Gmagick object of file: "' . $this->source . '" - Gmagick threw an exception.',
+                $e
+            );
         }
 
         /*

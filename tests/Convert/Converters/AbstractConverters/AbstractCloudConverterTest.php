@@ -3,6 +3,7 @@
 namespace WebPConvert\Tests\Convert\Converters\AbstractConverters;
 
 use WebPConvert\Convert\Converters\AbstractConverters\AbstractCloudConverter;
+use WebPConvert\Tests\Convert\Converters\ExposedCloudConverter;
 
 use PHPUnit\Framework\TestCase;
 
@@ -10,23 +11,23 @@ class AbstractConverterTest extends TestCase
 {
 
 
-    public function testparseShortHandSize()
+    public function testParseShortHandSize()
     {
         // Test without units
-        $this->assertEquals(0, AbstractCloudConverter::parseShortHandSize('0'));
-        $this->assertEquals(10, AbstractCloudConverter::parseShortHandSize('10'));
+        $this->assertEquals(0, ExposedCloudConverter::exposedParseShortHandSize('0'));
+        $this->assertEquals(10, ExposedCloudConverter::exposedParseShortHandSize('10'));
 
         // Test "k" unit
-        $this->assertEquals(1024, AbstractCloudConverter::parseShortHandSize('1k'));
+        $this->assertEquals(1024, ExposedCloudConverter::exposedParseShortHandSize('1k'));
 
         // Test capitial "K"
-        $this->assertEquals(1024, AbstractCloudConverter::parseShortHandSize('1K'));
+        $this->assertEquals(1024, ExposedCloudConverter::exposedParseShortHandSize('1K'));
 
         // Test "M" unit
-        $this->assertEquals(1024 * 1024, AbstractCloudConverter::parseShortHandSize('1M'));
+        $this->assertEquals(1024 * 1024, ExposedCloudConverter::exposedParseShortHandSize('1M'));
 
         // Test "G" unit
-        $this->assertEquals(1024 * 1024 * 1024, AbstractCloudConverter::parseShortHandSize('1G'));
+        $this->assertEquals(1024 * 1024 * 1024, ExposedCloudConverter::exposedParseShortHandSize('1G'));
 
 
         // Moving to terrabytes, we have to be careful.
@@ -34,7 +35,7 @@ class AbstractConverterTest extends TestCase
         // (on 32 bit systems, max integer value is 107.374.182.400, which can represent up to ~107G)
 
         // Testing floating point numbers for equality is prone to errors.
-        //$this->assertInternalType('int', AbstractCloudConverter::parseShortHandSize('10'));
+        //$this->assertInternalType('int', ExposedCloudConverter::exposedParseShortHandSize('10'));
         //$this->assertEquals(10.0, 10);
 
 
@@ -60,19 +61,19 @@ class AbstractConverterTest extends TestCase
         $this->assertGreaterThan($greatComputation, $greaterComputation);
 
         // Test "T" unit
-        $this->assertGreaterThan(AbstractCloudConverter::parseShortHandSize('1G'), AbstractCloudConverter::parseShortHandSize('100T'));
-        $this->assertGreaterThan(1024 * 1024 * 1024 * 1024, AbstractCloudConverter::parseShortHandSize('1T') + 1);
+        $this->assertGreaterThan(ExposedCloudConverter::exposedParseShortHandSize('1G'), ExposedCloudConverter::exposedParseShortHandSize('100T'));
+        $this->assertGreaterThan(1024 * 1024 * 1024 * 1024, ExposedCloudConverter::exposedParseShortHandSize('1T') + 1);
 
 
         // Test that decimals are trunked, as described here:
         // https://www.php.net/manual/en/faq.using.php#faq.using.shorthandbytes
-        $this->assertEquals(1024, AbstractCloudConverter::parseShortHandSize('1.5k'));
-        $this->assertEquals(0, AbstractCloudConverter::parseShortHandSize('0.5M'));
+        $this->assertEquals(1024, ExposedCloudConverter::exposedParseShortHandSize('1.5k'));
+        $this->assertEquals(0, ExposedCloudConverter::exposedParseShortHandSize('0.5M'));
 
 
         // Test syntax violations, which must result in parse error.
-        $this->assertFalse(AbstractCloudConverter::parseShortHandSize('0.5MM'));
-        $this->assertFalse(AbstractCloudConverter::parseShortHandSize('//5'));
+        $this->assertFalse(ExposedCloudConverter::exposedParseShortHandSize('0.5MM'));
+        $this->assertFalse(ExposedCloudConverter::exposedParseShortHandSize('//5'));
     }
 
     /* TODO...

@@ -2,51 +2,11 @@
 
 namespace WebPConvert\Convert\Converters\AbstractConverters;
 
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
 
 abstract class AbstractCloudConverter extends AbstractConverter
 {
-    /**
-     *  Test if basic requirements are met for using curl.
-     *
-     *  @throws SystemRequirementsNotMetException  if requirements are not met.
-     *  @return void
-     */
-    public static function testCurlRequirements()
-    {
-        if (!extension_loaded('curl')) {
-            throw new SystemRequirementsNotMetException('Required cURL extension is not available.');
-        }
-
-        if (!function_exists('curl_init')) {
-            throw new SystemRequirementsNotMetException('Required url_init() function is not available.');
-        }
-
-        if (!function_exists('curl_file_create')) {
-            throw new SystemRequirementsNotMetException(
-                'Required curl_file_create() function is not available (requires PHP > 5.5).'
-            );
-        }
-    }
-
-    /**
-     *  Init curl.
-     *
-     * @throws  SystemRequirementsNotMetException  if curl could not be initialized
-     * @return  resource  curl handle
-     */
-    public static function initCurl()
-    {
-        // Get curl handle
-        $ch = curl_init();
-        if ($ch === false) {
-            throw new SystemRequirementsNotMetException('Could not initialise cURL.');
-        }
-        return $ch;
-    }
-
     /**
      * Parse a shordhandsize string as the ones returned by ini_get()
      *
@@ -59,7 +19,7 @@ abstract class AbstractCloudConverter extends AbstractConverter
      * @return float|false  The parsed size (beware: it is float, do not check high numbers for equality),
      *                      or false if parse error
      */
-    public static function parseShortHandSize($shortHandSize)
+    protected static function parseShortHandSize($shortHandSize)
     {
 
         $result = preg_match("#^\\s*(\\d+(?:\\.\\d+)?)([bkmgtpezy]?)\\s*$#i", $shortHandSize, $matches);
@@ -92,7 +52,7 @@ abstract class AbstractCloudConverter extends AbstractConverter
     * @param  string  $varname  The configuration option name.
     * @return float|false  The parsed size or false if the configuration option does not exist
     */
-    public static function getIniBytes($iniVarName)
+    protected static function getIniBytes($iniVarName)
     {
         $iniVarValue = ini_get($iniVarName);
         if (($iniVarValue == '') || $iniVarValue === false) {
@@ -104,10 +64,10 @@ abstract class AbstractCloudConverter extends AbstractConverter
     /**
      *  Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini
      *
-     * @throws  ConversionFailedException  if filesize is too large
+     * @throws  ConversionFailedException  if filesize is larger than "upload_max_filesize" or "post_max_size"
      * @return  void
      */
-    public function testFilesizeRequirements()
+    protected function testFilesizeRequirements()
     {
         $fileSize = @filesize($this->source);
         if ($fileSize !== false) {
@@ -139,4 +99,14 @@ abstract class AbstractCloudConverter extends AbstractConverter
             // ini_get('memory_limit')
         }
     }
+
+    /**
+     * Check if specific file is convertable with current converter / converter settings.
+     *
+     */
+    protected function checkConvertability()
+    {
+        $this->testFilesizeRequirements();
+    }
+
 }

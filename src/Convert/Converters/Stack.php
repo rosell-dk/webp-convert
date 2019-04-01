@@ -43,7 +43,6 @@ class Stack extends AbstractConverter
     public static $availableConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'wpc', 'ewww'];
     public static $localConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'];
 
-
     public static function getClassNameOfConverter($converterId)
     {
         if (strtolower($converterId) == $converterId) {
@@ -62,9 +61,23 @@ class Stack extends AbstractConverter
         return $className;
     }
 
-    // Although this method is public, do not call directly.
-    // You should rather call the static convert() function, defined in AbstractConverter, which
-    // takes care of preparing stuff before calling doConvert, and validating after.
+    /**
+     * Check (general) operationality of imagack converter executable
+     *
+     * @throws SystemRequirementsNotMetException  if system requirements are not met
+     */
+    protected function checkOperationality()
+    {
+        if (count($this->options) == 0) {
+            throw new ConverterNotOperationalException(
+                'Converter stack is empty! - no converters to try, no conversion can be made!'
+            );
+        }
+
+        // TODO: We should test if all converters are found in order to detect problems early
+
+    }
+
     protected function doConvert()
     {
         $options = $this->options;
@@ -114,16 +127,7 @@ class Stack extends AbstractConverter
 
             $beginTime = microtime(true);
 
-            // We could have decided to carry on, if a converter could not be found,
-            // However, such an error should be corrected, so we decided to fail in that case (and skip rest of queue)
             $className = self::getClassNameOfConverter($converterId);
-            if (!is_callable([$className, 'convert'])) {
-                throw new ConverterNotFoundException(
-                    'There is no converter with id:' . $converterId .
-                    ' (and it is not a class either)'
-                );
-            }
-
 
             try {
                 $converterDisplayName = call_user_func(

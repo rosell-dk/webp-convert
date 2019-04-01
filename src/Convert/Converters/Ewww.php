@@ -2,12 +2,12 @@
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractCloudConverter;
+use WebPConvert\Convert\Converters\AbstractConverters\AbstractCloudCurlConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
-class Ewww extends AbstractCloudConverter
+class Ewww extends AbstractCloudCurlConverter
 {
     public static $extraOptions = [
         [
@@ -19,12 +19,16 @@ class Ewww extends AbstractCloudConverter
         ],
     ];
 
-    // Although this method is public, do not call directly.
-    // You should rather call the static convert() function, defined in AbstractConverter, which
-    // takes care of preparing stuff before calling doConvert, and validating after.
-    protected function doConvert()
+    /**
+     * Check operationality of Ewww converter.
+     *
+     * @throws SystemRequirementsNotMetException  if system requirements are not met (curl)
+     * @throws ConverterNotOperationalException   if key is missing or invalid, or quota has exceeded
+     */
+    protected function checkOperationality()
     {
-        self::testCurlRequirements();
+        // First check for curl requirements
+        parent::checkOperationality();
 
         $options = $this->options;
 
@@ -49,7 +53,16 @@ class Ewww extends AbstractCloudConverter
                 break;
         }
 
-        $this->testFilesizeRequirements();
+    }
+
+    // Although this method is public, do not call directly.
+    // You should rather call the static convert() function, defined in AbstractConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    protected function doConvert()
+    {
+
+        $options = $this->options;
+
         $ch = self::initCurl();
 
         $curlOptions = [

@@ -9,7 +9,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 abstract class AbstractExecConverter extends AbstractConverter
 {
-    public static function escapeFilename($string)
+    protected static function escapeFilename($string)
     {
         // Escaping whitespace
         $string = preg_replace('/\s/', '\\ ', $string);
@@ -28,7 +28,7 @@ abstract class AbstractExecConverter extends AbstractConverter
         return $string;
     }
 
-    public static function hasNiceSupport()
+    protected static function hasNiceSupport()
     {
         exec("nice 2>&1", $niceOutput);
 
@@ -42,15 +42,18 @@ abstract class AbstractExecConverter extends AbstractConverter
 
                 return true;
             }
-
             return false;
         }
     }
 
-    public function runValidations()
+    /**
+     * Check basis operationality of exec converters.
+     *
+     * @throws  SystemRequirementsNotMetException
+     * @return  void
+     */
+    protected function checkOperationality()
     {
-        //parent::runValidations();
-
         if (!function_exists('exec')) {
             throw new SystemRequirementsNotMetException('exec() is not enabled.');
         }

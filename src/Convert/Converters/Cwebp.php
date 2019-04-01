@@ -73,6 +73,16 @@ class Cwebp extends AbstractExecConverter
         'Linux' => [ 'cwebp-linux', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568']
     ];
 
+    /**
+     * Check operationality of Cwebp converter.
+     *
+     */
+     /*
+    protected function checkOperationality()
+    {
+        parent::checkOperationality();
+    }*/
+
     private static function executeBinary($binary, $commandOptions, $useNice, $logger)
     {
         $command = ($useNice ? 'nice ' : '') . $binary . ' ' . $commandOptions;

@@ -2,7 +2,6 @@
 
 namespace WebPConvert\Tests\Convert\Converters\AbstractConverters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
 use WebPConvert\Tests\Convert\Converters\ExposedConverter;
 use WebPConvert\Tests\Convert\Converters\SuccessGuaranteedConverter;
 

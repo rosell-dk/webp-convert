@@ -22,34 +22,13 @@ class ImagickBinary extends AbstractExecConverter
             'required' => false
         ],
     ];
-    //public $id = 'imagickbinary';
-    public static function imagickInstalled()
-    {
-        exec('convert -version', $output, $returnCode);
-        return ($returnCode == 0);
-    }
-    // Check if webp delegate is installed
-    public static function webPDelegateInstalled()
-    {
-        /* HM. We should not rely on grep being available
-        $command = 'convert -list configure | grep -i "delegates" | grep -i webp';
-        exec($command, $output, $returnCode);
-        return (count($output) > 0);
-        */
-        $command = 'convert -version';
-        exec($command, $output, $returnCode);
-        $hasDelegate = false;
-        foreach ($output as $line) {
-            if (preg_match('/Delegate.*webp.*/i', $line)) {
-                return true;
-            }
-        }
-        return false;
-    }
-    // Although this method is public, do not call directly.
-    // You should rather call the static convert() function, defined in AbstractConverter, which
-    // takes care of preparing stuff before calling doConvert, and validating after.
-    protected function doConvert()
+
+    /**
+     * Check (general) operationality of imagack converter executable
+     *
+     * @throws SystemRequirementsNotMetException  if system requirements are not met
+     */
+    protected function checkOperationality()
     {
         if (!self::imagickInstalled()) {
             throw new SystemRequirementsNotMetException('imagick is not installed');
@@ -57,6 +36,10 @@ class ImagickBinary extends AbstractExecConverter
         if (!self::webPDelegateInstalled()) {
             throw new SystemRequirementsNotMetException('webp delegate missing');
         }
+    }
+
+    protected function doConvert()
+    {
         //$this->logLn('Using quality:' . $this->getCalculatedQuality());
         // Should we use "magick" or "convert" command?
         // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
@@ -84,4 +67,30 @@ class ImagickBinary extends AbstractExecConverter
             throw new SystemRequirementsNotMetException('The exec call failed');
         }
     }
+
+    public static function imagickInstalled()
+    {
+        exec('convert -version', $output, $returnCode);
+        return ($returnCode == 0);
+    }
+    
+    // Check if webp delegate is installed
+    public static function webPDelegateInstalled()
+    {
+        /* HM. We should not rely on grep being available
+        $command = 'convert -list configure | grep -i "delegates" | grep -i webp';
+        exec($command, $output, $returnCode);
+        return (count($output) > 0);
+        */
+        $command = 'convert -version';
+        exec($command, $output, $returnCode);
+        $hasDelegate = false;
+        foreach ($output as $line) {
+            if (preg_match('/Delegate.*webp.*/i', $line)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

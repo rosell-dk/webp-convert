@@ -12,6 +12,50 @@ class Gd extends AbstractConverter
     public static $extraOptions = [];
 
     /**
+     * Check (general) operationality of Gd converter.
+     *
+     * @throws SystemRequirementsNotMetException  if system requirements are not met
+     */
+    protected function checkOperationality()
+    {
+        if (!extension_loaded('gd')) {
+            throw new SystemRequirementsNotMetException('Required Gd extension is not available.');
+        }
+
+        if (!function_exists('imagewebp')) {
+            throw new SystemRequirementsNotMetException(
+                'Gd has been compiled without webp support.'
+            );
+        }
+    }
+
+    /**
+     * Check if specific file is convertable with current converter / converter settings.
+     *
+     * @throws SystemRequirementsNotMetException  if Gd has been compiled without support for image type
+     */
+    protected function checkConvertability()
+    {
+        $mimeType = $this->getMimeTypeOfSource();
+        switch ($mimeType) {
+            case 'image/png':
+                if (!function_exists('imagecreatefrompng')) {
+                    throw new SystemRequirementsNotMetException(
+                        'Gd has been compiled without PNG support and can therefore not convert this PNG image.'
+                    );
+                }
+                break;
+
+            case 'image/jpeg':
+                if (!function_exists('imagecreatefromjpeg')) {
+                    throw new SystemRequirementsNotMetException(
+                        'Gd has been compiled without Jpeg support and can therefore not convert this jpeg image.'
+                    );
+                }
+        }
+    }
+
+    /**
      * Find out if all functions exists.
      *
      * @return boolean
@@ -76,15 +120,6 @@ class Gd extends AbstractConverter
     // takes care of preparing stuff before calling doConvert, and validating after.
     protected function doConvert()
     {
-        if (!extension_loaded('gd')) {
-            throw new SystemRequirementsNotMetException('Required Gd extension is not available.');
-        }
-
-        if (!function_exists('imagewebp')) {
-            throw new SystemRequirementsNotMetException(
-                'Gd has been compiled without webp support.'
-            );
-        }
 
         $this->logLn('GD Version: ' . gd_info()["GD Version"]);
 
@@ -94,11 +129,6 @@ class Gd extends AbstractConverter
         $mimeType = $this->getMimeTypeOfSource();
         switch ($mimeType) {
             case 'image/png':
-                if (!function_exists('imagecreatefrompng')) {
-                    throw new SystemRequirementsNotMetException(
-                        'Gd has been compiled without PNG support and can therefore not convert this PNG image.'
-                    );
-                }
                 $image = imagecreatefrompng($this->source);
                 if (!$image) {
                     throw new ConversionFailedException(
@@ -108,11 +138,6 @@ class Gd extends AbstractConverter
                 break;
 
             case 'image/jpeg':
-                if (!function_exists('imagecreatefromjpeg')) {
-                    throw new SystemRequirementsNotMetException(
-                        'Gd has been compiled without Jpeg support and can therefore not convert this jpeg image.'
-                    );
-                }
                 $image = imagecreatefromjpeg($this->source);
                 if (!$image) {
                     throw new ConversionFailedException(
