@@ -2,14 +2,14 @@
 
 namespace WebPConvert\Tests\Convert\Helpers;
 
-use WebPConvert\Convert\Helpers\JpegQualityDetector;
+use WebPConvert\Helpers\JpegQualityDetector;
 
 use PHPUnit\Framework\TestCase;
 
 class JpegQualityDetectorTest extends TestCase
 {
 
-    private static $imgDir = __DIR__ . '/../../images';
+    private static $imgDir = __DIR__ . '/../images';
 
     public function testDetectQualityOfJpg()
     {
@@ -19,6 +19,14 @@ class JpegQualityDetectorTest extends TestCase
         } else {
             $this->assertSame(61, $result);
         }
+    }
+
+
+    public function testDetectQualityOfJpgNonExistantFile()
+    {
+        $result = JpegQualityDetector::detectQualityOfJpg('i dont exist');
+
+        $this->assertNull($result);
     }
 
 }
