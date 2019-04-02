@@ -8,51 +8,11 @@
 
 namespace WebPConvert\Convert\Converters\AbstractConverters;
 
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
 
 abstract class AbstractCloudConverter extends AbstractConverter
 {
-    /**
-     *  Test if basic requirements are met for using curl.
-     *
-     *  @throws SystemRequirementsNotMetException  if requirements are not met.
-     *  @return void
-     */
-    public static function testCurlRequirements()
-    {
-        if (!extension_loaded('curl')) {
-            throw new SystemRequirementsNotMetException('Required cURL extension is not available.');
-        }
-
-        if (!function_exists('curl_init')) {
-            throw new SystemRequirementsNotMetException('Required url_init() function is not available.');
-        }
-
-        if (!function_exists('curl_file_create')) {
-            throw new SystemRequirementsNotMetException(
-                'Required curl_file_create() function is not available (requires PHP > 5.5).'
-            );
-        }
-    }
-
-    /**
-     *  Init curl.
-     *
-     * @throws  SystemRequirementsNotMetException  if curl could not be initialized
-     * @return  resource  curl handle
-     */
-    public static function initCurl()
-    {
-        // Get curl handle
-        $ch = curl_init();
-        if ($ch === false) {
-            throw new SystemRequirementsNotMetException('Could not initialise cURL.');
-        }
-        return $ch;
-    }
-
     /**
      * Parse a shordhandsize string as the ones returned by ini_get()
      *
@@ -65,7 +25,7 @@ abstract class AbstractCloudConverter extends AbstractConverter
      * @return float|false  The parsed size (beware: it is float, do not check high numbers for equality),
      *                      or false if parse error
      */
-    public static function parseShortHandSize($shortHandSize)
+    protected static function parseShortHandSize($shortHandSize)
     {
 
         $result = preg_match("#^\\s*(\\d+(?:\\.\\d+)?)([bkmgtpezy]?)\\s*$#i", $shortHandSize, $matches);
@@ -98,7 +58,7 @@ abstract class AbstractCloudConverter extends AbstractConverter
     * @param  string  $varname  The configuration option name.
     * @return float|false  The parsed size or false if the configuration option does not exist
     */
-    public static function getIniBytes($iniVarName)
+    protected static function getIniBytes($iniVarName)
     {
         $iniVarValue = ini_get($iniVarName);
         if (($iniVarValue == '') || $iniVarValue === false) {
@@ -110,10 +70,10 @@ abstract class AbstractCloudConverter extends AbstractConverter
     /**
      *  Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini
      *
-     * @throws  ConversionFailedException  if filesize is too large
+     * @throws  ConversionFailedException  if filesize is larger than "upload_max_filesize" or "post_max_size"
      * @return  void
      */
-    public function testFilesizeRequirements()
+    protected function testFilesizeRequirements()
     {
         $fileSize = @filesize($this->source);
         if ($fileSize !== false) {
@@ -145,6 +105,65 @@ abstract class AbstractCloudConverter extends AbstractConverter
             // ini_get('memory_limit')
         }
     }
+
+    /**
+     * Check if specific file is convertable with current converter / converter settings.
+     *
+     */
+    protected function checkConvertability()
+    {
+        $this->testFilesizeRequirements();
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Converters\AbstractConverters;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
+
+abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
+{
+
+    /**
+     * Check basis operationality for converters relying on curl
+     *
+     * @throws  SystemRequirementsNotMetException
+     * @return  void
+     */
+    protected function checkOperationality()
+    {
+        if (!extension_loaded('curl')) {
+            throw new SystemRequirementsNotMetException('Required cURL extension is not available.');
+        }
+
+        if (!function_exists('curl_init')) {
+            throw new SystemRequirementsNotMetException('Required url_init() function is not available.');
+        }
+
+        if (!function_exists('curl_file_create')) {
+            throw new SystemRequirementsNotMetException(
+                'Required curl_file_create() function is not available (requires PHP > 5.5).'
+            );
+        }
+    }
+
+    /**
+     *  Init curl.
+     *
+     * @throws  SystemRequirementsNotMetException  if curl could not be initialized
+     * @return  resource  curl handle
+     */
+    public static function initCurl()
+    {
+        // Get curl handle
+        $ch = curl_init();
+        if ($ch === false) {
+            throw new SystemRequirementsNotMetException('Could not initialise cURL.');
+        }
+        return $ch;
+    }
 }
 
 ?><?php
@@ -160,13 +179,15 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFou
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Helpers\JpegQualityDetector;
+use WebPConvert\Loggers\BaseLogger;
 
-use \ImageMimeTypeGuesser\ImageMimeTypeGuesser;
+use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 
 abstract class AbstractConverter
 {
     /**
-     *  The actual conversion must be done by a concrete class.
+     * The actual conversion must be done by a concrete class.
      *
      */
     abstract protected function doConvert();
@@ -177,9 +198,7 @@ abstract class AbstractConverter
     public $logger;
     public $beginTime;
     public $sourceMimeType;
-
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
-
     public static $defaultOptions = [
         'quality' => 'auto',
         'max-quality' => 85,
@@ -191,6 +210,37 @@ abstract class AbstractConverter
         'skip-pngs' => false,
     ];
 
+    /**
+     * Check basis operationality
+     *
+     * Converters may override this method for the purpose of performing basic operationaly checks. It is for
+     * running general operation checks for a conversion method.
+     * If some requirement is not met, it should throw a ConverterNotOperationalException (or subtype)
+     *
+     * The method is called internally right before calling doConvert() method.
+     * - It SHOULD take options into account when relevant. For example, a missing api key for a
+     *   cloud converter should be detected here
+     * - It should NOT take the actual filename into consideration, as the purpose is *general*
+     *   For that pupose, converters should override checkConvertability
+     *   Also note that doConvert method is allowed to throw ConverterNotOperationalException too.
+     *
+     * @return  void
+     */
+    protected function checkOperationality()
+    {
+    }
+
+    /**
+     * Converters may override this for the purpose of performing checks on the concrete file.
+     *
+     * This can for example be used for rejecting big uploads in cloud converters or rejecting unsupported
+     * image types.
+     *
+     * @return  void
+     */
+    protected function checkConvertability()
+    {
+    }
 
     public function __construct($source, $destination, $options = [], $logger = null)
     {
@@ -299,6 +349,15 @@ abstract class AbstractConverter
         //return false;   // let PHP handle the error from here
     }
 
+    /**
+     * Convert an image to webp.
+     *
+     * @param   string  $source              path to source file
+     * @param   string  $destination         path to destination
+     * @param   array   $options (optional)  options for conversion
+     * @param   \WebPConvert\Loggers\BaseLogger $logger (optional)
+     * @return  void
+     */
     public static function convert($source, $destination, $options = [], $logger = null)
     {
         $instance = self::createInstance($source, $destination, $options, $logger);
@@ -307,6 +366,8 @@ abstract class AbstractConverter
         $instance->logLn(self::getConverterDisplayName() . ' converter ignited');
         $instance->prepareConvert();
         try {
+            $instance->checkOperationality();
+            $instance->checkConvertability();
             $instance->doConvert();
         } catch (ConversionFailedException $e) {
             throw $e;
@@ -379,15 +440,7 @@ abstract class AbstractConverter
         }
 
         // Prepare options
-        $this->runValidations();
-
-        // Prepare options
         $this->prepareOptions();
-    }
-
-    // The individual converters can override this...
-    public function runValidations()
-    {
     }
 
     /**
@@ -522,32 +575,7 @@ abstract class AbstractConverter
      */
     public static function detectQualityOfJpg($filename)
     {
-        // Try Imagick extension
-        if (extension_loaded('imagick') && class_exists('\\Imagick')) {
-            $img = new \Imagick($filename);
-
-            // The required function is available as from PECL imagick v2.2.2
-            if (method_exists($img, 'getImageCompressionQuality')) {
-                return $img->getImageCompressionQuality();
-            }
-        }
-
-        // Gmagick extension doesn't seem to support this (yet):
-        // https://bugs.php.net/bug.php?id=63939
-
-        if (function_exists('shell_exec')) {
-            // Try Imagick
-            $quality = shell_exec("identify -format '%Q' " . escapeshellarg($filename));
-            if ($quality) {
-                return intval($quality);
-            }
-
-            // Try GraphicsMagick
-            $quality = shell_exec("gm identify -format '%Q' " . escapeshellarg($filename));
-            if ($quality) {
-                return intval($quality);
-            }
-        }
+        return JpegQualityDetector::detectQualityOfJpg($filename);
     }
 
     /**
@@ -657,7 +685,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 abstract class AbstractExecConverter extends AbstractConverter
 {
-    public static function escapeFilename($string)
+    protected static function escapeFilename($string)
     {
         // Escaping whitespace
         $string = preg_replace('/\s/', '\\ ', $string);
@@ -676,7 +704,7 @@ abstract class AbstractExecConverter extends AbstractConverter
         return $string;
     }
 
-    public static function hasNiceSupport()
+    protected static function hasNiceSupport()
     {
         exec("nice 2>&1", $niceOutput);
 
@@ -690,15 +718,18 @@ abstract class AbstractExecConverter extends AbstractConverter
 
                 return true;
             }
-
             return false;
         }
     }
 
-    public function runValidations()
+    /**
+     * Check basis operationality of exec converters.
+     *
+     * @throws  SystemRequirementsNotMetException
+     * @return  void
+     */
+    protected function checkOperationality()
     {
-        //parent::runValidations();
-
         if (!function_exists('exec')) {
             throw new SystemRequirementsNotMetException('exec() is not enabled.');
         }
@@ -779,6 +810,16 @@ class Cwebp extends AbstractExecConverter
         'FreeBSD' => [ 'cwebp-fbsd', 'e5cbea11c97fadffe221fdf57c093c19af2737e4bbd2cb3cd5e908de64286573'],
         'Linux' => [ 'cwebp-linux', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568']
     ];
+
+    /**
+     * Check operationality of Cwebp converter.
+     *
+     */
+     /*
+    protected function checkOperationality()
+    {
+        parent::checkOperationality();
+    }*/
 
     private static function executeBinary($binary, $commandOptions, $useNice, $logger)
     {
@@ -1057,12 +1098,12 @@ class Cwebp extends AbstractExecConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractCloudConverter;
+use WebPConvert\Convert\Converters\AbstractConverters\AbstractCloudCurlConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
-class Ewww extends AbstractCloudConverter
+class Ewww extends AbstractCloudCurlConverter
 {
     public static $extraOptions = [
         [
@@ -1074,12 +1115,16 @@ class Ewww extends AbstractCloudConverter
         ],
     ];
 
-    // Although this method is public, do not call directly.
-    // You should rather call the static convert() function, defined in AbstractConverter, which
-    // takes care of preparing stuff before calling doConvert, and validating after.
-    protected function doConvert()
+    /**
+     * Check operationality of Ewww converter.
+     *
+     * @throws SystemRequirementsNotMetException  if system requirements are not met (curl)
+     * @throws ConverterNotOperationalException   if key is missing or invalid, or quota has exceeded
+     */
+    protected function checkOperationality()
     {
-        self::testCurlRequirements();
+        // First check for curl requirements
+        parent::checkOperationality();
 
         $options = $this->options;
 
@@ -1103,8 +1148,16 @@ class Ewww extends AbstractCloudConverter
                 throw new ConverterNotOperationalException('key is invalid');
                 break;
         }
+    }
 
-        $this->testFilesizeRequirements();
+    // Although this method is public, do not call directly.
+    // You should rather call the static convert() function, defined in AbstractConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    protected function doConvert()
+    {
+
+        $options = $this->options;
+
         $ch = self::initCurl();
 
         $curlOptions = [
@@ -1185,6 +1238,9 @@ class Ewww extends AbstractCloudConverter
             $ch = curl_init();
         } catch (\Exception $e) {
             return 'curl is not installed';
+        }
+        if ($ch === false) {
+            return 'curl could not be initialized';
         }
         curl_setopt_array(
             $ch,
@@ -1350,6 +1406,50 @@ class Gd extends AbstractConverter
     public static $extraOptions = [];
 
     /**
+     * Check (general) operationality of Gd converter.
+     *
+     * @throws SystemRequirementsNotMetException  if system requirements are not met
+     */
+    protected function checkOperationality()
+    {
+        if (!extension_loaded('gd')) {
+            throw new SystemRequirementsNotMetException('Required Gd extension is not available.');
+        }
+
+        if (!function_exists('imagewebp')) {
+            throw new SystemRequirementsNotMetException(
+                'Gd has been compiled without webp support.'
+            );
+        }
+    }
+
+    /**
+     * Check if specific file is convertable with current converter / converter settings.
+     *
+     * @throws SystemRequirementsNotMetException  if Gd has been compiled without support for image type
+     */
+    protected function checkConvertability()
+    {
+        $mimeType = $this->getMimeTypeOfSource();
+        switch ($mimeType) {
+            case 'image/png':
+                if (!function_exists('imagecreatefrompng')) {
+                    throw new SystemRequirementsNotMetException(
+                        'Gd has been compiled without PNG support and can therefore not convert this PNG image.'
+                    );
+                }
+                break;
+
+            case 'image/jpeg':
+                if (!function_exists('imagecreatefromjpeg')) {
+                    throw new SystemRequirementsNotMetException(
+                        'Gd has been compiled without Jpeg support and can therefore not convert this jpeg image.'
+                    );
+                }
+        }
+    }
+
+    /**
      * Find out if all functions exists.
      *
      * @return boolean
@@ -1414,15 +1514,6 @@ class Gd extends AbstractConverter
     // takes care of preparing stuff before calling doConvert, and validating after.
     protected function doConvert()
     {
-        if (!extension_loaded('gd')) {
-            throw new SystemRequirementsNotMetException('Required Gd extension is not available.');
-        }
-
-        if (!function_exists('imagewebp')) {
-            throw new SystemRequirementsNotMetException(
-                'Gd has been compiled without webp support.'
-            );
-        }
 
         $this->logLn('GD Version: ' . gd_info()["GD Version"]);
 
@@ -1432,11 +1523,6 @@ class Gd extends AbstractConverter
         $mimeType = $this->getMimeTypeOfSource();
         switch ($mimeType) {
             case 'image/png':
-                if (!function_exists('imagecreatefrompng')) {
-                    throw new SystemRequirementsNotMetException(
-                        'Gd has been compiled without PNG support and can therefore not convert this PNG image.'
-                    );
-                }
                 $image = imagecreatefrompng($this->source);
                 if (!$image) {
                     throw new ConversionFailedException(
@@ -1446,11 +1532,6 @@ class Gd extends AbstractConverter
                 break;
 
             case 'image/jpeg':
-                if (!function_exists('imagecreatefromjpeg')) {
-                    throw new SystemRequirementsNotMetException(
-                        'Gd has been compiled without Jpeg support and can therefore not convert this jpeg image.'
-                    );
-                }
                 $image = imagecreatefromjpeg($this->source);
                 if (!$image) {
                     throw new ConversionFailedException(
@@ -1545,10 +1626,16 @@ class Gmagick extends AbstractConverter
 {
     public static $extraOptions = [];
 
-    // Although this method is public, do not call directly.
-    // You should rather call the static convert() function, defined in AbstractConverter, which
-    // takes care of preparing stuff before calling doConvert, and validating after.
-    protected function doConvert()
+    /**
+     * Check (general) operationality of Gmagick converter.
+     *
+     * Note:
+     * It may be that Gd has been compiled without jpeg support or png support.
+     * We do not check for this here, as the converter could still be used for the other.
+     *
+     * @throws SystemRequirementsNotMetException  if system requirements are not met
+     */
+    protected function checkOperationality()
     {
         if (!extension_loaded('Gmagick')) {
             throw new SystemRequirementsNotMetException('Required Gmagick extension is not available.');
@@ -1560,16 +1647,56 @@ class Gmagick extends AbstractConverter
             );
         }
 
-        $options = $this->options;
-
-        // This might throw an exception.
-        // We let it...
         $im = new \Gmagick($this->source);
 
-
-        // Throws an exception if Gmagick does not support WebP conversion
         if (!in_array('WEBP', $im->queryformats())) {
             throw new SystemRequirementsNotMetException('Gmagick was compiled without WebP support.');
+        }
+    }
+
+    /**
+     * Check if specific file is convertable with current converter / converter settings.
+     *
+     * @throws SystemRequirementsNotMetException  if Gmagick does not support image type
+     */
+    protected function checkConvertability()
+    {
+        $im = new \Gmagick();
+        $mimeType = $this->getMimeTypeOfSource();
+        switch ($mimeType) {
+            case 'image/png':
+                if (!in_array('PNG', $im->queryFormats())) {
+                    throw new SystemRequirementsNotMetException(
+                        'Imagick has been compiled without PNG support and can therefore not convert this PNG image.'
+                    );
+                }
+                break;
+            case 'image/jpeg':
+                if (!in_array('JPEG', $im->queryFormats())) {
+                    throw new SystemRequirementsNotMetException(
+                        'Imagick has been compiled without Jpeg support and can therefore not convert this Jpeg image.'
+                    );
+                }
+                break;
+        }
+    }
+
+    // Although this method is public, do not call directly.
+    // You should rather call the static convert() function, defined in AbstractConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    protected function doConvert()
+    {
+
+        $options = $this->options;
+
+        try {
+            $im = new \Gmagick($this->source);
+        } catch (\Exception $e) {
+            throw new ConversionFailedException(
+                'Failed creating Gmagick object of file',
+                'Failed creating Gmagick object of file: "' . $this->source . '" - Gmagick threw an exception.',
+                $e
+            );
         }
 
         /*
@@ -1645,12 +1772,17 @@ class Imagick extends AbstractConverter
     public static $extraOptions = [];
 
 
-    // Although this method is public, do not call directly.
-    // You should rather call the static convert() function, defined in AbstractConverter, which
-    // takes care of preparing stuff before calling doConvert, and validating after.
-    protected function doConvert()
+    /**
+     * Check operationality of Imagick converter.
+     *
+     * Note:
+     * It may be that Gd has been compiled without jpeg support or png support.
+     * We do not check for this here, as the converter could still be used for the other.
+     *
+     * @throws SystemRequirementsNotMetException  if system requirements are not met
+     */
+    protected function checkOperationality()
     {
-
         if (!extension_loaded('imagick')) {
             throw new SystemRequirementsNotMetException('Required iMagick extension is not available.');
         }
@@ -1661,19 +1793,61 @@ class Imagick extends AbstractConverter
             );
         }
 
-        $options = $this->options;
+        $im = new \Imagick();
 
-        // This might throw an exception.
-        // Ie "ImagickException: no decode delegate for this image format `JPEG'"
-        // We let it...
-        $im = new \Imagick($this->source);
-        //$im = new \Imagick();
-        //$im->readImage($this->source);
-
-        // Throws an exception if iMagick does not support WebP conversion
         if (!in_array('WEBP', $im->queryFormats())) {
             throw new SystemRequirementsNotMetException('iMagick was compiled without WebP support.');
         }
+    }
+
+    /**
+     * Check if specific file is convertable with current converter / converter settings.
+     *
+     * @throws SystemRequirementsNotMetException  if Imagick does not support image type
+     */
+    protected function checkConvertability()
+    {
+        $im = new \Imagick();
+        $mimeType = $this->getMimeTypeOfSource();
+        switch ($mimeType) {
+            case 'image/png':
+                if (!in_array('PNG', $im->queryFormats())) {
+                    throw new SystemRequirementsNotMetException(
+                        'Imagick has been compiled without PNG support and can therefore not convert this PNG image.'
+                    );
+                }
+                break;
+            case 'image/jpeg':
+                if (!in_array('JPEG', $im->queryFormats())) {
+                    throw new SystemRequirementsNotMetException(
+                        'Imagick has been compiled without Jpeg support and can therefore not convert this Jpeg image.'
+                    );
+                }
+                break;
+        }
+    }
+
+    // Although this method is public, do not call directly.
+    // You should rather call the static convert() function, defined in AbstractConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    protected function doConvert()
+    {
+
+
+        $options = $this->options;
+
+        try {
+            $im = new \Imagick($this->source);
+        } catch (\Exception $e) {
+            throw new ConversionFailedException(
+                'Failed creating Gmagick object of file',
+                'Failed creating Gmagick object of file: "' . $this->source . '" - Imagick threw an exception.',
+                $e
+            );
+        }
+
+        //$im = new \Imagick();
+        //$im->readImage($this->source);
 
         $im->setImageFormat('WEBP');
 
@@ -1714,8 +1888,6 @@ class Imagick extends AbstractConverter
             $im->setImageCompressionQuality($this->getCalculatedQuality());
         }
 
-
-
         // https://stackoverflow.com/questions/29171248/php-imagick-jpeg-optimization
         // setImageFormat
 
@@ -1751,8 +1923,6 @@ class Imagick extends AbstractConverter
             throw new CreateDestinationFileException('Failed writing file');
         }
 
-
-
         // Btw: check out processWebp() method here:
         // https://github.com/Intervention/image/blob/master/src/Intervention/Image/Imagick/Encoder.php
     }
@@ -1782,34 +1952,13 @@ class ImagickBinary extends AbstractExecConverter
             'required' => false
         ],
     ];
-    //public $id = 'imagickbinary';
-    public static function imagickInstalled()
-    {
-        exec('convert -version', $output, $returnCode);
-        return ($returnCode == 0);
-    }
-    // Check if webp delegate is installed
-    public static function webPDelegateInstalled()
-    {
-        /* HM. We should not rely on grep being available
-        $command = 'convert -list configure | grep -i "delegates" | grep -i webp';
-        exec($command, $output, $returnCode);
-        return (count($output) > 0);
-        */
-        $command = 'convert -version';
-        exec($command, $output, $returnCode);
-        $hasDelegate = false;
-        foreach ($output as $line) {
-            if (preg_match('/Delegate.*webp.*/i', $line)) {
-                return true;
-            }
-        }
-        return false;
-    }
-    // Although this method is public, do not call directly.
-    // You should rather call the static convert() function, defined in AbstractConverter, which
-    // takes care of preparing stuff before calling doConvert, and validating after.
-    protected function doConvert()
+
+    /**
+     * Check (general) operationality of imagack converter executable
+     *
+     * @throws SystemRequirementsNotMetException  if system requirements are not met
+     */
+    protected function checkOperationality()
     {
         if (!self::imagickInstalled()) {
             throw new SystemRequirementsNotMetException('imagick is not installed');
@@ -1817,6 +1966,10 @@ class ImagickBinary extends AbstractExecConverter
         if (!self::webPDelegateInstalled()) {
             throw new SystemRequirementsNotMetException('webp delegate missing');
         }
+    }
+
+    protected function doConvert()
+    {
         //$this->logLn('Using quality:' . $this->getCalculatedQuality());
         // Should we use "magick" or "convert" command?
         // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
@@ -1843,6 +1996,31 @@ class ImagickBinary extends AbstractExecConverter
             $this->logLn('output:' . print_r(implode("\n", $output), true));
             throw new SystemRequirementsNotMetException('The exec call failed');
         }
+    }
+
+    public static function imagickInstalled()
+    {
+        exec('convert -version', $output, $returnCode);
+        return ($returnCode == 0);
+    }
+    
+    // Check if webp delegate is installed
+    public static function webPDelegateInstalled()
+    {
+        /* HM. We should not rely on grep being available
+        $command = 'convert -list configure | grep -i "delegates" | grep -i webp';
+        exec($command, $output, $returnCode);
+        return (count($output) > 0);
+        */
+        $command = 'convert -version';
+        exec($command, $output, $returnCode);
+        $hasDelegate = false;
+        foreach ($output as $line) {
+            if (preg_match('/Delegate.*webp.*/i', $line)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 
@@ -1891,7 +2069,6 @@ class Stack extends AbstractConverter
     public static $availableConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'wpc', 'ewww'];
     public static $localConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'];
 
-
     public static function getClassNameOfConverter($converterId)
     {
         if (strtolower($converterId) == $converterId) {
@@ -1910,12 +2087,27 @@ class Stack extends AbstractConverter
         return $className;
     }
 
-    // Although this method is public, do not call directly.
-    // You should rather call the static convert() function, defined in AbstractConverter, which
-    // takes care of preparing stuff before calling doConvert, and validating after.
+    /**
+     * Check (general) operationality of imagack converter executable
+     *
+     * @throws SystemRequirementsNotMetException  if system requirements are not met
+     */
+    protected function checkOperationality()
+    {
+        if (count($this->options) == 0) {
+            throw new ConverterNotOperationalException(
+                'Converter stack is empty! - no converters to try, no conversion can be made!'
+            );
+        }
+
+        // TODO: We should test if all converters are found in order to detect problems early
+    }
+
     protected function doConvert()
     {
         $options = $this->options;
+
+        $beginTimeStack = microtime(true);
 
         // If we have set converter options for a converter, which is not in the converter array,
         // then we add it to the array
@@ -1960,16 +2152,7 @@ class Stack extends AbstractConverter
 
             $beginTime = microtime(true);
 
-            // We could have decided to carry on, if a converter could not be found,
-            // However, such an error should be corrected, so we decided to fail in that case (and skip rest of queue)
             $className = self::getClassNameOfConverter($converterId);
-            if (!is_callable([$className, 'convert'])) {
-                throw new ConverterNotFoundException(
-                    'There is no converter with id:' . $converterId .
-                    ' (and it is not a class either)'
-                );
-            }
-
 
             try {
                 $converterDisplayName = call_user_func(
@@ -2011,7 +2194,7 @@ class Stack extends AbstractConverter
         }
 
         $this->ln();
-        $this->logLn('Stack failed in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
+        $this->logLn('Stack failed in ' . round((microtime(true) - $beginTimeStack) * 1000) . ' ms');
 
         if ($anyRuntimeErrors) {
             // At least one converter failed
@@ -2030,12 +2213,12 @@ class Stack extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractCloudConverter;
+use WebPConvert\Convert\Converters\AbstractConverters\AbstractCloudCurlConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
-class Wpc extends AbstractCloudConverter
+class Wpc extends AbstractCloudCurlConverter
 {
     public static $extraOptions = [
         [
@@ -2115,8 +2298,6 @@ class Wpc extends AbstractCloudConverter
     {
         $options = $this->options;
 
-        self::testCurlRequirements();
-
         $apiVersion = $options['api-version'];
 
         if (!function_exists('curl_file_create')) {
@@ -2157,8 +2338,6 @@ class Wpc extends AbstractCloudConverter
                 'or the WebP Express plugin for Wordpress - and supply the url.'
             );
         }
-
-        $this->testFilesizeRequirements();
 
         // Got some code here:
         // https://coderwall.com/p/v4ps1a/send-a-file-via-post-with-curl-and-php
@@ -2331,9 +2510,28 @@ class Wpc extends AbstractCloudConverter
 
 namespace WebPConvert\Convert\Exceptions;
 
-use WebPConvert\Convert\Exceptions\ConversionFailedException;
+use WebPConvert\Exceptions\WebPConvertException;
 
-class ConversionFailedException extends \Exception
+/**
+ *  ConversionFailedException is the base exception in the hierarchy for conversion errors.
+ *
+ *  Exception hierarchy from here:
+ *
+ *  WebpConvertException
+ *      ConversionFailedException
+ *          ConversionDeclinedException
+ *          ConverterNotOperationalException
+ *              SystemRequirementsNotMetException
+ *          FileSystemProblemsException
+ *              CreateDestinationFileException
+ *              CreateDestinationFolderException
+ *          InvalidInputException
+ *              ConverterNotFoundException
+ *              InvalidImageTypeException
+ *              TargetNotFoundException
+ *          UnhandledException
+ */
+class ConversionFailedException extends WebPConvertException
 {
     public $description = 'The converter failed converting, although requirements seemed to be met';
 }
@@ -2473,6 +2671,218 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInputException;
 class TargetNotFoundException extends InvalidInputException
 {
     public $description = 'The converter could not locate source file';
+}
+
+?><?php
+
+namespace WebPConvert\Exceptions;
+
+use WebPConvert\Exceptions\WebPConvertException;
+
+/**
+ *  WebPConvertException is the base exception for all exceptions in this library.
+ *
+ *  Note that the parameters for the constructor differs from that of the Exception class.
+ *  We do not use exception code here, but are instead allowing two version of the error message:
+ *  a short version and a long version.
+ *  The short version may not contain special characters or dynamic content.
+ *  The detailed version may.
+ *  If the detailed version isn't provided, getDetailedMessage will return the short version.
+ *
+ */
+class WarningException extends WebPConvertException
+{
+    public $description = 'A warning was issued and turned into an exception';
+}
+
+?><?php
+
+namespace WebPConvert\Exceptions;
+
+/**
+ *  WebPConvertException is the base exception for all exceptions in this library.
+ *
+ *  Note that the parameters for the constructor differs from that of the Exception class.
+ *  We do not use exception code here, but are instead allowing two version of the error message:
+ *  a short version and a long version.
+ *  The short version may not contain special characters or dynamic content.
+ *  The detailed version may.
+ *  If the detailed version isn't provided, getDetailedMessage will return the short version.
+ *
+ */
+class WebPConvertException extends \Exception
+{
+    public $description = 'The converter failed converting, although requirements seemed to be met';
+    protected $detailedMessage;
+    protected $shortMessage;
+
+    public function getDetailedMessage()
+    {
+        return $this->detailedMessage;
+    }
+
+    public function getShortMessage()
+    {
+        return $this->shortMessage;
+    }
+
+    public function __construct($shortMessage = "", $detailedMessage = "", $previous = null)
+    {
+        $detailedMessage = ($detailedMessage != '') ? $detailedMessage : $shortMessage;
+        $this->detailedMessage = $detailedMessage;
+        $this->shortMessage = $shortMessage;
+
+        parent::__construct(
+            $detailedMessage,
+            0,
+            $previous
+        );
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Helpers;
+
+use WebPConvert\Helpers\WarningsIntoExceptions;
+
+abstract class JpegQualityDetector
+{
+
+    /**
+     * Try to detect quality of jpeg using imagick extension
+     *
+     * @param  string  $filename  A complete file path to file to be examined
+     * @return int|null  Quality, or null if it was not possible to detect quality
+     */
+    private static function detectQualityOfJpgUsingImagickExtension($filename)
+    {
+        if (extension_loaded('imagick') && class_exists('\\Imagick')) {
+            try {
+                $img = new \Imagick($filename);
+
+                // The required function is available as from PECL imagick v2.2.2
+                if (method_exists($img, 'getImageCompressionQuality')) {
+                    return $img->getImageCompressionQuality();
+                }
+            } catch (\Exception $e) {
+                // Well well, it just didn't work out.
+                // - But perhaps next method will work...
+            }
+        }
+        return null;
+    }
+
+
+    /**
+     * Try to detect quality of jpeg using imagick binary
+     *
+     * @param  string  $filename  A complete file path to file to be examined
+     * @return int|null  Quality, or null if it was not possible to detect quality
+     */
+    private static function detectQualityOfJpgUsingImagickBinary($filename)
+    {
+        if (function_exists('exec')) {
+            // Try Imagick using exec, and routing stderr to stdout (the "2>$1" magic)
+            exec("identify -format '%Q' " . escapeshellarg($filename) . " 2>&1", $output, $returnCode);
+            //echo 'out:' . print_r($output, true);
+            if ((intval($returnCode) == 0) && (is_array($output)) && (count($output) == 1)) {
+                return intval($output[0]);
+            }
+        }
+        return null;
+    }
+
+
+    /**
+     * Try to detect quality of jpeg using gmagick binary
+     *
+     * @param  string  $filename  A complete file path to file to be examined
+     * @return int|null  Quality, or null if it was not possible to detect quality
+     */
+    private static function detectQualityOfJpgUsingGmagickBinary($filename)
+    {
+        if (function_exists('exec')) {
+            // Try GraphicsMagick
+            exec("gm identify -format '%Q' " . escapeshellarg($filename) . " 2>&1", $output, $returnCode);
+            if ((intval($returnCode) == 0) && (is_array($output)) && (count($output) == 1)) {
+                return intval($output[0]);
+            }
+        }
+        return null;
+    }
+
+
+    /**
+     * Try to detect quality of jpeg.
+     *
+     * Note: This method does not throw errors, but might dispatch warnings.
+     * You can use the WarningsIntoExceptions class if it is critical to you that nothing gets "printed"
+     *
+     * @param  string  $filename  A complete file path to file to be examined
+     * @return int|null  Quality, or null if it was not possible to detect quality
+     */
+    public static function detectQualityOfJpg($filename)
+    {
+
+        //trigger_error('warning test', E_USER_WARNING);
+
+        // Test that file exists in order not to break things.
+        if (!file_exists($filename)) {
+            // One could argue that it would be better to throw an Exception...?
+            return null;
+        }
+
+        // Try Imagick extension, if available
+        $quality = self::detectQualityOfJpgUsingImagickExtension($filename);
+
+        if (is_null($quality)) {
+            $quality = self::detectQualityOfJpgUsingImagickBinary($filename);
+        }
+
+        if (is_null($quality)) {
+            $quality = self::detectQualityOfJpgUsingGmagickBinary($filename);
+        }
+
+        return $quality;
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Helpers;
+
+use WebPConvert\Exceptions\WarningException;
+
+abstract class WarningsIntoExceptions
+{
+
+    public static function warningHandler($errno, $errstr, $errfile, $errline)
+    {
+        //echo 'aeothsutsanoheutsnhaoeu: ' . E_USER_WARNING . ':' . E_WARNING;
+        throw new WarningException(
+            'A warning was issued',
+            'A warning was issued: ' . ': ' . $errstr . ' in ' . $errfile . ', line ' . $errline .
+                ', PHP ' . PHP_VERSION .
+                ' (' . PHP_OS . ')'
+        );
+
+        /* Don't execute PHP internal error handler */
+        return true;
+    }
+
+    public static function activate()
+    {
+        set_error_handler(
+            array('\\WebPConvert\\Helpers\\WarningsIntoExceptions', "warningHandler"),
+            E_WARNING | E_USER_WARNING | E_ALL
+        );   // E_USER_WARNING
+    }
+
+    public static function deactivate()
+    {
+        restore_error_handler();
+    }
 }
 
 ?><?php
@@ -2807,12 +3217,15 @@ use WebPConvert\Serve\Report;
 class ServeConverted extends ServeBase
 {
 
+    /*
+    Not used, currently...
     private function addXOptionsHeader()
     {
         if ($this->options['add-x-header-options']) {
             $this->header('X-WebP-Convert-Options:' . Report::getPrintableOptionsAsString($this->options));
         }
     }
+    */
 
     private function addHeadersPreventingCaching()
     {
@@ -2870,7 +3283,6 @@ class ServeConverted extends ServeBase
     {
 
         $criticalFail = false;
-        $success = false;
         $bufferLogger = new BufferLogger();
 
         try {
@@ -2979,14 +3391,33 @@ class ServeConverted extends ServeBase
             $this->header('Content-type: image/gif');
         }
 
-        // TODO: handle if this fails...
-        $image = imagecreatetruecolor(620, 200);
-        imagestring($image, 1, 5, 5, $msg, imagecolorallocate($image, 233, 214, 291));
-        // echo imagewebp($image);
-        echo imagegif($image);
-        imagedestroy($image);
+        try {
+            if (function_exists('imagecreatetruecolor') &&
+                function_exists('imagestring') &&
+                function_exists('imagecolorallocate') &&
+                function_exists('imagegif')
+            ) {
+                $image = imagecreatetruecolor(620, 200);
+                if ($image !== false) {
+                    imagestring($image, 1, 5, 5, $msg, imagecolorallocate($image, 233, 214, 291));
+                    // echo imagewebp($image);
+                    echo imagegif($image);
+                    imagedestroy($image);
+                    return;
+                }
+            }
+        } catch (\Exception $e) {
+            //
+        }
+
+        // Above failed.
+        // TODO: what to do?
     }
 
+    /**
+     *
+     * @return  void
+     */
     protected function fail($title, $description, $critical = false)
     {
         $action = $critical ? $this->options['fail-when-original-unavailable'] : $this->options['fail'];
@@ -3006,7 +3437,6 @@ class ServeConverted extends ServeBase
         $this->addXStatusHeader('Failed (' . $description . ')');
 
         $this->addHeadersPreventingCaching();
-
 
         $title = 'Conversion failed';
         switch ($action) {
@@ -3028,9 +3458,13 @@ class ServeConverted extends ServeBase
         }
     }
 
+    /**
+     *
+     * @return  void
+     */
     protected function criticalFail($title, $description)
     {
-        return $this->fail($title, $description, true);
+        $this->fail($title, $description, true);
     }
 
     /**
