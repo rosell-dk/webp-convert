@@ -46,5 +46,4 @@ abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
         }
         return $ch;
     }
-
 }

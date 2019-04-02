@@ -52,7 +52,6 @@ class Ewww extends AbstractCloudCurlConverter
                 throw new ConverterNotOperationalException('key is invalid');
                 break;
         }
-
     }
 
     // Although this method is public, do not call directly.

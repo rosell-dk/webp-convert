@@ -195,8 +195,7 @@ class ServeConverted extends ServeBase
         }
 
         try {
-            if (
-                function_exists('imagecreatetruecolor') &&
+            if (function_exists('imagecreatetruecolor') &&
                 function_exists('imagestring') &&
                 function_exists('imagecolorallocate') &&
                 function_exists('imagegif')

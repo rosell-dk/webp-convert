@@ -2,7 +2,6 @@
 
 namespace WebPConvert\Convert\Converters\AbstractConverters;
 
-
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\UnhandledException;

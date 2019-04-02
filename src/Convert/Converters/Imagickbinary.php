@@ -92,5 +92,4 @@ class ImagickBinary extends AbstractExecConverter
         }
         return false;
     }
-
 }

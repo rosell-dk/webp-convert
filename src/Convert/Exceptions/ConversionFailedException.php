@@ -55,7 +55,7 @@ class ConversionFailedException extends \Exception
         return $this->shortMessage;
     }
 
-    public function __construct($shortMessage="", $detailedMessage="", $previous = null)
+    public function __construct($shortMessage = "", $detailedMessage = "", $previous = null)
     {
         $detailedMessage = ($detailedMessage != '') ? $detailedMessage : $shortMessage;
         $this->detailedMessage = $detailedMessage;

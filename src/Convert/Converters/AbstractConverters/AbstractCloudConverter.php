@@ -108,5 +108,4 @@ abstract class AbstractCloudConverter extends AbstractConverter
     {
         $this->testFilesizeRequirements();
     }
-
 }

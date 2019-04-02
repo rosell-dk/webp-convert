@@ -48,5 +48,4 @@ abstract class JpegQualityDetector
 
         return null;
     }
-
 }
