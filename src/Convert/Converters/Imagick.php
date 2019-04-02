@@ -58,8 +58,9 @@ class Imagick extends AbstractConverter
                         'Imagick has been compiled without PNG support and can therefore not convert this PNG image.'
                     );
                 }
+                break;
             case 'image/jpeg':
-                if (!in_array('PNG', $im->queryFormats())) {
+                if (!in_array('JPEG', $im->queryFormats())) {
                     throw new SystemRequirementsNotMetException(
                         'Imagick has been compiled without Jpeg support and can therefore not convert this Jpeg image.'
                     );
