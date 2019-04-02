@@ -1,6 +1,6 @@
 <?php
 
-namespace WebPConvert\Tests\Convert\Helpers;
+namespace WebPConvert\Tests\Helpers;
 
 use WebPConvert\Helpers\JpegQualityDetector;
 

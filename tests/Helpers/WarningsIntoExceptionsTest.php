@@ -1,6 +1,6 @@
 <?php
 
-namespace WebPConvert\Tests\Convert\Helpers;
+namespace WebPConvert\Tests\Helpers;
 
 use WebPConvert\Helpers\WarningsIntoExceptions;
 use WebPConvert\Exceptions\WarningException;
@@ -40,7 +40,7 @@ class WarningsIntoExceptionsTest extends TestCase
 /*
     To suppress and capture output from exec calls, you need to redirect the stderr to stdout.
     Otherwise it is "echoed to screen"
-    
+
 
     https://stackoverflow.com/questions/1606943/suppressing-output-from-exec-calls-in-php
     public function testWarning2()
