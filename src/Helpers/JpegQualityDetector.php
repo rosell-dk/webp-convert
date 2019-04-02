@@ -8,6 +8,70 @@ abstract class JpegQualityDetector
 {
 
     /**
+     * Try to detect quality of jpeg using imagick extension
+     *
+     * @param  string  $filename  A complete file path to file to be examined
+     * @return int|null  Quality, or null if it was not possible to detect quality
+     */
+    private static function detectQualityOfJpgUsingImagickExtension($filename)
+    {
+        if (extension_loaded('imagick') && class_exists('\\Imagick')) {
+            try {
+                $img = new \Imagick($filename);
+
+                // The required function is available as from PECL imagick v2.2.2
+                if (method_exists($img, 'getImageCompressionQuality')) {
+                    return $img->getImageCompressionQuality();
+                }
+            } catch (\Exception $e) {
+                // Well well, it just didn't work out.
+                // - But perhaps next method will work...
+            }
+        }
+        return null;
+    }
+
+
+    /**
+     * Try to detect quality of jpeg using imagick binary
+     *
+     * @param  string  $filename  A complete file path to file to be examined
+     * @return int|null  Quality, or null if it was not possible to detect quality
+     */
+    private static function detectQualityOfJpgUsingImagickBinary($filename)
+    {
+        if (function_exists('exec')) {
+            // Try Imagick using exec, and routing stderr to stdout (the "2>$1" magic)
+            exec("identify -format '%Q' " . escapeshellarg($filename) . " 2>&1", $output, $returnCode);
+            //echo 'out:' . print_r($output, true);
+            if ((intval($returnCode) == 0) && (is_array($output)) && (count($output) == 1)) {
+                return intval($output[0]);
+            }
+        }
+        return null;
+    }
+
+
+    /**
+     * Try to detect quality of jpeg using gmagick binary
+     *
+     * @param  string  $filename  A complete file path to file to be examined
+     * @return int|null  Quality, or null if it was not possible to detect quality
+     */
+    private static function detectQualityOfJpgUsingGmagickBinary($filename)
+    {
+        if (function_exists('exec')) {
+            // Try GraphicsMagick
+            exec("gm identify -format '%Q' " . escapeshellarg($filename) . " 2>&1", $output, $returnCode);
+            if ((intval($returnCode) == 0) && (is_array($output)) && (count($output) == 1)) {
+                return intval($output[0]);
+            }
+        }
+        return null;
+    }
+
+
+    /**
      * Try to detect quality of jpeg.
      *
      * Note: This method does not throw errors, but might dispatch warnings.
@@ -28,45 +92,16 @@ abstract class JpegQualityDetector
         }
 
         // Try Imagick extension, if available
-        if (extension_loaded('imagick') && class_exists('\\Imagick')) {
-            try {
-                $img = new \Imagick($filename);
+        $quality = self::detectQualityOfJpgUsingImagickExtension($filename);
 
-                // The required function is available as from PECL imagick v2.2.2
-                if (method_exists($img, 'getImageCompressionQuality')) {
-                    return $img->getImageCompressionQuality();
-                }
-            } catch (\Exception $e) {
-                // Well well, it just didn't work out.
-                // - But perhaps next method will work...
-            }
+        if (is_null($quality)) {
+            $quality = self::detectQualityOfJpgUsingImagickBinary($filename);
         }
 
-        // Gmagick extension doesn't seem to support this (yet):
-        // https://bugs.php.net/bug.php?id=63939
-
-        if (function_exists('exec')) {
-            // Try Imagick using exec, and routing stderr to stdout (the "2>$1" magic)
-            exec("identify -format '%Q' " . escapeshellarg($filename) . " 2>&1", $output, $returnCode);
-            //echo 'out:' . print_r($output, true);
-            if ((intval($returnCode) == 0) && (is_array($output)) && (count($output) == 1)) {
-                return intval($output[0]);
-            }
-
-            // Try GraphicsMagick
-            exec("gm identify -format '%Q' " . escapeshellarg($filename) . " 2>&1", $output, $returnCode);
-            if ((intval($returnCode) == 0) && (is_array($output)) && (count($output) == 1)) {
-                return intval($output[0]);
-            }
-
-            // Try GraphicsMagick
-            /*
-            $quality = shell_exec("gm identify -format '%Q' " . escapeshellarg($filename) . " 2>&1");
-            if ($quality) {
-                return intval($quality);
-            }*/
+        if (is_null($quality)) {
+            $quality = self::detectQualityOfJpgUsingGmagickBinary($filename);
         }
 
-        return null;
+        return $quality;
     }
 }
