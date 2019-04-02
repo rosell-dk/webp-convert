@@ -2,6 +2,7 @@
 
 namespace WebPConvert\Convert\Converters\AbstractConverters;
 
+
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\UnhandledException;
@@ -11,6 +12,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFou
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Convert\Helpers\JpegQualityDetector;
 use WebPConvert\Loggers\BaseLogger;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
@@ -406,32 +408,7 @@ abstract class AbstractConverter
      */
     public static function detectQualityOfJpg($filename)
     {
-        // Try Imagick extension
-        if (extension_loaded('imagick') && class_exists('\\Imagick')) {
-            $img = new \Imagick($filename);
-
-            // The required function is available as from PECL imagick v2.2.2
-            if (method_exists($img, 'getImageCompressionQuality')) {
-                return $img->getImageCompressionQuality();
-            }
-        }
-
-        // Gmagick extension doesn't seem to support this (yet):
-        // https://bugs.php.net/bug.php?id=63939
-
-        if (function_exists('shell_exec')) {
-            // Try Imagick
-            $quality = shell_exec("identify -format '%Q' " . escapeshellarg($filename));
-            if ($quality) {
-                return intval($quality);
-            }
-
-            // Try GraphicsMagick
-            $quality = shell_exec("gm identify -format '%Q' " . escapeshellarg($filename));
-            if ($quality) {
-                return intval($quality);
-            }
-        }
+        return JpegQualityDetector::detectQualityOfJpg($filename);
     }
 
     /**
