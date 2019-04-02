@@ -47,17 +47,11 @@ class ConversionFailedException extends \Exception
 
     public function getDetailedMessage()
     {
-        if ($this->$detailedMessage() != "") {
-
-        }
         return $this->detailedMessage;
     }
 
     public function getShortMessage()
     {
-        if ($this->$detailedMessage() != "") {
-
-        }
         return $this->shortMessage;
     }
 

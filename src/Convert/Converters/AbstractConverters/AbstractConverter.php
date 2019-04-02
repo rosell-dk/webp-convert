@@ -23,42 +23,13 @@ abstract class AbstractConverter
      */
     abstract protected function doConvert();
 
-    /**
-     * Converters may override this method for the purpose of performing basic operationaly checks.
-     *
-     * Run general operation checks for a conversion method and throw ConverterNotOperationalException if
-     * some requirement is not met.
-     * The method is called internally right before calling doConvert() method.
-     * - It SHOULD take options into account when relevant. For example, a missing api key for a
-     *   cloud converter should be detected here
-     * - It should NOT take the actual filename into consideration, as the purpose is *general*
-     *   For that pupose, converters should override checkConvertability
-     *   Also note that doConvert method is allowed to throw ConverterNotOperationalException too.
-     *
-     */
-    protected function checkOperationality()
-    {
-    }
-
-    /**
-     * Converters may override this for the purpose of performing checks on the concrete file.
-     *
-     * This can for example be used for rejecting big uploads in cloud converters or rejecting unsupported
-     * image types.
-     */
-    protected function checkConvertability()
-    {
-    }
-
     public $source;
     public $destination;
     public $options;
     public $logger;
     public $beginTime;
     public $sourceMimeType;
-
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
-
     public static $defaultOptions = [
         'quality' => 'auto',
         'max-quality' => 85,
@@ -70,6 +41,37 @@ abstract class AbstractConverter
         'skip-pngs' => false,
     ];
 
+    /**
+     * Check basis operationality
+     *
+     * Converters may override this method for the purpose of performing basic operationaly checks. It is for
+     * running general operation checks for a conversion method.
+     * If some requirement is not met, it should throw a ConverterNotOperationalException (or subtype)
+     *
+     * The method is called internally right before calling doConvert() method.
+     * - It SHOULD take options into account when relevant. For example, a missing api key for a
+     *   cloud converter should be detected here
+     * - It should NOT take the actual filename into consideration, as the purpose is *general*
+     *   For that pupose, converters should override checkConvertability
+     *   Also note that doConvert method is allowed to throw ConverterNotOperationalException too.
+     *
+     * @return  void
+     */
+    protected function checkOperationality()
+    {
+    }
+
+    /**
+     * Converters may override this for the purpose of performing checks on the concrete file.
+     *
+     * This can for example be used for rejecting big uploads in cloud converters or rejecting unsupported
+     * image types.
+     *
+     * @return  void
+     */
+    protected function checkConvertability()
+    {
+    }
 
     public function __construct($source, $destination, $options = [], $logger = null)
     {
@@ -184,7 +186,7 @@ abstract class AbstractConverter
      * @param   string  $source              path to source file
      * @param   string  $destination         path to destination
      * @param   array   $options (optional)  options for conversion
-     * @param   WebPConvert\Loggers\BaseLogger $logger (optional)
+     * @param   \WebPConvert\Loggers\BaseLogger $logger (optional)
      * @return  void
      */
     public static function convert($source, $destination, $options = [], $logger = null)
