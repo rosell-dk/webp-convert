@@ -23,7 +23,7 @@ class ExposedConverter extends AbstractConverter {
     {
         $instance = self::createInstance(
             $filePath,
-            $filePath . '.webp',
+            $filePath . '.webp'
         );
         return $instance->getMimeTypeOfSource();
     }
