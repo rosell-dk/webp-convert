@@ -2,8 +2,8 @@
 
 namespace WebPConvert\Tests\Convert\BaseConverters;
 
-use WebPConvert\Tests\Convert\Converters\ExposedConverter;
-use WebPConvert\Tests\Convert\Converters\SuccessGuaranteedConverter;
+use WebPConvert\Tests\Convert\TestConverters\ExposedConverter;
+use WebPConvert\Tests\Convert\TestConverters\SuccessGuaranteedConverter;
 
 use PHPUnit\Framework\TestCase;
 

@@ -1,8 +1,8 @@
 <?php
 
-namespace WebPConvert\Tests\Convert\Converters;
+namespace WebPConvert\Tests\Convert\TestConverters;
 
-use WebPConvert\Convert\BaseConverters\AbstractCloudConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
 
 /**
  * Class for exposing otherwise unaccessible methods of AbstractConverter,
@@ -10,7 +10,7 @@ use WebPConvert\Convert\BaseConverters\AbstractCloudConverter;
  *
  * TODO: expose and test more methods! (and make more methods private/protected in AbstractConverter)
  */
-class ExposedCloudConverter extends AbstractCloudConverter {
+class ExposedConverter extends AbstractConverter {
 
     public static $extraOptions = [];
 
@@ -19,8 +19,12 @@ class ExposedCloudConverter extends AbstractCloudConverter {
         file_put_contents($this->destination, 'we-pretend-this-is-a-valid-webp!');
     }
 
-    public static function exposedParseShortHandSize($shortHandSize)
+    public static function exposedGetMimeType($filePath)
     {
-        return self::parseShortHandSize($shortHandSize);
+        $instance = self::createInstance(
+            $filePath,
+            $filePath . '.webp',
+        );
+        return $instance->getMimeTypeOfSource();
     }
 }

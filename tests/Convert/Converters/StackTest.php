@@ -36,7 +36,7 @@ class StackTest extends TestCase
             __DIR__ . '/../../test.webp',
             [
                 'converters' => [
-                    '\\WebPConvert\\Tests\\Convert\\Converters\\SuccessGuaranteedConverter'
+                    '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
                 ]
             ]
         );

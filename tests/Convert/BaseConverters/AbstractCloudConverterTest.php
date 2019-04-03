@@ -3,7 +3,7 @@
 namespace WebPConvert\Tests\Convert\BaseConverters;
 
 use WebPConvert\Convert\BaseConverters\AbstractCloudConverter;
-use WebPConvert\Tests\Convert\Converters\ExposedCloudConverter;
+use WebPConvert\Tests\Convert\TestConverters\ExposedCloudConverter;
 
 use PHPUnit\Framework\TestCase;
 

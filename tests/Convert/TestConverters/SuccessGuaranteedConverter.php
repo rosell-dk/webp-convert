@@ -1,6 +1,6 @@
 <?php
 
-namespace WebPConvert\Tests\Convert\Converters;
+namespace WebPConvert\Tests\Convert\TestConverters;
 
 use WebPConvert\Convert\BaseConverters\AbstractConverter;
 
