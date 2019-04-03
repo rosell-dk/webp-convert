@@ -135,18 +135,16 @@ class Wpc extends AbstractCloudCurlConverter
 
         $optionsToSend = $options;
 
-        if (isset($options['_quality_could_not_be_detected'])) {
+        if ($this->isQualitySetToAutoAndDidQualityDetectionFail()) {
             // quality was set to "auto", but we could not meassure the quality of the jpeg locally
             // Ask the cloud service to do it, rather than using what we came up with.
             $optionsToSend['quality'] = 'auto';
         } else {
-            $optionsToSend['quality'] = $options['_calculated_quality'];
+            $optionsToSend['quality'] = $this->getCalculatedQuality();
         }
 
         unset($optionsToSend['converters']);
         unset($optionsToSend['secret']);
-        unset($optionsToSend['_quality_could_not_be_detected']);
-        unset($optionsToSend['_calculated_quality']);
 
         $postData = [
             'file' => curl_file_create($this->source),

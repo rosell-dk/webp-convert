@@ -11,7 +11,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFou
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-use WebPConvert\Helpers\JpegQualityDetector;
+use WebPConvert\Convert\QualityProcessor;
 use WebPConvert\Loggers\BaseLogger;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
@@ -41,6 +41,7 @@ abstract class AbstractConverter
         'lossless' => false,
         'skip-pngs' => false,
     ];
+    private $qualityProcessor;
 
     /**
      * Check basis operationality
@@ -193,7 +194,7 @@ abstract class AbstractConverter
         $instance = self::createInstance($source, $destination, $options, $logger);
 
         //$instance->logLn($instance->getConverterDisplayName() . ' converter ignited');
-        $instance->logLn(self::getConverterDisplayName() . ' converter ignited');
+        //$instance->logLn(self::getConverterDisplayName() . ' converter ignited');
         $instance->prepareConvert();
         try {
             $instance->checkOperationality();
@@ -232,7 +233,7 @@ abstract class AbstractConverter
         $this->logger->log($msg);
     }
 
-    protected function getMimeTypeOfSource()
+    public function getMimeTypeOfSource()
     {
         if (!isset($this->sourceMimeType)) {
             /*  Get mime type for image (best guess)
@@ -299,9 +300,6 @@ abstract class AbstractConverter
 
         // -  Merge $defaultOptions into provided options
         $this->options = array_merge($defaultOptions, $this->options);
-
-        // Prepare quality option (sets "_calculated_quality" option)
-        $this->processQualityOption();
 
         if ($this->getMimeTypeOfSource() == 'png') {
             // skip png's ?
@@ -391,15 +389,12 @@ abstract class AbstractConverter
         return true;
     }
 
-    /**
-     * Try to detect quality of jpeg.
-     *
-     * @param  string  $filename  A complete file path to file to be examined
-     * @return int|null  Quality, or null if it was not possible to detect quality
-     */
-    public static function detectQualityOfJpg($filename)
+    private function getQualityProcessor()
     {
-        return JpegQualityDetector::detectQualityOfJpg($filename);
+        if (!isset($this->qualityProcessor)) {
+            $this->qualityProcessor = new QualityProcessor($this);
+        }
+        return $this->qualityProcessor;
     }
 
     /**
@@ -410,55 +405,12 @@ abstract class AbstractConverter
      */
     public function getCalculatedQuality()
     {
-        return $this->options['_calculated_quality'];
+        return $this->getQualityProcessor()->getCalculatedQuality();
     }
 
     public function isQualitySetToAutoAndDidQualityDetectionFail()
     {
-        return isset($this->options['_quality_could_not_be_detected']);
-    }
-
-    public function processQualityOption()
-    {
-        if (isset($this->options['_calculated_quality'])) {
-            return;
-        }
-        if ($this->options['quality'] == 'auto') {
-            $q = self::detectQualityOfJpg($this->source);
-            //$this->log('Quality set to auto... Quality of source: ');
-            if (is_null($q)) {
-                $q = $this->options['default-quality'];
-                $this->logLn(
-                    'Quality of source could not be established (Imagick or GraphicsMagick is required)' .
-                    ' - Using default instead (' . $this->options['default-quality'] . ').'
-                );
-
-                // this allows the converter to know (by calling isQualitySetToAutoAndDidQualityDetectionFail())
-                // that feature is btw used by wpc and imagick
-                $this->options['_quality_could_not_be_detected'] = true;
-            } else {
-                if ($q > $this->options['max-quality']) {
-                    $this->logLn(
-                        'Quality of source is ' . $q . '. ' .
-                        'This is higher than max-quality, so using that instead (' . $this->options['max-quality'] . ')'
-                    );
-                } else {
-                    $this->logLn('Quality set to same as source: ' . $q);
-                }
-            }
-            //$this->ln();
-            $q = min($q, $this->options['max-quality']);
-
-            $this->options['_calculated_quality'] = $q;
-        //$this->logLn('Using quality: ' . $this->options['quality']);
-        } else {
-            $this->logLn(
-                'Quality: ' . $this->options['quality'] . '. ' .
-                'Consider setting quality to "auto" instead. It is generally a better idea'
-            );
-            $this->options['_calculated_quality'] = $this->options['quality'];
-        }
-        //$this->ln();
+        return $this->getQualityProcessor()->isQualitySetToAutoAndDidQualityDetectionFail();
     }
 
     public function finalizeConvert()

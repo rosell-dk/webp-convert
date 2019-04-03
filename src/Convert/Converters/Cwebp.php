@@ -123,7 +123,7 @@ class Cwebp extends AbstractExecConverter
             $commandOptionsArray[] = '-size ' . $targetSize;
         } else {
             // Image quality
-            $commandOptionsArray[] = '-q ' . $options['_calculated_quality'];
+            $commandOptionsArray[] = '-q ' . $this->getCalculatedQuality();
         }
 
 

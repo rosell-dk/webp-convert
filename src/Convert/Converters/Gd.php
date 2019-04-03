@@ -196,7 +196,7 @@ class Gd extends AbstractConverter
             }
         }
 
-        $success = imagewebp($image, $this->destination, $this->options['_calculated_quality']);
+        $success = imagewebp($image, $this->destination, $this->getCalculatedQuality());
 
         if (!$success) {
             throw new ConversionFailedException(
