@@ -22,7 +22,6 @@ class QualityProcessor
             $this->processed = true;
             $this->proccess();
         }
-
     }
 
     /**
@@ -81,7 +80,8 @@ class QualityProcessor
                     if ($q > $options['max-quality']) {
                         $logger->logLn(
                             'Quality of source is ' . $q . '. ' .
-                            'This is higher than max-quality, so using max-quality instead (' . $options['max-quality'] . ')'
+                            'This is higher than max-quality, so using max-quality instead (' .
+                                $options['max-quality'] . ')'
                         );
                     } else {
                         $logger->logLn('Quality set to same as source: ' . $q);
