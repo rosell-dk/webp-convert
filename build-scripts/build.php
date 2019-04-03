@@ -52,6 +52,7 @@ $jobsEverything = [
             'Convert/Exceptions/ConversionFailed/ConverterNotOperational',
             'Convert/Exceptions/ConversionFailed/FileSystemProblems',
             'Convert/Exceptions/ConversionFailed/InvalidInput',
+            'Convert',
             'Exceptions',
             'Helpers',
             'Loggers',
