@@ -35,10 +35,10 @@ class WebPConvert
 
 ?><?php
 
-namespace WebPConvert\Convert\Converters\AbstractConverters;
+namespace WebPConvert\Convert\BaseConverters;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
 
 abstract class AbstractCloudConverter extends AbstractConverter
 {
@@ -147,10 +147,10 @@ abstract class AbstractCloudConverter extends AbstractConverter
 
 ?><?php
 
-namespace WebPConvert\Convert\Converters\AbstractConverters;
+namespace WebPConvert\Convert\BaseConverters;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
 
 abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
 {
@@ -197,7 +197,7 @@ abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
 
 ?><?php
 
-namespace WebPConvert\Convert\Converters\AbstractConverters;
+namespace WebPConvert\Convert\BaseConverters;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
@@ -208,7 +208,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFou
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-use WebPConvert\Helpers\JpegQualityDetector;
+use WebPConvert\Convert\QualityProcessor;
 use WebPConvert\Loggers\BaseLogger;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
@@ -238,6 +238,7 @@ abstract class AbstractConverter
         'lossless' => false,
         'skip-pngs' => false,
     ];
+    private $qualityProcessor;
 
     /**
      * Check basis operationality
@@ -292,7 +293,7 @@ abstract class AbstractConverter
         return substr(strrchr('\\' . static::class, '\\'), 1);
     }
 
-    public static function createInstance($source, $destination, $options, $logger)
+    public static function createInstance($source, $destination, $options = [], $logger = null)
     {
         return new static($source, $destination, $options, $logger);
     }
@@ -305,9 +306,7 @@ abstract class AbstractConverter
     {
 
         /*
-        We do not do the following on purpose.
-        We want to log all warnings and errors (also the ones that was suppressed with @)
-        https://secure.php.net/manual/en/language.operators.errorcontrol.php
+        We do NOT do the following (even though it is generally recommended):
 
         if (!(error_reporting() & $errno)) {
             // This error code is not included in error_reporting, so let it fall
@@ -315,7 +314,8 @@ abstract class AbstractConverter
             return false;
         }
 
-
+        - Because we want to log all warnings and errors (also the ones that was suppressed with @)
+        https://secure.php.net/manual/en/language.operators.errorcontrol.php
         */
 
         $errorTypes = [
@@ -364,14 +364,13 @@ abstract class AbstractConverter
             }
         }
         */
+        $this->logLn($msg);
+
         if ($errno == E_USER_ERROR) {
             // trigger error.
             // unfortunately, we can only catch user errors
-            throw new ConversionFailedException($msg);
-        } else {
-            $this->logLn($msg);
+            throw new ConversionFailedException('Uncaught error in converter', $msg);
         }
-
 
         // We do not return false, because we want to keep this little secret.
         //
@@ -392,7 +391,7 @@ abstract class AbstractConverter
         $instance = self::createInstance($source, $destination, $options, $logger);
 
         //$instance->logLn($instance->getConverterDisplayName() . ' converter ignited');
-        $instance->logLn(self::getConverterDisplayName() . ' converter ignited');
+        //$instance->logLn(self::getConverterDisplayName() . ' converter ignited');
         $instance->prepareConvert();
         try {
             $instance->checkOperationality();
@@ -431,24 +430,20 @@ abstract class AbstractConverter
         $this->logger->log($msg);
     }
 
-    /**
-     *  Get mime type for image (best guess)
-     *  It falls back to using file extension.
-     *  If that fails too, false is returned
-     *
-     *  PS: Is it a security risk to fall back on file extension?
-     *  - By setting file extension to "jpg", one can lure our library into trying to convert a file, which isn't a jpg.
-     *    hmm, seems very unlikely, though not unthinkable that one of the converters could be exploited
-     */
-    protected static function getMimeType($filePath)
-    {
-        return ImageMimeTypeGuesser::lenientGuess($filePath);
-    }
-
-    protected function getMimeTypeOfSource()
+    public function getMimeTypeOfSource()
     {
         if (!isset($this->sourceMimeType)) {
-            $this->sourceMimeType = self::getMimeType($this->source);
+            /*
+            Get mime type for image (best guess)
+            It falls back to using file extension.
+            If that fails too, false is returned
+
+            PS: Is it a security risk to fall back on file extension?
+            - By setting file extension to "jpg", one can lure our library into trying to convert a file,
+            which isn't a jpg.
+            hmm, seems very unlikely, though not unthinkable that one of the converters could be exploited
+            */
+            $this->sourceMimeType = ImageMimeTypeGuesser::lenientGuess($this->source);
         }
         return $this->sourceMimeType;
     }
@@ -504,9 +499,6 @@ abstract class AbstractConverter
 
         // -  Merge $defaultOptions into provided options
         $this->options = array_merge($defaultOptions, $this->options);
-
-        // Prepare quality option (sets "_calculated_quality" option)
-        $this->processQualityOption();
 
         if ($this->getMimeTypeOfSource() == 'png') {
             // skip png's ?
@@ -596,15 +588,12 @@ abstract class AbstractConverter
         return true;
     }
 
-    /**
-     * Try to detect quality of jpeg.
-     *
-     * @param  string  $filename  A complete file path to file to be examined
-     * @return int|null  Quality, or null if it was not possible to detect quality
-     */
-    public static function detectQualityOfJpg($filename)
+    private function getQualityProcessor()
     {
-        return JpegQualityDetector::detectQualityOfJpg($filename);
+        if (!isset($this->qualityProcessor)) {
+            $this->qualityProcessor = new QualityProcessor($this);
+        }
+        return $this->qualityProcessor;
     }
 
     /**
@@ -615,55 +604,12 @@ abstract class AbstractConverter
      */
     public function getCalculatedQuality()
     {
-        return $this->options['_calculated_quality'];
+        return $this->getQualityProcessor()->getCalculatedQuality();
     }
 
-    public function isQualitySetToAutoAndDidQualityDetectionFail()
+    public function isQualityDetectionRequiredButFailing()
     {
-        return isset($this->options['_quality_could_not_be_detected']);
-    }
-
-    public function processQualityOption()
-    {
-        if (isset($this->options['_calculated_quality'])) {
-            return;
-        }
-        if ($this->options['quality'] == 'auto') {
-            $q = self::detectQualityOfJpg($this->source);
-            //$this->log('Quality set to auto... Quality of source: ');
-            if (is_null($q)) {
-                $q = $this->options['default-quality'];
-                $this->logLn(
-                    'Quality of source could not be established (Imagick or GraphicsMagick is required)' .
-                    ' - Using default instead (' . $this->options['default-quality'] . ').'
-                );
-
-                // this allows the converter to know (by calling isQualitySetToAutoAndDidQualityDetectionFail())
-                // that feature is btw used by wpc and imagick
-                $this->options['_quality_could_not_be_detected'] = true;
-            } else {
-                if ($q > $this->options['max-quality']) {
-                    $this->logLn(
-                        'Quality of source is ' . $q . '. ' .
-                        'This is higher than max-quality, so using that instead (' . $this->options['max-quality'] . ')'
-                    );
-                } else {
-                    $this->logLn('Quality set to same as source: ' . $q);
-                }
-            }
-            //$this->ln();
-            $q = min($q, $this->options['max-quality']);
-
-            $this->options['_calculated_quality'] = $q;
-        //$this->logLn('Using quality: ' . $this->options['quality']);
-        } else {
-            $this->logLn(
-                'Quality: ' . $this->options['quality'] . '. ' .
-                'Consider setting quality to "auto" instead. It is generally a better idea'
-            );
-            $this->options['_calculated_quality'] = $this->options['quality'];
-        }
-        //$this->ln();
+        return $this->getQualityProcessor()->isQualityDetectionRequiredButFailing();
     }
 
     public function finalizeConvert()
@@ -705,9 +651,9 @@ abstract class AbstractConverter
 
 ?><?php
 
-namespace WebPConvert\Convert\Converters\AbstractConverters;
+namespace WebPConvert\Convert\BaseConverters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -769,7 +715,7 @@ abstract class AbstractExecConverter extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractExecConverter;
+use WebPConvert\Convert\BaseConverters\AbstractExecConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
@@ -890,7 +836,7 @@ class Cwebp extends AbstractExecConverter
             $commandOptionsArray[] = '-size ' . $targetSize;
         } else {
             // Image quality
-            $commandOptionsArray[] = '-q ' . $options['_calculated_quality'];
+            $commandOptionsArray[] = '-q ' . $this->getCalculatedQuality();
         }
 
 
@@ -1127,7 +1073,7 @@ class Cwebp extends AbstractExecConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractCloudCurlConverter;
+use WebPConvert\Convert\BaseConverters\AbstractCloudCurlConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -1194,7 +1140,7 @@ class Ewww extends AbstractCloudCurlConverter
             'webp' => '1',
             'file' => curl_file_create($this->source),
             'domain' => $_SERVER['HTTP_HOST'],
-            'quality' => $options['_calculated_quality'],
+            'quality' => $this->getCalculatedQuality(),
             'metadata' => ($options['metadata'] == 'none' ? '0' : '1')
         ];
 
@@ -1425,7 +1371,7 @@ class Ewww extends AbstractCloudCurlConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
@@ -1619,7 +1565,7 @@ class Gd extends AbstractConverter
             }
         }
 
-        $success = imagewebp($image, $this->destination, $this->options['_calculated_quality']);
+        $success = imagewebp($image, $this->destination, $this->getCalculatedQuality());
 
         if (!$success) {
             throw new ConversionFailedException(
@@ -1645,7 +1591,7 @@ class Gd extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
@@ -1789,7 +1735,7 @@ class Gmagick extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFileException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -1856,13 +1802,8 @@ class Imagick extends AbstractConverter
         }
     }
 
-    // Although this method is public, do not call directly.
-    // You should rather call the static convert() function, defined in AbstractConverter, which
-    // takes care of preparing stuff before calling doConvert, and validating after.
     protected function doConvert()
     {
-
-
         $options = $this->options;
 
         try {
@@ -1904,7 +1845,7 @@ class Imagick extends AbstractConverter
             $im->stripImage();
         }
 
-        if ($this->isQualitySetToAutoAndDidQualityDetectionFail()) {
+        if ($this->isQualityDetectionRequiredButFailing()) {
             // Luckily imagick is a big boy, and automatically converts with same quality as
             // source, when the quality isn't set.
             // So we simply do not set quality.
@@ -1961,7 +1902,7 @@ class Imagick extends AbstractConverter
 // TODO: Quality option
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractExecConverter;
+use WebPConvert\Convert\BaseConverters\AbstractExecConverter;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
@@ -1981,6 +1922,31 @@ class ImagickBinary extends AbstractExecConverter
             'required' => false
         ],
     ];
+
+    public static function imagickInstalled()
+    {
+        exec('convert -version', $output, $returnCode);
+        return ($returnCode == 0);
+    }
+
+    // Check if webp delegate is installed
+    public static function webPDelegateInstalled()
+    {
+        /* HM. We should not rely on grep being available
+        $command = 'convert -list configure | grep -i "delegates" | grep -i webp';
+        exec($command, $output, $returnCode);
+        return (count($output) > 0);
+        */
+        $command = 'convert -version';
+        exec($command, $output, $returnCode);
+        $hasDelegate = false;
+        foreach ($output as $line) {
+            if (preg_match('/Delegate.*webp.*/i', $line)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * Check (general) operationality of imagack converter executable
@@ -2004,17 +1970,27 @@ class ImagickBinary extends AbstractExecConverter
         // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
         // Should we perhaps try both?
         // For now, we just go with "convert"
-        $command = 'convert ' .
-            escapeshellarg($this->source) . ' ' . escapeshellarg('webp:' . $this->destination);
-            //self::escapeFilename($this->source) . ' webp:' . self::escapeFilename($this->destination);
 
-        // TODO:
-        // quality. Like this: 'convert -quality 100 small.jpg small.webp'
+
+        $commandArguments = [];
+        if ($this->isQualityDetectionRequiredButFailing()) {
+            // quality:auto was specified, but could not be determined.
+            // we cannot apply the max-quality logic, but we can provide auto quality
+            // simply by not specifying the quality option.
+        } else {
+            $commandArguments[] = '-quality ' . escapeshellarg($this->getCalculatedQuality());
+        }
+        $commandArguments[] = escapeshellarg($this->source);
+        $commandArguments[] = escapeshellarg('webp:' . $this->destination);
+
+        $command = 'convert ' . implode(' ', $commandArguments);
+
         $useNice = (($this->options['use-nice']) && self::hasNiceSupport()) ? true : false;
         if ($useNice) {
             $this->logLn('using nice');
             $command = 'nice ' . $command;
         }
+        $this->logLn('command: ' . $command);
         exec($command, $output, $returnCode);
         if ($returnCode == 127) {
             throw new SystemRequirementsNotMetException('imagick is not installed');
@@ -2026,31 +2002,6 @@ class ImagickBinary extends AbstractExecConverter
             throw new SystemRequirementsNotMetException('The exec call failed');
         }
     }
-
-    public static function imagickInstalled()
-    {
-        exec('convert -version', $output, $returnCode);
-        return ($returnCode == 0);
-    }
-    
-    // Check if webp delegate is installed
-    public static function webPDelegateInstalled()
-    {
-        /* HM. We should not rely on grep being available
-        $command = 'convert -list configure | grep -i "delegates" | grep -i webp';
-        exec($command, $output, $returnCode);
-        return (count($output) > 0);
-        */
-        $command = 'convert -version';
-        exec($command, $output, $returnCode);
-        $hasDelegate = false;
-        foreach ($output as $line) {
-            if (preg_match('/Delegate.*webp.*/i', $line)) {
-                return true;
-            }
-        }
-        return false;
-    }
 }
 
 ?><?php
@@ -2059,7 +2010,7 @@ class ImagickBinary extends AbstractExecConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFoundException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
@@ -2138,6 +2089,8 @@ class Stack extends AbstractConverter
 
         $beginTimeStack = microtime(true);
 
+        $this->logLn('Stack converter ignited');
+
         // If we have set converter options for a converter, which is not in the converter array,
         // then we add it to the array
         if (isset($options['converter-options'])) {
@@ -2174,10 +2127,16 @@ class Stack extends AbstractConverter
 
             $converterOptions = array_merge($defaultConverterOptions, $converterOptions);
 
+            // TODO:
+            // Reuse QualityProcessor of previous, unless quality option is overridden
+            // ON the other hand: With the recent change, the quality is not detected until a
+            // converter needs it (after operation checks). So such feature will rarely be needed now
+
             // If quality is different, we must recalculate
+            /*
             if ($converterOptions['quality'] != $defaultConverterOptions['quality']) {
                 unset($converterOptions['_calculated_quality']);
-            }
+            }*/
 
             $beginTime = microtime(true);
 
@@ -2242,7 +2201,7 @@ class Stack extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractCloudCurlConverter;
+use WebPConvert\Convert\BaseConverters\AbstractCloudCurlConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -2375,18 +2334,16 @@ class Wpc extends AbstractCloudCurlConverter
 
         $optionsToSend = $options;
 
-        if (isset($options['_quality_could_not_be_detected'])) {
+        if ($this->isQualityDetectionRequiredButFailing()) {
             // quality was set to "auto", but we could not meassure the quality of the jpeg locally
             // Ask the cloud service to do it, rather than using what we came up with.
             $optionsToSend['quality'] = 'auto';
         } else {
-            $optionsToSend['quality'] = $options['_calculated_quality'];
+            $optionsToSend['quality'] = $this->getCalculatedQuality();
         }
 
         unset($optionsToSend['converters']);
         unset($optionsToSend['secret']);
-        unset($optionsToSend['_quality_could_not_be_detected']);
-        unset($optionsToSend['_calculated_quality']);
 
         $postData = [
             'file' => curl_file_create($this->source),
@@ -2700,6 +2657,110 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInputException;
 class TargetNotFoundException extends InvalidInputException
 {
     public $description = 'The converter could not locate source file';
+}
+
+?><?php
+
+namespace WebPConvert\Convert;
+
+use WebPConvert\Helpers\JpegQualityDetector;
+
+class QualityProcessor
+{
+
+    private $processed = false;
+    private $qualityCouldNotBeDetected = false;
+    private $calculatedQuality;
+
+    public function __construct($converter)
+    {
+        $this->converter = $converter;
+    }
+
+    private function processIfNotAlready()
+    {
+        if (!$this->processed) {
+            $this->processed = true;
+            $this->proccess();
+        }
+    }
+
+    /**
+     *  Determine if quality detection is required but failing.
+     *
+     *  It is considered "required" when:
+     *  - Mime type is "image/jpeg"
+     *  - Quality is set to "auto"
+     *
+     *  @return  boolean
+     */
+    public function isQualityDetectionRequiredButFailing()
+    {
+        $this->processIfNotAlready();
+        return $this->qualityCouldNotBeDetected;
+    }
+
+    /**
+     *  Get calculated quality.
+     *
+     *  If mime type is something else than "image/jpeg", the "default-quality" option is returned
+     *  Same thing for jpeg, when the "quality" option is set to a number (rather than "auto").
+     *
+     *  Otherwise:
+     *  If quality cannot be detetected, the "default-quality" option is returned.
+     *  If quality can be detetected, the lowest value of this and the "max-quality" option is returned
+     *
+     *  @return  int
+     */
+    public function getCalculatedQuality()
+    {
+        $this->processIfNotAlready();
+        return $this->calculatedQuality;
+    }
+
+
+    private function proccess()
+    {
+        $options = $this->converter->options;
+        $logger = $this->converter->logger;
+        $source = $this->converter->source;
+
+        $q = $options['quality'];
+        if ($q == 'auto') {
+            if (($this->converter->getMimeTypeOfSource() == 'image/jpeg')) {
+                $q = JpegQualityDetector::detectQualityOfJpg($source);
+                if (is_null($q)) {
+                    $q = $options['default-quality'];
+                    $logger->logLn(
+                        'Quality of source could not be established (Imagick or GraphicsMagick is required)' .
+                        ' - Using default instead (' . $options['default-quality'] . ').'
+                    );
+
+                    $this->qualityCouldNotBeDetected = true;
+                } else {
+                    if ($q > $options['max-quality']) {
+                        $logger->logLn(
+                            'Quality of source is ' . $q . '. ' .
+                            'This is higher than max-quality, so using max-quality instead (' .
+                                $options['max-quality'] . ')'
+                        );
+                    } else {
+                        $logger->logLn('Quality set to same as source: ' . $q);
+                    }
+                }
+                $q = min($q, $options['max-quality']);
+            } else {
+                $q = $options['default-quality'];
+                $logger->logLn('Quality: ' . $q . '. ');
+            }
+        } else {
+            $logger->logLn(
+                'Quality: ' . $q . '. ' .
+                'Consider setting quality to "auto" instead. It is generally a better idea'
+            );
+        }
+        $this->calculatedQuality = $q;
+    }
 }
 
 ?><?php
