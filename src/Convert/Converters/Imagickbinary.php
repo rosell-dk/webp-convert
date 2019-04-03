@@ -73,7 +73,11 @@ class ImagickBinary extends AbstractExecConverter
 
 
         $commandArguments = [];
-        if (!$this->isQualitySetToAutoAndDidQualityDetectionFail()) {
+        if ($this->isQualityDetectionRequiredButFailing()) {
+            // quality:auto was specified, but could not be determined.
+            // we cannot apply the max-quality logic, but we can provide auto quality
+            // simply by not specifying the quality option.
+        } else {
             $commandArguments[] = '-quality ' . escapeshellarg($this->getCalculatedQuality());
         }
         $commandArguments[] = escapeshellarg($this->source);

@@ -112,7 +112,7 @@ class Imagick extends AbstractConverter
             $im->stripImage();
         }
 
-        if ($this->isQualitySetToAutoAndDidQualityDetectionFail()) {
+        if ($this->isQualityDetectionRequiredButFailing()) {
             // Luckily imagick is a big boy, and automatically converts with same quality as
             // source, when the quality isn't set.
             // So we simply do not set quality.

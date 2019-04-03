@@ -35,10 +35,10 @@ class QualityProcessorTest extends TestCase
         $result = $qp->getCalculatedQuality();
         $this->assertSame(75, $result);
 
-        $this->assertFalse($qp->isQualitySetToAutoAndDidQualityDetectionFail());
+        $this->assertFalse($qp->isQualityDetectionRequiredButFailing());
 
         // Test that it is still the same (testing caching)
-        $this->assertFalse($qp->isQualitySetToAutoAndDidQualityDetectionFail());
+        $this->assertFalse($qp->isQualityDetectionRequiredButFailing());
 
     }
 
@@ -58,7 +58,6 @@ class QualityProcessorTest extends TestCase
         $result = $qp->getCalculatedQuality();
 
         $this->assertSame(70, $result);
-        $this->assertTrue($qp->isQualitySetToAutoAndDidQualityDetectionFail());
     }
 
     public function testAutoQuality()
@@ -102,7 +101,7 @@ class QualityProcessorTest extends TestCase
         $this->assertSame(60, $qp->getCalculatedQuality());
     }
 
-    public function testAutoQualityMaxQualityOnFail()
+    public function testAutoQualityMaxQualityOnNonJpeg()
     {
         $converter = SuccessGuaranteedConverter::createInstance(
             self::$imgDir . '/non-existant',
@@ -111,19 +110,38 @@ class QualityProcessorTest extends TestCase
                 'max-quality' => 60,
                 'quality' => 'auto',
                 'default-quality' => 70,
+            ]
+        );
+
+        $qp = new QualityProcessor($converter);
+
+        $this->assertSame(70, $qp->getCalculatedQuality());
+        $this->assertFalse($qp->isQualityDetectionRequiredButFailing());
+    }
+
+    public function testAutoQualityOnQualityDetectionFail()
+    {
+        $converter = SuccessGuaranteedConverter::createInstance(
+            self::$imgDir . '/non-existing.jpg',
+            self::$imgDir . '/non-existant.webp',
+            [
+                'max-quality' => 70,
+                'quality' => 'auto',
+                'default-quality' => 60,
             ]
         );
 
         $qp = new QualityProcessor($converter);
 
         $this->assertSame(60, $qp->getCalculatedQuality());
-        $this->assertTrue($qp->isQualitySetToAutoAndDidQualityDetectionFail());
+        $this->assertTrue($qp->isQualityDetectionRequiredButFailing());
     }
+
 
     public function testIsQualitySetToAutoAndDidQualityDetectionFail()
     {
         $converter = SuccessGuaranteedConverter::createInstance(
-            self::$imgDir . '/non-existant',
+            self::$imgDir . '/non-existant.jpg',
             self::$imgDir . '/non-existant.webp',
             [
                 'max-quality' => 60,
@@ -133,10 +151,10 @@ class QualityProcessorTest extends TestCase
         );
 
         $qp = new QualityProcessor($converter);
-        $this->assertTrue($qp->isQualitySetToAutoAndDidQualityDetectionFail());
+        $this->assertTrue($qp->isQualityDetectionRequiredButFailing());
 
         // Test that it is still the same (testing caching)
-        $this->assertTrue($qp->isQualitySetToAutoAndDidQualityDetectionFail());
+        $this->assertTrue($qp->isQualityDetectionRequiredButFailing());
     }
 
 

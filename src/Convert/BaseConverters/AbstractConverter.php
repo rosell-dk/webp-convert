@@ -408,9 +408,9 @@ abstract class AbstractConverter
         return $this->getQualityProcessor()->getCalculatedQuality();
     }
 
-    public function isQualitySetToAutoAndDidQualityDetectionFail()
+    public function isQualityDetectionRequiredButFailing()
     {
-        return $this->getQualityProcessor()->isQualitySetToAutoAndDidQualityDetectionFail();
+        return $this->getQualityProcessor()->isQualityDetectionRequiredButFailing();
     }
 
     public function finalizeConvert()

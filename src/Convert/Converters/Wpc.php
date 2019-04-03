@@ -135,7 +135,7 @@ class Wpc extends AbstractCloudCurlConverter
 
         $optionsToSend = $options;
 
-        if ($this->isQualitySetToAutoAndDidQualityDetectionFail()) {
+        if ($this->isQualityDetectionRequiredButFailing()) {
             // quality was set to "auto", but we could not meassure the quality of the jpeg locally
             // Ask the cloud service to do it, rather than using what we came up with.
             $optionsToSend['quality'] = 'auto';
