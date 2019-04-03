@@ -2,7 +2,7 @@
 
 namespace WebPConvert\Tests\Convert\Converters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractCloudConverter;
+use WebPConvert\Convert\BaseConverters\AbstractCloudConverter;
 
 /**
  * Class for exposing otherwise unaccessible methods of AbstractConverter,

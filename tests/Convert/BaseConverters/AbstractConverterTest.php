@@ -1,6 +1,6 @@
 <?php
 
-namespace WebPConvert\Tests\Convert\Converters\AbstractConverters;
+namespace WebPConvert\Tests\Convert\BaseConverters;
 
 use WebPConvert\Tests\Convert\Converters\ExposedConverter;
 use WebPConvert\Tests\Convert\Converters\SuccessGuaranteedConverter;
@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 class AbstractCloudConverterTest extends TestCase
 {
 
-    private static $imgDir = __DIR__ . '/../../..';
+    private static $imgDir = __DIR__ . '/../..';
 
     public function testConvert()
     {

@@ -1,9 +1,9 @@
 <?php
 
-namespace WebPConvert\Convert\Converters\AbstractConverters;
+namespace WebPConvert\Convert\BaseConverters;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
 
 abstract class AbstractCloudConverter extends AbstractConverter
 {

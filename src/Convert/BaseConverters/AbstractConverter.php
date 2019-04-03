@@ -1,6 +1,6 @@
 <?php
 
-namespace WebPConvert\Convert\Converters\AbstractConverters;
+namespace WebPConvert\Convert\BaseConverters;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
@@ -95,7 +95,7 @@ abstract class AbstractConverter
         return substr(strrchr('\\' . static::class, '\\'), 1);
     }
 
-    public static function createInstance($source, $destination, $options, $logger)
+    public static function createInstance($source, $destination, $options = [], $logger = null)
     {
         return new static($source, $destination, $options, $logger);
     }
@@ -108,9 +108,7 @@ abstract class AbstractConverter
     {
 
         /*
-        We do not do the following on purpose.
-        We want to log all warnings and errors (also the ones that was suppressed with @)
-        https://secure.php.net/manual/en/language.operators.errorcontrol.php
+        We do NOT do the following (even though it is generally recommended):
 
         if (!(error_reporting() & $errno)) {
             // This error code is not included in error_reporting, so let it fall
@@ -118,7 +116,8 @@ abstract class AbstractConverter
             return false;
         }
 
-
+        - Because we want to log all warnings and errors (also the ones that was suppressed with @)
+        https://secure.php.net/manual/en/language.operators.errorcontrol.php
         */
 
         $errorTypes = [
@@ -167,14 +166,13 @@ abstract class AbstractConverter
             }
         }
         */
+        $this->logLn($msg);
+
         if ($errno == E_USER_ERROR) {
             // trigger error.
             // unfortunately, we can only catch user errors
-            throw new ConversionFailedException($msg);
-        } else {
-            $this->logLn($msg);
+            throw new ConversionFailedException('Uncaught error in converter', $msg);
         }
-
 
         // We do not return false, because we want to keep this little secret.
         //
@@ -234,24 +232,18 @@ abstract class AbstractConverter
         $this->logger->log($msg);
     }
 
-    /**
-     *  Get mime type for image (best guess)
-     *  It falls back to using file extension.
-     *  If that fails too, false is returned
-     *
-     *  PS: Is it a security risk to fall back on file extension?
-     *  - By setting file extension to "jpg", one can lure our library into trying to convert a file, which isn't a jpg.
-     *    hmm, seems very unlikely, though not unthinkable that one of the converters could be exploited
-     */
-    protected static function getMimeType($filePath)
-    {
-        return ImageMimeTypeGuesser::lenientGuess($filePath);
-    }
-
     protected function getMimeTypeOfSource()
     {
         if (!isset($this->sourceMimeType)) {
-            $this->sourceMimeType = self::getMimeType($this->source);
+            /*  Get mime type for image (best guess)
+               It falls back to using file extension.
+               If that fails too, false is returned
+
+               PS: Is it a security risk to fall back on file extension?
+               - By setting file extension to "jpg", one can lure our library into trying to convert a file, which isn't a jpg.
+                 hmm, seems very unlikely, though not unthinkable that one of the converters could be exploited
+             */
+            $this->sourceMimeType = ImageMimeTypeGuesser::lenientGuess($this->source);
         }
         return $this->sourceMimeType;
     }

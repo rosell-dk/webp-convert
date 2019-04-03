@@ -29,4 +29,5 @@ class JpegQualityDetectorTest extends TestCase
         $this->assertNull($result);
     }
 
+    // TODO: Test when PNG is supplied
 }

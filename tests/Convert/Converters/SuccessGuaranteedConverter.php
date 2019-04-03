@@ -2,7 +2,7 @@
 
 namespace WebPConvert\Tests\Convert\Converters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
 
 class SuccessGuaranteedConverter extends AbstractConverter {
     public static $extraOptions = [];

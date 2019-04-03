@@ -1,8 +1,8 @@
 <?php
 
-namespace WebPConvert\Tests\Convert\Converters\AbstractConverters;
+namespace WebPConvert\Tests\Convert\BaseConverters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractCloudConverter;
+use WebPConvert\Convert\BaseConverters\AbstractCloudConverter;
 use WebPConvert\Tests\Convert\Converters\ExposedCloudConverter;
 
 use PHPUnit\Framework\TestCase;

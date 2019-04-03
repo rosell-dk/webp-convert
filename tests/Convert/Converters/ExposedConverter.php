@@ -2,7 +2,7 @@
 
 namespace WebPConvert\Tests\Convert\Converters;
 
-use WebPConvert\Convert\Converters\AbstractConverters\AbstractConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
 
 /**
  * Class for exposing otherwise unaccessible methods of AbstractConverter,
@@ -21,6 +21,10 @@ class ExposedConverter extends AbstractConverter {
 
     public static function exposedGetMimeType($filePath)
     {
-        return self::getMimeType($filePath);
+        $instance = self::createInstance(
+            $filePath,
+            $filePath . '.webp',            
+        );
+        return $instance->getMimeTypeOfSource();
     }
 }
