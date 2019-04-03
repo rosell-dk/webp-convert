@@ -7,6 +7,7 @@ use WebPConvert\Helpers\JpegQualityDetector;
 class QualityProcessor
 {
 
+    private $converter;
     private $processed = false;
     private $qualityCouldNotBeDetected = false;
     private $calculatedQuality;
