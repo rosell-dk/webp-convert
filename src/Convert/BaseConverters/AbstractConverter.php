@@ -233,19 +233,20 @@ abstract class AbstractConverter
         $this->logger->log($msg);
     }
 
+    /**
+     * Get mime type for image (best guess).
+     *
+     * It falls back to using file extension. If that fails too, false is returned
+     *
+     * PS: Is it a security risk to fall back on file extension?
+     * - By setting file extension to "jpg", one can lure our library into trying to convert a file, which isn't a jpg.
+     * hmm, seems very unlikely, though not unthinkable that one of the converters could be exploited
+     *
+     * @return  string|false
+     */
     public function getMimeTypeOfSource()
     {
         if (!isset($this->sourceMimeType)) {
-            /*
-            Get mime type for image (best guess)
-            It falls back to using file extension.
-            If that fails too, false is returned
-
-            PS: Is it a security risk to fall back on file extension?
-            - By setting file extension to "jpg", one can lure our library into trying to convert a file,
-            which isn't a jpg.
-            hmm, seems very unlikely, though not unthinkable that one of the converters could be exploited
-            */
             $this->sourceMimeType = ImageMimeTypeGuesser::lenientGuess($this->source);
         }
         return $this->sourceMimeType;
