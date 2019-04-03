@@ -25,12 +25,33 @@ class QualityProcessor
 
     }
 
-    public function isQualitySetToAutoAndDidQualityDetectionFail()
+    /**
+     *  Determine if quality detection is required but failing.
+     *
+     *  It is considered "required" when:
+     *  - Mime type is "image/jpeg"
+     *  - Quality is set to "auto"
+     *
+     *  @return  boolean
+     */
+    public function isQualityDetectionRequiredButFailing()
     {
         $this->processIfNotAlready();
         return $this->qualityCouldNotBeDetected;
     }
 
+    /**
+     *  Get calculated quality.
+     *
+     *  If mime type is something else than "image/jpeg", the "default-quality" option is returned
+     *  Same thing for jpeg, when the "quality" option is set to a number (rather than "auto").
+     *
+     *  Otherwise:
+     *  If quality cannot be detetected, the "default-quality" option is returned.
+     *  If quality can be detetected, the lowest value of this and the "max-quality" option is returned
+     *
+     *  @return  int
+     */
     public function getCalculatedQuality()
     {
         $this->processIfNotAlready();
@@ -68,6 +89,7 @@ class QualityProcessor
                 }
                 $q = min($q, $options['max-quality']);
             } else {
+                $q = $options['default-quality'];
                 $logger->logLn('Quality: ' . $q . '. ');
             }
         } else {
