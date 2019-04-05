@@ -120,7 +120,7 @@ class Imagick extends AbstractConverter
             // because setting image quality to something higher than source generates bigger files,
             // but gets you no extra quality. When failing to limit quality, you at least get something
             // out of it
-            $logger->logLn('Converting without setting quality, to achieve auto quality');
+            $this->logLn('Converting without setting quality, to achieve auto quality');
         } else {
             $im->setImageCompressionQuality($this->getCalculatedQuality());
         }
