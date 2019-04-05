@@ -9,6 +9,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
 class Gd extends AbstractConverter
 {
+    private $errorMessageWhileCreating = '';
+
     public static $extraOptions = [];
 
     /**
@@ -115,6 +117,12 @@ class Gd extends AbstractConverter
         }
     }
 
+    private function errorHandlerWhileCreatingWebP($errno, $errstr, $errfile, $errline)
+    {
+        $this->errorMessageWhileCreating = $errstr . ' in ' . $errfile . ', line ' . $errline .
+            ', PHP ' . PHP_VERSION . ' (' . PHP_OS . ')';
+    }
+
     // Although this method is public, do not call directly.
     // You should rather call the static convert() function, defined in AbstractConverter, which
     // takes care of preparing stuff before calling doConvert, and validating after.
@@ -196,6 +204,69 @@ class Gd extends AbstractConverter
             }
         }
 
+        // Danger zone!
+        //    Using output buffering to generate image.
+        //    In this zone, Do NOT do anything that might produce unwanted output
+        //    Do NOT call $this->logLn
+        // --------------------------------- (start of danger zone)
+
+        $addedZeroPadding = false;
+        set_error_handler(array($this, "errorHandlerWhileCreatingWebP"));
+
+        ob_start();
+        $success = imagewebp($image);
+        if (!$success) {
+            ob_end_clean();
+            restore_error_handler();
+            throw new ConversionFailedException(
+                'Failed creating image. Call to imagewebp() failed.',
+                $this->errorMessageWhileCreating
+            );
+        }
+
+
+        // The following hack solves an `imagewebp` bug
+        // See https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files
+        if (ob_get_length() % 2 == 1) {
+            echo "\0";
+            $addedZeroPadding = true;
+        }
+        $output = ob_get_clean();
+        restore_error_handler();
+
+        // --------------------------------- (end of danger zone).
+
+        if ($this->errorMessageWhileCreating != '') {
+            $this->logLn('An error or warning was produced during conversion: ' . $this->errorMessageWhileCreating);
+        }
+
+        if ($addedZeroPadding) {
+            $this->logLn('Fixing corrupt webp by adding a zero byte (older versions of Gd had a bug, but this hack fixes it)');
+
+        }
+
+        $success = file_put_contents($this->destination, $output);
+
+        if (!$success) {
+            throw new ConversionFailedException(
+                'Gd failed when trying to save the image. Check file permissions!'
+            );
+        }
+
+        /*
+        Previous code was much simpler, but on a system, the hack was not activated (a file with uneven number of bytes
+        was created). This is puzzeling. And the old code did not provide any insights.
+        Also, perhaps having two subsequent writes to the same file could perhaps cause a problem.
+        In the new code, there is only one write.
+        However, a bad thing about the new code is that the entire webp file is read into memory. This might cause
+        memory overflow with big files.
+        Perhaps we should check the filesize of the original and only use the new code when it is smaller than
+        memory limit set in PHP by a certain factor.
+        Or perhaps only use the new code on older versions of Gd
+        https://wordpress.org/support/topic/images-not-seen-on-chrome/#post-11390284
+
+        Here is the old code:
+
         $success = imagewebp($image, $this->destination, $this->getCalculatedQuality());
 
         if (!$success) {
@@ -205,14 +276,13 @@ class Gd extends AbstractConverter
             );
         }
 
-        /*
-         * This hack solves an `imagewebp` bug
-         * See https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files
-         *
-         */
+
+        // This hack solves an `imagewebp` bug
+        // See https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files
         if (filesize($this->destination) % 2 == 1) {
             file_put_contents($this->destination, "\0", FILE_APPEND);
         }
+        */
 
         imagedestroy($image);
     }
