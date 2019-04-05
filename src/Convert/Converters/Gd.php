@@ -156,9 +156,15 @@ class Gd extends AbstractConverter
                 break;
 
             default:
-                throw new InvalidInputException(
-                    'Unsupported mime type:' . $mimeType
-                );
+                if ($mimeType === false) {
+                    throw new InvalidInputException(
+                        'Mime type could not be determined'
+                    );
+                } else {
+                    throw new InvalidInputException(
+                        'Unsupported mime type:' . $mimeType
+                    );
+                }
         }
 
         // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
