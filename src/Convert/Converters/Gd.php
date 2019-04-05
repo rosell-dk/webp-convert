@@ -153,6 +153,7 @@ class Gd extends AbstractConverter
                         'Gd failed when trying to load/create image (imagecreatefromjpeg() failed)'
                     );
                 }
+                break;
 
             default:
                 throw new InvalidInputException(
