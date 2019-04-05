@@ -241,8 +241,10 @@ class Gd extends AbstractConverter
         }
 
         if ($addedZeroPadding) {
-            $this->logLn('Fixing corrupt webp by adding a zero byte (older versions of Gd had a bug, but this hack fixes it)');
-
+            $this->logLn(
+                'Fixing corrupt webp by adding a zero byte ' .
+                '(older versions of Gd had a bug, but this hack fixes it)'
+            );
         }
 
         $success = file_put_contents($this->destination, $output);
