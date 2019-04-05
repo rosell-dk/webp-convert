@@ -15,16 +15,20 @@ use WebPConvert\Serve\ServeExistingOrHandOver;
 class WebPConvert
 {
 
-    /*
-      @param (string) $source: Absolute path to image to be converted (no backslashes). Image must be jpeg or png
-      @param (string) $destination: Absolute path (no backslashes)
-      @param (object) $options: Array of named options, such as 'quality' and 'metadata'
+    /**
+     * Convert jpeg or png into webp
+     *
+     * @param  string  $source  Absolute path to image to be converted (no backslashes). Image must be jpeg or png
+     * @param  string  $destination  Absolute path (no backslashes)
+     * @param  object  $options  Array of named options, such as 'quality' and 'metadata'
+     * @throws \WebPConvert\Exceptions\WebPConvertException
+     * @return void
     */
     public static function convert($source, $destination, $options = [], $logger = null)
     {
         //return ConverterHelper::runConverterStack($source, $destination, $options, $logger);
         //return Convert::runConverterStack($source, $destination, $options, $logger);
-        return Stack::convert($source, $destination, $options, $logger);
+        Stack::convert($source, $destination, $options, $logger);
     }
 
     public static function convertAndServe($source, $destination, $options = [])
@@ -220,6 +224,10 @@ abstract class AbstractConverter
      *
      */
     abstract protected function doConvert();
+
+    // The following must be defined in all actual converters.
+    // Unfortunately properties cannot be declared abstract. TODO: We need to change to using method instead.
+    public static $extraOptions;
 
     public $source;
     public $destination;
@@ -430,19 +438,20 @@ abstract class AbstractConverter
         $this->logger->log($msg);
     }
 
+    /**
+     * Get mime type for image (best guess).
+     *
+     * It falls back to using file extension. If that fails too, false is returned
+     *
+     * PS: Is it a security risk to fall back on file extension?
+     * - By setting file extension to "jpg", one can lure our library into trying to convert a file, which isn't a jpg.
+     * hmm, seems very unlikely, though not unthinkable that one of the converters could be exploited
+     *
+     * @return  string|false
+     */
     public function getMimeTypeOfSource()
     {
         if (!isset($this->sourceMimeType)) {
-            /*
-            Get mime type for image (best guess)
-            It falls back to using file extension.
-            If that fails too, false is returned
-
-            PS: Is it a security risk to fall back on file extension?
-            - By setting file extension to "jpg", one can lure our library into trying to convert a file,
-            which isn't a jpg.
-            hmm, seems very unlikely, though not unthinkable that one of the converters could be exploited
-            */
             $this->sourceMimeType = ImageMimeTypeGuesser::lenientGuess($this->source);
         }
         return $this->sourceMimeType;
@@ -1374,10 +1383,13 @@ namespace WebPConvert\Convert\Converters;
 use WebPConvert\Convert\BaseConverters\AbstractConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInputException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
 class Gd extends AbstractConverter
 {
+    private $errorMessageWhileCreating = '';
+
     public static $extraOptions = [];
 
     /**
@@ -1484,6 +1496,12 @@ class Gd extends AbstractConverter
         }
     }
 
+    private function errorHandlerWhileCreatingWebP($errno, $errstr, $errfile, $errline)
+    {
+        $this->errorMessageWhileCreating = $errstr . ' in ' . $errfile . ', line ' . $errline .
+            ', PHP ' . PHP_VERSION . ' (' . PHP_OS . ')';
+    }
+
     // Although this method is public, do not call directly.
     // You should rather call the static convert() function, defined in AbstractConverter, which
     // takes care of preparing stuff before calling doConvert, and validating after.
@@ -1513,6 +1531,12 @@ class Gd extends AbstractConverter
                         'Gd failed when trying to load/create image (imagecreatefromjpeg() failed)'
                     );
                 }
+                break;
+
+            default:
+                throw new InvalidInputException(
+                    'Unsupported mime type:' . $mimeType
+                );
         }
 
         // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
@@ -1565,6 +1589,71 @@ class Gd extends AbstractConverter
             }
         }
 
+        // Danger zone!
+        //    Using output buffering to generate image.
+        //    In this zone, Do NOT do anything that might produce unwanted output
+        //    Do NOT call $this->logLn
+        // --------------------------------- (start of danger zone)
+
+        $addedZeroPadding = false;
+        set_error_handler(array($this, "errorHandlerWhileCreatingWebP"));
+
+        ob_start();
+        $success = imagewebp($image);
+        if (!$success) {
+            ob_end_clean();
+            restore_error_handler();
+            throw new ConversionFailedException(
+                'Failed creating image. Call to imagewebp() failed.',
+                $this->errorMessageWhileCreating
+            );
+        }
+
+
+        // The following hack solves an `imagewebp` bug
+        // See https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files
+        if (ob_get_length() % 2 == 1) {
+            echo "\0";
+            $addedZeroPadding = true;
+        }
+        $output = ob_get_clean();
+        restore_error_handler();
+
+        // --------------------------------- (end of danger zone).
+
+        if ($this->errorMessageWhileCreating != '') {
+            $this->logLn('An error or warning was produced during conversion: ' . $this->errorMessageWhileCreating);
+        }
+
+        if ($addedZeroPadding) {
+            $this->logLn(
+                'Fixing corrupt webp by adding a zero byte ' .
+                '(older versions of Gd had a bug, but this hack fixes it)'
+            );
+        }
+
+        $success = file_put_contents($this->destination, $output);
+
+        if (!$success) {
+            throw new ConversionFailedException(
+                'Gd failed when trying to save the image. Check file permissions!'
+            );
+        }
+
+        /*
+        Previous code was much simpler, but on a system, the hack was not activated (a file with uneven number of bytes
+        was created). This is puzzeling. And the old code did not provide any insights.
+        Also, perhaps having two subsequent writes to the same file could perhaps cause a problem.
+        In the new code, there is only one write.
+        However, a bad thing about the new code is that the entire webp file is read into memory. This might cause
+        memory overflow with big files.
+        Perhaps we should check the filesize of the original and only use the new code when it is smaller than
+        memory limit set in PHP by a certain factor.
+        Or perhaps only use the new code on older versions of Gd
+        https://wordpress.org/support/topic/images-not-seen-on-chrome/#post-11390284
+
+        Here is the old code:
+
         $success = imagewebp($image, $this->destination, $this->getCalculatedQuality());
 
         if (!$success) {
@@ -1574,14 +1663,13 @@ class Gd extends AbstractConverter
             );
         }
 
-        /*
-         * This hack solves an `imagewebp` bug
-         * See https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files
-         *
-         */
+
+        // This hack solves an `imagewebp` bug
+        // See https://stackoverflow.com/questions/30078090/imagewebp-php-creates-corrupted-webp-files
         if (filesize($this->destination) % 2 == 1) {
             file_put_contents($this->destination, "\0", FILE_APPEND);
         }
+        */
 
         imagedestroy($image);
     }
@@ -1853,7 +1941,7 @@ class Imagick extends AbstractConverter
             // because setting image quality to something higher than source generates bigger files,
             // but gets you no extra quality. When failing to limit quality, you at least get something
             // out of it
-            $logger->logLn('Converting without setting quality, to achieve auto quality');
+            $this->logLn('Converting without setting quality, to achieve auto quality');
         } else {
             $im->setImageCompressionQuality($this->getCalculatedQuality());
         }
@@ -2049,15 +2137,27 @@ class Stack extends AbstractConverter
     public static $availableConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'wpc', 'ewww'];
     public static $localConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'];
 
+    public static function converterIdToClassname($converterId)
+    {
+        switch ($converterId) {
+            case 'imagickbinary':
+                $classNameShort = 'ImagickBinary';
+                break;
+            default:
+                $classNameShort = ucfirst($converterId);
+        }
+        $className = 'WebPConvert\\Convert\\Converters\\' . ucfirst($converterId);
+        if (is_callable([$className, 'convert'])) {
+            return $className;
+        } else {
+            throw new ConverterNotFoundException('There is no converter with id:' . $converterId);
+        }
+    }
+
     public static function getClassNameOfConverter($converterId)
     {
         if (strtolower($converterId) == $converterId) {
-            $className = 'WebPConvert\\Convert\\Converters\\' . ucfirst($converterId);
-            if (is_callable([$className, 'convert'])) {
-                return $className;
-            } else {
-                throw new ConverterNotFoundException('There is no converter with id:' . $converterId);
-            }
+            return self::converterIdToClassname($converterId);
         }
         $className = $converterId;
         if (!is_callable([$className, 'convert'])) {
@@ -2668,6 +2768,7 @@ use WebPConvert\Helpers\JpegQualityDetector;
 class QualityProcessor
 {
 
+    private $converter;
     private $processed = false;
     private $qualityCouldNotBeDetected = false;
     private $calculatedQuality;
