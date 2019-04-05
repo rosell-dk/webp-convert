@@ -52,7 +52,7 @@ class Stack extends AbstractConverter
             default:
                 $classNameShort = ucfirst($converterId);
         }
-        $className = 'WebPConvert\\Convert\\Converters\\' . ucfirst($converterId);
+        $className = 'WebPConvert\\Convert\\Converters\\' . $classNameShort;
         if (is_callable([$className, 'convert'])) {
             return $className;
         } else {
