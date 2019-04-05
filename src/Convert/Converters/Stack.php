@@ -43,15 +43,27 @@ class Stack extends AbstractConverter
     public static $availableConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'wpc', 'ewww'];
     public static $localConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'];
 
+    public static function converterIdToClassname($converterId)
+    {
+        switch ($converterId) {
+            case 'imagickbinary':
+                $classNameShort = 'ImagickBinary';
+                break;
+            default:
+                $classNameShort = ucfirst($converterId);
+        }
+        $className = 'WebPConvert\\Convert\\Converters\\' . ucfirst($converterId);
+        if (is_callable([$className, 'convert'])) {
+            return $className;
+        } else {
+            throw new ConverterNotFoundException('There is no converter with id:' . $converterId);
+        }
+    }
+
     public static function getClassNameOfConverter($converterId)
     {
         if (strtolower($converterId) == $converterId) {
-            $className = 'WebPConvert\\Convert\\Converters\\' . ucfirst($converterId);
-            if (is_callable([$className, 'convert'])) {
-                return $className;
-            } else {
-                throw new ConverterNotFoundException('There is no converter with id:' . $converterId);
-            }
+            return self::converterIdToClassname($converterId);
         }
         $className = $converterId;
         if (!is_callable([$className, 'convert'])) {

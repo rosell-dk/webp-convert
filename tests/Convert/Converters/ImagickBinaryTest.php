@@ -8,7 +8,7 @@
 
 namespace WebPConvert\Tests\Convert\Converters;
 
-use WebPConvert\Convert\Converters\Imagickbinary;
+use WebPConvert\Convert\Converters\ImagickBinary;
 use PHPUnit\Framework\TestCase;
 
 class ImagickBinaryTest extends TestCase
@@ -16,7 +16,7 @@ class ImagickBinaryTest extends TestCase
 
     public function testConvert()
     {
-        ConverterTestHelper::runAllConvertTests($this, 'Imagickbinary');
+        ConverterTestHelper::runAllConvertTests($this, 'ImagickBinary');
     }
 
 }
