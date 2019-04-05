@@ -5,6 +5,7 @@ namespace WebPConvert\Convert\Converters;
 use WebPConvert\Convert\BaseConverters\AbstractConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInputException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
 class Gd extends AbstractConverter
@@ -152,6 +153,12 @@ class Gd extends AbstractConverter
                         'Gd failed when trying to load/create image (imagecreatefromjpeg() failed)'
                     );
                 }
+
+            default:
+                throw new InvalidInputException(
+                    'Unsupported mime type:' . $mimeType
+                );
+
         }
 
         // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
