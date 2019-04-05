@@ -24,6 +24,10 @@ abstract class AbstractConverter
      */
     abstract protected function doConvert();
 
+    // The following must be defined in all actual converters.
+    // Unfortunately properties cannot be declared abstract. TODO: We need to change to using method instead.
+    public static $extraOptions;
+
     public $source;
     public $destination;
     public $options;
