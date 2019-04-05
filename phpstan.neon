@@ -1,0 +1,5 @@
+parameters:
+    ignoreErrors:
+        - '#Instantiated class Imagick not found.#'
+        - '#Instantiated class Gmagick not found.#'
+        - '#Caught class ImagickException not found.#'
