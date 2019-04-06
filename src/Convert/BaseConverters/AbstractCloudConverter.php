@@ -15,7 +15,7 @@ abstract class AbstractCloudConverter extends AbstractConverter
      * Strings without units are also accepted.
      * The shorthandbytes syntax is described here: https://www.php.net/manual/en/faq.using.php#faq.using.shorthandbytes
      *
-     * @param  string  $size  A size string of the type returned by ini_get()
+     * @param  string  $shortHandSize  A size string of the type returned by ini_get()
      * @return float|false  The parsed size (beware: it is float, do not check high numbers for equality),
      *                      or false if parse error
      */
