@@ -35,7 +35,7 @@
     "phpcs-all": "phpcs --standard=PSR2 src",
     "phpcbf": "phpcbf --standard=PSR2",
     "build": "php build-scripts/build.php",
-    "phpstan": "vendor/bin/phpstan analyse src --level=0"
+    "phpstan": "vendor/bin/phpstan analyse src --level=2"
   },
   "extra": {
       "scripts-descriptions": {
