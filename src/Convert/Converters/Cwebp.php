@@ -206,6 +206,8 @@ class Cwebp extends AbstractExecConverter
                 'this converter can convert images. No conversion can be made!';
         }
 
+        $returnCode = 0;
+        $majorFailCode = 0;
         if ($options['try-common-system-paths']) {
             foreach ($cwebpPathsToTest as $index => $binary) {
                 $returnCode = self::executeBinary($binary, $commandOptions, $useNice, $this);
@@ -220,7 +222,7 @@ class Cwebp extends AbstractExecConverter
                     }
                 }
             }
-            $majorFailCode = 0;
+
             if (!$success) {
                 if (count($failureCodes) == 1) {
                     $majorFailCode = $failureCodes[0];

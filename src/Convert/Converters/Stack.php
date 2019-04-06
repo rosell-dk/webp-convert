@@ -148,10 +148,17 @@ class Stack extends AbstractConverter
 
             $className = self::getClassNameOfConverter($converterId);
 
+
+            $converterDisplayName = 'Untitled converter';  // TODO: handle failure better than this
             try {
                 $converterDisplayName = call_user_func(
                     [$className, 'getConverterDisplayName']
                 );
+            } catch (\Exception $e) {
+                // should we throw? 
+            }
+
+            try {
 
                 $this->ln();
                 $this->logLn('Trying: ' . $converterId, 'italic');
