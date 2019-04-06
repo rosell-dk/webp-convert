@@ -1,5 +1,8 @@
 <?php
 
+// TODO:
+// Read this: https://sourcemaking.com/design_patterns/strategy
+
 namespace WebPConvert\Convert\BaseConverters;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
@@ -28,8 +31,12 @@ abstract class AbstractConverter
     // Unfortunately properties cannot be declared abstract. TODO: We need to change to using method instead.
     public static $extraOptions;
 
+    /** @var string  The filename of the image to convert (complete path) */
     public $source;
+
+    /** @var string  Where to save the webp (complete path) */
     public $destination;
+    
     public $options;
     public $logger;
     public $beginTime;
