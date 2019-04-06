@@ -83,7 +83,7 @@ class Gd extends AbstractConverter
      * Try to convert image pallette to true color. If imageistruecolor() exists, that is used (available from
      * PHP >= 5.5.0). Otherwise using workaround found on the net.
      *
-     * @param  resource  &$image
+     * @param  resource  $image
      * @return boolean  TRUE if the convertion was complete, or if the source image already is a true color image,
      *          otherwise FALSE is returned.
      */
@@ -100,17 +100,35 @@ class Gd extends AbstractConverter
                         'imagefilledrectangle', 'imagecopy', 'imagedestroy', 'imagesx', 'imagesy'])) {
                     $dst = imagecreatetruecolor(imagesx($image), imagesy($image));
 
+                    if ($dst === false) {
+                        return false;
+                    }
+
                     //prevent blending with default black
-                    imagealphablending($dst, false);
+                    if (imagealphablending($dst, false) === false) {
+                        return false;
+                    }
 
                      //change the RGB values if you need, but leave alpha at 127
                     $transparent = imagecolorallocatealpha($dst, 255, 255, 255, 127);
 
-                     //simpler than flood fill
-                    imagefilledrectangle($dst, 0, 0, imagesx($image), imagesy($image), $transparent);
-                    imagealphablending($dst, true);     //restore default blending
+                    if ($transparent === false) {
+                        return false;
+                    }
 
-                    imagecopy($dst, $image, 0, 0, 0, 0, imagesx($image), imagesy($image));
+                     //simpler than flood fill
+                    if (imagefilledrectangle($dst, 0, 0, imagesx($image), imagesy($image), $transparent) === false) {
+                        return false;
+                    }
+
+                    //restore default blending
+                    if (imagealphablending($dst, true) === false) {
+                        return false;
+                    };
+
+                    if (imagecopy($dst, $image, 0, 0, 0, 0, imagesx($image), imagesy($image)) === false) {
+                        return false;
+                    }
                     imagedestroy($image);
 
                     $image = $dst;
