@@ -23,7 +23,7 @@ class Gd extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met
      */
-    private function checkOperationality()
+    protected function checkOperationality()
     {
         if (!extension_loaded('gd')) {
             throw new SystemRequirementsNotMetException('Required Gd extension is not available.');
@@ -148,7 +148,7 @@ class Gd extends AbstractConverter
      * @throws  InvalidInputException  if mime type is unsupported or could not be detected
      * @return  void
      */
-    protected function createImageResource()
+    private function createImageResource()
     {
         // In case of failure, image will be false
         $this->image = false;
