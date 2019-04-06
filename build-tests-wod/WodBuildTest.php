@@ -69,29 +69,11 @@ class WodBuildTest extends TestCase
                 'reconvert' => true,
                 'require-for-conversion' => $wod2,
                 //'converters' => ['imagick'],
-                'aboutToServeImageCallBack' => function($servingWhat, $whyServingThis, $obj) {
-                    /*
-                    The first argument to the callback contains a string that tells what is about to be served.
-                    It can be 'fresh-conversion', 'destination' or 'source'.
-
-                    The second argument tells you why that is served. It can be one of the following:
-                    for 'source':
-                    - "explicitly-told-to"     (when the "serve-original" option is set)
-                    - "source-lighter"         (when original image is actually smaller than the converted)
-
-                    for 'fresh-conversion':
-                    - "explicitly-told-to"     (when the "reconvert" option is set)
-                    - "source-modified"        (when source is newer than existing)
-                    - "no-existing"            (when there is no existing at the destination)
-
-                    for 'destination':
-                    - "no-reason-not-to"       (it is lighter than source, its not older, and we were not told to do otherwise)
-                    */
-
+                'aboutToServeImageCallBack' => function() {
                     // Return false, in order to cancel serving
                     return false;
                 },
-                'aboutToPerformFailActionCallback' => function ($errorTitle, $errorDescription, $actionAboutToBeTaken, $serveConvertedObj) {
+                'aboutToPerformFailActionCallback' => function () {
                     return false;
                 }
             ]
