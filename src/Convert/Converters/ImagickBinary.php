@@ -39,7 +39,6 @@ class ImagickBinary extends AbstractExecConverter
         */
         $command = 'convert -version';
         exec($command, $output, $returnCode);
-        $hasDelegate = false;
         foreach ($output as $line) {
             if (preg_match('/Delegate.*webp.*/i', $line)) {
                 return true;
