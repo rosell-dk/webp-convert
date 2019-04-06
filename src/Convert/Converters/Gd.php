@@ -14,7 +14,7 @@ class Gd extends AbstractConverter
     private $errorNumberWhileCreating;
 
     // TODO: Can we make this private, but still test?
-    private $image = false;
+    public $image = false;
 
     public static $extraOptions = [];
 
@@ -132,7 +132,16 @@ class Gd extends AbstractConverter
      */
     protected function createImageResource()
     {
+        // In case of failure, image will be false
+        $this->image = false;
+
         $mimeType = $this->getMimeTypeOfSource();
+        if ($mimeType === false) {
+            throw new InvalidInputException(
+                'Mime type could not be determined'
+            );
+        }
+
         switch ($mimeType) {
             case 'image/png':
                 $this->image = imagecreatefrompng($this->source);
@@ -152,15 +161,7 @@ class Gd extends AbstractConverter
                 }
                 break;
 
-            case false:
-                $this->image = false;
-                throw new InvalidInputException(
-                    'Mime type could not be determined'
-                );
-                break;
-
             default:
-                $this->image = false;
                 throw new InvalidInputException(
                     'Unsupported mime type:' . $mimeType
                 );
