@@ -1356,6 +1356,10 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 class Gd extends AbstractConverter
 {
     private $errorMessageWhileCreating = '';
+    private $errorNumberWhileCreating;
+
+    // TODO: Can we make this private, but still test?
+    public $image = false;
 
     public static $extraOptions = [];
 
@@ -1424,11 +1428,11 @@ class Gd extends AbstractConverter
      * Try to convert image pallette to true color. If imageistruecolor() exists, that is used (available from
      * PHP >= 5.5.0). Otherwise using workaround found on the net.
      *
-     * @param  resource  &$image
+     * @param  resource  $image
      * @return boolean  TRUE if the convertion was complete, or if the source image already is a true color image,
      *          otherwise FALSE is returned.
      */
-    public static function makeTrueColor(&$image)
+    private static function makeTrueColor(&$image)
     {
         if (function_exists('imagepalettetotruecolor')) {
             return imagepalettetotruecolor($image);
@@ -1441,17 +1445,35 @@ class Gd extends AbstractConverter
                         'imagefilledrectangle', 'imagecopy', 'imagedestroy', 'imagesx', 'imagesy'])) {
                     $dst = imagecreatetruecolor(imagesx($image), imagesy($image));
 
+                    if ($dst === false) {
+                        return false;
+                    }
+
                     //prevent blending with default black
-                    imagealphablending($dst, false);
+                    if (imagealphablending($dst, false) === false) {
+                        return false;
+                    }
 
                      //change the RGB values if you need, but leave alpha at 127
                     $transparent = imagecolorallocatealpha($dst, 255, 255, 255, 127);
 
-                     //simpler than flood fill
-                    imagefilledrectangle($dst, 0, 0, imagesx($image), imagesy($image), $transparent);
-                    imagealphablending($dst, true);     //restore default blending
+                    if ($transparent === false) {
+                        return false;
+                    }
 
-                    imagecopy($dst, $image, 0, 0, 0, 0, imagesx($image), imagesy($image));
+                     //simpler than flood fill
+                    if (imagefilledrectangle($dst, 0, 0, imagesx($image), imagesy($image), $transparent) === false) {
+                        return false;
+                    }
+
+                    //restore default blending
+                    if (imagealphablending($dst, true) === false) {
+                        return false;
+                    };
+
+                    if (imagecopy($dst, $image, 0, 0, 0, 0, imagesx($image), imagesy($image)) === false) {
+                        return false;
+                    }
                     imagedestroy($image);
 
                     $image = $dst;
@@ -1463,28 +1485,30 @@ class Gd extends AbstractConverter
         }
     }
 
-    private function errorHandlerWhileCreatingWebP($errno, $errstr, $errfile, $errline)
+    /**
+     * Create Gd image resource from source
+     *
+     * Sets $this->image to new image, or false if unsuccesful
+     *
+     * @throws  InvalidInputException  if mime type is unsupported or could not be detected
+     * @return  void
+     */
+    protected function createImageResource()
     {
-        $this->errorMessageWhileCreating = $errstr . ' in ' . $errfile . ', line ' . $errline .
-            ', PHP ' . PHP_VERSION . ' (' . PHP_OS . ')';
-    }
-
-    // Although this method is public, do not call directly.
-    // You should rather call the static convert() function, defined in AbstractConverter, which
-    // takes care of preparing stuff before calling doConvert, and validating after.
-    protected function doConvert()
-    {
-
-        $this->logLn('GD Version: ' . gd_info()["GD Version"]);
-
-        // Btw: Check out processWebp here:
-        // https://github.com/Intervention/image/blob/master/src/Intervention/Image/Gd/Encoder.php
+        // In case of failure, image will be false
+        $this->image = false;
 
         $mimeType = $this->getMimeTypeOfSource();
+        if ($mimeType === false) {
+            throw new InvalidInputException(
+                'Mime type could not be determined'
+            );
+        }
+
         switch ($mimeType) {
             case 'image/png':
-                $image = imagecreatefrompng($this->source);
-                if (!$image) {
+                $this->image = imagecreatefrompng($this->source);
+                if ($this->image === false) {
                     throw new ConversionFailedException(
                         'Gd failed when trying to load/create image (imagecreatefrompng() failed)'
                     );
@@ -1492,8 +1516,8 @@ class Gd extends AbstractConverter
                 break;
 
             case 'image/jpeg':
-                $image = imagecreatefromjpeg($this->source);
-                if (!$image) {
+                $this->image = imagecreatefromjpeg($this->source);
+                if ($this->image === false) {
                     throw new ConversionFailedException(
                         'Gd failed when trying to load/create image (imagecreatefromjpeg() failed)'
                     );
@@ -1505,12 +1529,17 @@ class Gd extends AbstractConverter
                     'Unsupported mime type:' . $mimeType
                 );
         }
+    }
 
-        // Checks if either imagecreatefromjpeg() or imagecreatefrompng() returned false
-
+    /**
+     * Try to make image resource true color if it is not already
+     *
+     */
+    protected function tryToMakeTrueColorIfNot()
+    {
         $mustMakeTrueColor = false;
         if (function_exists('imageistruecolor')) {
-            if (imageistruecolor($image)) {
+            if (imageistruecolor($this->image)) {
                 $this->logLn('image is true color');
             } else {
                 $this->logLn('image is not true color');
@@ -1523,7 +1552,7 @@ class Gd extends AbstractConverter
 
         if ($mustMakeTrueColor) {
             $this->logLn('converting color palette to true color');
-            $success = $this->makeTrueColor($image);
+            $success = $this->makeTrueColor($this->image);
             if (!$success) {
                 $this->logLn(
                     'Warning: FAILED converting color palette to true color. ' .
@@ -1531,31 +1560,50 @@ class Gd extends AbstractConverter
                 );
             }
         }
+    }
 
-        if ($mimeType == 'png') {
-            if (function_exists('imagealphablending')) {
-                if (!imagealphablending($image, true)) {
-                    $this->logLn('Warning: imagealphablending() failed');
-                }
-            } else {
-                $this->logLn(
-                    'Warning: imagealphablending() is not available on your system.' .
-                    ' Converting PNGs with transparency might fail on some systems'
-                );
+    protected function trySettingAlphaBlending()
+    {
+        if (function_exists('imagealphablending')) {
+            if (!imagealphablending($this->image, true)) {
+                $this->logLn('Warning: imagealphablending() failed');
             }
-
-            if (function_exists('imagesavealpha')) {
-                if (!imagesavealpha($image, true)) {
-                    $this->logLn('Warning: imagesavealpha() failed');
-                }
-            } else {
-                $this->logLn(
-                    'Warning: imagesavealpha() is not available on your system. ' .
-                    'Converting PNGs with transparency might fail on some systems'
-                );
-            }
+        } else {
+            $this->logLn(
+                'Warning: imagealphablending() is not available on your system.' .
+                ' Converting PNGs with transparency might fail on some systems'
+            );
         }
 
+        if (function_exists('imagesavealpha')) {
+            if (!imagesavealpha($this->image, true)) {
+                $this->logLn('Warning: imagesavealpha() failed');
+            }
+        } else {
+            $this->logLn(
+                'Warning: imagesavealpha() is not available on your system. ' .
+                'Converting PNGs with transparency might fail on some systems'
+            );
+        }
+    }
+
+    protected function errorHandlerWhileCreatingWebP($errno, $errstr, $errfile, $errline)
+    {
+        $this->errorNumberWhileCreating = $errno;
+        $this->errorMessageWhileCreating = $errstr . ' in ' . $errfile . ', line ' . $errline .
+            ', PHP ' . PHP_VERSION . ' (' . PHP_OS . ')';
+    }
+
+    protected function destroyAndRemove()
+    {
+        imagedestroy($this->image);
+        if (file_exists($this->destination)) {
+            unlink($this->destination);
+        }
+    }
+
+    protected function tryConverting()
+    {
         // Danger zone!
         //    Using output buffering to generate image.
         //    In this zone, Do NOT do anything that might produce unwanted output
@@ -1566,8 +1614,9 @@ class Gd extends AbstractConverter
         set_error_handler(array($this, "errorHandlerWhileCreatingWebP"));
 
         ob_start();
-        $success = imagewebp($image);
+        $success = imagewebp($this->image);
         if (!$success) {
+            $this->destroyAndRemove();
             ob_end_clean();
             restore_error_handler();
             throw new ConversionFailedException(
@@ -1588,8 +1637,23 @@ class Gd extends AbstractConverter
 
         // --------------------------------- (end of danger zone).
 
+
         if ($this->errorMessageWhileCreating != '') {
-            $this->logLn('An error or warning was produced during conversion: ' . $this->errorMessageWhileCreating);
+            switch ($this->errorNumberWhileCreating) {
+                case E_WARNING:
+                    $this->logLn('An warning was produced during conversion: ' . $this->errorMessageWhileCreating);
+                    break;
+                case E_NOTICE:
+                    $this->logLn('An notice was produced during conversion: ' . $this->errorMessageWhileCreating);
+                    break;
+                default:
+                    $this->destroyAndRemove();
+                    throw new ConversionFailedException(
+                        'An error was produced during conversion',
+                        $this->errorMessageWhileCreating
+                    );
+                    break;
+            }
         }
 
         if ($addedZeroPadding) {
@@ -1602,6 +1666,7 @@ class Gd extends AbstractConverter
         $success = file_put_contents($this->destination, $output);
 
         if (!$success) {
+            $this->destroyAndRemove();
             throw new ConversionFailedException(
                 'Gd failed when trying to save the image. Check file permissions!'
             );
@@ -1621,7 +1686,7 @@ class Gd extends AbstractConverter
 
         Here is the old code:
 
-        $success = imagewebp($image, $this->destination, $this->getCalculatedQuality());
+        $success = imagewebp($this->image, $this->destination, $this->getCalculatedQuality());
 
         if (!$success) {
             throw new ConversionFailedException(
@@ -1637,8 +1702,36 @@ class Gd extends AbstractConverter
             file_put_contents($this->destination, "\0", FILE_APPEND);
         }
         */
+    }
 
-        imagedestroy($image);
+    // Although this method is public, do not call directly.
+    // You should rather call the static convert() function, defined in AbstractConverter, which
+    // takes care of preparing stuff before calling doConvert, and validating after.
+    protected function doConvert()
+    {
+
+        $this->logLn('GD Version: ' . gd_info()["GD Version"]);
+
+        // Btw: Check out processWebp here:
+        // https://github.com/Intervention/image/blob/master/src/Intervention/Image/Gd/Encoder.php
+
+        // Create image resource (this sets $this->image)
+        $this->createImageResource();
+
+        // Try to convert color palette if it is not true color (works on $this->image)
+        $this->tryToMakeTrueColorIfNot();
+
+
+        if ($this->getMimeTypeOfSource() == 'png') {
+            // Try to set alpha blending (works on $this->image)
+            $this->trySettingAlphaBlending();
+        }
+
+        // Try to convert it to webp
+        $this->tryConverting();
+
+        // End of story
+        imagedestroy($this->image);
     }
 }
 
@@ -1994,7 +2087,6 @@ class ImagickBinary extends AbstractExecConverter
         */
         $command = 'convert -version';
         exec($command, $output, $returnCode);
-        $hasDelegate = false;
         foreach ($output as $line) {
             if (preg_match('/Delegate.*webp.*/i', $line)) {
                 return true;
@@ -2113,7 +2205,7 @@ class Stack extends AbstractConverter
             default:
                 $classNameShort = ucfirst($converterId);
         }
-        $className = 'WebPConvert\\Convert\\Converters\\' . ucfirst($converterId);
+        $className = 'WebPConvert\\Convert\\Converters\\' . $classNameShort;
         if (is_callable([$className, 'convert'])) {
             return $className;
         } else {

@@ -281,7 +281,7 @@ class WebPConvert
      *
      * @param  string  $source  Absolute path to image to be converted (no backslashes). Image must be jpeg or png
      * @param  string  $destination  Absolute path (no backslashes)
-     * @param  object  $options  Array of named options, such as 'quality' and 'metadata'
+     * @param  array   $options  Array of named options, such as 'quality' and 'metadata'
      * @throws \WebPConvert\Exceptions\WebPConvertException
      * @return void
     */
