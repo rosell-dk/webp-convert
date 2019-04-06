@@ -3,3 +3,5 @@ parameters:
         - '#Instantiated class Imagick not found.#'
         - '#Instantiated class Gmagick not found.#'
         - '#Caught class ImagickException not found.#'
+        - '# on an unknown class Imagick.#'
+        - '# on an unknown class Gmagick.#'
