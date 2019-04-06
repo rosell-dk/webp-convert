@@ -13,7 +13,8 @@ class Gd extends AbstractConverter
     private $errorMessageWhileCreating = '';
     private $errorNumberWhileCreating;
 
-    private $image;
+    // TODO: Can we make this private, but still test?
+    private $image = false;
 
     public static $extraOptions = [];
 
@@ -124,13 +125,17 @@ class Gd extends AbstractConverter
     /**
      * Create Gd image resource from source
      *
+     * Sets $this->image to new image, or false if unsuccesful
+     *
+     * @throws  InvalidInputException  if mime type is unsupported or could not be detected
+     * @return  void
      */
-    private function createImageResource()
+    protected function createImageResource()
     {
         $mimeType = $this->getMimeTypeOfSource();
         switch ($mimeType) {
             case 'image/png':
-                $this->$image = imagecreatefrompng($this->source);
+                $this->image = imagecreatefrompng($this->source);
                 if ($this->image === false) {
                     throw new ConversionFailedException(
                         'Gd failed when trying to load/create image (imagecreatefrompng() failed)'
@@ -147,16 +152,18 @@ class Gd extends AbstractConverter
                 }
                 break;
 
+            case false:
+                $this->image = false;
+                throw new InvalidInputException(
+                    'Mime type could not be determined'
+                );
+                break;
+
             default:
-                if ($mimeType === false) {
-                    throw new InvalidInputException(
-                        'Mime type could not be determined'
-                    );
-                } else {
-                    throw new InvalidInputException(
-                        'Unsupported mime type:' . $mimeType
-                    );
-                }
+                $this->image = false;
+                throw new InvalidInputException(
+                    'Unsupported mime type:' . $mimeType
+                );
         }
     }
 
@@ -164,7 +171,7 @@ class Gd extends AbstractConverter
      * Try to make image resource true color if it is not already
      *
      */
-    private function tryToMakeTrueColorIfNot()
+    protected function tryToMakeTrueColorIfNot()
     {
         $mustMakeTrueColor = false;
         if (function_exists('imageistruecolor')) {
@@ -191,7 +198,7 @@ class Gd extends AbstractConverter
         }
     }
 
-    private function trySettingAlphaBlending()
+    protected function trySettingAlphaBlending()
     {
         if (function_exists('imagealphablending')) {
             if (!imagealphablending($this->image, true)) {
@@ -217,14 +224,14 @@ class Gd extends AbstractConverter
 
     }
 
-    private function errorHandlerWhileCreatingWebP($errno, $errstr, $errfile, $errline)
+    protected function errorHandlerWhileCreatingWebP($errno, $errstr, $errfile, $errline)
     {
         $this->errorNumberWhileCreating = $errno;
         $this->errorMessageWhileCreating = $errstr . ' in ' . $errfile . ', line ' . $errline .
             ', PHP ' . PHP_VERSION . ' (' . PHP_OS . ')';
     }
 
-    private function destroyAndRemove()
+    protected function destroyAndRemove()
     {
         imagedestroy($this->image);
         if (file_exists($this->destination)) {
@@ -232,7 +239,7 @@ class Gd extends AbstractConverter
         }
     }
 
-    private function tryConverting()
+    protected function tryConverting()
     {
         // Danger zone!
         //    Using output buffering to generate image.
