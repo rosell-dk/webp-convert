@@ -221,7 +221,6 @@ class Gd extends AbstractConverter
                 'Converting PNGs with transparency might fail on some systems'
             );
         }
-
     }
 
     protected function errorHandlerWhileCreatingWebP($errno, $errstr, $errfile, $errline)
@@ -276,7 +275,6 @@ class Gd extends AbstractConverter
 
 
         if ($this->errorMessageWhileCreating != '') {
-
             switch ($this->errorNumberWhileCreating) {
                 case E_WARNING:
                     $this->logLn('An warning was produced during conversion: ' . $this->errorMessageWhileCreating);
@@ -361,7 +359,6 @@ class Gd extends AbstractConverter
 
 
         if ($this->getMimeTypeOfSource() == 'png') {
-
             // Try to set alpha blending (works on $this->image)
             $this->trySettingAlphaBlending();
         }
