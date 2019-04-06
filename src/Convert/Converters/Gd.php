@@ -13,8 +13,8 @@ class Gd extends AbstractConverter
     private $errorMessageWhileCreating = '';
     private $errorNumberWhileCreating;
 
-    // TODO: Can we make this private, but still test?
-    public $image = false;
+    /** @var resource|false  Image resource after successful creation */
+    private $image = false;
 
     public static $extraOptions = [];
 
@@ -23,7 +23,7 @@ class Gd extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met
      */
-    protected function checkOperationality()
+    private function checkOperationality()
     {
         if (!extension_loaded('gd')) {
             throw new SystemRequirementsNotMetException('Required Gd extension is not available.');
