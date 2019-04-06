@@ -27,10 +27,10 @@ class WebPConvertBuildTest extends TestCase
             [
                 'reconvert' => true,
                 //'converters' => ['imagick'],
-                'aboutToServeImageCallBack' => function($servingWhat, $whyServingThis, $obj) {
+                'aboutToServeImageCallBack' => function() {
                     return false;
                 },
-                'aboutToPerformFailActionCallback' => function ($errorTitle, $errorDescription, $actionAboutToBeTaken, $serveConvertedObj) {
+                'aboutToPerformFailActionCallback' => function() {
                     return false;
                 }
             ]
