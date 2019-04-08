@@ -69,7 +69,7 @@ class Imagick extends AbstractConverter
         }
     }
 
-    protected function doConvert()
+    protected function doActualConvert()
     {
         $options = $this->options;
 

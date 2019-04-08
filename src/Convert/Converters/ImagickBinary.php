@@ -62,7 +62,7 @@ class ImagickBinary extends AbstractExecConverter
         }
     }
 
-    protected function doConvert()
+    protected function doActualConvert()
     {
         //$this->logLn('Using quality:' . $this->getCalculatedQuality());
         // Should we use "magick" or "convert" command?

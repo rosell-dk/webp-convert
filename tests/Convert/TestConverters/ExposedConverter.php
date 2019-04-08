@@ -14,7 +14,7 @@ class ExposedConverter extends AbstractConverter {
 
     public static $extraOptions = [];
 
-    public function doConvert()
+    public function doActualConvert()
     {
         file_put_contents($this->destination, 'we-pretend-this-is-a-valid-webp!');
     }

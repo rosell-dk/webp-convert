@@ -35,7 +35,7 @@ abstract class AbstractConverter
      * Note: This method is not meant to be called from the outside. Use the *convert* method for that.
      *
      */
-    abstract protected function doConvert();
+    abstract protected function doActualConvert();
 
     // The following must be defined in all actual converters.
     // Unfortunately properties cannot be declared abstract. TODO: We need to change to using method instead.
@@ -71,7 +71,7 @@ abstract class AbstractConverter
      * running general operation checks for a conversion method.
      * If some requirement is not met, it should throw a ConverterNotOperationalException (or subtype)
      *
-     * The method is called internally right before calling doConvert() method.
+     * The method is called internally right before calling doActualConvert() method.
      * - It SHOULD take options into account when relevant. For example, a missing api key for a
      *   cloud converter should be detected here
      * - It should NOT take the actual filename into consideration, as the purpose is *general*
@@ -204,13 +204,28 @@ abstract class AbstractConverter
     //$instance->logLn($instance->getConverterDisplayName() . ' converter ignited');
     //$instance->logLn(self::getConverterDisplayName() . ' converter ignited');
 
-    public function doConvertWithChecks()
+    public function doConvert()
     {
-        $this->prepareConvert();
+        $this->beginTime = microtime(true);
+
+        //set_error_handler(array($this, "warningHandler"), E_WARNING);
+        set_error_handler(array($this, "errorHandler"));
+
+        if (!isset($this->options['_skip_input_check'])) {
+            // Run basic validations (if source exists and if file extension is valid)
+            $this->checkInput();
+
+            // Prepare destination folder (may throw exception)
+            $this->createWritableDestinationFolder();
+        }
+
+        // Prepare options
+        $this->prepareOptions();
+
         try {
             $this->checkOperationality();
             $this->checkConvertability();
-            $this->doConvert();
+            $this->doActualConvert();
         } catch (ConversionFailedException $e) {
             throw $e;
         } catch (\Exception $e) {
@@ -219,7 +234,39 @@ abstract class AbstractConverter
             // https://stackoverflow.com/questions/7116995/is-it-possible-in-php-to-prevent-fatal-error-call-to-undefined-function
             throw new UnhandledException('Conversion failed due to uncaught error', 0, $e);
         }
-        $this->finalizeConvert();
+
+        restore_error_handler();
+
+        $source = $this->source;
+        $destination = $this->destination;
+
+        if (!@file_exists($destination)) {
+            throw new ConversionFailedException('Destination file is not there: ' . $destination);
+        } elseif (@filesize($destination) === 0) {
+            @unlink($destination);
+            throw new ConversionFailedException('Destination file was completely empty');
+        } else {
+            if (!isset($this->options['_suppress_success_message'])) {
+                $this->ln();
+                $msg = 'Successfully converted image in ' .
+                    round((microtime(true) - $this->beginTime) * 1000) . ' ms';
+
+                $sourceSize = @filesize($source);
+                if ($sourceSize !== false) {
+                    $msg .= ', reducing file size with ' .
+                        round((filesize($source) - filesize($destination))/filesize($source) * 100) . '% ';
+
+                    if ($sourceSize < 10000) {
+                        $msg .= '(went from ' . round(filesize($source)) . ' bytes to ';
+                        $msg .= round(filesize($destination)) . ' bytes)';
+                    } else {
+                        $msg .= '(went from ' . round(filesize($source)/1024) . ' kb to ';
+                        $msg .= round(filesize($destination)/1024) . ' kb)';
+                    }
+                }
+                $this->logLn($msg);
+            }
+        }
     }
 
     /**
@@ -234,7 +281,7 @@ abstract class AbstractConverter
     public static function convert($source, $destination, $options = [], $logger = null)
     {
         $instance = self::createInstance($source, $destination, $options, $logger);
-        $instance->doConvertWithChecks();
+        $instance->doConvert();
         //echo $instance->id;
     }
 
@@ -275,25 +322,6 @@ abstract class AbstractConverter
             $this->sourceMimeType = ImageMimeTypeGuesser::lenientGuess($this->source);
         }
         return $this->sourceMimeType;
-    }
-
-    private function prepareConvert()
-    {
-        $this->beginTime = microtime(true);
-
-        //set_error_handler(array($this, "warningHandler"), E_WARNING);
-        set_error_handler(array($this, "errorHandler"));
-
-        if (!isset($this->options['_skip_input_check'])) {
-            // Run basic validations (if source exists and if file extension is valid)
-            $this->checkInput();
-
-            // Prepare destination folder (may throw exception)
-            $this->createWritableDestinationFolder();
-        }
-
-        // Prepare options
-        $this->prepareOptions();
     }
 
     /**
@@ -417,39 +445,4 @@ abstract class AbstractConverter
         return true;
     }
 
-    public function finalizeConvert()
-    {
-        restore_error_handler();
-
-        $source = $this->source;
-        $destination = $this->destination;
-
-        if (!@file_exists($destination)) {
-            throw new ConversionFailedException('Destination file is not there: ' . $destination);
-        } elseif (@filesize($destination) === 0) {
-            @unlink($destination);
-            throw new ConversionFailedException('Destination file was completely empty');
-        } else {
-            if (!isset($this->options['_suppress_success_message'])) {
-                $this->ln();
-                $msg = 'Successfully converted image in ' .
-                    round((microtime(true) - $this->beginTime) * 1000) . ' ms';
-
-                $sourceSize = @filesize($source);
-                if ($sourceSize !== false) {
-                    $msg .= ', reducing file size with ' .
-                        round((filesize($source) - filesize($destination))/filesize($source) * 100) . '% ';
-
-                    if ($sourceSize < 10000) {
-                        $msg .= '(went from ' . round(filesize($source)) . ' bytes to ';
-                        $msg .= round(filesize($destination)) . ' bytes)';
-                    } else {
-                        $msg .= '(went from ' . round(filesize($source)/1024) . ' kb to ';
-                        $msg .= round(filesize($destination)/1024) . ' kb)';
-                    }
-                }
-                $this->logLn($msg);
-            }
-        }
-    }
 }

@@ -131,7 +131,7 @@ class ConverterTestHelper
             // Conversion was successful.
 
             // make sure the function did not return anything (as of 2.0)
-            $testCase->assertEmpty($result, 'The doConvert() method returned something. As of 2.0, converters should never return anything');
+            $testCase->assertEmpty($result, 'The doActualConvert() method returned something. As of 2.0, converters should never return anything');
 
             // verify that there indeed is a file
             $testCase->assertTrue(file_exists($destination), 'There is not a converted file at the destinaiton');

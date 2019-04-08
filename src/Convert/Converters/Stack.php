@@ -89,7 +89,7 @@ class Stack extends AbstractConverter
         // TODO: We should test if all converters are found in order to detect problems early
     }
 
-    protected function doConvert()
+    protected function doActualConvert()
     {
         $options = $this->options;
 
