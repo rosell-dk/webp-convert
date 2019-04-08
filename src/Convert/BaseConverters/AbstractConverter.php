@@ -14,15 +14,25 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFou
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-use WebPConvert\Convert\QualityProcessor;
+//use WebPConvert\Convert\QualityProcessor;
+use WebPConvert\Convert\AutoQualityTrait;
 use WebPConvert\Loggers\BaseLogger;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 
 abstract class AbstractConverter
 {
+    use AutoQualityTrait;
+
     /**
      * The actual conversion must be done by a concrete class.
+     *
+     * At the stage this method is called, the abstract converter has taken preparational steps.
+     * - It has created the destination folder (if neccesary)
+     * - It has checked the input (valid mime type)
+     * - It has set up an error handler, mostly in order to catch and log warnings during the doConvert fase
+     *
+     * Note: This method is not meant to be called from the outside. Use the *convert* method for that.
      *
      */
     abstract protected function doConvert();
@@ -36,7 +46,7 @@ abstract class AbstractConverter
 
     /** @var string  Where to save the webp (complete path) */
     public $destination;
-    
+
     public $options;
     public $logger;
     public $beginTime;
@@ -191,6 +201,27 @@ abstract class AbstractConverter
         //return false;   // let PHP handle the error from here
     }
 
+    //$instance->logLn($instance->getConverterDisplayName() . ' converter ignited');
+    //$instance->logLn(self::getConverterDisplayName() . ' converter ignited');
+
+    public function doConvertWithChecks()
+    {
+        $this->prepareConvert();
+        try {
+            $this->checkOperationality();
+            $this->checkConvertability();
+            $this->doConvert();
+        } catch (ConversionFailedException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            throw new UnhandledException('Conversion failed due to uncaught exception', 0, $e);
+        } catch (\Error $e) {
+            // https://stackoverflow.com/questions/7116995/is-it-possible-in-php-to-prevent-fatal-error-call-to-undefined-function
+            throw new UnhandledException('Conversion failed due to uncaught error', 0, $e);
+        }
+        $this->finalizeConvert();
+    }
+
     /**
      * Convert an image to webp.
      *
@@ -203,24 +234,7 @@ abstract class AbstractConverter
     public static function convert($source, $destination, $options = [], $logger = null)
     {
         $instance = self::createInstance($source, $destination, $options, $logger);
-
-        //$instance->logLn($instance->getConverterDisplayName() . ' converter ignited');
-        //$instance->logLn(self::getConverterDisplayName() . ' converter ignited');
-        $instance->prepareConvert();
-        try {
-            $instance->checkOperationality();
-            $instance->checkConvertability();
-            $instance->doConvert();
-        } catch (ConversionFailedException $e) {
-            throw $e;
-        } catch (\Exception $e) {
-            throw new UnhandledException('Conversion failed due to uncaught exception', 0, $e);
-        } catch (\Error $e) {
-            // https://stackoverflow.com/questions/7116995/is-it-possible-in-php-to-prevent-fatal-error-call-to-undefined-function
-            throw new UnhandledException('Conversion failed due to uncaught error', 0, $e);
-        }
-        $instance->finalizeConvert();
-
+        $instance->doConvertWithChecks();
         //echo $instance->id;
     }
 
@@ -270,9 +284,9 @@ abstract class AbstractConverter
         //set_error_handler(array($this, "warningHandler"), E_WARNING);
         set_error_handler(array($this, "errorHandler"));
 
-        if (!isset($this->options['_skip_basic_validations'])) {
+        if (!isset($this->options['_skip_input_check'])) {
             // Run basic validations (if source exists and if file extension is valid)
-            $this->runBasicValidations();
+            $this->checkInput();
 
             // Prepare destination folder (may throw exception)
             $this->createWritableDestinationFolder();
@@ -283,10 +297,10 @@ abstract class AbstractConverter
     }
 
     /**
-     *  Note: As the "basic" validations are only run one time in a stack,
+     *  Note: As the input validations are only run one time in a stack,
      *  this method is not overridable
      */
-    private function runBasicValidations()
+    private function checkInput()
     {
         // Check if source exists
         if (!@file_exists($this->source)) {
@@ -401,30 +415,6 @@ abstract class AbstractConverter
         @unlink($filePath);
 
         return true;
-    }
-
-    private function getQualityProcessor()
-    {
-        if (!isset($this->qualityProcessor)) {
-            $this->qualityProcessor = new QualityProcessor($this);
-        }
-        return $this->qualityProcessor;
-    }
-
-    /**
-     *  Returns quality, as a number.
-     *  If quality was set to auto, you get the detected quality / fallback quality, otherwise
-     *  you get whatever it was set to.
-     *  Use this, if you simply want quality as a number, and have no handling of "auto" quality
-     */
-    public function getCalculatedQuality()
-    {
-        return $this->getQualityProcessor()->getCalculatedQuality();
-    }
-
-    public function isQualityDetectionRequiredButFailing()
-    {
-        return $this->getQualityProcessor()->isQualityDetectionRequiredButFailing();
     }
 
     public function finalizeConvert()

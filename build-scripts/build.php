@@ -35,11 +35,17 @@ $jobsEverything = [
 
         'files' => [
             // put base classes here
-            'Convert/BaseConverters',
-            'Convert/Converters',
-            'Convert/Exceptions',
-            'Loggers',
-            'Serve',
+            'Convert/BaseConverters/AbstractConverter.php',
+            'Convert/BaseConverters/AbstractCloudConverter.php',
+            'Convert/BaseConverters/AbstractCloudCurlConverter.php',
+            'Convert/BaseConverters/AbstractExecConverter.php',
+            'Exceptions/WebPConvertException.php',
+            'Convert/Exceptions/ConversionFailedException.php',
+            //'Convert/BaseConverters',
+            //'Convert/Converters',
+            //'Convert/Exceptions',
+            //'Loggers',
+            //'Serve',
         ],
         'dirs' => [
             // dirs will be required in specified order. There is no recursion, so you need to specify subdirs as well.

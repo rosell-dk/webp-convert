@@ -1,172 +1,8 @@
 <?php 
-
-
-
-
-
 ?><?php
 
-namespace WebPConvert\Convert\BaseConverters;
-
-use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
-
-abstract class AbstractCloudConverter extends AbstractConverter
-{
-    /**
-     * Parse a shordhandsize string as the ones returned by ini_get()
-     *
-     * Parse a shorthandsize string having the syntax allowed in php.ini and returned by ini_get().
-     * Ie "1K" => 1024.
-     * Strings without units are also accepted.
-     * The shorthandbytes syntax is described here: https://www.php.net/manual/en/faq.using.php#faq.using.shorthandbytes
-     *
-     * @param  string  $size  A size string of the type returned by ini_get()
-     * @return float|false  The parsed size (beware: it is float, do not check high numbers for equality),
-     *                      or false if parse error
-     */
-    protected static function parseShortHandSize($shortHandSize)
-    {
-
-        $result = preg_match("#^\\s*(\\d+(?:\\.\\d+)?)([bkmgtpezy]?)\\s*$#i", $shortHandSize, $matches);
-        if ($result !== 1) {
-            return false;
-        }
-
-        // Truncate, because that is what php does.
-        $digitsValue = floor($matches[1]);
-
-        if ((count($matches) >= 3) && ($matches[2] != '')) {
-            $unit = $matches[2];
-
-            // Find the position of the unit in the ordered string which is the power
-            // of magnitude to multiply a kilobyte by.
-            $position = stripos('bkmgtpezy', $unit);
-
-            return floatval($digitsValue * pow(1024, $position));
-        } else {
-            return $digitsValue;
-        }
-    }
-
-    /*
-    * Get the size of an php.ini option.
-    *
-    * Calls ini_get() and parses the size to a number.
-    * If the configuration option is null, does not exist, or cannot be parsed as a shorthandsize, false is returned
-    *
-    * @param  string  $varname  The configuration option name.
-    * @return float|false  The parsed size or false if the configuration option does not exist
-    */
-    protected static function getIniBytes($iniVarName)
-    {
-        $iniVarValue = ini_get($iniVarName);
-        if (($iniVarValue == '') || $iniVarValue === false) {
-            return false;
-        }
-        return self::parseShortHandSize($iniVarValue);
-    }
-
-    /**
-     *  Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini
-     *
-     * @throws  ConversionFailedException  if filesize is larger than "upload_max_filesize" or "post_max_size"
-     * @return  void
-     */
-    protected function testFilesizeRequirements()
-    {
-        $fileSize = @filesize($this->source);
-        if ($fileSize !== false) {
-            $uploadMaxSize = self::getIniBytes('upload_max_filesize');
-            if ($uploadMaxSize === false) {
-                // Not sure if we should throw an exception here, or not...
-            } elseif ($uploadMaxSize < $fileSize) {
-                throw new ConversionFailedException(
-                    'File is larger than your max upload (set in your php.ini). File size:' .
-                        round($fileSize/1024) . ' kb. ' .
-                        'upload_max_filesize in php.ini: ' . ini_get('upload_max_filesize') .
-                        ' (parsed as ' . round($uploadMaxSize/1024) . ' kb)'
-                );
-            }
-
-            $postMaxSize = self::getIniBytes(ini_get('post_max_size'));
-            if ($postMaxSize === false) {
-                // Not sure if we should throw an exception here, or not...
-            } elseif ($postMaxSize < $fileSize) {
-                throw new ConversionFailedException(
-                    'File is larger than your post_max_size limit (set in your php.ini). File size:' .
-                        round($fileSize/1024) . ' kb. ' .
-                        'post_max_size in php.ini: ' . ini_get('post_max_size') .
-                        ' (parsed as ' . round($postMaxSize/1024) . ' kb)'
-                );
-            }
-
-            // Should we worry about memory limit as well?
-            // ini_get('memory_limit')
-        }
-    }
-
-    /**
-     * Check if specific file is convertable with current converter / converter settings.
-     *
-     */
-    protected function checkConvertability()
-    {
-        $this->testFilesizeRequirements();
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Convert\BaseConverters;
-
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
-
-abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
-{
-
-    /**
-     * Check basis operationality for converters relying on curl
-     *
-     * @throws  SystemRequirementsNotMetException
-     * @return  void
-     */
-    protected function checkOperationality()
-    {
-        if (!extension_loaded('curl')) {
-            throw new SystemRequirementsNotMetException('Required cURL extension is not available.');
-        }
-
-        if (!function_exists('curl_init')) {
-            throw new SystemRequirementsNotMetException('Required url_init() function is not available.');
-        }
-
-        if (!function_exists('curl_file_create')) {
-            throw new SystemRequirementsNotMetException(
-                'Required curl_file_create() function is not available (requires PHP > 5.5).'
-            );
-        }
-    }
-
-    /**
-     *  Init curl.
-     *
-     * @throws  SystemRequirementsNotMetException  if curl could not be initialized
-     * @return  resource  curl handle
-     */
-    public static function initCurl()
-    {
-        // Get curl handle
-        $ch = curl_init();
-        if ($ch === false) {
-            throw new SystemRequirementsNotMetException('Could not initialise cURL.');
-        }
-        return $ch;
-    }
-}
-
-?><?php
+// TODO:
+// Read this: https://sourcemaking.com/design_patterns/strategy
 
 namespace WebPConvert\Convert\BaseConverters;
 
@@ -179,15 +15,25 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFou
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-use WebPConvert\Convert\QualityProcessor;
+//use WebPConvert\Convert\QualityProcessor;
+use WebPConvert\Convert\AutoQualityTrait;
 use WebPConvert\Loggers\BaseLogger;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 
 abstract class AbstractConverter
 {
+    use AutoQualityTrait;
+
     /**
      * The actual conversion must be done by a concrete class.
+     *
+     * At the stage this method is called, the abstract converter has taken preparational steps.
+     * - It has created the destination folder (if neccesary)
+     * - It has checked the input (valid mime type)
+     * - It has set up an error handler, mostly in order to catch and log warnings during the doConvert fase
+     *
+     * Note: This method is not meant to be called from the outside. Use the *convert* method for that.
      *
      */
     abstract protected function doConvert();
@@ -196,8 +42,12 @@ abstract class AbstractConverter
     // Unfortunately properties cannot be declared abstract. TODO: We need to change to using method instead.
     public static $extraOptions;
 
+    /** @var string  The filename of the image to convert (complete path) */
     public $source;
+
+    /** @var string  Where to save the webp (complete path) */
     public $destination;
+
     public $options;
     public $logger;
     public $beginTime;
@@ -352,6 +202,27 @@ abstract class AbstractConverter
         //return false;   // let PHP handle the error from here
     }
 
+    //$instance->logLn($instance->getConverterDisplayName() . ' converter ignited');
+    //$instance->logLn(self::getConverterDisplayName() . ' converter ignited');
+
+    public function doConvertWithChecks()
+    {
+        $this->prepareConvert();
+        try {
+            $this->checkOperationality();
+            $this->checkConvertability();
+            $this->doConvert();
+        } catch (ConversionFailedException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            throw new UnhandledException('Conversion failed due to uncaught exception', 0, $e);
+        } catch (\Error $e) {
+            // https://stackoverflow.com/questions/7116995/is-it-possible-in-php-to-prevent-fatal-error-call-to-undefined-function
+            throw new UnhandledException('Conversion failed due to uncaught error', 0, $e);
+        }
+        $this->finalizeConvert();
+    }
+
     /**
      * Convert an image to webp.
      *
@@ -364,24 +235,7 @@ abstract class AbstractConverter
     public static function convert($source, $destination, $options = [], $logger = null)
     {
         $instance = self::createInstance($source, $destination, $options, $logger);
-
-        //$instance->logLn($instance->getConverterDisplayName() . ' converter ignited');
-        //$instance->logLn(self::getConverterDisplayName() . ' converter ignited');
-        $instance->prepareConvert();
-        try {
-            $instance->checkOperationality();
-            $instance->checkConvertability();
-            $instance->doConvert();
-        } catch (ConversionFailedException $e) {
-            throw $e;
-        } catch (\Exception $e) {
-            throw new UnhandledException('Conversion failed due to uncaught exception', 0, $e);
-        } catch (\Error $e) {
-            // https://stackoverflow.com/questions/7116995/is-it-possible-in-php-to-prevent-fatal-error-call-to-undefined-function
-            throw new UnhandledException('Conversion failed due to uncaught error', 0, $e);
-        }
-        $instance->finalizeConvert();
-
+        $instance->doConvertWithChecks();
         //echo $instance->id;
     }
 
@@ -431,9 +285,9 @@ abstract class AbstractConverter
         //set_error_handler(array($this, "warningHandler"), E_WARNING);
         set_error_handler(array($this, "errorHandler"));
 
-        if (!isset($this->options['_skip_basic_validations'])) {
+        if (!isset($this->options['_skip_input_check'])) {
             // Run basic validations (if source exists and if file extension is valid)
-            $this->runBasicValidations();
+            $this->checkInput();
 
             // Prepare destination folder (may throw exception)
             $this->createWritableDestinationFolder();
@@ -444,10 +298,10 @@ abstract class AbstractConverter
     }
 
     /**
-     *  Note: As the "basic" validations are only run one time in a stack,
+     *  Note: As the input validations are only run one time in a stack,
      *  this method is not overridable
      */
-    private function runBasicValidations()
+    private function checkInput()
     {
         // Check if source exists
         if (!@file_exists($this->source)) {
@@ -564,30 +418,6 @@ abstract class AbstractConverter
         return true;
     }
 
-    private function getQualityProcessor()
-    {
-        if (!isset($this->qualityProcessor)) {
-            $this->qualityProcessor = new QualityProcessor($this);
-        }
-        return $this->qualityProcessor;
-    }
-
-    /**
-     *  Returns quality, as a number.
-     *  If quality was set to auto, you get the detected quality / fallback quality, otherwise
-     *  you get whatever it was set to.
-     *  Use this, if you simply want quality as a number, and have no handling of "auto" quality
-     */
-    public function getCalculatedQuality()
-    {
-        return $this->getQualityProcessor()->getCalculatedQuality();
-    }
-
-    public function isQualityDetectionRequiredButFailing()
-    {
-        return $this->getQualityProcessor()->isQualityDetectionRequiredButFailing();
-    }
-
     public function finalizeConvert()
     {
         restore_error_handler();
@@ -622,6 +452,168 @@ abstract class AbstractConverter
                 $this->logLn($msg);
             }
         }
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\BaseConverters;
+
+use WebPConvert\Convert\Exceptions\ConversionFailedException;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
+
+abstract class AbstractCloudConverter extends AbstractConverter
+{
+    /**
+     * Parse a shordhandsize string as the ones returned by ini_get()
+     *
+     * Parse a shorthandsize string having the syntax allowed in php.ini and returned by ini_get().
+     * Ie "1K" => 1024.
+     * Strings without units are also accepted.
+     * The shorthandbytes syntax is described here: https://www.php.net/manual/en/faq.using.php#faq.using.shorthandbytes
+     *
+     * @param  string  $shortHandSize  A size string of the type returned by ini_get()
+     * @return float|false  The parsed size (beware: it is float, do not check high numbers for equality),
+     *                      or false if parse error
+     */
+    protected static function parseShortHandSize($shortHandSize)
+    {
+
+        $result = preg_match("#^\\s*(\\d+(?:\\.\\d+)?)([bkmgtpezy]?)\\s*$#i", $shortHandSize, $matches);
+        if ($result !== 1) {
+            return false;
+        }
+
+        // Truncate, because that is what php does.
+        $digitsValue = floor($matches[1]);
+
+        if ((count($matches) >= 3) && ($matches[2] != '')) {
+            $unit = $matches[2];
+
+            // Find the position of the unit in the ordered string which is the power
+            // of magnitude to multiply a kilobyte by.
+            $position = stripos('bkmgtpezy', $unit);
+
+            return floatval($digitsValue * pow(1024, $position));
+        } else {
+            return $digitsValue;
+        }
+    }
+
+    /*
+    * Get the size of an php.ini option.
+    *
+    * Calls ini_get() and parses the size to a number.
+    * If the configuration option is null, does not exist, or cannot be parsed as a shorthandsize, false is returned
+    *
+    * @param  string  $varname  The configuration option name.
+    * @return float|false  The parsed size or false if the configuration option does not exist
+    */
+    protected static function getIniBytes($iniVarName)
+    {
+        $iniVarValue = ini_get($iniVarName);
+        if (($iniVarValue == '') || $iniVarValue === false) {
+            return false;
+        }
+        return self::parseShortHandSize($iniVarValue);
+    }
+
+    /**
+     *  Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini
+     *
+     * @throws  ConversionFailedException  if filesize is larger than "upload_max_filesize" or "post_max_size"
+     * @return  void
+     */
+    protected function testFilesizeRequirements()
+    {
+        $fileSize = @filesize($this->source);
+        if ($fileSize !== false) {
+            $uploadMaxSize = self::getIniBytes('upload_max_filesize');
+            if ($uploadMaxSize === false) {
+                // Not sure if we should throw an exception here, or not...
+            } elseif ($uploadMaxSize < $fileSize) {
+                throw new ConversionFailedException(
+                    'File is larger than your max upload (set in your php.ini). File size:' .
+                        round($fileSize/1024) . ' kb. ' .
+                        'upload_max_filesize in php.ini: ' . ini_get('upload_max_filesize') .
+                        ' (parsed as ' . round($uploadMaxSize/1024) . ' kb)'
+                );
+            }
+
+            $postMaxSize = self::getIniBytes(ini_get('post_max_size'));
+            if ($postMaxSize === false) {
+                // Not sure if we should throw an exception here, or not...
+            } elseif ($postMaxSize < $fileSize) {
+                throw new ConversionFailedException(
+                    'File is larger than your post_max_size limit (set in your php.ini). File size:' .
+                        round($fileSize/1024) . ' kb. ' .
+                        'post_max_size in php.ini: ' . ini_get('post_max_size') .
+                        ' (parsed as ' . round($postMaxSize/1024) . ' kb)'
+                );
+            }
+
+            // Should we worry about memory limit as well?
+            // ini_get('memory_limit')
+        }
+    }
+
+    /**
+     * Check if specific file is convertable with current converter / converter settings.
+     *
+     */
+    protected function checkConvertability()
+    {
+        $this->testFilesizeRequirements();
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\BaseConverters;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
+
+abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
+{
+
+    /**
+     * Check basis operationality for converters relying on curl
+     *
+     * @throws  SystemRequirementsNotMetException
+     * @return  void
+     */
+    protected function checkOperationality()
+    {
+        if (!extension_loaded('curl')) {
+            throw new SystemRequirementsNotMetException('Required cURL extension is not available.');
+        }
+
+        if (!function_exists('curl_init')) {
+            throw new SystemRequirementsNotMetException('Required url_init() function is not available.');
+        }
+
+        if (!function_exists('curl_file_create')) {
+            throw new SystemRequirementsNotMetException(
+                'Required curl_file_create() function is not available (requires PHP > 5.5).'
+            );
+        }
+    }
+
+    /**
+     *  Init curl.
+     *
+     * @throws  SystemRequirementsNotMetException  if curl could not be initialized
+     * @return  resource  curl handle
+     */
+    public static function initCurl()
+    {
+        // Get curl handle
+        $ch = curl_init();
+        if ($ch === false) {
+            throw new SystemRequirementsNotMetException('Could not initialise cURL.');
+        }
+        return $ch;
     }
 }
 
@@ -685,6 +677,81 @@ abstract class AbstractExecConverter extends AbstractConverter
             throw new SystemRequirementsNotMetException('exec() is not enabled.');
         }
     }
+}
+
+?><?php
+
+namespace WebPConvert\Exceptions;
+
+/**
+ *  WebPConvertException is the base exception for all exceptions in this library.
+ *
+ *  Note that the parameters for the constructor differs from that of the Exception class.
+ *  We do not use exception code here, but are instead allowing two version of the error message:
+ *  a short version and a long version.
+ *  The short version may not contain special characters or dynamic content.
+ *  The detailed version may.
+ *  If the detailed version isn't provided, getDetailedMessage will return the short version.
+ *
+ */
+class WebPConvertException extends \Exception
+{
+    public $description = 'The converter failed converting, although requirements seemed to be met';
+    protected $detailedMessage;
+    protected $shortMessage;
+
+    public function getDetailedMessage()
+    {
+        return $this->detailedMessage;
+    }
+
+    public function getShortMessage()
+    {
+        return $this->shortMessage;
+    }
+
+    public function __construct($shortMessage = "", $detailedMessage = "", $previous = null)
+    {
+        $detailedMessage = ($detailedMessage != '') ? $detailedMessage : $shortMessage;
+        $this->detailedMessage = $detailedMessage;
+        $this->shortMessage = $shortMessage;
+
+        parent::__construct(
+            $detailedMessage,
+            0,
+            $previous
+        );
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Exceptions;
+
+use WebPConvert\Exceptions\WebPConvertException;
+
+/**
+ *  ConversionFailedException is the base exception in the hierarchy for conversion errors.
+ *
+ *  Exception hierarchy from here:
+ *
+ *  WebpConvertException
+ *      ConversionFailedException
+ *          ConversionDeclinedException
+ *          ConverterNotOperationalException
+ *              SystemRequirementsNotMetException
+ *          FileSystemProblemsException
+ *              CreateDestinationFileException
+ *              CreateDestinationFolderException
+ *          InvalidInputException
+ *              ConverterNotFoundException
+ *              InvalidImageTypeException
+ *              TargetNotFoundException
+ *          UnhandledException
+ */
+class ConversionFailedException extends WebPConvertException
+{
+    public $description = 'The converter failed converting, although requirements seemed to be met';
 }
 
 ?><?php
@@ -895,6 +962,8 @@ class Cwebp extends AbstractExecConverter
                 'this converter can convert images. No conversion can be made!';
         }
 
+        $returnCode = 0;
+        $majorFailCode = 0;
         if ($options['try-common-system-paths']) {
             foreach ($cwebpPathsToTest as $index => $binary) {
                 $returnCode = self::executeBinary($binary, $commandOptions, $useNice, $this);
@@ -909,7 +978,7 @@ class Cwebp extends AbstractExecConverter
                     }
                 }
             }
-            $majorFailCode = 0;
+
             if (!$success) {
                 if (count($failureCodes) == 1) {
                     $majorFailCode = $failureCodes[0];
@@ -1358,8 +1427,8 @@ class Gd extends AbstractConverter
     private $errorMessageWhileCreating = '';
     private $errorNumberWhileCreating;
 
-    // TODO: Can we make this private, but still test?
-    public $image = false;
+    /** @var resource|false  Image resource after successful creation */
+    private $image = false;
 
     public static $extraOptions = [];
 
@@ -1493,7 +1562,7 @@ class Gd extends AbstractConverter
      * @throws  InvalidInputException  if mime type is unsupported or could not be detected
      * @return  void
      */
-    protected function createImageResource()
+    private function createImageResource()
     {
         // In case of failure, image will be false
         $this->image = false;
@@ -2266,7 +2335,7 @@ class Stack extends AbstractConverter
 
         unset($defaultConverterOptions['converters']);
         unset($defaultConverterOptions['converter-options']);
-        $defaultConverterOptions['_skip_basic_validations'] = true;
+        $defaultConverterOptions['_skip_input_check'] = true;
         $defaultConverterOptions['_suppress_success_message'] = true;
 
         $anyRuntimeErrors = false;
@@ -2301,11 +2370,17 @@ class Stack extends AbstractConverter
 
             $className = self::getClassNameOfConverter($converterId);
 
+
             try {
                 $converterDisplayName = call_user_func(
                     [$className, 'getConverterDisplayName']
                 );
+            } catch (\Exception $e) {
+                // TODO: handle failure better than this
+                $converterDisplayName = 'Untitled converter';
+            }
 
+            try {
                 $this->ln();
                 $this->logLn('Trying: ' . $converterId, 'italic');
 
@@ -2653,36 +2728,6 @@ class Wpc extends AbstractCloudCurlConverter
 
 ?><?php
 
-namespace WebPConvert\Convert\Exceptions;
-
-use WebPConvert\Exceptions\WebPConvertException;
-
-/**
- *  ConversionFailedException is the base exception in the hierarchy for conversion errors.
- *
- *  Exception hierarchy from here:
- *
- *  WebpConvertException
- *      ConversionFailedException
- *          ConversionDeclinedException
- *          ConverterNotOperationalException
- *              SystemRequirementsNotMetException
- *          FileSystemProblemsException
- *              CreateDestinationFileException
- *              CreateDestinationFolderException
- *          InvalidInputException
- *              ConverterNotFoundException
- *              InvalidImageTypeException
- *              TargetNotFoundException
- *          UnhandledException
- */
-class ConversionFailedException extends WebPConvertException
-{
-    public $description = 'The converter failed converting, although requirements seemed to be met';
-}
-
-?><?php
-
 namespace WebPConvert\Convert\Exceptions\ConversionFailed;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
@@ -2824,6 +2869,110 @@ namespace WebPConvert\Convert;
 
 use WebPConvert\Helpers\JpegQualityDetector;
 
+trait AutoQualityTrait
+{
+
+    private $processed = false;
+    private $qualityCouldNotBeDetected = false;
+    private $calculatedQuality;
+
+    /**
+     *  Determine if quality detection is required but failing.
+     *
+     *  It is considered "required" when:
+     *  - Mime type is "image/jpeg"
+     *  - Quality is set to "auto"
+     *
+     *  @return  boolean
+     */
+    public function isQualityDetectionRequiredButFailing()
+    {
+        $this->processQualityOptionIfNotAlready();
+        return $this->qualityCouldNotBeDetected;
+    }
+
+    /**
+     *  Get calculated quality.
+     *
+     *  If mime type is something else than "image/jpeg", the "default-quality" option is returned
+     *  Same thing for jpeg, when the "quality" option is set to a number (rather than "auto").
+     *
+     *  Otherwise:
+     *  If quality cannot be detetected, the "default-quality" option is returned.
+     *  If quality can be detetected, the lowest value of this and the "max-quality" option is returned
+     *
+     *  @return  int
+     */
+    public function getCalculatedQuality()
+    {
+        $this->processQualityOptionIfNotAlready();
+        return $this->calculatedQuality;
+    }
+
+    /**
+     * @return void
+     */
+    private function processQualityOptionIfNotAlready()
+    {
+        if (!$this->processed) {
+            $this->processed = true;
+            $this->processQualityOption();
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function processQualityOption()
+    {
+        $options = $this->options;
+        $logger = $this->logger;
+        $source = $this->source;
+
+        $q = $options['quality'];
+        if ($q == 'auto') {
+            if (($this->getMimeTypeOfSource() == 'image/jpeg')) {
+                $q = JpegQualityDetector::detectQualityOfJpg($source);
+                if (is_null($q)) {
+                    $q = $options['default-quality'];
+                    $logger->logLn(
+                        'Quality of source could not be established (Imagick or GraphicsMagick is required)' .
+                        ' - Using default instead (' . $options['default-quality'] . ').'
+                    );
+
+                    $this->qualityCouldNotBeDetected = true;
+                } else {
+                    if ($q > $options['max-quality']) {
+                        $logger->logLn(
+                            'Quality of source is ' . $q . '. ' .
+                            'This is higher than max-quality, so using max-quality instead (' .
+                                $options['max-quality'] . ')'
+                        );
+                    } else {
+                        $logger->logLn('Quality set to same as source: ' . $q);
+                    }
+                }
+                $q = min($q, $options['max-quality']);
+            } else {
+                $q = $options['default-quality'];
+                $logger->logLn('Quality: ' . $q . '. ');
+            }
+        } else {
+            $logger->logLn(
+                'Quality: ' . $q . '. ' .
+                'Consider setting quality to "auto" instead. It is generally a better idea'
+            );
+        }
+        $this->calculatedQuality = $q;
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert;
+
+use WebPConvert\Helpers\JpegQualityDetector;
+
 class QualityProcessor
 {
 
@@ -2947,51 +3096,6 @@ class WarningException extends WebPConvertException
 
 ?><?php
 
-namespace WebPConvert\Exceptions;
-
-/**
- *  WebPConvertException is the base exception for all exceptions in this library.
- *
- *  Note that the parameters for the constructor differs from that of the Exception class.
- *  We do not use exception code here, but are instead allowing two version of the error message:
- *  a short version and a long version.
- *  The short version may not contain special characters or dynamic content.
- *  The detailed version may.
- *  If the detailed version isn't provided, getDetailedMessage will return the short version.
- *
- */
-class WebPConvertException extends \Exception
-{
-    public $description = 'The converter failed converting, although requirements seemed to be met';
-    protected $detailedMessage;
-    protected $shortMessage;
-
-    public function getDetailedMessage()
-    {
-        return $this->detailedMessage;
-    }
-
-    public function getShortMessage()
-    {
-        return $this->shortMessage;
-    }
-
-    public function __construct($shortMessage = "", $detailedMessage = "", $previous = null)
-    {
-        $detailedMessage = ($detailedMessage != '') ? $detailedMessage : $shortMessage;
-        $this->detailedMessage = $detailedMessage;
-        $this->shortMessage = $shortMessage;
-
-        parent::__construct(
-            $detailedMessage,
-            0,
-            $previous
-        );
-    }
-}
-
-?><?php
-
 namespace WebPConvert\Helpers;
 
 use WebPConvert\Helpers\WarningsIntoExceptions;
@@ -3109,7 +3213,6 @@ abstract class WarningsIntoExceptions
 
     public static function warningHandler($errno, $errstr, $errfile, $errline)
     {
-        //echo 'aeothsutsanoheutsnhaoeu: ' . E_USER_WARNING . ':' . E_WARNING;
         throw new WarningException(
             'A warning was issued',
             'A warning was issued: ' . ': ' . $errstr . ' in ' . $errfile . ', line ' . $errline .
@@ -3118,15 +3221,15 @@ abstract class WarningsIntoExceptions
         );
 
         /* Don't execute PHP internal error handler */
-        return true;
+        // return true;     // commented out (unreachable)
     }
 
     public static function activate()
     {
         set_error_handler(
             array('\\WebPConvert\\Helpers\\WarningsIntoExceptions', "warningHandler"),
-            E_WARNING | E_USER_WARNING | E_ALL
-        );   // E_USER_WARNING
+            E_WARNING | E_USER_WARNING
+        );   // E_USER_WARNING  E_ALL
     }
 
     public static function deactivate()
@@ -3207,9 +3310,9 @@ class BufferLogger extends BaseLogger
     {
         $text = '';
         foreach ($this->entries as $entry) {
-            if ($entry == '') {
-                if (substr($text, -2) != '. ') {
-                    $text .= '. ';
+            if ($entry == '') {  // empty string means new line
+                if (substr($text, -2) != '.' . $newLineChar) {
+                    $text .= '.' . $newLineChar;
                 }
             } else {
                 list($msg, $style) = $entry;

@@ -113,7 +113,7 @@ class Stack extends AbstractConverter
 
         unset($defaultConverterOptions['converters']);
         unset($defaultConverterOptions['converter-options']);
-        $defaultConverterOptions['_skip_basic_validations'] = true;
+        $defaultConverterOptions['_skip_input_check'] = true;
         $defaultConverterOptions['_suppress_success_message'] = true;
 
         $anyRuntimeErrors = false;
@@ -149,17 +149,16 @@ class Stack extends AbstractConverter
             $className = self::getClassNameOfConverter($converterId);
 
 
-            $converterDisplayName = 'Untitled converter';  // TODO: handle failure better than this
             try {
                 $converterDisplayName = call_user_func(
                     [$className, 'getConverterDisplayName']
                 );
             } catch (\Exception $e) {
-                // should we throw? 
+                // TODO: handle failure better than this
+                $converterDisplayName = 'Untitled converter';
             }
 
             try {
-
                 $this->ln();
                 $this->logLn('Trying: ' . $converterId, 'italic');
 

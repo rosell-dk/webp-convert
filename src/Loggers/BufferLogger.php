@@ -44,7 +44,6 @@ class BufferLogger extends BaseLogger
         $text = '';
         foreach ($this->entries as $entry) {
             if ($entry == '') {  // empty string means new line
-
                 if (substr($text, -2) != '.' . $newLineChar) {
                     $text .= '.' . $newLineChar;
                 }
