@@ -11,6 +11,8 @@ trait AutoQualityTrait
     private $qualityCouldNotBeDetected = false;
     private $calculatedQuality;
 
+    abstract public function getMimeTypeOfSource();
+    
     /**
      *  Determine if quality detection is required but failing.
      *
