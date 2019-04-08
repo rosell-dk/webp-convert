@@ -35,7 +35,8 @@
     "phpcs-all": "phpcs --standard=PSR2 src",
     "phpcbf": "phpcbf --standard=PSR2",
     "build": "php build-scripts/build.php",
-    "phpstan": "vendor/bin/phpstan analyse src --level=2"
+    "phpstan": "vendor/bin/phpstan analyse src --level=2",
+    "phpstan-global": "~/.composer/vendor/bin/phpstan analyse src --level=2"
   },
   "extra": {
       "scripts-descriptions": {
@@ -67,6 +68,9 @@
   ],
   "require": {
       "rosell-dk/image-mime-type-guesser": "^0.2"
+  },
+  "suggest": {
+      "php-stan/php-stan": "Suggested for dev, in order to analyse code before committing"
   },
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^2.11",
