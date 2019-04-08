@@ -14,7 +14,6 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFou
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-//use WebPConvert\Convert\QualityProcessor;
 use WebPConvert\Convert\AutoQualityTrait;
 use WebPConvert\Convert\LoggerTrait;
 use WebPConvert\Loggers\BaseLogger;
@@ -50,7 +49,6 @@ abstract class AbstractConverter
     public $destination;
 
     public $options;
-    public $logger;
     public $beginTime;
     public $sourceMimeType;
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
@@ -64,7 +62,6 @@ abstract class AbstractConverter
         'lossless' => false,
         'skip-pngs' => false,
     ];
-    private $qualityProcessor;
 
     /**
      * Check basis operationality
@@ -100,13 +97,11 @@ abstract class AbstractConverter
 
     public function __construct($source, $destination, $options = [], $logger = null)
     {
-        if (!isset($logger)) {
-            $logger = new \WebPConvert\Loggers\VoidLogger();
-        }
         $this->source = $source;
         $this->destination = $destination;
         $this->options = $options;
-        $this->logger = $logger;
+
+        $this->setLogger($logger);
     }
 
     /**
