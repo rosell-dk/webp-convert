@@ -16,6 +16,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundE
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 //use WebPConvert\Convert\QualityProcessor;
 use WebPConvert\Convert\AutoQualityTrait;
+use WebPConvert\Convert\LoggerTrait;
 use WebPConvert\Loggers\BaseLogger;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
@@ -23,6 +24,7 @@ use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 abstract class AbstractConverter
 {
     use AutoQualityTrait;
+    use LoggerTrait;
 
     /**
      * The actual conversion must be done by a concrete class.
@@ -285,26 +287,6 @@ abstract class AbstractConverter
         //echo $instance->id;
     }
 
-    public function logLn($msg, $style = '')
-    {
-        $this->logger->logLn($msg, $style);
-    }
-
-    public function logLnLn($msg)
-    {
-        $this->logger->logLnLn($msg);
-    }
-
-    public function ln()
-    {
-        $this->logger->ln();
-    }
-
-    public function log($msg)
-    {
-        $this->logger->log($msg);
-    }
-
     /**
      * Get mime type for image (best guess).
      *
@@ -444,5 +426,4 @@ abstract class AbstractConverter
 
         return true;
     }
-
 }

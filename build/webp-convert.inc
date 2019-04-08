@@ -17,6 +17,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundE
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 //use WebPConvert\Convert\QualityProcessor;
 use WebPConvert\Convert\AutoQualityTrait;
+use WebPConvert\Convert\LoggerTrait;
 use WebPConvert\Loggers\BaseLogger;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
@@ -24,6 +25,7 @@ use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 abstract class AbstractConverter
 {
     use AutoQualityTrait;
+    use LoggerTrait;
 
     /**
      * The actual conversion must be done by a concrete class.
@@ -36,7 +38,7 @@ abstract class AbstractConverter
      * Note: This method is not meant to be called from the outside. Use the *convert* method for that.
      *
      */
-    abstract protected function doConvert();
+    abstract protected function doActualConvert();
 
     // The following must be defined in all actual converters.
     // Unfortunately properties cannot be declared abstract. TODO: We need to change to using method instead.
@@ -72,7 +74,7 @@ abstract class AbstractConverter
      * running general operation checks for a conversion method.
      * If some requirement is not met, it should throw a ConverterNotOperationalException (or subtype)
      *
-     * The method is called internally right before calling doConvert() method.
+     * The method is called internally right before calling doActualConvert() method.
      * - It SHOULD take options into account when relevant. For example, a missing api key for a
      *   cloud converter should be detected here
      * - It should NOT take the actual filename into consideration, as the purpose is *general*
@@ -205,13 +207,28 @@ abstract class AbstractConverter
     //$instance->logLn($instance->getConverterDisplayName() . ' converter ignited');
     //$instance->logLn(self::getConverterDisplayName() . ' converter ignited');
 
-    public function doConvertWithChecks()
+    public function doConvert()
     {
-        $this->prepareConvert();
+        $this->beginTime = microtime(true);
+
+        //set_error_handler(array($this, "warningHandler"), E_WARNING);
+        set_error_handler(array($this, "errorHandler"));
+
+        if (!isset($this->options['_skip_input_check'])) {
+            // Run basic validations (if source exists and if file extension is valid)
+            $this->checkInput();
+
+            // Prepare destination folder (may throw exception)
+            $this->createWritableDestinationFolder();
+        }
+
+        // Prepare options
+        $this->prepareOptions();
+
         try {
             $this->checkOperationality();
             $this->checkConvertability();
-            $this->doConvert();
+            $this->doActualConvert();
         } catch (ConversionFailedException $e) {
             throw $e;
         } catch (\Exception $e) {
@@ -220,7 +237,39 @@ abstract class AbstractConverter
             // https://stackoverflow.com/questions/7116995/is-it-possible-in-php-to-prevent-fatal-error-call-to-undefined-function
             throw new UnhandledException('Conversion failed due to uncaught error', 0, $e);
         }
-        $this->finalizeConvert();
+
+        restore_error_handler();
+
+        $source = $this->source;
+        $destination = $this->destination;
+
+        if (!@file_exists($destination)) {
+            throw new ConversionFailedException('Destination file is not there: ' . $destination);
+        } elseif (@filesize($destination) === 0) {
+            @unlink($destination);
+            throw new ConversionFailedException('Destination file was completely empty');
+        } else {
+            if (!isset($this->options['_suppress_success_message'])) {
+                $this->ln();
+                $msg = 'Successfully converted image in ' .
+                    round((microtime(true) - $this->beginTime) * 1000) . ' ms';
+
+                $sourceSize = @filesize($source);
+                if ($sourceSize !== false) {
+                    $msg .= ', reducing file size with ' .
+                        round((filesize($source) - filesize($destination))/filesize($source) * 100) . '% ';
+
+                    if ($sourceSize < 10000) {
+                        $msg .= '(went from ' . round(filesize($source)) . ' bytes to ';
+                        $msg .= round(filesize($destination)) . ' bytes)';
+                    } else {
+                        $msg .= '(went from ' . round(filesize($source)/1024) . ' kb to ';
+                        $msg .= round(filesize($destination)/1024) . ' kb)';
+                    }
+                }
+                $this->logLn($msg);
+            }
+        }
     }
 
     /**
@@ -235,28 +284,8 @@ abstract class AbstractConverter
     public static function convert($source, $destination, $options = [], $logger = null)
     {
         $instance = self::createInstance($source, $destination, $options, $logger);
-        $instance->doConvertWithChecks();
+        $instance->doConvert();
         //echo $instance->id;
-    }
-
-    public function logLn($msg, $style = '')
-    {
-        $this->logger->logLn($msg, $style);
-    }
-
-    public function logLnLn($msg)
-    {
-        $this->logger->logLnLn($msg);
-    }
-
-    public function ln()
-    {
-        $this->logger->ln();
-    }
-
-    public function log($msg)
-    {
-        $this->logger->log($msg);
     }
 
     /**
@@ -276,25 +305,6 @@ abstract class AbstractConverter
             $this->sourceMimeType = ImageMimeTypeGuesser::lenientGuess($this->source);
         }
         return $this->sourceMimeType;
-    }
-
-    private function prepareConvert()
-    {
-        $this->beginTime = microtime(true);
-
-        //set_error_handler(array($this, "warningHandler"), E_WARNING);
-        set_error_handler(array($this, "errorHandler"));
-
-        if (!isset($this->options['_skip_input_check'])) {
-            // Run basic validations (if source exists and if file extension is valid)
-            $this->checkInput();
-
-            // Prepare destination folder (may throw exception)
-            $this->createWritableDestinationFolder();
-        }
-
-        // Prepare options
-        $this->prepareOptions();
     }
 
     /**
@@ -416,42 +426,6 @@ abstract class AbstractConverter
         @unlink($filePath);
 
         return true;
-    }
-
-    public function finalizeConvert()
-    {
-        restore_error_handler();
-
-        $source = $this->source;
-        $destination = $this->destination;
-
-        if (!@file_exists($destination)) {
-            throw new ConversionFailedException('Destination file is not there: ' . $destination);
-        } elseif (@filesize($destination) === 0) {
-            @unlink($destination);
-            throw new ConversionFailedException('Destination file was completely empty');
-        } else {
-            if (!isset($this->options['_suppress_success_message'])) {
-                $this->ln();
-                $msg = 'Successfully converted image in ' .
-                    round((microtime(true) - $this->beginTime) * 1000) . ' ms';
-
-                $sourceSize = @filesize($source);
-                if ($sourceSize !== false) {
-                    $msg .= ', reducing file size with ' .
-                        round((filesize($source) - filesize($destination))/filesize($source) * 100) . '% ';
-
-                    if ($sourceSize < 10000) {
-                        $msg .= '(went from ' . round(filesize($source)) . ' bytes to ';
-                        $msg .= round(filesize($destination)) . ' bytes)';
-                    } else {
-                        $msg .= '(went from ' . round(filesize($source)/1024) . ' kb to ';
-                        $msg .= round(filesize($destination)/1024) . ' kb)';
-                    }
-                }
-                $this->logLn($msg);
-            }
-        }
     }
 }
 
@@ -886,7 +860,7 @@ class Cwebp extends AbstractExecConverter
     // Although this method is public, do not call directly.
     // You should rather call the static convert() function, defined in AbstractConverter, which
     // takes care of preparing stuff before calling doConvert, and validating after.
-    protected function doConvert()
+    protected function doActualConvert()
     {
         $errorMsg = '';
         $options = $this->options;
@@ -1206,7 +1180,7 @@ class Ewww extends AbstractCloudCurlConverter
     // Although this method is public, do not call directly.
     // You should rather call the static convert() function, defined in AbstractConverter, which
     // takes care of preparing stuff before calling doConvert, and validating after.
-    protected function doConvert()
+    protected function doActualConvert()
     {
 
         $options = $this->options;
@@ -1809,7 +1783,7 @@ class Gd extends AbstractConverter
     // Although this method is public, do not call directly.
     // You should rather call the static convert() function, defined in AbstractConverter, which
     // takes care of preparing stuff before calling doConvert, and validating after.
-    protected function doConvert()
+    protected function doActualConvert()
     {
 
         $this->logLn('GD Version: ' . gd_info()["GD Version"]);
@@ -1909,7 +1883,7 @@ class Gmagick extends AbstractConverter
     // Although this method is public, do not call directly.
     // You should rather call the static convert() function, defined in AbstractConverter, which
     // takes care of preparing stuff before calling doConvert, and validating after.
-    protected function doConvert()
+    protected function doActualConvert()
     {
 
         $options = $this->options;
@@ -2052,7 +2026,7 @@ class Imagick extends AbstractConverter
         }
     }
 
-    protected function doConvert()
+    protected function doActualConvert()
     {
         $options = $this->options;
 
@@ -2212,7 +2186,7 @@ class ImagickBinary extends AbstractExecConverter
         }
     }
 
-    protected function doConvert()
+    protected function doActualConvert()
     {
         //$this->logLn('Using quality:' . $this->getCalculatedQuality());
         // Should we use "magick" or "convert" command?
@@ -2344,7 +2318,7 @@ class Stack extends AbstractConverter
         // TODO: We should test if all converters are found in order to detect problems early
     }
 
-    protected function doConvert()
+    protected function doActualConvert()
     {
         $options = $this->options;
 
@@ -2546,10 +2520,7 @@ class Wpc extends AbstractCloudCurlConverter
         return $salt;
     }
 
-    // Although this method is public, do not call directly.
-    // You should rather call the static convert() function, defined in AbstractConverter, which
-    // takes care of preparing stuff before calling doConvert, and validating after.
-    protected function doConvert()
+    protected function doActualConvert()
     {
         $options = $this->options;
 
@@ -2997,6 +2968,34 @@ trait AutoQualityTrait
             );
         }
         $this->calculatedQuality = $q;
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert;
+
+trait LoggerTrait
+{
+    
+    public function logLn($msg, $style = '')
+    {
+        $this->logger->logLn($msg, $style);
+    }
+
+    public function logLnLn($msg)
+    {
+        $this->logger->logLnLn($msg);
+    }
+
+    public function ln()
+    {
+        $this->logger->ln();
+    }
+
+    public function log($msg)
+    {
+        $this->logger->log($msg);
     }
 }
 
