@@ -1,6 +1,6 @@
 <?php
 
-namespace WebPConvert\Convert;
+namespace WebPConvert\Convert\BaseConverters\BaseTraits;
 
 use WebPConvert\Helpers\JpegQualityDetector;
 
@@ -12,7 +12,7 @@ trait AutoQualityTrait
     private $calculatedQuality;
 
     abstract public function getMimeTypeOfSource();
-    
+
     /**
      *  Determine if quality detection is required but failing.
      *

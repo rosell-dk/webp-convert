@@ -1,6 +1,6 @@
 <?php
 
-namespace WebPConvert\Convert;
+namespace WebPConvert\Convert\BaseConverters\BaseTraits;
 
 trait LoggerTrait
 {
