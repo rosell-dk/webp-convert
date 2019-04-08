@@ -14,8 +14,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFou
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-use WebPConvert\Convert\AutoQualityTrait;
-use WebPConvert\Convert\LoggerTrait;
+use WebPConvert\Convert\BaseConverters\BaseTraits\AutoQualityTrait;
+use WebPConvert\Convert\BaseConverters\BaseTraits\LoggerTrait;
 use WebPConvert\Loggers\BaseLogger;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
@@ -208,30 +208,36 @@ abstract class AbstractConverter
         //set_error_handler(array($this, "warningHandler"), E_WARNING);
         set_error_handler(array($this, "errorHandler"));
 
-        if (!isset($this->options['_skip_input_check'])) {
-            // Run basic validations (if source exists and if file extension is valid)
-            $this->checkInput();
-
-            // Prepare destination folder (may throw exception)
-            $this->createWritableDestinationFolder();
-        }
-
-        // Prepare options
-        $this->prepareOptions();
-
         try {
+            // Prepare options
+            $this->prepareOptions();
+
+            // Prepare destination folder
+            $this->createWritableDestinationFolder();
+            $this->removeExistingDestinationIfExists();
+
+            if (!isset($this->options['_skip_input_check'])) {
+                // Run basic input validations (if source exists and if file extension is valid)
+                $this->checkInput();
+
+                // Check that a file can be written to destination
+                $this->checkFileSystem();
+            }
+
             $this->checkOperationality();
             $this->checkConvertability();
             $this->doActualConvert();
         } catch (ConversionFailedException $e) {
+            restore_error_handler();
             throw $e;
         } catch (\Exception $e) {
+            restore_error_handler();
             throw new UnhandledException('Conversion failed due to uncaught exception', 0, $e);
         } catch (\Error $e) {
+            restore_error_handler();
             // https://stackoverflow.com/questions/7116995/is-it-possible-in-php-to-prevent-fatal-error-call-to-undefined-function
             throw new UnhandledException('Conversion failed due to uncaught error', 0, $e);
         }
-
         restore_error_handler();
 
         $source = $this->source;
@@ -350,75 +356,57 @@ abstract class AbstractConverter
         //       and if not, throw something extending InvalidArgumentException (which is a LogicException)
     }
 
+    private function checkFileSystem()
+    {
+        // TODO:
+        // Instead of creating dummy file,
+        // perhaps something like this ?
+        // if (@is_writable($dirName) && @is_executable($dirName) || self::isWindows() )
+        // Or actually, probably best with a mix.
+        // First we test is_writable and is_executable. If that fails and we are on windows, we can do the dummy
+        // function isWindows(){
+        // return (boolean) preg_match('/^win/i', PHP_OS);
+        //}
+
+        // Try to create a dummy file here, with that name, just to see if it is possible (we delete it again)
+        file_put_contents($this->destination, '');
+        if (file_put_contents($this->destination, '') === false) {
+            throw new CreateDestinationFileException(
+                'Cannot create file: ' . basename($this->destination) . ' in dir:' . dirname($this->destination)
+            );
+        }
+        unlink($this->destination);
+    }
+
+    private function removeExistingDestinationIfExists()
+    {
+        if (file_exists($this->destination)) {
+            // A file already exists in this folder...
+            // We delete it, to make way for a new webp
+            if (!unlink($this->destination)) {
+                throw new CreateDestinationFileException(
+                    'Existing file cannot be removed: ' . basename($this->destination)
+                );
+            }
+        }
+    }
+
     // Creates folder in provided path & sets correct permissions
     // also deletes the file at filePath (if it already exists)
-    public function createWritableDestinationFolder()
+    private function createWritableDestinationFolder()
     {
         $filePath = $this->destination;
 
         $folder = dirname($filePath);
-        if (!@file_exists($folder)) {
+        if (!file_exists($folder)) {
+            $this->logLn('Destination folder does not exist. Creating folder: ' . $folder);
             // TODO: what if this is outside open basedir?
             // see http://php.net/manual/en/ini.core.php#ini.open-basedir
 
-            // First, we have to figure out which permissions to set.
-            // We want same permissions as parent folder
-            // But which parent? - the parent to the first missing folder
-
-            $parentFolders = explode('/', $folder);
-            $poppedFolders = [];
-
-            while (!(@file_exists(implode('/', $parentFolders))) && count($parentFolders) > 0) {
-                array_unshift($poppedFolders, array_pop($parentFolders));
-            }
-
-            // Retrieving permissions of closest existing folder
-            $closestExistingFolder = implode('/', $parentFolders);
-            $permissions = @fileperms($closestExistingFolder) & 000777;
-            $stat = @stat($closestExistingFolder);
-
             // Trying to create the given folder (recursively)
-            if (!@mkdir($folder, $permissions, true)) {
+            if (!mkdir($folder, 0777, true)) {
                 throw new CreateDestinationFolderException('Failed creating folder: ' . $folder);
             }
-
-            // `mkdir` doesn't always respect permissions, so we have to `chmod` each created subfolder
-            foreach ($poppedFolders as $subfolder) {
-                $closestExistingFolder .= '/' . $subfolder;
-                // Setting directory permissions
-                if ($permissions !== false) {
-                    @chmod($folder, $permissions);
-                }
-                if ($stat !== false) {
-                    if (isset($stat['uid'])) {
-                        @chown($folder, $stat['uid']);
-                    }
-                    if (isset($stat['gid'])) {
-                        @chgrp($folder, $stat['gid']);
-                    }
-                }
-            }
         }
-
-        if (@file_exists($filePath)) {
-            // A file already exists in this folder...
-            // We delete it, to make way for a new webp
-            if (!@unlink($filePath)) {
-                throw new CreateDestinationFileException(
-                    'Existing file cannot be removed: ' . basename($filePath)
-                );
-            }
-        }
-
-        // Try to create a dummy file here, with that name, just to see if it is possible (we delete it again)
-        @file_put_contents($filePath, '');
-        if (@file_put_contents($filePath, '') === false) {
-            throw new CreateDestinationFileException(
-                'Cannot create file: ' . basename($filePath) . ' in dir:' . $folder
-            );
-        }
-        @unlink($filePath);
-
-        return true;
     }
 }
