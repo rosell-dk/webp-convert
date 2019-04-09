@@ -2,7 +2,7 @@
 
 namespace WebPConvert\Tests\Convert\Converters;
 
-use WebPConvert\Tests\Convert\TestConverters\GdExposer;
+use WebPConvert\Tests\Convert\Exposers\GdExposer;
 use WebPConvert\Convert\Converters\Gd;
 
 use PHPUnit\Framework\TestCase;
@@ -15,21 +15,26 @@ class GdTest extends TestCase
         ConverterTestHelper::runAllConvertTests($this, 'Gd');
     }
 
+    public static $imageDir = __DIR__ . '/../..';
+
     public function testSource()
     {
-        $source = __DIR__ . '/../../test.png';
-        $gdExposer = new GdExposer($source, $source . '.webp');
+        $source = self::$imageDir . '/test.png';
+        $gd = new Gd($source, $source . '.webp');
+        $gdExposer = new GdExposer($gd);
+
         $this->assertEquals($source, $gdExposer->getSource());
         $this->assertTrue(file_exists($source), 'source does not exist');
     }
 
     public function testCreateImageResource()
     {
-        $source = __DIR__ . '/../../test.png';
-
-        $gdExposer = new GdExposer($source, $source . '.webp');
+        $source = self::$imageDir . '/test.png';
+        $gd = new Gd($source, $source . '.webp');
+        $gdExposer = new GdExposer($gd);
 
         if (!$gdExposer->isOperating()) {
+            //$this->assertTrue(false);
             return;
         }
 

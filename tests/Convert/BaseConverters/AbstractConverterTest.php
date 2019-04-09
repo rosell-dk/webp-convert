@@ -2,6 +2,8 @@
 
 namespace WebPConvert\Tests\Convert\BaseConverters;
 
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Tests\Convert\Exposers\AbstractConverterExposer;
 use WebPConvert\Tests\Convert\TestConverters\ExposedConverter;
 use WebPConvert\Tests\Convert\TestConverters\SuccessGuaranteedConverter;
 
@@ -35,6 +37,42 @@ class AbstractCloudConverterTest extends TestCase
         } else {
             $this->assertEquals('image/png', $mimeTypeMaybeDetected);
         }
+    }
 
+    public function testDefaultOptions()
+    {
+        $converter = new SuccessGuaranteedConverter(
+            self::$imgDir . '/test.jpg',
+            self::$imgDir . '/test.webp'
+        );
+
+        $exposer = new AbstractConverterExposer($converter);
+
+        $defaultOptions = $exposer->getDefaultOptions();
+
+        $this->assertSame('auto', $defaultOptions['quality']);
+        $this->assertSame(85, $defaultOptions['max-quality']);
+        $this->assertSame(75, $defaultOptions['default-quality']);
+        $this->assertSame('none', $defaultOptions['metadata']);
+    }
+
+
+    public function testOptionMerging()
+    {
+        $converter = new SuccessGuaranteedConverter(
+            self::$imgDir . '/test.jpg',
+            self::$imgDir . '/test.webp',
+            [
+                'quality' => 80
+            ]
+        );
+
+        $exposer = new AbstractConverterExposer($converter);
+
+        $exposer->prepareOptions();
+
+        $mergedOptions = $exposer->getOptions();
+
+        $this->assertSame(80, $mergedOptions['quality']);
     }
 }

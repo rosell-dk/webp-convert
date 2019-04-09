@@ -1,6 +1,6 @@
 <?php
 
-namespace WebPConvert\Tests\Convert\TestConverters;
+namespace WebPConvert\Tests\Convert\Exposers;
 
 use WebPConvert\Convert\Converters\Gd;
 
@@ -10,50 +10,16 @@ use WebPConvert\Convert\Converters\Gd;
  *
  * TODO: expose and test more methods! (and make more methods private/protected in AbstractConverter)
  */
-class GdExposer {
+class GdExposer extends AbstractConverterExposer {
 
-    //public static $extraOptions = [];
-
-    public $gd;
-
-    public function __construct($source, $destination, $options = [], $logger = null)
+    public function __construct($gd)
     {
-        $this->gd = new Gd($source, $destination, $options, $logger);
-    }
-
-    private function bindAndCall($functionToBind) {
-        $functionToBind = $functionToBind->bindTo($this->gd, Gd::class);
-        return $functionToBind();
-    }
-
-    public function getSource()
-    {
-        $sourceThief = function() {
-            return $this->source;
-        };
-        return $this->bindAndCall($sourceThief);
-    }
-
-    public function isOperating()
-    {
-        $inject = function() {
-            try {
-                $this->checkOperationality();
-                $this->checkConvertability();
-            } catch (\Exception $e) {
-                return false;
-            }
-            return true;
-        };
-        return $this->bindAndCall($inject);
+        parent::__construct($gd);
     }
 
     public function createImageResource()
     {
-        $cb = function() {
-            return call_user_func_array(array($this, 'createImageResource'), func_get_args());
-        };
-        return $this->bindAndCall($cb);
+        return $this->callPrivateFunction('createImageResource');
     }
 
 

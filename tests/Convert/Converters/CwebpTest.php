@@ -10,15 +10,56 @@
 namespace WebPConvert\Tests\Convert\Converters;
 
 use WebPConvert\Convert\Converters\Cwebp;
+use WebPConvert\Tests\Convert\Exposers\CwebpExposer;
 use PHPUnit\Framework\TestCase;
 
 class CwebpTest extends TestCase
 {
 
+    public static $imageDir = __DIR__ . '/../..';
+
     public function testConvert()
     {
         ConverterTestHelper::runAllConvertTests($this, 'Cwebp');
     }
+
+    public function testSource()
+    {
+        $source = self::$imageDir . '/test.png';
+        $cwebp = new Cwebp($source, $source . '.webp');
+        $cwebpExposer = new CwebpExposer($cwebp);
+
+        $this->assertEquals($source, $cwebpExposer->getSource());
+        $this->assertTrue(file_exists($source), 'source does not exist');
+    }
+
+    public function testCreateCommandLineOptions()
+    {
+        $source = self::$imageDir . '/test.png';
+        $cwebp = new Cwebp($source, $source . '.webp', [
+            'quality' => 'auto',
+            'method' => 3,
+        ]);
+        $cwebpExposer = new CwebpExposer($cwebp);
+
+        $cwebpExposer->prepareOptions();
+
+        $commandLineOption = $cwebpExposer->createCommandLineOptions();
+        //$this->assertEquals('e', $commandLineOption); // use this to quickly see it...
+
+        // Metadata is per default none
+        $this->assertRegExp('#-metadata none#', $commandLineOption);
+
+        // We passed the method option and set it to 3
+        $this->assertRegExp('#-m 3#', $commandLineOption);
+
+        // There must be an output option, and it must be quoted
+        $this->assertRegExp('#-o \'#', $commandLineOption);
+
+        // There must be a quality option, and it must be digits
+        $this->assertRegExp('#-q \\d+#', $commandLineOption);
+    }
+
 
   /*
     public function testCwebpDefaultPaths()
