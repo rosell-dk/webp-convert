@@ -125,7 +125,6 @@ abstract class AbstractConverter
      */
     public function errorHandler($errno, $errstr, $errfile, $errline)
     {
-
         /*
         We do NOT do the following (even though it is generally recommended):
 
@@ -151,12 +150,11 @@ abstract class AbstractConverter
 
             /*
             The following can never be catched by a custom error handler:
-            E_PARSE =>               "Parse Error",
-            E_ERROR =>               "Error",
-            E_CORE_ERROR =>          "Core Error",
-            E_CORE_WARNING =>        "Core Warning",
-            E_COMPILE_ERROR =>       "Compile Error",
-            E_COMPILE_WARNING =>     "Compile Warning",
+            E_PARSE, E_ERROR, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING
+
+            We do do not trigger the following, but actually, triggering warnings and notices
+            is perhaps a good alternative to calling logLn
+            E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE
             */
         ];
 
@@ -168,23 +166,6 @@ abstract class AbstractConverter
 
         $msg = $errType . ': ' . $errstr . ' in ' . $errfile . ', line ' . $errline . ', PHP ' . PHP_VERSION .
             ' (' . PHP_OS . ')';
-        //$this->logLn($msg);
-
-        /*
-        if(function_exists('debug_backtrace')){
-            //print "backtrace:\n";
-            $backtrace = debug_backtrace();
-            array_shift($backtrace);
-            foreach($backtrace as $i=>$l){
-                $msg = '';
-                $msg .= "[$i] in function <b>{$l['class']}{$l['type']}{$l['function']}</b>";
-                if($l['file']) $msg .= " in <b>{$l['file']}</b>";
-                if($l['line']) $msg .= " on line <b>{$l['line']}</b>";
-                $this->logLn($msg);
-
-            }
-        }
-        */
         $this->logLn($msg);
 
         if ($errno == E_USER_ERROR) {
@@ -194,7 +175,6 @@ abstract class AbstractConverter
         }
 
         // We do not return false, because we want to keep this little secret.
-        //
         //return false;   // let PHP handle the error from here
     }
 
@@ -246,7 +226,7 @@ abstract class AbstractConverter
         if (!@file_exists($destination)) {
             throw new ConversionFailedException('Destination file is not there: ' . $destination);
         } elseif (@filesize($destination) === 0) {
-            @unlink($destination);
+            unlink($destination);
             throw new ConversionFailedException('Destination file was completely empty');
         } else {
             if (!isset($this->options['_suppress_success_message'])) {
