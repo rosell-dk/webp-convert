@@ -5,3 +5,12 @@ parameters:
         - '#Caught class ImagickException not found.#'
         - '# on an unknown class Imagick.#'
         - '# on an unknown class Gmagick.#'
+        -
+            message: '#Strict comparison using === between int and false will always evaluate to false.#'
+            path: %currentWorkingDirectory%/src/Convert/Converters/Gd.php
+        -
+            message: '#Strict comparison using === between resource and false will always evaluate to false.#'
+            path: %currentWorkingDirectory%/src/Convert/Converters/Ewww.php
+        -
+            message: '#Strict comparison using === between resource and false will always evaluate to false.#'
+            path: %currentWorkingDirectory%/src/Convert/BaseConverters/AbstractCloudCurlConverter.php
