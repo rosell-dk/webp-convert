@@ -24,4 +24,4 @@ before_script:
 
 script:
   - composer test
-  - if [[ $PHPSTAN == 1 ]]; then vendor/bin/phpstan analyse src --level=2; fi
+  - if [[ $PHPSTAN == 1 ]]; then vendor/bin/phpstan analyse src --level=4; fi
