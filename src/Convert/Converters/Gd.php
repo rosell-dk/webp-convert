@@ -220,7 +220,7 @@ class Gd extends AbstractConverter
      * @param  resource  $image
      * @return void
      */
-    protected function trySettingAlphaBlending()
+    protected function trySettingAlphaBlending($image)
     {
         if (function_exists('imagealphablending')) {
             if (!imagealphablending($image, true)) {
@@ -285,7 +285,7 @@ class Gd extends AbstractConverter
         ob_start();
         $success = imagewebp($image);
         if (!$success) {
-            $this->destroyAndRemove();
+            $this->destroyAndRemove($image);
             ob_end_clean();
             restore_error_handler();
             throw new ConversionFailedException(
@@ -316,7 +316,7 @@ class Gd extends AbstractConverter
                     $this->logLn('An notice was produced during conversion: ' . $this->errorMessageWhileCreating);
                     break;
                 default:
-                    $this->destroyAndRemove();
+                    $this->destroyAndRemove($image);
                     throw new ConversionFailedException(
                         'An error was produced during conversion',
                         $this->errorMessageWhileCreating
@@ -335,7 +335,7 @@ class Gd extends AbstractConverter
         $success = file_put_contents($this->destination, $output);
 
         if (!$success) {
-            $this->destroyAndRemove();
+            $this->destroyAndRemove($image);
             throw new ConversionFailedException(
                 'Gd failed when trying to save the image. Check file permissions!'
             );
