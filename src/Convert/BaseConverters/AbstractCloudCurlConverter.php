@@ -16,6 +16,8 @@ abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
      */
     protected function checkOperationality()
     {
+        parent::checkOperationality();
+
         if (!extension_loaded('curl')) {
             throw new SystemRequirementsNotMetException('Required cURL extension is not available.');
         }
