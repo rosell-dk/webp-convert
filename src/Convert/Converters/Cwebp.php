@@ -163,9 +163,6 @@ class Cwebp extends AbstractExecConverter
         // https://www.brianstorti.com/understanding-shell-script-idiom-redirect/
         $commandOptionsArray[] = '2>&1';
 
-
-        $useNice = (($options['use-nice']) && self::hasNiceSupport()) ? true : false;
-
         $commandOptions = implode(' ', $commandOptionsArray);
         $this->logLn('cwebp options:' . $commandOptions);
 
@@ -177,6 +174,7 @@ class Cwebp extends AbstractExecConverter
     {
         $errorMsg = '';
         $options = $this->options;
+        $useNice = (($options['use-nice']) && self::hasNiceSupport()) ? true : false;
 
         $commandOptions = $this->createCommandLineOptions();
 
