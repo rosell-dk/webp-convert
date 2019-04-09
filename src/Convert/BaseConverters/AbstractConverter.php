@@ -48,7 +48,9 @@ abstract class AbstractConverter
     /** @var string  Where to save the webp (complete path) */
     public $destination;
 
+    /** @var array  Conversion options */
     public $options;
+    
     public $beginTime;
     public $sourceMimeType;
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
@@ -317,6 +319,8 @@ abstract class AbstractConverter
         // -  Merge defaults of the converters extra options into the standard default options.
         $defaultOptions = array_merge($defaultOptions, array_column(static::$extraOptions, 'default', 'name'));
 
+        //throw new \Exception('extra!' . print_r($this->getConverterDisplayName(), true));
+
         // -  Merge $defaultOptions into provided options
         $this->options = array_merge($defaultOptions, $this->options);
 
@@ -331,6 +335,7 @@ abstract class AbstractConverter
             // Force lossless option to true for PNG images
             $this->options['lossless'] = true;
         }
+
 
         // TODO: Here we could test if quality is 0-100 or auto.
         //       and if not, throw something extending InvalidArgumentException (which is a LogicException)
