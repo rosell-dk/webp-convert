@@ -73,15 +73,6 @@ class Cwebp extends AbstractExecConverter
         'Linux' => [ 'cwebp-linux', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568']
     ];
 
-    /**
-     * Check operationality of Cwebp converter.
-     *
-     */
-     /*
-    protected function checkOperationality()
-    {
-        parent::checkOperationality();
-    }*/
 
     private static function executeBinary($binary, $commandOptions, $useNice, $logger)
     {
@@ -94,17 +85,14 @@ class Cwebp extends AbstractExecConverter
         return intval($returnCode);
     }
 
-    // Although this method is public, do not call directly.
-    // You should rather call the static convert() function, defined in AbstractConverter, which
-    // takes care of preparing stuff before calling doConvert, and validating after.
-    protected function doActualConvert()
+    /**
+     * Build command line options
+     *
+     * @return string
+     */
+    private function createCommandLineOptions()
     {
-        $errorMsg = '';
         $options = $this->options;
-
-        /*
-         * Prepare cwebp options
-         */
 
         $commandOptionsArray = [];
 
@@ -165,11 +153,9 @@ class Cwebp extends AbstractExecConverter
         }
 
         // Source file
-        //$commandOptionsArray[] = self::escapeFilename($this->source);
         $commandOptionsArray[] = escapeshellarg($this->source);
 
         // Output
-        //$commandOptionsArray[] = '-o ' . self::escapeFilename($this->destination);
         $commandOptionsArray[] = '-o ' . escapeshellarg($this->destination);
 
 
@@ -181,8 +167,19 @@ class Cwebp extends AbstractExecConverter
         $useNice = (($options['use-nice']) && self::hasNiceSupport()) ? true : false;
 
         $commandOptions = implode(' ', $commandOptionsArray);
-
         $this->logLn('cwebp options:' . $commandOptions);
+
+        return $commandOptions;
+    }
+
+
+    protected function doActualConvert()
+    {
+        $errorMsg = '';
+        $options = $this->options;
+
+        $commandOptions = $this->createCommandLineOptions();
+
 
         // Init with common system paths
         $cwebpPathsToTest = self::$cwebpDefaultPaths;
