@@ -33,13 +33,9 @@ class GdTest extends TestCase
             return;
         }
 
-        // Get image before it has been created should return false
-        $image = $gdExposer->getImage();
-        $this->assertFalse($image, 'Getting image before it has been created should return false');
-
-        $gdExposer->createImageResource();
-        $image = $gdExposer->getImage();
-        $this->assertNotFalse($image, 'Failed creating image even though Gd is operating and source image should be ok');
+        // It is operating and image should be ok.
+        // - so it should be able to create image resource
+        $image = $gdExposer->createImageResource();
         $this->assertEquals(gettype($image), 'resource');
 
     }

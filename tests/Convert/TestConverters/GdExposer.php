@@ -48,18 +48,10 @@ class GdExposer {
         return $this->bindAndCall($inject);
     }
 
-    public function getImage()
-    {
-        $thief = function() {
-            return $this->image;
-        };
-        return $this->bindAndCall($thief);
-    }
-
     public function createImageResource()
     {
         $cb = function() {
-            call_user_func_array(array($this, 'createImageResource'), func_get_args());
+            return call_user_func_array(array($this, 'createImageResource'), func_get_args());
         };
         return $this->bindAndCall($cb);
     }
