@@ -15,9 +15,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFou
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-//use WebPConvert\Convert\QualityProcessor;
-use WebPConvert\Convert\AutoQualityTrait;
-use WebPConvert\Convert\LoggerTrait;
+use WebPConvert\Convert\BaseConverters\BaseTraits\AutoQualityTrait;
+use WebPConvert\Convert\BaseConverters\BaseTraits\LoggerTrait;
 use WebPConvert\Loggers\BaseLogger;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
@@ -50,8 +49,9 @@ abstract class AbstractConverter
     /** @var string  Where to save the webp (complete path) */
     public $destination;
 
+    /** @var array  Conversion options */
     public $options;
-    public $logger;
+    
     public $beginTime;
     public $sourceMimeType;
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
@@ -65,7 +65,6 @@ abstract class AbstractConverter
         'lossless' => false,
         'skip-pngs' => false,
     ];
-    private $qualityProcessor;
 
     /**
      * Check basis operationality
@@ -101,13 +100,11 @@ abstract class AbstractConverter
 
     public function __construct($source, $destination, $options = [], $logger = null)
     {
-        if (!isset($logger)) {
-            $logger = new \WebPConvert\Loggers\VoidLogger();
-        }
         $this->source = $source;
         $this->destination = $destination;
         $this->options = $options;
-        $this->logger = $logger;
+
+        $this->setLogger($logger);
     }
 
     /**
@@ -131,7 +128,6 @@ abstract class AbstractConverter
      */
     public function errorHandler($errno, $errstr, $errfile, $errline)
     {
-
         /*
         We do NOT do the following (even though it is generally recommended):
 
@@ -157,12 +153,11 @@ abstract class AbstractConverter
 
             /*
             The following can never be catched by a custom error handler:
-            E_PARSE =>               "Parse Error",
-            E_ERROR =>               "Error",
-            E_CORE_ERROR =>          "Core Error",
-            E_CORE_WARNING =>        "Core Warning",
-            E_COMPILE_ERROR =>       "Compile Error",
-            E_COMPILE_WARNING =>     "Compile Warning",
+            E_PARSE, E_ERROR, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING
+
+            We do do not trigger the following, but actually, triggering warnings and notices
+            is perhaps a good alternative to calling logLn
+            E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE
             */
         ];
 
@@ -174,23 +169,6 @@ abstract class AbstractConverter
 
         $msg = $errType . ': ' . $errstr . ' in ' . $errfile . ', line ' . $errline . ', PHP ' . PHP_VERSION .
             ' (' . PHP_OS . ')';
-        //$this->logLn($msg);
-
-        /*
-        if(function_exists('debug_backtrace')){
-            //print "backtrace:\n";
-            $backtrace = debug_backtrace();
-            array_shift($backtrace);
-            foreach($backtrace as $i=>$l){
-                $msg = '';
-                $msg .= "[$i] in function <b>{$l['class']}{$l['type']}{$l['function']}</b>";
-                if($l['file']) $msg .= " in <b>{$l['file']}</b>";
-                if($l['line']) $msg .= " on line <b>{$l['line']}</b>";
-                $this->logLn($msg);
-
-            }
-        }
-        */
         $this->logLn($msg);
 
         if ($errno == E_USER_ERROR) {
@@ -200,7 +178,6 @@ abstract class AbstractConverter
         }
 
         // We do not return false, because we want to keep this little secret.
-        //
         //return false;   // let PHP handle the error from here
     }
 
@@ -214,30 +191,36 @@ abstract class AbstractConverter
         //set_error_handler(array($this, "warningHandler"), E_WARNING);
         set_error_handler(array($this, "errorHandler"));
 
-        if (!isset($this->options['_skip_input_check'])) {
-            // Run basic validations (if source exists and if file extension is valid)
-            $this->checkInput();
-
-            // Prepare destination folder (may throw exception)
-            $this->createWritableDestinationFolder();
-        }
-
-        // Prepare options
-        $this->prepareOptions();
-
         try {
+            // Prepare options
+            $this->prepareOptions();
+
+            // Prepare destination folder
+            $this->createWritableDestinationFolder();
+            $this->removeExistingDestinationIfExists();
+
+            if (!isset($this->options['_skip_input_check'])) {
+                // Run basic input validations (if source exists and if file extension is valid)
+                $this->checkInput();
+
+                // Check that a file can be written to destination
+                $this->checkFileSystem();
+            }
+
             $this->checkOperationality();
             $this->checkConvertability();
             $this->doActualConvert();
         } catch (ConversionFailedException $e) {
+            restore_error_handler();
             throw $e;
         } catch (\Exception $e) {
+            restore_error_handler();
             throw new UnhandledException('Conversion failed due to uncaught exception', 0, $e);
         } catch (\Error $e) {
+            restore_error_handler();
             // https://stackoverflow.com/questions/7116995/is-it-possible-in-php-to-prevent-fatal-error-call-to-undefined-function
             throw new UnhandledException('Conversion failed due to uncaught error', 0, $e);
         }
-
         restore_error_handler();
 
         $source = $this->source;
@@ -246,7 +229,7 @@ abstract class AbstractConverter
         if (!@file_exists($destination)) {
             throw new ConversionFailedException('Destination file is not there: ' . $destination);
         } elseif (@filesize($destination) === 0) {
-            @unlink($destination);
+            unlink($destination);
             throw new ConversionFailedException('Destination file was completely empty');
         } else {
             if (!isset($this->options['_suppress_success_message'])) {
@@ -337,6 +320,8 @@ abstract class AbstractConverter
         // -  Merge defaults of the converters extra options into the standard default options.
         $defaultOptions = array_merge($defaultOptions, array_column(static::$extraOptions, 'default', 'name'));
 
+        //throw new \Exception('extra!' . print_r($this->getConverterDisplayName(), true));
+
         // -  Merge $defaultOptions into provided options
         $this->options = array_merge($defaultOptions, $this->options);
 
@@ -352,80 +337,63 @@ abstract class AbstractConverter
             $this->options['lossless'] = true;
         }
 
+
         // TODO: Here we could test if quality is 0-100 or auto.
         //       and if not, throw something extending InvalidArgumentException (which is a LogicException)
     }
 
+    private function checkFileSystem()
+    {
+        // TODO:
+        // Instead of creating dummy file,
+        // perhaps something like this ?
+        // if (@is_writable($dirName) && @is_executable($dirName) || self::isWindows() )
+        // Or actually, probably best with a mix.
+        // First we test is_writable and is_executable. If that fails and we are on windows, we can do the dummy
+        // function isWindows(){
+        // return (boolean) preg_match('/^win/i', PHP_OS);
+        //}
+
+        // Try to create a dummy file here, with that name, just to see if it is possible (we delete it again)
+        file_put_contents($this->destination, '');
+        if (file_put_contents($this->destination, '') === false) {
+            throw new CreateDestinationFileException(
+                'Cannot create file: ' . basename($this->destination) . ' in dir:' . dirname($this->destination)
+            );
+        }
+        unlink($this->destination);
+    }
+
+    private function removeExistingDestinationIfExists()
+    {
+        if (file_exists($this->destination)) {
+            // A file already exists in this folder...
+            // We delete it, to make way for a new webp
+            if (!unlink($this->destination)) {
+                throw new CreateDestinationFileException(
+                    'Existing file cannot be removed: ' . basename($this->destination)
+                );
+            }
+        }
+    }
+
     // Creates folder in provided path & sets correct permissions
     // also deletes the file at filePath (if it already exists)
-    public function createWritableDestinationFolder()
+    private function createWritableDestinationFolder()
     {
         $filePath = $this->destination;
 
         $folder = dirname($filePath);
-        if (!@file_exists($folder)) {
+        if (!file_exists($folder)) {
+            $this->logLn('Destination folder does not exist. Creating folder: ' . $folder);
             // TODO: what if this is outside open basedir?
             // see http://php.net/manual/en/ini.core.php#ini.open-basedir
 
-            // First, we have to figure out which permissions to set.
-            // We want same permissions as parent folder
-            // But which parent? - the parent to the first missing folder
-
-            $parentFolders = explode('/', $folder);
-            $poppedFolders = [];
-
-            while (!(@file_exists(implode('/', $parentFolders))) && count($parentFolders) > 0) {
-                array_unshift($poppedFolders, array_pop($parentFolders));
-            }
-
-            // Retrieving permissions of closest existing folder
-            $closestExistingFolder = implode('/', $parentFolders);
-            $permissions = @fileperms($closestExistingFolder) & 000777;
-            $stat = @stat($closestExistingFolder);
-
             // Trying to create the given folder (recursively)
-            if (!@mkdir($folder, $permissions, true)) {
+            if (!mkdir($folder, 0777, true)) {
                 throw new CreateDestinationFolderException('Failed creating folder: ' . $folder);
             }
-
-            // `mkdir` doesn't always respect permissions, so we have to `chmod` each created subfolder
-            foreach ($poppedFolders as $subfolder) {
-                $closestExistingFolder .= '/' . $subfolder;
-                // Setting directory permissions
-                if ($permissions !== false) {
-                    @chmod($folder, $permissions);
-                }
-                if ($stat !== false) {
-                    if (isset($stat['uid'])) {
-                        @chown($folder, $stat['uid']);
-                    }
-                    if (isset($stat['gid'])) {
-                        @chgrp($folder, $stat['gid']);
-                    }
-                }
-            }
         }
-
-        if (@file_exists($filePath)) {
-            // A file already exists in this folder...
-            // We delete it, to make way for a new webp
-            if (!@unlink($filePath)) {
-                throw new CreateDestinationFileException(
-                    'Existing file cannot be removed: ' . basename($filePath)
-                );
-            }
-        }
-
-        // Try to create a dummy file here, with that name, just to see if it is possible (we delete it again)
-        @file_put_contents($filePath, '');
-        if (@file_put_contents($filePath, '') === false) {
-            throw new CreateDestinationFileException(
-                'Cannot create file: ' . basename($filePath) . ' in dir:' . $folder
-            );
-        }
-        @unlink($filePath);
-
-        return true;
     }
 }
 
@@ -559,6 +527,8 @@ abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
      */
     protected function checkOperationality()
     {
+        parent::checkOperationality();
+
         if (!extension_loaded('curl')) {
             throw new SystemRequirementsNotMetException('Required cURL extension is not available.');
         }
@@ -803,15 +773,6 @@ class Cwebp extends AbstractExecConverter
         'Linux' => [ 'cwebp-linux', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568']
     ];
 
-    /**
-     * Check operationality of Cwebp converter.
-     *
-     */
-     /*
-    protected function checkOperationality()
-    {
-        parent::checkOperationality();
-    }*/
 
     private static function executeBinary($binary, $commandOptions, $useNice, $logger)
     {
@@ -824,17 +785,14 @@ class Cwebp extends AbstractExecConverter
         return intval($returnCode);
     }
 
-    // Although this method is public, do not call directly.
-    // You should rather call the static convert() function, defined in AbstractConverter, which
-    // takes care of preparing stuff before calling doConvert, and validating after.
-    protected function doActualConvert()
+    /**
+     * Build command line options
+     *
+     * @return string
+     */
+    private function createCommandLineOptions()
     {
-        $errorMsg = '';
         $options = $this->options;
-
-        /*
-         * Prepare cwebp options
-         */
 
         $commandOptionsArray = [];
 
@@ -895,11 +853,9 @@ class Cwebp extends AbstractExecConverter
         }
 
         // Source file
-        //$commandOptionsArray[] = self::escapeFilename($this->source);
         $commandOptionsArray[] = escapeshellarg($this->source);
 
         // Output
-        //$commandOptionsArray[] = '-o ' . self::escapeFilename($this->destination);
         $commandOptionsArray[] = '-o ' . escapeshellarg($this->destination);
 
 
@@ -907,12 +863,21 @@ class Cwebp extends AbstractExecConverter
         // https://www.brianstorti.com/understanding-shell-script-idiom-redirect/
         $commandOptionsArray[] = '2>&1';
 
+        $commandOptions = implode(' ', $commandOptionsArray);
+        $this->logLn('cwebp options:' . $commandOptions);
 
+        return $commandOptions;
+    }
+
+
+    protected function doActualConvert()
+    {
+        $errorMsg = '';
+        $options = $this->options;
         $useNice = (($options['use-nice']) && self::hasNiceSupport()) ? true : false;
 
-        $commandOptions = implode(' ', $commandOptionsArray);
+        $commandOptions = $this->createCommandLineOptions();
 
-        $this->logLn('cwebp options:' . $commandOptions);
 
         // Init with common system paths
         $cwebpPathsToTest = self::$cwebpDefaultPaths;
@@ -1401,9 +1366,6 @@ class Gd extends AbstractConverter
     private $errorMessageWhileCreating = '';
     private $errorNumberWhileCreating;
 
-    /** @var resource|false  Image resource after successful creation */
-    private $image = false;
-
     public static $extraOptions = [];
 
     /**
@@ -1531,15 +1493,13 @@ class Gd extends AbstractConverter
     /**
      * Create Gd image resource from source
      *
-     * Sets $this->image to new image, or false if unsuccesful
-     *
      * @throws  InvalidInputException  if mime type is unsupported or could not be detected
-     * @return  void
+     * @throws  ConversionFailedException  if imagecreatefrompng or imagecreatefromjpeg fails
+     * @return  resource  $image  The created image
      */
     private function createImageResource()
     {
         // In case of failure, image will be false
-        $this->image = false;
 
         $mimeType = $this->getMimeTypeOfSource();
         if ($mimeType === false) {
@@ -1550,8 +1510,8 @@ class Gd extends AbstractConverter
 
         switch ($mimeType) {
             case 'image/png':
-                $this->image = imagecreatefrompng($this->source);
-                if ($this->image === false) {
+                $image = imagecreatefrompng($this->source);
+                if ($image === false) {
                     throw new ConversionFailedException(
                         'Gd failed when trying to load/create image (imagecreatefrompng() failed)'
                     );
@@ -1559,8 +1519,8 @@ class Gd extends AbstractConverter
                 break;
 
             case 'image/jpeg':
-                $this->image = imagecreatefromjpeg($this->source);
-                if ($this->image === false) {
+                $image = imagecreatefromjpeg($this->source);
+                if ($image === false) {
                     throw new ConversionFailedException(
                         'Gd failed when trying to load/create image (imagecreatefromjpeg() failed)'
                     );
@@ -1572,17 +1532,20 @@ class Gd extends AbstractConverter
                     'Unsupported mime type:' . $mimeType
                 );
         }
+        return $image;
     }
 
     /**
-     * Try to make image resource true color if it is not already
+     * Try to make image resource true color if it is not already.
      *
+     * @param  resource  $image  The image to work on
+     * @return void
      */
-    protected function tryToMakeTrueColorIfNot()
+    protected function tryToMakeTrueColorIfNot(&$image)
     {
         $mustMakeTrueColor = false;
         if (function_exists('imageistruecolor')) {
-            if (imageistruecolor($this->image)) {
+            if (imageistruecolor($image)) {
                 $this->logLn('image is true color');
             } else {
                 $this->logLn('image is not true color');
@@ -1595,7 +1558,7 @@ class Gd extends AbstractConverter
 
         if ($mustMakeTrueColor) {
             $this->logLn('converting color palette to true color');
-            $success = $this->makeTrueColor($this->image);
+            $success = $this->makeTrueColor($image);
             if (!$success) {
                 $this->logLn(
                     'Warning: FAILED converting color palette to true color. ' .
@@ -1605,10 +1568,15 @@ class Gd extends AbstractConverter
         }
     }
 
+    /**
+     *
+     * @param  resource  $image
+     * @return void
+     */
     protected function trySettingAlphaBlending()
     {
         if (function_exists('imagealphablending')) {
-            if (!imagealphablending($this->image, true)) {
+            if (!imagealphablending($image, true)) {
                 $this->logLn('Warning: imagealphablending() failed');
             }
         } else {
@@ -1619,7 +1587,7 @@ class Gd extends AbstractConverter
         }
 
         if (function_exists('imagesavealpha')) {
-            if (!imagesavealpha($this->image, true)) {
+            if (!imagesavealpha($image, true)) {
                 $this->logLn('Warning: imagesavealpha() failed');
             }
         } else {
@@ -1637,16 +1605,27 @@ class Gd extends AbstractConverter
             ', PHP ' . PHP_VERSION . ' (' . PHP_OS . ')';
     }
 
-    protected function destroyAndRemove()
+    /**
+     *
+     * @param  resource  $image
+     * @return void
+     */
+    protected function destroyAndRemove($image)
     {
-        imagedestroy($this->image);
+        imagedestroy($image);
         if (file_exists($this->destination)) {
             unlink($this->destination);
         }
     }
 
-    protected function tryConverting()
+    /**
+     *
+     * @param  resource  $image
+     * @return void
+     */
+    protected function tryConverting($image)
     {
+
         // Danger zone!
         //    Using output buffering to generate image.
         //    In this zone, Do NOT do anything that might produce unwanted output
@@ -1657,7 +1636,7 @@ class Gd extends AbstractConverter
         set_error_handler(array($this, "errorHandlerWhileCreatingWebP"));
 
         ob_start();
-        $success = imagewebp($this->image);
+        $success = imagewebp($image);
         if (!$success) {
             $this->destroyAndRemove();
             ob_end_clean();
@@ -1729,7 +1708,7 @@ class Gd extends AbstractConverter
 
         Here is the old code:
 
-        $success = imagewebp($this->image, $this->destination, $this->getCalculatedQuality());
+        $success = imagewebp($image, $this->destination, $this->getCalculatedQuality());
 
         if (!$success) {
             throw new ConversionFailedException(
@@ -1758,23 +1737,23 @@ class Gd extends AbstractConverter
         // Btw: Check out processWebp here:
         // https://github.com/Intervention/image/blob/master/src/Intervention/Image/Gd/Encoder.php
 
-        // Create image resource (this sets $this->image)
-        $this->createImageResource();
+        // Create image resource
+        $image = $this->createImageResource();
 
-        // Try to convert color palette if it is not true color (works on $this->image)
-        $this->tryToMakeTrueColorIfNot();
+        // Try to convert color palette if it is not true color
+        $this->tryToMakeTrueColorIfNot($image);
 
 
         if ($this->getMimeTypeOfSource() == 'png') {
-            // Try to set alpha blending (works on $this->image)
-            $this->trySettingAlphaBlending();
+            // Try to set alpha blending
+            $this->trySettingAlphaBlending($image);
         }
 
         // Try to convert it to webp
-        $this->tryConverting();
+        $this->tryConverting($image);
 
         // End of story
-        imagedestroy($this->image);
+        imagedestroy($image);
     }
 }
 
@@ -2832,138 +2811,6 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInputException;
 class TargetNotFoundException extends InvalidInputException
 {
     public $description = 'The converter could not locate source file';
-}
-
-?><?php
-
-namespace WebPConvert\Convert;
-
-use WebPConvert\Helpers\JpegQualityDetector;
-
-trait AutoQualityTrait
-{
-
-    private $processed = false;
-    private $qualityCouldNotBeDetected = false;
-    private $calculatedQuality;
-
-    /**
-     *  Determine if quality detection is required but failing.
-     *
-     *  It is considered "required" when:
-     *  - Mime type is "image/jpeg"
-     *  - Quality is set to "auto"
-     *
-     *  @return  boolean
-     */
-    public function isQualityDetectionRequiredButFailing()
-    {
-        $this->processQualityOptionIfNotAlready();
-        return $this->qualityCouldNotBeDetected;
-    }
-
-    /**
-     *  Get calculated quality.
-     *
-     *  If mime type is something else than "image/jpeg", the "default-quality" option is returned
-     *  Same thing for jpeg, when the "quality" option is set to a number (rather than "auto").
-     *
-     *  Otherwise:
-     *  If quality cannot be detetected, the "default-quality" option is returned.
-     *  If quality can be detetected, the lowest value of this and the "max-quality" option is returned
-     *
-     *  @return  int
-     */
-    public function getCalculatedQuality()
-    {
-        $this->processQualityOptionIfNotAlready();
-        return $this->calculatedQuality;
-    }
-
-    /**
-     * @return void
-     */
-    private function processQualityOptionIfNotAlready()
-    {
-        if (!$this->processed) {
-            $this->processed = true;
-            $this->processQualityOption();
-        }
-    }
-
-    /**
-     * @return void
-     */
-    private function processQualityOption()
-    {
-        $options = $this->options;
-        $logger = $this->logger;
-        $source = $this->source;
-
-        $q = $options['quality'];
-        if ($q == 'auto') {
-            if (($this->getMimeTypeOfSource() == 'image/jpeg')) {
-                $q = JpegQualityDetector::detectQualityOfJpg($source);
-                if (is_null($q)) {
-                    $q = $options['default-quality'];
-                    $logger->logLn(
-                        'Quality of source could not be established (Imagick or GraphicsMagick is required)' .
-                        ' - Using default instead (' . $options['default-quality'] . ').'
-                    );
-
-                    $this->qualityCouldNotBeDetected = true;
-                } else {
-                    if ($q > $options['max-quality']) {
-                        $logger->logLn(
-                            'Quality of source is ' . $q . '. ' .
-                            'This is higher than max-quality, so using max-quality instead (' .
-                                $options['max-quality'] . ')'
-                        );
-                    } else {
-                        $logger->logLn('Quality set to same as source: ' . $q);
-                    }
-                }
-                $q = min($q, $options['max-quality']);
-            } else {
-                $q = $options['default-quality'];
-                $logger->logLn('Quality: ' . $q . '. ');
-            }
-        } else {
-            $logger->logLn(
-                'Quality: ' . $q . '. ' .
-                'Consider setting quality to "auto" instead. It is generally a better idea'
-            );
-        }
-        $this->calculatedQuality = $q;
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Convert;
-
-trait LoggerTrait
-{
-    
-    public function logLn($msg, $style = '')
-    {
-        $this->logger->logLn($msg, $style);
-    }
-
-    public function logLnLn($msg)
-    {
-        $this->logger->logLnLn($msg);
-    }
-
-    public function ln()
-    {
-        $this->logger->ln();
-    }
-
-    public function log($msg)
-    {
-        $this->logger->log($msg);
-    }
 }
 
 ?><?php
