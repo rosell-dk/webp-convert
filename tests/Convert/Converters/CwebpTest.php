@@ -39,27 +39,49 @@ class CwebpTest extends TestCase
         $cwebp = new Cwebp($source, $source . '.webp', [
             'quality' => 'auto',
             'method' => 3,
+            'command-line-options' => '-sharpness 5 -crop 10 10 40 40'
         ]);
         $cwebpExposer = new CwebpExposer($cwebp);
 
         $cwebpExposer->prepareOptions();
 
-        $commandLineOption = $cwebpExposer->createCommandLineOptions();
+        $commandLineOptions = $cwebpExposer->createCommandLineOptions();
         //$this->assertEquals('e', $commandLineOption); // use this to quickly see it...
 
         // Metadata is per default none
-        $this->assertRegExp('#-metadata none#', $commandLineOption);
+        $this->assertRegExp('#-metadata none#', $commandLineOptions);
 
         // We passed the method option and set it to 3
-        $this->assertRegExp('#-m 3#', $commandLineOption);
+        $this->assertRegExp('#-m 3#', $commandLineOptions);
 
         // There must be an output option, and it must be quoted
-        $this->assertRegExp('#-o \'#', $commandLineOption);
+        $this->assertRegExp('#-o \'#', $commandLineOptions);
 
         // There must be a quality option, and it must be digits
-        $this->assertRegExp('#-q \\d+#', $commandLineOption);
+        $this->assertRegExp('#-q \\d+#', $commandLineOptions);
+
+        // -sharpness '5'
+        $this->assertRegExp('#-sharpness \'5\'#', $commandLineOptions);
+
+        // Option with multiple values. Each are escapeshellarg'ed
+        $this->assertRegExp('#-crop \'10\' \'10\' \'40\' \'40\'#', $commandLineOptions);
+
     }
 
+/*
+    public function testCreateCommandLineOptions2()
+    {
+        $source = self::$imageDir . '/test.png';
+        $cwebp = new Cwebp($source, $source . '.webp', [
+            'quality' => 'auto',
+            'method' => 3,
+        ]);
+        $cwebpExposer = new CwebpExposer($cwebp);
+
+        $cwebpExposer->prepareOptions();
+
+        $commandLineOptions = $cwebpExposer->createCommandLineOptions();
+    }*/
 
   /*
     public function testCwebpDefaultPaths()
