@@ -5,6 +5,7 @@ namespace WebPConvert\Convert\Converters;
 use WebPConvert\Convert\BaseConverters\AbstractExecConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 
 class Cwebp extends AbstractExecConverter
 {
@@ -74,7 +75,7 @@ class Cwebp extends AbstractExecConverter
     ];
 
 
-    private static function executeBinary($binary, $commandOptions, $useNice, $logger)
+    private function executeBinary($binary, $commandOptions, $useNice)
     {
         $command = ($useNice ? 'nice ' : '') . $binary . ' ' . $commandOptions;
 
@@ -102,7 +103,7 @@ class Cwebp extends AbstractExecConverter
 
         // Size
         if (!is_null($options['size-in-percentage'])) {
-            $sizeSource =  @filesize($this->source);
+            $sizeSource =  filesize($this->source);
             if ($sizeSource !== false) {
                 $targetSize = floor($sizeSource * $options['size-in-percentage'] / 100);
             }
@@ -158,15 +159,26 @@ class Cwebp extends AbstractExecConverter
         // Output
         $commandOptionsArray[] = '-o ' . escapeshellarg($this->destination);
 
-
         // Redirect stderr to same place as stdout
         // https://www.brianstorti.com/understanding-shell-script-idiom-redirect/
         $commandOptionsArray[] = '2>&1';
 
         $commandOptions = implode(' ', $commandOptionsArray);
-        $this->logLn('cwebp options:' . $commandOptions);
+        $this->logLn('command line options:' . $commandOptions);
 
         return $commandOptions;
+    }
+
+    protected function checkOperationality()
+    {
+        $options = $this->options;
+        if (!$options['try-supplied-binary-for-os'] && !$options['try-common-system-paths']) {
+            throw new ConverterNotOperationalException(
+                'Configured to neither look for cweb binaries in common system locations, ' .
+                'nor to use one of the supplied precompiled binaries. But these are the only ways ' .
+                'this converter can convert images. No conversion can be made!'
+            );
+        }
     }
 
 
@@ -174,7 +186,7 @@ class Cwebp extends AbstractExecConverter
     {
         $errorMsg = '';
         $options = $this->options;
-        $useNice = (($options['use-nice']) && self::hasNiceSupport()) ? true : false;
+        $useNice = (($options['use-nice']) && self::hasNiceSupport());
 
         $commandOptions = $this->createCommandLineOptions();
 
@@ -195,17 +207,12 @@ class Cwebp extends AbstractExecConverter
         $failures = [];
         $failureCodes = [];
 
-        if (!$options['try-supplied-binary-for-os'] && !$options['try-common-system-paths']) {
-            $errorMsg .= 'Configured to neither look for cweb binaries in common system locations, ' .
-                'nor to use one of the supplied precompiled binaries. But these are the only ways ' .
-                'this converter can convert images. No conversion can be made!';
-        }
 
         $returnCode = 0;
         $majorFailCode = 0;
         if ($options['try-common-system-paths']) {
             foreach ($cwebpPathsToTest as $index => $binary) {
-                $returnCode = self::executeBinary($binary, $commandOptions, $useNice, $this);
+                $returnCode = $this->executeBinary($binary, $commandOptions, $useNice);
                 if ($returnCode == 0) {
                     $this->logLn('Successfully executed binary: ' . $binary);
                     $success = true;
@@ -273,7 +280,7 @@ class Cwebp extends AbstractExecConverter
                 $binaryFile = __DIR__ . '/' . $options['rel-path-to-precompiled-binaries'] . '/' . $file;
 
                 // The file should exist, but may have been removed manually.
-                if (@file_exists($binaryFile)) {
+                if (file_exists($binaryFile)) {
                     // File exists, now generate its hash
 
                     // hash_file() is normally available, but it is not always
@@ -293,7 +300,7 @@ class Cwebp extends AbstractExecConverter
                         }
                     }
                     if ($proceedAfterHashCheck) {
-                        $returnCode = self::executeBinary($binaryFile, $commandOptions, $useNice, $this);
+                        $returnCode = $this->executeBinary($binaryFile, $commandOptions, $useNice);
                         if ($returnCode == 0) {
                             $success = true;
                         } else {
@@ -337,13 +344,16 @@ class Cwebp extends AbstractExecConverter
 
         // cwebp sets file permissions to 664 but instead ..
         // .. $destination's parent folder's permissions should be used (except executable bits)
+        // (or perhaps the current umask instead? https://www.php.net/umask)
+
         if ($success) {
+
             $destinationParent = dirname($this->destination);
-            $fileStatistics = @stat($destinationParent);
+            $fileStatistics = stat($destinationParent);
             if ($fileStatistics !== false) {
                 // Apply same permissions as parent folder but strip off the executable bits
                 $permissions = $fileStatistics['mode'] & 0000666;
-                @chmod($this->destination, $permissions);
+                chmod($this->destination, $permissions);
             }
         }
 
