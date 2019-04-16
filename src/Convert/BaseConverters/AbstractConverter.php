@@ -39,7 +39,6 @@ abstract class AbstractConverter
      *
      */
     abstract protected function doActualConvert();
-    abstract protected function getOptionDefinitionsExtra();
 
     /** @var string  The filename of the image to convert (complete path) */
     public $source;

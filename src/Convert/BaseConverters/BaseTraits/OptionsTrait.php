@@ -13,6 +13,9 @@ trait OptionsTrait
     /** @var array  Calculated conversion options (merge of default options and provided options)*/
     public $options;
 
+    // The concrete converters must supply this method...
+    abstract protected function getOptionDefinitionsExtra();
+
 
     public static $optionDefinitionsBasic = [
         ['quality', 'string|number', 'auto'],
