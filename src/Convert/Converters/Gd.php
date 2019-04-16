@@ -132,7 +132,7 @@ class Gd extends AbstractConverter
             $image = $dst;
             return true;
         } else {
-            $this->logLn('The necessary methods for converting color palette are not avalaible.');
+            // The necessary methods for converting color palette are not avalaible
             return false;
         }
     }
@@ -152,7 +152,7 @@ class Gd extends AbstractConverter
         if (function_exists('imagepalettetotruecolor')) {
             return imagepalettetotruecolor($image);
         } else {
-            $this->logLn('imagepalettetotruecolor() is not available on this system. Using custom implementation instead.');            
+            // imagepalettetotruecolor() is not available on this system. Using custom implementation instead
             return self::makeTrueColorUsingWorkaround($image);
         }
     }
