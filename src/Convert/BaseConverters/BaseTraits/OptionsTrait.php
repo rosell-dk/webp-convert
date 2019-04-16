@@ -28,7 +28,7 @@ trait OptionsTrait
     /**
      * Set logger
      *
-     * @param   array $options (optional)
+     * @param   array $providedOptions (optional)
      * @return  void
      */
     public function setProvidedOptions($providedOptions = [])
