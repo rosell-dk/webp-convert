@@ -87,7 +87,7 @@ trait OptionsTrait
                             );
                         }
                     } else {
-                        if (($optionValue < 0) | ($optionValue > 100)) {
+                        if (($optionValue < 0) || ($optionValue > 100)) {
                             throw new InvalidOptionTypeException(
                                 'Quality must be eithe "auto" or a number between 0-100. ' .
                                     'The number you provided (' . strval($optionValue) . ') is out of range.'
