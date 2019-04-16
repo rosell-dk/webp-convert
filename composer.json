@@ -9,7 +9,8 @@
       "@build",
       "@test",
       "@phpcs-all",
-      "@composer validate --no-check-all --strict"
+      "@composer validate --no-check-all --strict",
+      "@phpstan-global"
     ],
     "test": [
       "@test-wod-build",
