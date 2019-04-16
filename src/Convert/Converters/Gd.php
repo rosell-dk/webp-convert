@@ -95,7 +95,6 @@ class Gd extends AbstractConverter
         }
         if (self::functionsExist(['imagecreatetruecolor', 'imagealphablending', 'imagecolorallocatealpha',
                 'imagefilledrectangle', 'imagecopy', 'imagedestroy', 'imagesx', 'imagesy'])) {
-
             $dst = imagecreatetruecolor(imagesx($image), imagesy($image));
 
             if ($dst === false) {
