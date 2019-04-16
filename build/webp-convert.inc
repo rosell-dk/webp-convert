@@ -1687,9 +1687,68 @@ class Gd extends AbstractConverter
     }
 
     /**
+     * Try to convert image pallette to true color on older systems that does not have imagepalettetotruecolor().
+     *
+     * The aim is to function as imagepalettetotruecolor, but for older systems.
+     * So, if the image is already rgb, nothing will be done, and true will be returned
+     * PS: Got the workaround here: https://secure.php.net/manual/en/function.imagepalettetotruecolor.php
+     *
+     * @param  resource  $image
+     * @return boolean  TRUE if the convertion was complete, or if the source image already is a true color image,
+     *          otherwise FALSE is returned.
+     */
+    private static function makeTrueColorUsingWorkaround(&$image)
+    {
+        if (function_exists('imageistruecolor') && imageistruecolor($image)) {
+            return true;
+        }
+        if (self::functionsExist(['imagecreatetruecolor', 'imagealphablending', 'imagecolorallocatealpha',
+                'imagefilledrectangle', 'imagecopy', 'imagedestroy', 'imagesx', 'imagesy'])) {
+            $dst = imagecreatetruecolor(imagesx($image), imagesy($image));
+
+            if ($dst === false) {
+                return false;
+            }
+
+            //prevent blending with default black
+            if (imagealphablending($dst, false) === false) {
+                return false;
+            }
+
+             //change the RGB values if you need, but leave alpha at 127
+            $transparent = imagecolorallocatealpha($dst, 255, 255, 255, 127);
+
+            if ($transparent === false) {
+                return false;
+            }
+
+             //simpler than flood fill
+            if (imagefilledrectangle($dst, 0, 0, imagesx($image), imagesy($image), $transparent) === false) {
+                return false;
+            }
+
+            //restore default blending
+            if (imagealphablending($dst, true) === false) {
+                return false;
+            };
+
+            if (imagecopy($dst, $image, 0, 0, 0, 0, imagesx($image), imagesy($image)) === false) {
+                return false;
+            }
+            imagedestroy($image);
+
+            $image = $dst;
+            return true;
+        } else {
+            // The necessary methods for converting color palette are not avalaible
+            return false;
+        }
+    }
+
+    /**
      * Try to convert image pallette to true color.
      *
-     * Try to convert image pallette to true color. If imageistruecolor() exists, that is used (available from
+     * Try to convert image pallette to true color. If imagepalettetotruecolor() exists, that is used (available from
      * PHP >= 5.5.0). Otherwise using workaround found on the net.
      *
      * @param  resource  $image
@@ -1701,51 +1760,8 @@ class Gd extends AbstractConverter
         if (function_exists('imagepalettetotruecolor')) {
             return imagepalettetotruecolor($image);
         } else {
-            // Got the workaround here: https://secure.php.net/manual/en/function.imagepalettetotruecolor.php
-            if ((function_exists('imageistruecolor') && !imageistruecolor($image))
-                || !function_exists('imageistruecolor')
-            ) {
-                if (self::functionsExist(['imagecreatetruecolor', 'imagealphablending', 'imagecolorallocatealpha',
-                        'imagefilledrectangle', 'imagecopy', 'imagedestroy', 'imagesx', 'imagesy'])) {
-                    $dst = imagecreatetruecolor(imagesx($image), imagesy($image));
-
-                    if ($dst === false) {
-                        return false;
-                    }
-
-                    //prevent blending with default black
-                    if (imagealphablending($dst, false) === false) {
-                        return false;
-                    }
-
-                     //change the RGB values if you need, but leave alpha at 127
-                    $transparent = imagecolorallocatealpha($dst, 255, 255, 255, 127);
-
-                    if ($transparent === false) {
-                        return false;
-                    }
-
-                     //simpler than flood fill
-                    if (imagefilledrectangle($dst, 0, 0, imagesx($image), imagesy($image), $transparent) === false) {
-                        return false;
-                    }
-
-                    //restore default blending
-                    if (imagealphablending($dst, true) === false) {
-                        return false;
-                    };
-
-                    if (imagecopy($dst, $image, 0, 0, 0, 0, imagesx($image), imagesy($image)) === false) {
-                        return false;
-                    }
-                    imagedestroy($image);
-
-                    $image = $dst;
-                    return true;
-                }
-            } else {
-                return false;
-            }
+            // imagepalettetotruecolor() is not available on this system. Using custom implementation instead
+            return self::makeTrueColorUsingWorkaround($image);
         }
     }
 
@@ -1821,7 +1837,7 @@ class Gd extends AbstractConverter
             if (!$success) {
                 $this->logLn(
                     'Warning: FAILED converting color palette to true color. ' .
-                    'Continuing, but this does not look good.'
+                    'Continuing, but this does NOT look good.'
                 );
             }
         }
@@ -4086,7 +4102,7 @@ class ServeConverted extends ServeBase
                 break;
             case 'report-as-image':
                 // todo: handle if this fails
-                self::serveErrorMessageImage($title . '. ' . $description);
+                $this->serveErrorMessageImage($title . '. ' . $description);
                 break;
             case 'report':
                 echo '<h1>' . $title . '</h1>' . $description;
@@ -4133,7 +4149,6 @@ class ServeConverted extends ServeBase
                 return true;
             case 'fresh-conversion':
                 return $this->serveFreshlyConverted();
-                break;
             case 'critical-fail':
                 $this->criticalFail('Error', $this->whyServingThis);
                 return false;
