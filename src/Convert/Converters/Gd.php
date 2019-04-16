@@ -95,6 +95,7 @@ class Gd extends AbstractConverter
         }
         if (self::functionsExist(['imagecreatetruecolor', 'imagealphablending', 'imagecolorallocatealpha',
                 'imagefilledrectangle', 'imagecopy', 'imagedestroy', 'imagesx', 'imagesy'])) {
+
             $dst = imagecreatetruecolor(imagesx($image), imagesy($image));
 
             if ($dst === false) {
@@ -131,6 +132,7 @@ class Gd extends AbstractConverter
             $image = $dst;
             return true;
         } else {
+            $this->logLn('The necessary methods for converting color palette are not avalaible.');
             return false;
         }
     }
@@ -150,6 +152,7 @@ class Gd extends AbstractConverter
         if (function_exists('imagepalettetotruecolor')) {
             return imagepalettetotruecolor($image);
         } else {
+            $this->logLn('imagepalettetotruecolor() is not available on this system. Using custom implementation instead.');            
             return self::makeTrueColorUsingWorkaround($image);
         }
     }
@@ -226,7 +229,7 @@ class Gd extends AbstractConverter
             if (!$success) {
                 $this->logLn(
                     'Warning: FAILED converting color palette to true color. ' .
-                    'Continuing, but this does not look good.'
+                    'Continuing, but this does NOT look good.'
                 );
             }
         }
