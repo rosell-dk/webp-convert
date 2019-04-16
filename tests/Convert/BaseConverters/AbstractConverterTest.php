@@ -69,7 +69,7 @@ class AbstractCloudConverterTest extends TestCase
 
         $exposer = new AbstractConverterExposer($converter);
 
-        $exposer->prepareOptions();
+        //$exposer->prepareOptions();
 
         $mergedOptions = $exposer->getOptions();
 

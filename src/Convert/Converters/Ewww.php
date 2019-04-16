@@ -2,6 +2,7 @@
 
 namespace WebPConvert\Convert\Converters;
 
+use WebPConvert\Convert\ConvertOptionDefinition;
 use WebPConvert\Convert\BaseConverters\AbstractCloudCurlConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
@@ -9,15 +10,12 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Ewww extends AbstractCloudCurlConverter
 {
-    public static $extraOptions = [
-        [
-            'name' => 'key',
-            'type' => 'string',
-            'sensitive' => true,
-            'default' => '',
-            'required' => true
-        ],
-    ];
+    protected function getOptionDefinitionsExtra()
+    {
+        return [
+            ['key', 'string', '', true, true]
+        ];
+    }
 
     /**
      * Check operationality of Ewww converter.

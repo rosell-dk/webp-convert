@@ -11,8 +11,10 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Imagick extends AbstractConverter
 {
-    public static $extraOptions = [];
-
+    protected function getOptionDefinitionsExtra()
+    {
+        return [];
+    }
 
     /**
      * Check operationality of Imagick converter.

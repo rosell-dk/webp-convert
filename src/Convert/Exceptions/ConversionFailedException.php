@@ -20,6 +20,7 @@ use WebPConvert\Exceptions\WebPConvertException;
  *          InvalidInputException
  *              ConverterNotFoundException
  *              InvalidImageTypeException
+ *              InvalidOptionTypeException
  *              TargetNotFoundException
  *          UnhandledException
  */

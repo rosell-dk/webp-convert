@@ -42,10 +42,11 @@ class AbstractConverterExposer extends BaseExposer {
         return $this->bindDynamicFunctionToObjectAndCallIt($inject);
     }
 
+    /*
     public function prepareOptions()
     {
         $this->callPrivateFunction('prepareOptions', AbstractConverter::class);
-    }
+    }*/
 
     public function getOptions()
     {
@@ -54,7 +55,8 @@ class AbstractConverterExposer extends BaseExposer {
 
     public function getDefaultOptions()
     {
-        return $this->getPrivateStaticProperty('defaultOptions', AbstractConverter::class);
+        //return $this->getPrivateStaticProperty('defaultOptions', AbstractConverter::class);
+        return $this->callPrivateFunction('getDefaultOptions', AbstractConverter::class);
     }
 
 }

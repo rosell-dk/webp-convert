@@ -147,6 +147,7 @@ class Report
         <table>
             <tr><td><i>source:</i></td><td><?php echo $source ?></td></tr>
             <tr><td><i>destination:</i></td><td><?php echo $destination ?><td></tr>
+                <!--
             <tr>
                 <td><i>options:</i></td>
                 <td>
@@ -158,6 +159,7 @@ class Report
                     <?php //echo print_r(self::getPrintableOptions($options), true); ?>
                 </td>
             </tr>
+        -->
         </table>
         <br>
         <?php

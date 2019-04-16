@@ -43,7 +43,7 @@ class CwebpTest extends TestCase
         ]);
         $cwebpExposer = new CwebpExposer($cwebp);
 
-        $cwebpExposer->prepareOptions();
+        //$cwebpExposer->prepareOptions();
 
         $commandLineOptions = $cwebpExposer->createCommandLineOptions();
         //$this->assertEquals('e', $commandLineOption); // use this to quickly see it...

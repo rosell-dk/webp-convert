@@ -10,7 +10,10 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Gmagick extends AbstractConverter
 {
-    public static $extraOptions = [];
+    protected function getOptionDefinitionsExtra()
+    {
+        return [];
+    }
 
     /**
      * Check (general) operationality of Gmagick converter.

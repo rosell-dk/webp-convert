@@ -9,51 +9,17 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalExcep
 
 class Cwebp extends AbstractExecConverter
 {
-    public static $extraOptions = [
-        [
-            'name' => 'use-nice',
-            'type' => 'boolean',
-            'sensitive' => false,
-            'default' => false,
-            'required' => false
-        ],
-        // low-memory is defined for all, in ConverterHelper
-        [
-            'name' => 'try-common-system-paths',
-            'type' => 'boolean',
-            'sensitive' => false,
-            'default' => true,
-            'required' => false
-        ],
-        [
-            'name' => 'try-supplied-binary-for-os',
-            'type' => 'boolean',
-            'sensitive' => false,
-            'default' => true,
-            'required' => false
-        ],
-        [
-            'name' => 'size-in-percentage',
-            'type' => 'number',
-            'sensitive' => false,
-            'default' => null,
-            'required' => false
-        ],
-        [
-            'name' => 'command-line-options',
-            'type' => 'string',
-            'sensitive' => false,
-            'default' => '',
-            'required' => false
-        ],
-        [
-            'name' => 'rel-path-to-precompiled-binaries',
-            'type' => 'string',
-            'sensitive' => false,
-            'default' => './Binaries',
-            'required' => false
-        ],
-    ];
+    protected function getOptionDefinitionsExtra()
+    {
+        return [
+            ['use-nice', 'boolean', false],
+            ['try-common-system-paths', 'boolean', true],
+            ['try-supplied-binary-for-os', 'boolean', true],
+            ['size-in-percentage', 'number', null],
+            ['command-line-options', 'string', ''],
+            ['rel-path-to-precompiled-binaries', 'string', './Binaries'],
+        ];
+    }
 
     // System paths to look for cwebp binary
     private static $cwebpDefaultPaths = [
@@ -347,7 +313,6 @@ class Cwebp extends AbstractExecConverter
         // (or perhaps the current umask instead? https://www.php.net/umask)
 
         if ($success) {
-
             $destinationParent = dirname($this->destination);
             $fileStatistics = stat($destinationParent);
             if ($fileStatistics !== false) {

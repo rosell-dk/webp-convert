@@ -13,7 +13,10 @@ class Gd extends AbstractConverter
     private $errorMessageWhileCreating = '';
     private $errorNumberWhileCreating;
 
-    public static $extraOptions = [];
+    protected function getOptionDefinitionsExtra()
+    {
+        return [];
+    }
 
     /**
      * Check (general) operationality of Gd converter.

@@ -12,7 +12,10 @@ use WebPConvert\Convert\BaseConverters\AbstractConverter;
  */
 class ExposedConverter extends AbstractConverter {
 
-    public static $extraOptions = [];
+    protected function getOptionDefinitionsExtra()
+    {
+        return [];
+    }
 
     public function doActualConvert()
     {

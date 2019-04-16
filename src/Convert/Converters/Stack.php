@@ -15,30 +15,12 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
 
 class Stack extends AbstractConverter
 {
-    public static $extraOptions = [
-        [
-            'name' => 'converters',
-            'type' => 'array',
-            'sensitive' => true,
-            'default' => ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'],
-            'required' => false
-        ],
-        /*
-        [
-            'name' => 'skip-pngs',
-            'type' => 'boolean',
-            'sensitive' => false,
-            'default' => false,
-            'required' => false
-        ],*/
-        /*[
-            'name' => 'quality',
-            'type' => 'quality',
-            'sensitive' => false,
-            'default' => 'auto',
-            'required' => false
-        ],*/
-    ];
+    protected function getOptionDefinitionsExtra()
+    {
+        return [
+            ['converters', 'array', ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'], true],
+        ];
+    }
 
     public static $availableConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'wpc', 'ewww'];
     public static $localConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'];

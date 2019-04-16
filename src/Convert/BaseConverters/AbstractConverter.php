@@ -16,6 +16,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundE
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\BaseConverters\BaseTraits\AutoQualityTrait;
 use WebPConvert\Convert\BaseConverters\BaseTraits\LoggerTrait;
+use WebPConvert\Convert\BaseConverters\BaseTraits\OptionsTrait;
 use WebPConvert\Loggers\BaseLogger;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
@@ -24,6 +25,7 @@ abstract class AbstractConverter
 {
     use AutoQualityTrait;
     use LoggerTrait;
+    use OptionsTrait;
 
     /**
      * The actual conversion must be done by a concrete class.
@@ -37,10 +39,7 @@ abstract class AbstractConverter
      *
      */
     abstract protected function doActualConvert();
-
-    // The following must be defined in all actual converters.
-    // Unfortunately properties cannot be declared abstract. TODO: We need to change to using method instead.
-    public static $extraOptions;
+    abstract protected function getOptionDefinitionsExtra();
 
     /** @var string  The filename of the image to convert (complete path) */
     public $source;
@@ -48,22 +47,9 @@ abstract class AbstractConverter
     /** @var string  Where to save the webp (complete path) */
     public $destination;
 
-    /** @var array  Conversion options */
-    public $options;
-    
     public $beginTime;
     public $sourceMimeType;
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
-    public static $defaultOptions = [
-        'quality' => 'auto',
-        'max-quality' => 85,
-        'default-quality' => 75,
-        'metadata' => 'none',
-        'method' => 6,
-        'low-memory' => false,
-        'lossless' => false,
-        'skip-pngs' => false,
-    ];
 
     /**
      * Check basis operationality
@@ -101,9 +87,9 @@ abstract class AbstractConverter
     {
         $this->source = $source;
         $this->destination = $destination;
-        $this->options = $options;
 
         $this->setLogger($logger);
+        $this->setProvidedOptions($options);
     }
 
     /**
@@ -192,7 +178,9 @@ abstract class AbstractConverter
 
         try {
             // Prepare options
-            $this->prepareOptions();
+            //$this->prepareOptions();
+
+            $this->checkOptions();
 
             // Prepare destination folder
             $this->createWritableDestinationFolder();
@@ -218,7 +206,8 @@ abstract class AbstractConverter
         } catch (\Error $e) {
             restore_error_handler();
             // https://stackoverflow.com/questions/7116995/is-it-possible-in-php-to-prevent-fatal-error-call-to-undefined-function
-            throw new UnhandledException('Conversion failed due to uncaught error', 0, $e);
+            //throw new UnhandledException('Conversion failed due to uncaught error', 0, $e);
+            throw $e;
         }
         restore_error_handler();
 
@@ -307,38 +296,6 @@ abstract class AbstractConverter
         } elseif (!in_array($fileMimeType, self::$allowedMimeTypes)) {
             throw new InvalidImageTypeException('Unsupported mime type: ' . $fileMimeType);
         }
-    }
-
-    /**
-     * Prepare options.
-     */
-    private function prepareOptions()
-    {
-        $defaultOptions = self::$defaultOptions;
-
-        // -  Merge defaults of the converters extra options into the standard default options.
-        $defaultOptions = array_merge($defaultOptions, array_column(static::$extraOptions, 'default', 'name'));
-
-        //throw new \Exception('extra!' . print_r($this->getConverterDisplayName(), true));
-
-        // -  Merge $defaultOptions into provided options
-        $this->options = array_merge($defaultOptions, $this->options);
-
-        if ($this->getMimeTypeOfSource() == 'png') {
-            // skip png's ?
-            if ($this->options['skip-pngs']) {
-                throw new ConversionDeclinedException(
-                    'PNG file skipped (configured to do so)'
-                );
-            }
-
-            // Force lossless option to true for PNG images
-            $this->options['lossless'] = true;
-        }
-
-
-        // TODO: Here we could test if quality is 0-100 or auto.
-        //       and if not, throw something extending InvalidArgumentException (which is a LogicException)
     }
 
     private function checkFileSystem()

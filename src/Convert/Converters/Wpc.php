@@ -9,60 +9,16 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Wpc extends AbstractCloudCurlConverter
 {
-    public static $extraOptions = [
-        [
-            'name' => 'api-version',        /* Can currently be 0 or 1 */
-            'type' => 'number',
-            'sensitive' => false,
-            'default' => 0,
-            'required' => false
-        ],
-        [
-            'name' => 'secret',        /* only in api v.0 */
-            'type' => 'string',
-            'sensitive' => true,
-            'default' => 'my dog is white',
-            'required' => false
-        ],
-        [
-            'name' => 'api-key',        /* new in api v.1 (renamed 'secret' to 'api-key') */
-            'type' => 'string',
-            'sensitive' => true,
-            'default' => 'my dog is white',
-            'required' => false
-        ],
-        [
-            'name' => 'url',
-            'type' => 'string',
-            'sensitive' => true,
-            'default' => '',
-            'required' => true
-        ],
-        [
-            'name' => 'crypt-api-key-in-transfer',  /* new in api v.1 */
-            'type' => 'boolean',
-            'sensitive' => false,
-            'default' => false,
-            'required' => false
-        ],
-
-        /*
-        [
-            'name' => 'web-services',
-            'type' => 'array',
-            'sensitive' => true,
-            'default' => [
-                [
-                    'label' => 'test',
-                    'api-key' => 'my dog is white',
-                    'url' => 'http://we0/wordpress/webp-express-server',
-                    'crypt-api-key-in-transfer' => true
-                ]
-            ],
-            'required' => true
-        ],
-        */
-    ];
+    protected function getOptionDefinitionsExtra()
+    {
+        return [
+            ['api-version', 'number', 0],                     /* Can currently be 0 or 1 */
+            ['secret', 'string', 'my dog is white', true],    /* only in api v.0 */
+            ['api-key', 'string', 'my dog is white', true],   /* new in api v.1 (renamed 'secret' to 'api-key') */
+            ['url', 'string', '', true, true],
+            ['crypt-api-key-in-transfer', 'boolean', false],  /* new in api v.1 */
+        ];
+    }
 
     private static function createRandomSaltForBlowfish()
     {

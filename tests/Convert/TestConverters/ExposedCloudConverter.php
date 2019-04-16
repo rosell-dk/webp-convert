@@ -12,7 +12,10 @@ use WebPConvert\Convert\BaseConverters\AbstractCloudConverter;
  */
 class ExposedCloudConverter extends AbstractCloudConverter {
 
-    public static $extraOptions = [];
+    protected function getOptionDefinitionsExtra()
+    {
+        return [];
+    }
 
     public function doActualConvert()
     {

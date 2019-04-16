@@ -13,15 +13,12 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 // https://github.com/Orbitale/ImageMagickPHP
 class ImagickBinary extends AbstractExecConverter
 {
-    public static $extraOptions = [
-        [
-            'name' => 'use-nice',
-            'type' => 'boolean',
-            'sensitive' => false,
-            'default' => true,
-            'required' => false
-        ],
-    ];
+    protected function getOptionDefinitionsExtra()
+    {
+        return [
+            ['use-nice', 'boolean', false],
+        ];
+    }
 
     public static function imagickInstalled()
     {

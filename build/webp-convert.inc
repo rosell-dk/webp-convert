@@ -17,6 +17,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundE
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\BaseConverters\BaseTraits\AutoQualityTrait;
 use WebPConvert\Convert\BaseConverters\BaseTraits\LoggerTrait;
+use WebPConvert\Convert\BaseConverters\BaseTraits\OptionsTrait;
 use WebPConvert\Loggers\BaseLogger;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
@@ -25,6 +26,7 @@ abstract class AbstractConverter
 {
     use AutoQualityTrait;
     use LoggerTrait;
+    use OptionsTrait;
 
     /**
      * The actual conversion must be done by a concrete class.
@@ -38,10 +40,7 @@ abstract class AbstractConverter
      *
      */
     abstract protected function doActualConvert();
-
-    // The following must be defined in all actual converters.
-    // Unfortunately properties cannot be declared abstract. TODO: We need to change to using method instead.
-    public static $extraOptions;
+    abstract protected function getOptionDefinitionsExtra();
 
     /** @var string  The filename of the image to convert (complete path) */
     public $source;
@@ -49,22 +48,9 @@ abstract class AbstractConverter
     /** @var string  Where to save the webp (complete path) */
     public $destination;
 
-    /** @var array  Conversion options */
-    public $options;
-    
     public $beginTime;
     public $sourceMimeType;
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
-    public static $defaultOptions = [
-        'quality' => 'auto',
-        'max-quality' => 85,
-        'default-quality' => 75,
-        'metadata' => 'none',
-        'method' => 6,
-        'low-memory' => false,
-        'lossless' => false,
-        'skip-pngs' => false,
-    ];
 
     /**
      * Check basis operationality
@@ -102,9 +88,9 @@ abstract class AbstractConverter
     {
         $this->source = $source;
         $this->destination = $destination;
-        $this->options = $options;
 
         $this->setLogger($logger);
+        $this->setProvidedOptions($options);
     }
 
     /**
@@ -193,7 +179,9 @@ abstract class AbstractConverter
 
         try {
             // Prepare options
-            $this->prepareOptions();
+            //$this->prepareOptions();
+
+            $this->checkOptions();
 
             // Prepare destination folder
             $this->createWritableDestinationFolder();
@@ -219,7 +207,8 @@ abstract class AbstractConverter
         } catch (\Error $e) {
             restore_error_handler();
             // https://stackoverflow.com/questions/7116995/is-it-possible-in-php-to-prevent-fatal-error-call-to-undefined-function
-            throw new UnhandledException('Conversion failed due to uncaught error', 0, $e);
+            //throw new UnhandledException('Conversion failed due to uncaught error', 0, $e);
+            throw $e;
         }
         restore_error_handler();
 
@@ -308,38 +297,6 @@ abstract class AbstractConverter
         } elseif (!in_array($fileMimeType, self::$allowedMimeTypes)) {
             throw new InvalidImageTypeException('Unsupported mime type: ' . $fileMimeType);
         }
-    }
-
-    /**
-     * Prepare options.
-     */
-    private function prepareOptions()
-    {
-        $defaultOptions = self::$defaultOptions;
-
-        // -  Merge defaults of the converters extra options into the standard default options.
-        $defaultOptions = array_merge($defaultOptions, array_column(static::$extraOptions, 'default', 'name'));
-
-        //throw new \Exception('extra!' . print_r($this->getConverterDisplayName(), true));
-
-        // -  Merge $defaultOptions into provided options
-        $this->options = array_merge($defaultOptions, $this->options);
-
-        if ($this->getMimeTypeOfSource() == 'png') {
-            // skip png's ?
-            if ($this->options['skip-pngs']) {
-                throw new ConversionDeclinedException(
-                    'PNG file skipped (configured to do so)'
-                );
-            }
-
-            // Force lossless option to true for PNG images
-            $this->options['lossless'] = true;
-        }
-
-
-        // TODO: Here we could test if quality is 0-100 or auto.
-        //       and if not, throw something extending InvalidArgumentException (which is a LogicException)
     }
 
     private function checkFileSystem()
@@ -733,59 +690,317 @@ class WebPConvert
 
 ?><?php
 
+namespace WebPConvert\Convert\BaseConverters\BaseTraits;
+
+use WebPConvert\Helpers\JpegQualityDetector;
+
+trait AutoQualityTrait
+{
+
+    private $processed = false;
+    private $qualityCouldNotBeDetected = false;
+    private $calculatedQuality;
+
+    abstract public function getMimeTypeOfSource();
+
+    /**
+     *  Determine if quality detection is required but failing.
+     *
+     *  It is considered "required" when:
+     *  - Mime type is "image/jpeg"
+     *  - Quality is set to "auto"
+     *
+     *  @return  boolean
+     */
+    public function isQualityDetectionRequiredButFailing()
+    {
+        $this->processQualityOptionIfNotAlready();
+        return $this->qualityCouldNotBeDetected;
+    }
+
+    /**
+     *  Get calculated quality.
+     *
+     *  If mime type is something else than "image/jpeg", the "default-quality" option is returned
+     *  Same thing for jpeg, when the "quality" option is set to a number (rather than "auto").
+     *
+     *  Otherwise:
+     *  If quality cannot be detetected, the "default-quality" option is returned.
+     *  If quality can be detetected, the lowest value of this and the "max-quality" option is returned
+     *
+     *  @return  int
+     */
+    public function getCalculatedQuality()
+    {
+        $this->processQualityOptionIfNotAlready();
+        return $this->calculatedQuality;
+    }
+
+    /**
+     * @return void
+     */
+    private function processQualityOptionIfNotAlready()
+    {
+        if (!$this->processed) {
+            $this->processed = true;
+            $this->processQualityOption();
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function processQualityOption()
+    {
+        $options = $this->options;
+        $logger = $this->logger;
+        $source = $this->source;
+
+        $q = $options['quality'];
+        if ($q == 'auto') {
+            if (($this->getMimeTypeOfSource() == 'image/jpeg')) {
+                $q = JpegQualityDetector::detectQualityOfJpg($source);
+                if (is_null($q)) {
+                    $q = $options['default-quality'];
+                    $logger->logLn(
+                        'Quality of source could not be established (Imagick or GraphicsMagick is required)' .
+                        ' - Using default instead (' . $options['default-quality'] . ').'
+                    );
+
+                    $this->qualityCouldNotBeDetected = true;
+                } else {
+                    if ($q > $options['max-quality']) {
+                        $logger->logLn(
+                            'Quality of source is ' . $q . '. ' .
+                            'This is higher than max-quality, so using max-quality instead (' .
+                                $options['max-quality'] . ')'
+                        );
+                    } else {
+                        $logger->logLn('Quality set to same as source: ' . $q);
+                    }
+                }
+                $q = min($q, $options['max-quality']);
+            } else {
+                $q = $options['default-quality'];
+                $logger->logLn('Quality: ' . $q . '. ');
+            }
+        } else {
+            $logger->logLn(
+                'Quality: ' . $q . '. ' .
+                'Consider setting quality to "auto" instead. It is generally a better idea'
+            );
+        }
+        $this->calculatedQuality = $q;
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\BaseConverters\BaseTraits;
+
+trait LoggerTrait
+{
+
+    public $logger;
+
+    /**
+     * Set logger
+     *
+     * @param   \WebPConvert\Loggers\BaseLogger $logger (optional)  $logger
+     * @return  void
+     */
+    public function setLogger($logger = null)
+    {
+        if (!isset($logger)) {
+            $logger = new \WebPConvert\Loggers\VoidLogger();
+        }
+        $this->logger = $logger;
+    }
+
+    public function logLn($msg, $style = '')
+    {
+        $this->logger->logLn($msg, $style);
+    }
+
+    public function logLnLn($msg)
+    {
+        $this->logger->logLnLn($msg);
+    }
+
+    public function ln()
+    {
+        $this->logger->ln();
+    }
+
+    public function log($msg)
+    {
+        $this->logger->log($msg);
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\BaseConverters\BaseTraits;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidOptionTypeException;
+
+trait OptionsTrait
+{
+
+    /** @var array  Provided conversion options */
+    public $providedOptions;
+
+    /** @var array  Calculated conversion options (merge of default options and provided options)*/
+    public $options;
+
+
+    public static $optionDefinitionsBasic = [
+        ['quality', 'string|number', 'auto'],
+        ['max-quality', 'number', 85],
+        ['default-quality', 'number', 75],
+        ['metadata', 'string', 'none'],
+        ['method', 'number', 6],
+        ['low-memory', 'boolean', false],
+        ['lossless', 'boolean', false],
+        ['skip-pngs', 'boolean', false],
+    ];
+
+    /**
+     * Set logger
+     *
+     * @param   array $options (optional)
+     * @return  void
+     */
+    public function setProvidedOptions($providedOptions = [])
+    {
+        $this->providedOptions = $providedOptions;
+
+        // -  Merge $defaultOptions into provided options
+        $this->options = array_merge($this->getDefaultOptions(), $this->providedOptions);
+    }
+
+
+    public function getAllOptionDefinitions()
+    {
+        return array_merge(self::$optionDefinitionsBasic, $this->getOptionDefinitionsExtra());
+    }
+
+    public function getDefaultOptions()
+    {
+        $defaults = [];
+        foreach ($this->getAllOptionDefinitions() as list($name, $type, $default)) {
+            $defaults[$name] = $default;
+        }
+        return $defaults;
+    }
+
+    protected function checkOptions()
+    {
+        foreach ($this->getAllOptionDefinitions() as $def) {
+            list($optionName, $optionType) = $def;
+
+            if (isset($this->providedOptions[$optionName])) {
+                //$this->logLn($optionName);
+
+                $actualType = gettype($this->providedOptions[$optionName]);
+                if ($actualType != $optionType) {
+                    $optionType = str_replace('number', 'integer|double', $optionType);
+                    if (!in_array($actualType, explode('|', $optionType))) {
+                        throw new InvalidOptionTypeException(
+                            'The provided ' . $optionName . ' option is not a ' . $optionType .
+                                ' (it is a ' . $actualType . ')'
+                        );
+                    }
+                }
+
+                $optionValue = $this->providedOptions[$optionName];
+
+                if ($optionName == 'quality') {
+                    if ($actualType == 'string') {
+                        if ($optionValue != 'auto') {
+                            throw new InvalidOptionTypeException(
+                                'Quality must be eithe "auto" or a number between 0-100. ' .
+                                'A string, "' . $optionValue . '" was given'
+                            );
+                        }
+                    } else {
+                        if (($optionValue < 0) | ($optionValue > 100)) {
+                            throw new InvalidOptionTypeException(
+                                'Quality must be eithe "auto" or a number between 0-100. ' .
+                                    'The number you provided (' . strval($optionValue) . ') is out of range.'
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Prepare options.
+     */
+     /*
+    private function prepareOptions()
+    {
+        //$defaultOptions = self::$defaultOptions;
+
+        // -  Merge defaults of the converters extra options into the standard default options.
+        //$defaultOptions = array_merge($defaultOptions, array_column(static::$extraOptions, 'default', 'name'));
+        //print_r($this->getOptionDefinitionsExtra());
+        //$extra = [];
+        //$this->getDefaultOptionsExtra();
+        //echo '<br>';
+        //print_r(static::$extraOptions);
+        //print_r(array_column(static::$extraOptions, 'default', 'name'));
+        //$defaultOptions = array_merge($defaultOptions, $this->getDefaultOptionsExtra());
+
+
+        //throw new \Exception('extra!' . print_r($this->getConverterDisplayName(), true));
+
+        // -  Merge $defaultOptions into provided options
+        //$this->options = array_merge($defaultOptions, $this->options);
+        //$this->options = array_merge($this->getDefaultOptions(), $providedOptions);
+
+        if ($this->getMimeTypeOfSource() == 'png') {
+            // skip png's ?
+            if ($this->options['skip-pngs']) {
+                throw new ConversionDeclinedException(
+                    'PNG file skipped (configured to do so)'
+                );
+            }
+
+            // Force lossless option to true for PNG images
+            $this->options['lossless'] = true;
+        }
+
+
+        // TODO: Here we could test if quality is 0-100 or auto.
+        //       and if not, throw something extending InvalidArgumentException (which is a LogicException)
+    }*/
+}
+
+?><?php
+
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\BaseConverters\AbstractExecConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 
 class Cwebp extends AbstractExecConverter
 {
-    public static $extraOptions = [
-        [
-            'name' => 'use-nice',
-            'type' => 'boolean',
-            'sensitive' => false,
-            'default' => false,
-            'required' => false
-        ],
-        // low-memory is defined for all, in ConverterHelper
-        [
-            'name' => 'try-common-system-paths',
-            'type' => 'boolean',
-            'sensitive' => false,
-            'default' => true,
-            'required' => false
-        ],
-        [
-            'name' => 'try-supplied-binary-for-os',
-            'type' => 'boolean',
-            'sensitive' => false,
-            'default' => true,
-            'required' => false
-        ],
-        [
-            'name' => 'size-in-percentage',
-            'type' => 'number',
-            'sensitive' => false,
-            'default' => null,
-            'required' => false
-        ],
-        [
-            'name' => 'command-line-options',
-            'type' => 'string',
-            'sensitive' => false,
-            'default' => '',
-            'required' => false
-        ],
-        [
-            'name' => 'rel-path-to-precompiled-binaries',
-            'type' => 'string',
-            'sensitive' => false,
-            'default' => './Binaries',
-            'required' => false
-        ],
-    ];
+    protected function getOptionDefinitionsExtra()
+    {
+        return [
+            ['use-nice', 'boolean', false],
+            ['try-common-system-paths', 'boolean', true],
+            ['try-supplied-binary-for-os', 'boolean', true],
+            ['size-in-percentage', 'number', null],
+            ['command-line-options', 'string', ''],
+            ['rel-path-to-precompiled-binaries', 'string', './Binaries'],
+        ];
+    }
 
     // System paths to look for cwebp binary
     private static $cwebpDefaultPaths = [
@@ -807,7 +1022,7 @@ class Cwebp extends AbstractExecConverter
     ];
 
 
-    private static function executeBinary($binary, $commandOptions, $useNice, $logger)
+    private function executeBinary($binary, $commandOptions, $useNice)
     {
         $command = ($useNice ? 'nice ' : '') . $binary . ' ' . $commandOptions;
 
@@ -835,7 +1050,7 @@ class Cwebp extends AbstractExecConverter
 
         // Size
         if (!is_null($options['size-in-percentage'])) {
-            $sizeSource =  @filesize($this->source);
+            $sizeSource =  filesize($this->source);
             if ($sizeSource !== false) {
                 $targetSize = floor($sizeSource * $options['size-in-percentage'] / 100);
             }
@@ -891,15 +1106,26 @@ class Cwebp extends AbstractExecConverter
         // Output
         $commandOptionsArray[] = '-o ' . escapeshellarg($this->destination);
 
-
         // Redirect stderr to same place as stdout
         // https://www.brianstorti.com/understanding-shell-script-idiom-redirect/
         $commandOptionsArray[] = '2>&1';
 
         $commandOptions = implode(' ', $commandOptionsArray);
-        $this->logLn('cwebp options:' . $commandOptions);
+        $this->logLn('command line options:' . $commandOptions);
 
         return $commandOptions;
+    }
+
+    protected function checkOperationality()
+    {
+        $options = $this->options;
+        if (!$options['try-supplied-binary-for-os'] && !$options['try-common-system-paths']) {
+            throw new ConverterNotOperationalException(
+                'Configured to neither look for cweb binaries in common system locations, ' .
+                'nor to use one of the supplied precompiled binaries. But these are the only ways ' .
+                'this converter can convert images. No conversion can be made!'
+            );
+        }
     }
 
 
@@ -907,7 +1133,7 @@ class Cwebp extends AbstractExecConverter
     {
         $errorMsg = '';
         $options = $this->options;
-        $useNice = (($options['use-nice']) && self::hasNiceSupport()) ? true : false;
+        $useNice = (($options['use-nice']) && self::hasNiceSupport());
 
         $commandOptions = $this->createCommandLineOptions();
 
@@ -928,17 +1154,12 @@ class Cwebp extends AbstractExecConverter
         $failures = [];
         $failureCodes = [];
 
-        if (!$options['try-supplied-binary-for-os'] && !$options['try-common-system-paths']) {
-            $errorMsg .= 'Configured to neither look for cweb binaries in common system locations, ' .
-                'nor to use one of the supplied precompiled binaries. But these are the only ways ' .
-                'this converter can convert images. No conversion can be made!';
-        }
 
         $returnCode = 0;
         $majorFailCode = 0;
         if ($options['try-common-system-paths']) {
             foreach ($cwebpPathsToTest as $index => $binary) {
-                $returnCode = self::executeBinary($binary, $commandOptions, $useNice, $this);
+                $returnCode = $this->executeBinary($binary, $commandOptions, $useNice);
                 if ($returnCode == 0) {
                     $this->logLn('Successfully executed binary: ' . $binary);
                     $success = true;
@@ -1006,7 +1227,7 @@ class Cwebp extends AbstractExecConverter
                 $binaryFile = __DIR__ . '/' . $options['rel-path-to-precompiled-binaries'] . '/' . $file;
 
                 // The file should exist, but may have been removed manually.
-                if (@file_exists($binaryFile)) {
+                if (file_exists($binaryFile)) {
                     // File exists, now generate its hash
 
                     // hash_file() is normally available, but it is not always
@@ -1026,7 +1247,7 @@ class Cwebp extends AbstractExecConverter
                         }
                     }
                     if ($proceedAfterHashCheck) {
-                        $returnCode = self::executeBinary($binaryFile, $commandOptions, $useNice, $this);
+                        $returnCode = $this->executeBinary($binaryFile, $commandOptions, $useNice);
                         if ($returnCode == 0) {
                             $success = true;
                         } else {
@@ -1070,13 +1291,15 @@ class Cwebp extends AbstractExecConverter
 
         // cwebp sets file permissions to 664 but instead ..
         // .. $destination's parent folder's permissions should be used (except executable bits)
+        // (or perhaps the current umask instead? https://www.php.net/umask)
+
         if ($success) {
             $destinationParent = dirname($this->destination);
-            $fileStatistics = @stat($destinationParent);
+            $fileStatistics = stat($destinationParent);
             if ($fileStatistics !== false) {
                 // Apply same permissions as parent folder but strip off the executable bits
                 $permissions = $fileStatistics['mode'] & 0000666;
-                @chmod($this->destination, $permissions);
+                chmod($this->destination, $permissions);
             }
         }
 
@@ -1090,6 +1313,7 @@ class Cwebp extends AbstractExecConverter
 
 namespace WebPConvert\Convert\Converters;
 
+use WebPConvert\Convert\ConvertOptionDefinition;
 use WebPConvert\Convert\BaseConverters\AbstractCloudCurlConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
@@ -1097,15 +1321,12 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Ewww extends AbstractCloudCurlConverter
 {
-    public static $extraOptions = [
-        [
-            'name' => 'key',
-            'type' => 'string',
-            'sensitive' => true,
-            'default' => '',
-            'required' => true
-        ],
-    ];
+    protected function getOptionDefinitionsExtra()
+    {
+        return [
+            ['key', 'string', '', true, true]
+        ];
+    }
 
     /**
      * Check operationality of Ewww converter.
@@ -1399,7 +1620,10 @@ class Gd extends AbstractConverter
     private $errorMessageWhileCreating = '';
     private $errorNumberWhileCreating;
 
-    public static $extraOptions = [];
+    protected function getOptionDefinitionsExtra()
+    {
+        return [];
+    }
 
     /**
      * Check (general) operationality of Gd converter.
@@ -1606,7 +1830,7 @@ class Gd extends AbstractConverter
      * @param  resource  $image
      * @return void
      */
-    protected function trySettingAlphaBlending()
+    protected function trySettingAlphaBlending($image)
     {
         if (function_exists('imagealphablending')) {
             if (!imagealphablending($image, true)) {
@@ -1671,7 +1895,7 @@ class Gd extends AbstractConverter
         ob_start();
         $success = imagewebp($image);
         if (!$success) {
-            $this->destroyAndRemove();
+            $this->destroyAndRemove($image);
             ob_end_clean();
             restore_error_handler();
             throw new ConversionFailedException(
@@ -1702,7 +1926,7 @@ class Gd extends AbstractConverter
                     $this->logLn('An notice was produced during conversion: ' . $this->errorMessageWhileCreating);
                     break;
                 default:
-                    $this->destroyAndRemove();
+                    $this->destroyAndRemove($image);
                     throw new ConversionFailedException(
                         'An error was produced during conversion',
                         $this->errorMessageWhileCreating
@@ -1721,7 +1945,7 @@ class Gd extends AbstractConverter
         $success = file_put_contents($this->destination, $output);
 
         if (!$success) {
-            $this->destroyAndRemove();
+            $this->destroyAndRemove($image);
             throw new ConversionFailedException(
                 'Gd failed when trying to save the image. Check file permissions!'
             );
@@ -1802,7 +2026,10 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Gmagick extends AbstractConverter
 {
-    public static $extraOptions = [];
+    protected function getOptionDefinitionsExtra()
+    {
+        return [];
+    }
 
     /**
      * Check (general) operationality of Gmagick converter.
@@ -1947,8 +2174,10 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Imagick extends AbstractConverter
 {
-    public static $extraOptions = [];
-
+    protected function getOptionDefinitionsExtra()
+    {
+        return [];
+    }
 
     /**
      * Check operationality of Imagick converter.
@@ -2116,15 +2345,12 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 // https://github.com/Orbitale/ImageMagickPHP
 class ImagickBinary extends AbstractExecConverter
 {
-    public static $extraOptions = [
-        [
-            'name' => 'use-nice',
-            'type' => 'boolean',
-            'sensitive' => false,
-            'default' => true,
-            'required' => false
-        ],
-    ];
+    protected function getOptionDefinitionsExtra()
+    {
+        return [
+            ['use-nice', 'boolean', false],
+        ];
+    }
 
     public static function imagickInstalled()
     {
@@ -2223,30 +2449,12 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
 
 class Stack extends AbstractConverter
 {
-    public static $extraOptions = [
-        [
-            'name' => 'converters',
-            'type' => 'array',
-            'sensitive' => true,
-            'default' => ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'],
-            'required' => false
-        ],
-        /*
-        [
-            'name' => 'skip-pngs',
-            'type' => 'boolean',
-            'sensitive' => false,
-            'default' => false,
-            'required' => false
-        ],*/
-        /*[
-            'name' => 'quality',
-            'type' => 'quality',
-            'sensitive' => false,
-            'default' => 'auto',
-            'required' => false
-        ],*/
-    ];
+    protected function getOptionDefinitionsExtra()
+    {
+        return [
+            ['converters', 'array', ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'], true],
+        ];
+    }
 
     public static $availableConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'wpc', 'ewww'];
     public static $localConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'];
@@ -2428,60 +2636,16 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Wpc extends AbstractCloudCurlConverter
 {
-    public static $extraOptions = [
-        [
-            'name' => 'api-version',        /* Can currently be 0 or 1 */
-            'type' => 'number',
-            'sensitive' => false,
-            'default' => 0,
-            'required' => false
-        ],
-        [
-            'name' => 'secret',        /* only in api v.0 */
-            'type' => 'string',
-            'sensitive' => true,
-            'default' => 'my dog is white',
-            'required' => false
-        ],
-        [
-            'name' => 'api-key',        /* new in api v.1 (renamed 'secret' to 'api-key') */
-            'type' => 'string',
-            'sensitive' => true,
-            'default' => 'my dog is white',
-            'required' => false
-        ],
-        [
-            'name' => 'url',
-            'type' => 'string',
-            'sensitive' => true,
-            'default' => '',
-            'required' => true
-        ],
-        [
-            'name' => 'crypt-api-key-in-transfer',  /* new in api v.1 */
-            'type' => 'boolean',
-            'sensitive' => false,
-            'default' => false,
-            'required' => false
-        ],
-
-        /*
-        [
-            'name' => 'web-services',
-            'type' => 'array',
-            'sensitive' => true,
-            'default' => [
-                [
-                    'label' => 'test',
-                    'api-key' => 'my dog is white',
-                    'url' => 'http://we0/wordpress/webp-express-server',
-                    'crypt-api-key-in-transfer' => true
-                ]
-            ],
-            'required' => true
-        ],
-        */
-    ];
+    protected function getOptionDefinitionsExtra()
+    {
+        return [
+            ['api-version', 'number', 0],                     /* Can currently be 0 or 1 */
+            ['secret', 'string', 'my dog is white', true],    /* only in api v.0 */
+            ['api-key', 'string', 'my dog is white', true],   /* new in api v.1 (renamed 'secret' to 'api-key') */
+            ['url', 'string', '', true, true],
+            ['crypt-api-key-in-transfer', 'boolean', false],  /* new in api v.1 */
+        ];
+    }
 
     private static function createRandomSaltForBlowfish()
     {
@@ -2833,6 +2997,17 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInputException;
 class InvalidImageTypeException extends InvalidInputException
 {
     public $description = 'The converter does not handle the supplied image type';
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInputException;
+
+class InvalidOptionTypeException extends InvalidInputException
+{
+    public $description = '';
 }
 
 ?><?php
@@ -3391,6 +3566,7 @@ class Report
         <table>
             <tr><td><i>source:</i></td><td><?php echo $source ?></td></tr>
             <tr><td><i>destination:</i></td><td><?php echo $destination ?><td></tr>
+                <!--
             <tr>
                 <td><i>options:</i></td>
                 <td>
@@ -3402,6 +3578,7 @@ class Report
                     <?php //echo print_r(self::getPrintableOptions($options), true); ?>
                 </td>
             </tr>
+        -->
         </table>
         <br>
         <?php
