@@ -40,7 +40,6 @@ abstract class AbstractConverter
      *
      */
     abstract protected function doActualConvert();
-    abstract protected function getOptionDefinitionsExtra();
 
     /** @var string  The filename of the image to convert (complete path) */
     public $source;
@@ -647,6 +646,7 @@ use WebPConvert\Exceptions\WebPConvertException;
  *          InvalidInputException
  *              ConverterNotFoundException
  *              InvalidImageTypeException
+ *              InvalidOptionTypeException
  *              TargetNotFoundException
  *          UnhandledException
  */
@@ -820,6 +820,9 @@ trait OptionsTrait
     /** @var array  Calculated conversion options (merge of default options and provided options)*/
     public $options;
 
+    // The concrete converters must supply this method...
+    abstract protected function getOptionDefinitionsExtra();
+
 
     public static $optionDefinitionsBasic = [
         ['quality', 'string|number', 'auto'],
@@ -835,7 +838,7 @@ trait OptionsTrait
     /**
      * Set logger
      *
-     * @param   array $options (optional)
+     * @param   array $providedOptions (optional)
      * @return  void
      */
     public function setProvidedOptions($providedOptions = [])
@@ -891,7 +894,7 @@ trait OptionsTrait
                             );
                         }
                     } else {
-                        if (($optionValue < 0) | ($optionValue > 100)) {
+                        if (($optionValue < 0) || ($optionValue > 100)) {
                             throw new InvalidOptionTypeException(
                                 'Quality must be eithe "auto" or a number between 0-100. ' .
                                     'The number you provided (' . strval($optionValue) . ') is out of range.'
@@ -1280,7 +1283,6 @@ class Cwebp extends AbstractExecConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\ConvertOptionDefinition;
 use WebPConvert\Convert\BaseConverters\AbstractCloudCurlConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
