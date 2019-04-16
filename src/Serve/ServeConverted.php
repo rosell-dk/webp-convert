@@ -253,7 +253,7 @@ class ServeConverted extends ServeBase
                 break;
             case 'report-as-image':
                 // todo: handle if this fails
-                self::serveErrorMessageImage($title . '. ' . $description);
+                $this->serveErrorMessageImage($title . '. ' . $description);
                 break;
             case 'report':
                 echo '<h1>' . $title . '</h1>' . $description;
@@ -300,7 +300,6 @@ class ServeConverted extends ServeBase
                 return true;
             case 'fresh-conversion':
                 return $this->serveFreshlyConverted();
-                break;
             case 'critical-fail':
                 $this->criticalFail('Error', $this->whyServingThis);
                 return false;
