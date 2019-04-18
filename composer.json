@@ -71,6 +71,8 @@
       "rosell-dk/image-mime-type-guesser": "^0.2"
   },
   "suggest": {
+      "ext-gd": "to use GD library for converting. Note: Gd must be compiled with webp support",
+      "ext-imagick": "to use Imagick for converting. Note: Gd must be compiled with webp support",
       "php-stan/php-stan": "Suggested for dev, in order to analyse code before committing"
   },
   "require-dev": {
