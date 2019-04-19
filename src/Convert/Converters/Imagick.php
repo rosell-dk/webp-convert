@@ -71,19 +71,17 @@ class Imagick extends AbstractConverter
         }
     }
 
+    /**
+     *
+     * @throws ImagickException if imagick throws an exception
+     * @throws CreateDestinationFileException if imageblob could not be saved to file
+     */
     protected function doActualConvert()
     {
         $options = $this->options;
 
-        try {
-            $im = new \Imagick($this->source);
-        } catch (\Exception $e) {
-            throw new ConversionFailedException(
-                'Failed creating Gmagick object of file',
-                'Failed creating Gmagick object of file: "' . $this->source . '" - Imagick threw an exception.',
-                $e
-            );
-        }
+        // This might throw - we let it!
+        $im = new \Imagick($this->source);
 
         //$im = new \Imagick();
         //$im->readImage($this->source);
@@ -122,7 +120,7 @@ class Imagick extends AbstractConverter
             // because setting image quality to something higher than source generates bigger files,
             // but gets you no extra quality. When failing to limit quality, you at least get something
             // out of it
-            $this->logLn('Converting without setting quality, to achieve auto quality');
+            $this->logLn('Converting without setting quality in order to achieve auto quality');
         } else {
             $im->setImageCompressionQuality($this->getCalculatedQuality());
         }
@@ -146,15 +144,9 @@ class Imagick extends AbstractConverter
         // We used to use writeImageFile() method. But we now use getImageBlob(). See issue #43
         //$success = $im->writeImageFile(fopen($destination, 'wb'));
 
-        try {
-            $imageBlob = $im->getImageBlob();
-        } catch (\ImagickException $e) {
-            throw new ConversionFailedException(
-                'Imagick failed converting - getImageBlob() threw an exception)',
-                0,
-                $e
-            );
-        }
+
+        // This might throw - we let it!
+        $imageBlob = $im->getImageBlob();
 
         $success = file_put_contents($this->destination, $imageBlob);
 
