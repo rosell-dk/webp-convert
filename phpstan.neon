@@ -15,3 +15,4 @@ parameters:
             message: '#Strict comparison using === between resource and false will always evaluate to false.#'
             path: %currentWorkingDirectory%/src/Convert/BaseConverters/AbstractCloudCurlConverter.php
         - '#Function vips_call invoked with 4 parameters, 2 required.#'
+        - '#Function vips_.* not found.#'
