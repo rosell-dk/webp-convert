@@ -58,7 +58,13 @@ class Vips extends AbstractConverter
         return;
         */
 
-        $result = vips_image_new_from_file($this->source);
+        if (function_exists('vips_version')) {
+            $this->logLn('vips version: ' . vips_version());
+        }
+
+        // We are currently using vips_image_new_from_file(), but we could consider
+        // calling vips_jpegload / vips_pngload instead
+        $result = vips_image_new_from_file($this->source, []);
         if ($result === -1) {
             /*throw new ConversionFailedException(
                 'Failed creating new vips image from file: ' . $this->source
@@ -81,6 +87,9 @@ class Vips extends AbstractConverter
         }
 
         $im = array_shift($result);
+
+        // for some reason, vips_webpsave function is unavailable on at least one system, so we
+        // use vips_call instead.
 
         // webpsave options are described here:
         // https://jcupitt.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave
