@@ -73,7 +73,7 @@ class Imagick extends AbstractConverter
 
     /**
      *
-     * @throws ImagickException if imagick throws an exception
+     * It may also throw an ImagickException if imagick throws an exception
      * @throws CreateDestinationFileException if imageblob could not be saved to file
      */
     protected function doActualConvert()
