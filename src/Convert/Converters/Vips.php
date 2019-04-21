@@ -71,7 +71,6 @@ class Vips extends AbstractConverter
             );*/
             $message = vips_error_buffer();
             throw new ConversionFailedException($message);
-
         }
 
         if (!is_array($result)) {
@@ -82,7 +81,8 @@ class Vips extends AbstractConverter
 
         if (count($result) != 1) {
             throw new ConversionFailedException(
-                'vips_image_new_from_file did not return an array of length 1 as we expected - length was: ' . count($result)
+                'vips_image_new_from_file did not return an array of length 1 as we expected ' .
+                '- length was: ' . count($result)
             );
         }
 
