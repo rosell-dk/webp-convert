@@ -76,12 +76,12 @@ class Vips extends AbstractConverter
 
         // We are currently using vips_image_new_from_file(), but we could consider
         // calling vips_jpegload / vips_pngload instead
-        $result = vips_image_new_from_file($this->source, []);
+        $result = /** @scrutinizer ignore-call */ vips_image_new_from_file($this->source, []);
         if ($result === -1) {
             /*throw new ConversionFailedException(
                 'Failed creating new vips image from file: ' . $this->source
             );*/
-            $message = vips_error_buffer();
+            $message = /** @scrutinizer ignore-call */ vips_error_buffer();
             throw new ConversionFailedException($message);
         }
 
@@ -130,10 +130,10 @@ class Vips extends AbstractConverter
         // Iterations happens when vips errors out because of unsupported properties
         // in that case, we remove that property and try again.
         while (!$done) {
-            $result = vips_call('webpsave', $im, $this->destination, $options);
+            $result = /** @scrutinizer ignore-call */ vips_call('webpsave', $im, $this->destination, $options);
 
             if ($result === -1) {
-                $message = vips_error_buffer();
+                $message = /** @scrutinizer ignore-call */ vips_error_buffer();
 
                 // If the error
                 if (preg_match("#no property named .(.*).#", $message, $matches)) {
