@@ -16,9 +16,9 @@ class Vips extends AbstractConverter
     {
         return [
             ['smart-subsample', 'boolean', false],
-            ['alpha-quality', 'int', 100],        // alpha quality in lossless mode
-            ['near-lossless', 'boolean', false],  // apply near-lossless preprocessing (controled by setting quality to 20,40,60 or 80)
-            ['preset', 'int', 0],                 // preset. 0:default, 1:picture, 2:photo, 3:drawing, 4:icon, 5:text, 6:last
+            ['alpha-quality', 'integer', 80],    // alpha quality in lossless mode
+            ['near-lossless', 'integer', 60],     // apply near-lossless preprocessing (100 is lossless, 20 means a lot of preprocessing and savings)
+            ['preset', 'integer', 0],             // preset. 0:default, 1:picture, 2:photo, 3:drawing, 4:icon, 5:text, 6:last
         ];
     }
 
@@ -111,9 +111,6 @@ class Vips extends AbstractConverter
 
         // Only set the following options if they differ from the default of vipslib
         // This ensures we do not get warning if that property isn't supported
-        if ($this->options['near-lossless'] !== false) {
-            $options['near_lossless'] = $this->options['near-lossless'];
-        }
         if ($this->options['smart-subsample'] !== false) {
             $options['smart_subsample'] = $this->options['smart-subsample'];
         }
@@ -122,6 +119,18 @@ class Vips extends AbstractConverter
         }
         if ($this->options['preset'] !== 0) {
             $options['preset'] = $this->options['preset'];
+        }
+        if ($this->options['near-lossless'] !== 100) {
+            if ($options['lossless'] === true) {
+                // We only let near_lossless have effect when lossless is set.
+                // otherwise lossless auto would not work as expected
+                $options['near_lossless'] = true;
+
+                // In Vips, the near-lossless value is controlled by Q.
+                // this differs from how it is done in cwebp, where it is an integer.
+                // We have chosen same option syntax as cwebp
+                $options['Q'] = $this->options['near-lossless'];
+            }
         }
 
         $done = false;
