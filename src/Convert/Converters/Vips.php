@@ -16,9 +16,9 @@ class Vips extends AbstractConverter
     {
         return [
             ['smart-subsample', 'boolean', false],
-            ['alpha-quality', 'integer', 80],    // alpha quality in lossless mode
-            ['near-lossless', 'integer', 60],     // apply near-lossless preprocessing (100 is lossless, 20 means a lot of preprocessing and savings)
-            ['preset', 'integer', 0],             // preset. 0:default, 1:picture, 2:photo, 3:drawing, 4:icon, 5:text, 6:last
+            ['alpha-quality', 'integer', 80],  // alpha quality in lossless mode
+            ['near-lossless', 'integer', 60],
+            ['preset', 'integer', 0],  // preset. 0:default, 1:picture, 2:photo, 3:drawing, 4:icon, 5:text, 6:last
         ];
     }
 
@@ -158,7 +158,6 @@ class Vips extends AbstractConverter
             } else {
                 $done = true;
             }
-
         }
     }
 }

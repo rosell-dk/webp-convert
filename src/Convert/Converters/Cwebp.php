@@ -92,7 +92,6 @@ class Cwebp extends AbstractExecConverter
 
         // Losless PNG conversion
         if ($options['lossless'] === true) {
-
             // No need to add -lossless when near-lossless is used
             if ($options['near-lossless'] === 100) {
                 $commandOptionsArray[] = '-lossless';
