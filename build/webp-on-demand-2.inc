@@ -259,8 +259,8 @@ abstract class AbstractConverter
     {
         if ($this->processLosslessAuto && ($this->options['lossless'] === 'auto') && $this->supportsLossless) {
             $destination = $this->destination;
-            $destinationLossless =  $this->destination . '.lossless';
-            $destinationLossy =  $this->destination . '.lossy';
+            $destinationLossless =  $this->destination . '.lossless.webp';
+            $destinationLossy =  $this->destination . '.lossy.webp';
 
             $this->logLn(
                 'Lossless is set to auto. Converting to both lossless and lossy and selecting the smallest file'
@@ -879,6 +879,7 @@ trait OptionsTrait
     // The concrete converters must supply this method...
     abstract protected function getOptionDefinitionsExtra();
 
+    abstract protected function getMimeTypeOfSource();
 
     public static $optionDefinitionsBasic = [
         ['quality', 'number|string', 'auto'],
@@ -1050,6 +1051,7 @@ class Cwebp extends AbstractExecConverter
             ['rel-path-to-precompiled-binaries', 'string', './Binaries'],
             ['low-memory', 'boolean', false],
             ['method', 'number', 6],
+            ['near-lossless', 'integer', 60],
         ];
     }
 
@@ -1114,8 +1116,25 @@ class Cwebp extends AbstractExecConverter
         }
 
 
-        // Losless PNG conversion
         $commandOptionsArray[] = ($options['lossless'] ? '-lossless' : '');
+
+        // Losless PNG conversion
+        if ($options['lossless'] === true) {
+            // No need to add -lossless when near-lossless is used
+            if ($options['near-lossless'] === 100) {
+                $commandOptionsArray[] = '-lossless';
+            }
+        }
+
+        // Near-lossles
+        if ($options['near-lossless'] !== 100) {
+            // We only let near_lossless have effect when lossless is set.
+            // otherwise lossless auto would not work as expected
+            if ($options['lossless'] === true) {
+                $commandOptionsArray[] ='-near_lossless ' . $options['near-lossless'];
+            }
+        }
+
 
         // Built-in method option
         $commandOptionsArray[] = '-m ' . strval($options['method']);
@@ -2710,13 +2729,20 @@ use WebPConvert\Convert\BaseConverters\AbstractConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
+//require '/home/rosell/.composer/vendor/autoload.php';
+
 class Vips extends AbstractConverter
 {
     protected $supportsLossless = true;
 
     protected function getOptionDefinitionsExtra()
     {
-        return [];
+        return [
+            ['smart-subsample', 'boolean', false],
+            ['alpha-quality', 'integer', 80],  // alpha quality in lossless mode
+            ['near-lossless', 'integer', 60],
+            ['preset', 'integer', 0],  // preset. 0:default, 1:picture, 2:photo, 3:drawing, 4:icon, 5:text, 6:last
+        ];
     }
 
     /**
@@ -2752,31 +2778,33 @@ class Vips extends AbstractConverter
         // - so nothing needs to be done here
 
         if (function_exists('vips_version')) {
-            $this->logLn('vips version: ' . vips_version());
+            $this->logLn('vipslib version: ' . vips_version());
         }
+        $this->logLn('vips extension version: ' . phpversion('vips'));
     }
 
     protected function doActualConvert()
     {
-        /*
-        $im = \Jcupitt\Vips\Image::newFromFile(__DIR__ . '/images/small.jpg');
+/*
+        $im = \Jcupitt\Vips\Image::newFromFile($this->source);
         //$im->writeToFile(__DIR__ . '/images/small-vips.webp', ["Q" => 10]);
-        $im->webpsave(__DIR__ . '/images/small-vips.webp', [
+
+        $im->webpsave($this->destination, [
             "Q" => 80,
-            'near_lossless' => true
+            //'near_lossless' => true
         ]);
-        return;
-        */
+        return;*/
+
 
 
         // We are currently using vips_image_new_from_file(), but we could consider
         // calling vips_jpegload / vips_pngload instead
-        $result = vips_image_new_from_file($this->source, []);
+        $result = /** @scrutinizer ignore-call */ vips_image_new_from_file($this->source, []);
         if ($result === -1) {
             /*throw new ConversionFailedException(
                 'Failed creating new vips image from file: ' . $this->source
             );*/
-            $message = vips_error_buffer();
+            $message = /** @scrutinizer ignore-call */ vips_error_buffer();
             throw new ConversionFailedException($message);
         }
 
@@ -2795,30 +2823,64 @@ class Vips extends AbstractConverter
 
         $im = array_shift($result);
 
-        //$this->logLn('lossless:' . ($this->options['lossless'] ? 'yes' : 'no'));
-
-        // for some reason, vips_webpsave function is unavailable on at least one system, so we
-        // use vips_call instead.
-
         // webpsave options are described here:
         // https://jcupitt.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave
-        $result = vips_call('webpsave', $im, $this->destination, [
+
+        $options = [
             "Q" => $this->getCalculatedQuality(),
             'lossless' => $this->options['lossless'],
-            //'lossless' => $this->options['lossless'],       // boolean
-            //'preset'
-            //'smart_subsample'     // boolean
+            'strip' => $this->options['metadata'] == 'none',
+        ];
 
-            // hm, when I use near_lossless, I get error: "no property named `near_lossless'"
-            // btw: beware that if this is used, q must be 20, 40, 60 or 80 (according to link above)
-            //'near_lossless' => true,   // boolean
+        // Only set the following options if they differ from the default of vipslib
+        // This ensures we do not get warning if that property isn't supported
+        if ($this->options['smart-subsample'] !== false) {
+            $options['smart_subsample'] = $this->options['smart-subsample'];
+        }
+        if ($this->options['alpha-quality'] !== 100) {
+            $options['alpha_q'] = $this->options['alpha-quality'];
+        }
+        if ($this->options['preset'] !== 0) {
+            $options['preset'] = $this->options['preset'];
+        }
+        if ($this->options['near-lossless'] !== 100) {
+            if ($options['lossless'] === true) {
+                // We only let near_lossless have effect when lossless is set.
+                // otherwise lossless auto would not work as expected
+                $options['near_lossless'] = true;
 
-            //'alpha_q'     // int
-            'strip' => $this->options['metadata'] == 'none'
-        ]);
-        if ($result === -1) {
-            $message = vips_error_buffer();
-            throw new ConversionFailedException($message);
+                // In Vips, the near-lossless value is controlled by Q.
+                // this differs from how it is done in cwebp, where it is an integer.
+                // We have chosen same option syntax as cwebp
+                $options['Q'] = $this->options['near-lossless'];
+            }
+        }
+
+        $done = false;
+
+        // A bit unusual loop.
+        // Iterations happens when vips errors out because of unsupported properties
+        // in that case, we remove that property and try again.
+        while (!$done) {
+            $result = /** @scrutinizer ignore-call */ vips_call('webpsave', $im, $this->destination, $options);
+
+            if ($result === -1) {
+                $message = /** @scrutinizer ignore-call */ vips_error_buffer();
+
+                // If the error
+                if (preg_match("#no property named .(.*).#", $message, $matches)) {
+                    $nameOfPropertyNotFound = $matches[1];
+                    $this->logLn(
+                        'Your version of vipslib does not support the "' . $nameOfPropertyNotFound . '" property. ' .
+                        'The option is ignored.'
+                    );
+                    unset($options[$nameOfPropertyNotFound]);
+                } else {
+                    throw new ConversionFailedException($message);
+                }
+            } else {
+                $done = true;
+            }
         }
     }
 }
