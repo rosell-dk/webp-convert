@@ -74,6 +74,10 @@ Reduce memory usage of lossy encoding at the cost of ~30% longer encoding time a
 #### the `command-line-options` option
 This allows you to set any parameter available for cwebp in the same way as you would do when executing *cwebp*. You could ie set it to "-sharpness 5 -mt -crop 10 10 40 40". Read more about all the available parameters in [the docs](https://developers.google.com/speed/webp/docs/cwebp)
 
+#### the `near-lossless` option
+Specify the level of near-lossless image preprocessing. This option adjusts pixel values to help compressibility, but has minimal impact on the visual quality. It triggers lossless compression mode automatically. The range is 0 (maximum preprocessing) to 100 (no preprocessing, the default). The typical value is around 60. Read more [here](https://groups.google.com/a/webmproject.org/forum/#!topic/webp-discuss/0GmxDmlexek)
+
+
 #### final words on cwebp
 The implementation is based on the work of Shane Bishop for his plugin, [EWWW Image Optimizer](https://ewww.io). Thanks for letting us do that!
 
@@ -86,12 +90,16 @@ See [the wiki](https://github.com/rosell-dk/webp-convert/wiki/Installing-cwebp--
   <tr><th>Reliability</th><td>No problems detected so far!</td></tr>
   <tr><th>Availability</th><td>Not that widespread yet, but gaining popularity</td></tr>
   <tr><th>General options supported</th><td>All (`quality`, `metadata`, `lossless`)</td></tr>
-  <tr><th>Extra options</th><td>`smart-subsample`(boolean)<br>`alpha-quality`(0-100)<br>`near-lossless` (boolean)<br> `preset` (0-6)</td></tr>
+  <tr><th>Extra options</th><td>`smart-subsample`(boolean)<br>`alpha-quality`(0-100)<br>`near-lossless` (0-100)<br> `preset` (0-6)</td></tr>
 </table>
 
 For installation instructions, go [here](https://github.com/libvips/php-vips-ext).
 
 The options are described [here](https://jcupitt.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave)
+
+*near-lossless* is however an integer (0-100), in order to have the option behave like in cwebp.
+
+
 
 ## wpc
 *WebPConvert Cloud Service*

@@ -23,6 +23,7 @@ class Cwebp extends AbstractExecConverter
             ['rel-path-to-precompiled-binaries', 'string', './Binaries'],
             ['low-memory', 'boolean', false],
             ['method', 'number', 6],
+            ['near-lossless', 'integer', 60],
         ];
     }
 
@@ -87,8 +88,26 @@ class Cwebp extends AbstractExecConverter
         }
 
 
-        // Losless PNG conversion
         $commandOptionsArray[] = ($options['lossless'] ? '-lossless' : '');
+
+        // Losless PNG conversion
+        if ($options['lossless'] === true) {
+
+            // No need to add -lossless when near-lossless is used
+            if ($options['near-lossless'] === 100) {
+                $commandOptionsArray[] = '-lossless';
+            }
+        }
+
+        // Near-lossles
+        if ($options['near-lossless'] !== 100) {
+            // We only let near_lossless have effect when lossless is set.
+            // otherwise lossless auto would not work as expected
+            if ($options['lossless'] === true) {
+                $commandOptionsArray[] ='-near_lossless ' . $options['near-lossless'];
+            }
+        }
+
 
         // Built-in method option
         $commandOptionsArray[] = '-m ' . strval($options['method']);
