@@ -258,8 +258,8 @@ abstract class AbstractConverter
     {
         if ($this->processLosslessAuto && ($this->options['lossless'] === 'auto') && $this->supportsLossless) {
             $destination = $this->destination;
-            $destinationLossless =  $this->destination . '.lossless';
-            $destinationLossy =  $this->destination . '.lossy';
+            $destinationLossless =  $this->destination . '.lossless.webp';
+            $destinationLossy =  $this->destination . '.lossy.webp';
 
             $this->logLn(
                 'Lossless is set to auto. Converting to both lossless and lossy and selecting the smallest file'
