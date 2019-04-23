@@ -16,6 +16,7 @@ trait OptionsTrait
     // The concrete converters must supply this method...
     abstract protected function getOptionDefinitionsExtra();
 
+    abstract protected function getMimeTypeOfSource();
 
     public static $optionDefinitionsBasic = [
         ['quality', 'number|string', 'auto'],
