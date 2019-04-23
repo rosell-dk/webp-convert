@@ -29,6 +29,7 @@ Of course, as we here have to call a binary directly, *cwebp* requires the *exec
 | Converter                            | Method                                           | Requirements                                       |
 | ------------------------------------ | ------------------------------------------------ | -------------------------------------------------- |
 | [`cwebp`](#cwebp)                    | Calls `cwebp` binary directly                    | `exec()` function *and* that the webserver user has permission to run `cwebp` binary |
+| [`vips`](#vips) (new in 2.0)         | Vips extension                                   | Vips extension                                     |
 | [`imagick`](#imagick)                | Imagick extension (`ImageMagick` wrapper)        | Imagick PHP extension compiled with WebP support   |
 | [`gmagick`](#gmagick)                | Gmagick extension (`ImageMagick` wrapper)        | Gmagick PHP extension compiled with WebP support   |
 | [`gd`](#gd)                          | GD Graphics (Draw) extension (`LibGD` wrapper)   | GD PHP extension compiled with WebP support        |
@@ -77,6 +78,20 @@ This allows you to set any parameter available for cwebp in the same way as you 
 The implementation is based on the work of Shane Bishop for his plugin, [EWWW Image Optimizer](https://ewww.io). Thanks for letting us do that!
 
 See [the wiki](https://github.com/rosell-dk/webp-convert/wiki/Installing-cwebp---using-official-precompilations) for instructions regarding installing cwebp or using official precompilations.
+
+## vips
+<table>
+  <tr><th>Requirements</th><td>Vips extension</td></tr>
+  <tr><th>Performance</th><td>Great</td></tr>
+  <tr><th>Reliability</th><td>No problems detected so far!</td></tr>
+  <tr><th>Availability</th><td>Not that widespread yet, but gaining popularity</td></tr>
+  <tr><th>General options supported</th><td>All (`quality`, `metadata`, `lossless`)</td></tr>
+  <tr><th>Extra options</th><td>`smart-subsample`(boolean)<br>`alpha-quality`(0-100)<br>`near-lossless` (boolean)<br> `preset` (0-6)</td></tr>
+</table>
+
+For installation instructions, go [here](https://github.com/libvips/php-vips-ext).
+
+The options are described [here](https://jcupitt.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave)
 
 ## wpc
 *WebPConvert Cloud Service*
