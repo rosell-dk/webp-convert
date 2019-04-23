@@ -257,7 +257,7 @@ abstract class AbstractConverter
 
     private function runActualConvert()
     {
-        if ($this->processLosslessAuto && ($this->options['lossless'] == 'auto') && $this->supportsLossless) {
+        if ($this->processLosslessAuto && ($this->options['lossless'] === 'auto') && $this->supportsLossless) {
             $destination = $this->destination;
             $destinationLossless =  $this->destination . '.lossless';
             $destinationLossy =  $this->destination . '.lossy';
@@ -890,7 +890,8 @@ trait OptionsTrait
     ];
 
     /**
-     * Set logger
+     * Set "provided options"
+     * This also sets the internal options array, by merging in the default options
      *
      * @param   array $providedOptions (optional)
      * @return  void
@@ -899,6 +900,18 @@ trait OptionsTrait
     {
         $this->providedOptions = $providedOptions;
 
+        if (isset($this->providedOptions['png'])) {
+            if ($this->getMimeTypeOfSource() == 'image/png') {
+                $this->providedOptions = array_merge($this->providedOptions, $this->providedOptions['png']);
+//                $this->logLn(print_r($this->providedOptions, true));
+            }
+        }
+
+        if (isset($this->providedOptions['jpeg'])) {
+            if ($this->getMimeTypeOfSource() == 'image/jpeg') {
+                $this->providedOptions = array_merge($this->providedOptions, $this->providedOptions['jpeg']);
+            }
+        }
         // -  Merge $defaultOptions into provided options
         $this->options = array_merge($this->getDefaultOptions(), $this->providedOptions);
     }
@@ -914,6 +927,9 @@ trait OptionsTrait
         $defaults = [];
         foreach ($this->getAllOptionDefinitions() as list($name, $type, $default)) {
             $defaults[$name] = $default;
+        }
+        if ($this->getMimeTypeOfSource() == 'image/png') {
+            $defaults['lossless'] = 'auto';
         }
         return $defaults;
     }
@@ -2734,6 +2750,10 @@ class Vips extends AbstractConverter
     {
         // It seems that png and jpeg are always supported by Vips
         // - so nothing needs to be done here
+
+        if (function_exists('vips_version')) {
+            $this->logLn('vips version: ' . vips_version());
+        }
     }
 
     protected function doActualConvert()
@@ -2748,9 +2768,6 @@ class Vips extends AbstractConverter
         return;
         */
 
-        if (function_exists('vips_version')) {
-            $this->logLn('vips version: ' . vips_version());
-        }
 
         // We are currently using vips_image_new_from_file(), but we could consider
         // calling vips_jpegload / vips_pngload instead
@@ -2778,7 +2795,7 @@ class Vips extends AbstractConverter
 
         $im = array_shift($result);
 
-        $this->logLn('lossless:' . ($this->options['lossless'] ? 'yes' : 'no'));
+        //$this->logLn('lossless:' . ($this->options['lossless'] ? 'yes' : 'no'));
 
         // for some reason, vips_webpsave function is unavailable on at least one system, so we
         // use vips_call instead.
