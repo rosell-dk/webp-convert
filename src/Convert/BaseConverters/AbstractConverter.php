@@ -40,6 +40,17 @@ abstract class AbstractConverter
      */
     abstract protected function doActualConvert();
 
+    /**
+     *  Set to false for converters that should hand the lossless option over (stack and wpc)
+     */
+    protected $processLosslessAuto = true;
+
+    /**
+     *  Set this on all converters (unfortunately, properties cannot be declared abstract)
+     */
+    protected $supportsLossless = false;
+
+
     /** @var string  The filename of the image to convert (complete path) */
     public $source;
 
@@ -195,7 +206,7 @@ abstract class AbstractConverter
 
             $this->checkOperationality();
             $this->checkConvertability();
-            $this->doActualConvert();
+            $this->runActualConvert();
         } catch (ConversionFailedException $e) {
             restore_error_handler();
             throw $e;
@@ -221,7 +232,7 @@ abstract class AbstractConverter
         } else {
             if (!isset($this->options['_suppress_success_message'])) {
                 $this->ln();
-                $msg = 'Successfully converted image in ' .
+                $msg = 'Converted image in ' .
                     round((microtime(true) - $this->beginTime) * 1000) . ' ms';
 
                 $sourceSize = @filesize($source);
@@ -239,6 +250,51 @@ abstract class AbstractConverter
                 }
                 $this->logLn($msg);
             }
+        }
+    }
+
+
+    private function runActualConvert()
+    {
+        if ($this->processLosslessAuto && ($this->options['lossless'] == 'auto') && $this->supportsLossless) {
+            $destination = $this->destination;
+            $destinationLossless =  $this->destination . '.lossless';
+            $destinationLossy =  $this->destination . '.lossy';
+
+            $this->logLn(
+                'Lossless is set to auto. Converting to both lossless and lossy and selecting the smallest file'
+            );
+
+
+            $this->ln();
+            $this->logLn('Converting to lossy');
+            $this->destination = $destinationLossy;
+            $this->options['lossless'] = false;
+            $this->doActualConvert();
+            $this->logLn('Reduction: ' .
+                round((filesize($this->source) - filesize($this->destination))/filesize($this->source) * 100) . '% ');
+
+            $this->ln();
+            $this->logLn('Converting to lossless');
+            $this->destination = $destinationLossless;
+            $this->options['lossless'] = true;
+            $this->doActualConvert();
+            $this->logLn('Reduction: ' .
+                round((filesize($this->source) - filesize($this->destination))/filesize($this->source) * 100) . '% ');
+
+            $this->ln();
+            if (filesize($destinationLossless) > filesize($destinationLossy)) {
+                $this->logLn('Picking lossy');
+                unlink($destinationLossless);
+                rename($destinationLossy, $destination);
+            } else {
+                $this->logLn('Picking lossless');
+                unlink($destinationLossy);
+                rename($destinationLossless, $destination);
+            }
+            $this->destination = $destination;
+        } else {
+            $this->doActualConvert();
         }
     }
 

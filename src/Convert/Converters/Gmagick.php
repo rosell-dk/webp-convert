@@ -10,6 +10,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Gmagick extends AbstractConverter
 {
+    protected $supportsLossless = false;
+    
     protected function getOptionDefinitionsExtra()
     {
         return [];

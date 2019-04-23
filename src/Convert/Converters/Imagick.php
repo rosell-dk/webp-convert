@@ -11,6 +11,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Imagick extends AbstractConverter
 {
+    protected $supportsLossless = false;
+    
     protected function getOptionDefinitionsExtra()
     {
         return [];

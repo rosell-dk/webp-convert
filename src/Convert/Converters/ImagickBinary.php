@@ -13,6 +13,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 // https://github.com/Orbitale/ImageMagickPHP
 class ImagickBinary extends AbstractExecConverter
 {
+    protected $supportsLossless = false;
+    
     protected function getOptionDefinitionsExtra()
     {
         return [

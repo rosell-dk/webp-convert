@@ -10,6 +10,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
 class Gd extends AbstractConverter
 {
+    protected $supportsLossless = false;
+
     private $errorMessageWhileCreating = '';
     private $errorNumberWhileCreating;
 
@@ -301,8 +303,13 @@ class Gd extends AbstractConverter
         $addedZeroPadding = false;
         set_error_handler(array($this, "errorHandlerWhileCreatingWebP"));
 
+        // This line may trigger log, so we need to do it BEFORE ob_start() !
+        $q = $this->getCalculatedQuality();
+
         ob_start();
-        $success = imagewebp($image);
+        //$success = imagewebp($image);
+        $success = imagewebp($image, null, $q);
+
         if (!$success) {
             $this->destroyAndRemove($image);
             ob_end_clean();

@@ -8,6 +8,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Vips extends AbstractConverter
 {
+    protected $supportsLossless = true;
+
     protected function getOptionDefinitionsExtra()
     {
         return [];
@@ -88,6 +90,8 @@ class Vips extends AbstractConverter
 
         $im = array_shift($result);
 
+        $this->logLn('lossless:' . ($this->options['lossless'] ? 'yes' : 'no'));
+
         // for some reason, vips_webpsave function is unavailable on at least one system, so we
         // use vips_call instead.
 
@@ -95,7 +99,7 @@ class Vips extends AbstractConverter
         // https://jcupitt.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave
         $result = vips_call('webpsave', $im, $this->destination, [
             "Q" => $this->getCalculatedQuality(),
-            //'lossless' => true,
+            'lossless' => $this->options['lossless'],
             //'lossless' => $this->options['lossless'],       // boolean
             //'preset'
             //'smart_subsample'     // boolean

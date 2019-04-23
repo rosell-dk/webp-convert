@@ -41,6 +41,17 @@ abstract class AbstractConverter
      */
     abstract protected function doActualConvert();
 
+    /**
+     *  Set to false for converters that should hand the lossless option over (stack and wpc)
+     */
+    protected $processLosslessAuto = true;
+
+    /**
+     *  Set this on all converters (unfortunately, properties cannot be declared abstract)
+     */
+    protected $supportsLossless = false;
+
+
     /** @var string  The filename of the image to convert (complete path) */
     public $source;
 
@@ -196,7 +207,7 @@ abstract class AbstractConverter
 
             $this->checkOperationality();
             $this->checkConvertability();
-            $this->doActualConvert();
+            $this->runActualConvert();
         } catch (ConversionFailedException $e) {
             restore_error_handler();
             throw $e;
@@ -222,7 +233,7 @@ abstract class AbstractConverter
         } else {
             if (!isset($this->options['_suppress_success_message'])) {
                 $this->ln();
-                $msg = 'Successfully converted image in ' .
+                $msg = 'Converted image in ' .
                     round((microtime(true) - $this->beginTime) * 1000) . ' ms';
 
                 $sourceSize = @filesize($source);
@@ -240,6 +251,51 @@ abstract class AbstractConverter
                 }
                 $this->logLn($msg);
             }
+        }
+    }
+
+
+    private function runActualConvert()
+    {
+        if ($this->processLosslessAuto && ($this->options['lossless'] == 'auto') && $this->supportsLossless) {
+            $destination = $this->destination;
+            $destinationLossless =  $this->destination . '.lossless';
+            $destinationLossy =  $this->destination . '.lossy';
+
+            $this->logLn(
+                'Lossless is set to auto. Converting to both lossless and lossy and selecting the smallest file'
+            );
+
+
+            $this->ln();
+            $this->logLn('Converting to lossy');
+            $this->destination = $destinationLossy;
+            $this->options['lossless'] = false;
+            $this->doActualConvert();
+            $this->logLn('Reduction: ' .
+                round((filesize($this->source) - filesize($this->destination))/filesize($this->source) * 100) . '% ');
+
+            $this->ln();
+            $this->logLn('Converting to lossless');
+            $this->destination = $destinationLossless;
+            $this->options['lossless'] = true;
+            $this->doActualConvert();
+            $this->logLn('Reduction: ' .
+                round((filesize($this->source) - filesize($this->destination))/filesize($this->source) * 100) . '% ');
+
+            $this->ln();
+            if (filesize($destinationLossless) > filesize($destinationLossy)) {
+                $this->logLn('Picking lossy');
+                unlink($destinationLossless);
+                rename($destinationLossy, $destination);
+            } else {
+                $this->logLn('Picking lossless');
+                unlink($destinationLossy);
+                rename($destinationLossless, $destination);
+            }
+            $this->destination = $destination;
+        } else {
+            $this->doActualConvert();
         }
     }
 
@@ -825,13 +881,11 @@ trait OptionsTrait
 
 
     public static $optionDefinitionsBasic = [
-        ['quality', 'string|number', 'auto'],
+        ['quality', 'number|string', 'auto'],
         ['max-quality', 'number', 85],
         ['default-quality', 'number', 75],
         ['metadata', 'string', 'none'],
-        ['method', 'number', 6],
-        ['low-memory', 'boolean', false],
-        ['lossless', 'boolean', false],
+        ['lossless', 'boolean|string', false],
         ['skip-pngs', 'boolean', false],
     ];
 
@@ -889,18 +943,24 @@ trait OptionsTrait
                     if ($actualType == 'string') {
                         if ($optionValue != 'auto') {
                             throw new InvalidOptionTypeException(
-                                'Quality must be eithe "auto" or a number between 0-100. ' .
+                                'Quality option must be either "auto" or a number between 0-100. ' .
                                 'A string, "' . $optionValue . '" was given'
                             );
                         }
                     } else {
                         if (($optionValue < 0) || ($optionValue > 100)) {
                             throw new InvalidOptionTypeException(
-                                'Quality must be eithe "auto" or a number between 0-100. ' .
+                                'Quality option must be either "auto" or a number between 0-100. ' .
                                     'The number you provided (' . strval($optionValue) . ') is out of range.'
                             );
                         }
                     }
+                }
+
+                if (($optionName == 'lossless') && ($actualType == 'string')  && ($optionValue != 'auto')) {
+                    throw new InvalidOptionTypeException(
+                        'Lossless option must be true, false or "auto". It was set to: "' . $optionValue . '"'
+                    );
                 }
             }
         }
@@ -960,8 +1020,11 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalExcep
 
 class Cwebp extends AbstractExecConverter
 {
+    protected $supportsLossless = true;
+
     protected function getOptionDefinitionsExtra()
     {
+        // TODO: near_lossless
         return [
             ['use-nice', 'boolean', false],
             ['try-common-system-paths', 'boolean', true],
@@ -969,6 +1032,8 @@ class Cwebp extends AbstractExecConverter
             ['size-in-percentage', 'number', null],
             ['command-line-options', 'string', ''],
             ['rel-path-to-precompiled-binaries', 'string', './Binaries'],
+            ['low-memory', 'boolean', false],
+            ['method', 'number', 6],
         ];
     }
 
@@ -1290,6 +1355,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Ewww extends AbstractCloudCurlConverter
 {
+    protected $supportsLossless = false;
+
     protected function getOptionDefinitionsExtra()
     {
         return [
@@ -1586,6 +1653,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
 class Gd extends AbstractConverter
 {
+    protected $supportsLossless = false;
+
     private $errorMessageWhileCreating = '';
     private $errorNumberWhileCreating;
 
@@ -1877,8 +1946,13 @@ class Gd extends AbstractConverter
         $addedZeroPadding = false;
         set_error_handler(array($this, "errorHandlerWhileCreatingWebP"));
 
+        // This line may trigger log, so we need to do it BEFORE ob_start() !
+        $q = $this->getCalculatedQuality();
+
         ob_start();
-        $success = imagewebp($image);
+        //$success = imagewebp($image);
+        $success = imagewebp($image, null, $q);
+
         if (!$success) {
             $this->destroyAndRemove($image);
             ob_end_clean();
@@ -2011,6 +2085,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Gmagick extends AbstractConverter
 {
+    protected $supportsLossless = false;
+    
     protected function getOptionDefinitionsExtra()
     {
         return [];
@@ -2159,6 +2235,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Imagick extends AbstractConverter
 {
+    protected $supportsLossless = false;
+    
     protected function getOptionDefinitionsExtra()
     {
         return [];
@@ -2322,6 +2400,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 // https://github.com/Orbitale/ImageMagickPHP
 class ImagickBinary extends AbstractExecConverter
 {
+    protected $supportsLossless = false;
+    
     protected function getOptionDefinitionsExtra()
     {
         return [
@@ -2426,6 +2506,9 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
 
 class Stack extends AbstractConverter
 {
+    protected $processLosslessAuto = false;
+    protected $supportsLossless = true;
+    
     protected function getOptionDefinitionsExtra()
     {
         return [
@@ -2480,6 +2563,8 @@ class Stack extends AbstractConverter
         }
 
         // TODO: We should test if all converters are found in order to detect problems early
+
+        $this->logLn('Stack converter ignited');
     }
 
     protected function doActualConvert()
@@ -2488,7 +2573,6 @@ class Stack extends AbstractConverter
 
         $beginTimeStack = microtime(true);
 
-        $this->logLn('Stack converter ignited');
 
         // If we have set converter options for a converter, which is not in the converter array,
         // then we add it to the array
@@ -2612,6 +2696,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Vips extends AbstractConverter
 {
+    protected $supportsLossless = true;
+
     protected function getOptionDefinitionsExtra()
     {
         return [];
@@ -2675,7 +2761,6 @@ class Vips extends AbstractConverter
             );*/
             $message = vips_error_buffer();
             throw new ConversionFailedException($message);
-
         }
 
         if (!is_array($result)) {
@@ -2686,11 +2771,14 @@ class Vips extends AbstractConverter
 
         if (count($result) != 1) {
             throw new ConversionFailedException(
-                'vips_image_new_from_file did not return an array of length 1 as we expected - length was: ' . count($result)
+                'vips_image_new_from_file did not return an array of length 1 as we expected ' .
+                '- length was: ' . count($result)
             );
         }
 
         $im = array_shift($result);
+
+        $this->logLn('lossless:' . ($this->options['lossless'] ? 'yes' : 'no'));
 
         // for some reason, vips_webpsave function is unavailable on at least one system, so we
         // use vips_call instead.
@@ -2699,7 +2787,7 @@ class Vips extends AbstractConverter
         // https://jcupitt.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave
         $result = vips_call('webpsave', $im, $this->destination, [
             "Q" => $this->getCalculatedQuality(),
-            //'lossless' => true,
+            'lossless' => $this->options['lossless'],
             //'lossless' => $this->options['lossless'],       // boolean
             //'preset'
             //'smart_subsample'     // boolean
@@ -2729,6 +2817,9 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Wpc extends AbstractCloudCurlConverter
 {
+    protected $processLosslessAuto = true;
+    protected $supportsLossless = true;
+
     protected function getOptionDefinitionsExtra()
     {
         return [

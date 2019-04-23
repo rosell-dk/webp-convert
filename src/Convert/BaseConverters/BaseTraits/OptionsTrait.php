@@ -18,13 +18,11 @@ trait OptionsTrait
 
 
     public static $optionDefinitionsBasic = [
-        ['quality', 'string|number', 'auto'],
+        ['quality', 'number|string', 'auto'],
         ['max-quality', 'number', 85],
         ['default-quality', 'number', 75],
         ['metadata', 'string', 'none'],
-        ['method', 'number', 6],
-        ['low-memory', 'boolean', false],
-        ['lossless', 'boolean', false],
+        ['lossless', 'boolean|string', false],
         ['skip-pngs', 'boolean', false],
     ];
 
@@ -82,18 +80,24 @@ trait OptionsTrait
                     if ($actualType == 'string') {
                         if ($optionValue != 'auto') {
                             throw new InvalidOptionTypeException(
-                                'Quality must be eithe "auto" or a number between 0-100. ' .
+                                'Quality option must be either "auto" or a number between 0-100. ' .
                                 'A string, "' . $optionValue . '" was given'
                             );
                         }
                     } else {
                         if (($optionValue < 0) || ($optionValue > 100)) {
                             throw new InvalidOptionTypeException(
-                                'Quality must be eithe "auto" or a number between 0-100. ' .
+                                'Quality option must be either "auto" or a number between 0-100. ' .
                                     'The number you provided (' . strval($optionValue) . ') is out of range.'
                             );
                         }
                     }
+                }
+
+                if (($optionName == 'lossless') && ($actualType == 'string')  && ($optionValue != 'auto')) {
+                    throw new InvalidOptionTypeException(
+                        'Lossless option must be true, false or "auto". It was set to: "' . $optionValue . '"'
+                    );
                 }
             }
         }

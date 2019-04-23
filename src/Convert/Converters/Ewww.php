@@ -9,6 +9,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Ewww extends AbstractCloudCurlConverter
 {
+    protected $supportsLossless = false;
+
     protected function getOptionDefinitionsExtra()
     {
         return [

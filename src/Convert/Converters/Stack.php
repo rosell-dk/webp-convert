@@ -15,6 +15,9 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
 
 class Stack extends AbstractConverter
 {
+    protected $processLosslessAuto = false;
+    protected $supportsLossless = true;
+    
     protected function getOptionDefinitionsExtra()
     {
         return [
@@ -69,6 +72,8 @@ class Stack extends AbstractConverter
         }
 
         // TODO: We should test if all converters are found in order to detect problems early
+
+        $this->logLn('Stack converter ignited');
     }
 
     protected function doActualConvert()
@@ -77,7 +82,6 @@ class Stack extends AbstractConverter
 
         $beginTimeStack = microtime(true);
 
-        $this->logLn('Stack converter ignited');
 
         // If we have set converter options for a converter, which is not in the converter array,
         // then we add it to the array

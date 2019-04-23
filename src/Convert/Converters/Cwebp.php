@@ -9,8 +9,11 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalExcep
 
 class Cwebp extends AbstractExecConverter
 {
+    protected $supportsLossless = true;
+
     protected function getOptionDefinitionsExtra()
     {
+        // TODO: near_lossless
         return [
             ['use-nice', 'boolean', false],
             ['try-common-system-paths', 'boolean', true],
@@ -18,6 +21,8 @@ class Cwebp extends AbstractExecConverter
             ['size-in-percentage', 'number', null],
             ['command-line-options', 'string', ''],
             ['rel-path-to-precompiled-binaries', 'string', './Binaries'],
+            ['low-memory', 'boolean', false],
+            ['method', 'number', 6],
         ];
     }
 

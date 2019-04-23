@@ -9,6 +9,9 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 class Wpc extends AbstractCloudCurlConverter
 {
+    protected $processLosslessAuto = true;
+    protected $supportsLossless = true;
+
     protected function getOptionDefinitionsExtra()
     {
         return [
