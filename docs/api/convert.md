@@ -23,10 +23,11 @@ Many options correspond to options of *cwebp*. These are documented [here](https
 | default-quality           | An integer between 0-100 | 75 | See the `quality` option. Only relevant, when quality is set to "auto".
 | metadata          | String  | 'none'                      | Valid values: all, none, exif, icc, xmp. Note: Only *cwebp* supports all values. *gd* will always remove all metadata. *ewww*, *imagick* and *gmagick* can either strip all, or keep all (they will keep all, unless metadata is set to *none*) |
 | method            | Integer | 6                           | Specify the compression method to use (0-6). When higher values are used, the encoder will spend more time inspecting additional encoding possibilities and decide on the quality gain. Lower value can result in faster processing time at the expense of larger file size and lower compression quality. |
-| low-memory        | Boolean | false                       | Reduce memory usage of lossy encoding by saving four times the compressed size (typically) |
-| lossless          | Boolean | false                       | Encode the image without any loss. The option is ignored for PNG's (forced true) |
+| lossless          | Boolean | false ("auto" for pngs in 2.0)       | Encode the image without any loss. The option is ignored for PNG's (forced true). In 2.0, it can also be "auto", and it is not forced to anything - rather it deafaults to false for Jpegs and "auto" for PNGs |
 | converters        | Array   | ['cwebp', 'gd', 'imagick']  | Specify conversion methods to use, and their order. Also optionally set converter options (see below) |
 | converter-options | Array   | []                          | Set options of the individual converters (see below) |
+| jpeg              | Array   | null                        | These options will be merged into the other options when source is jpeg |
+| png               | Array   | null                        | These options will be merged into the other options when source is jpeg |
 
 #### More on quality=auto
 Unfortunately, *libwebp* does not provide a way to use the same quality for the converted image, as for source. This feature is implemented by *imagick* and *gmagick*. No matter which conversion method you choose, if you set *quality* to *auto*, our library will try to detect the quality of the source file using one of these libraries. If this isn't available, it will revert to the value set in the *default-quality* option (75 per default). *However*, with the *wpc* converter you have a second chance: If quality cannot be detected locally, it will send quality="auto" to *wpc*.

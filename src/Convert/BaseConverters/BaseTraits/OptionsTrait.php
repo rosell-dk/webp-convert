@@ -27,7 +27,8 @@ trait OptionsTrait
     ];
 
     /**
-     * Set logger
+     * Set "provided options"
+     * This also sets the internal options array, by merging in the default options
      *
      * @param   array $providedOptions (optional)
      * @return  void
@@ -36,6 +37,18 @@ trait OptionsTrait
     {
         $this->providedOptions = $providedOptions;
 
+        if (isset($this->providedOptions['png'])) {
+            if ($this->getMimeTypeOfSource() == 'image/png') {
+                $this->providedOptions = array_merge($this->providedOptions, $this->providedOptions['png']);
+//                $this->logLn(print_r($this->providedOptions, true));
+            }
+        }
+
+        if (isset($this->providedOptions['jpeg'])) {
+            if ($this->getMimeTypeOfSource() == 'image/jpeg') {
+                $this->providedOptions = array_merge($this->providedOptions, $this->providedOptions['jpeg']);
+            }
+        }
         // -  Merge $defaultOptions into provided options
         $this->options = array_merge($this->getDefaultOptions(), $this->providedOptions);
     }
@@ -51,6 +64,9 @@ trait OptionsTrait
         $defaults = [];
         foreach ($this->getAllOptionDefinitions() as list($name, $type, $default)) {
             $defaults[$name] = $default;
+        }
+        if ($this->getMimeTypeOfSource() == 'image/png') {
+            $defaults['lossless'] = 'auto';
         }
         return $defaults;
     }

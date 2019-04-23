@@ -45,8 +45,8 @@ Instructions regarding getting the individual converters to work are [on the wik
   <tr><th>Performance</th><td>~40-120ms to convert a 40kb image (depending on *method* option)</td></tr>
   <tr><th>Reliability</th><td>No problems detected so far!</td></tr>
   <tr><th>Availability</th><td>According to ewww docs, requirements are met on surprisingly many webhosts. Look <a href="https://docs.ewww.io/article/43-supported-web-hosts">here</a> for a list</td></tr>
-  <tr><th>General options supported</th><td>All (`quality`, `metadata`, `method`, `low-memory`, `lossless`)</td></tr>
-  <tr><th>Extra options</th><td>`use-nice` (boolean)<br>`try-common-system-paths` (boolean)<br> `try-supplied-binary-for-os` (boolean)<br>`autofilter` (boolean)<br>`size-in-percentage` (number / null)<br>`command-line-options` (string)</td></tr>
+  <tr><th>General options supported</th><td>All (`quality`, `metadata`, `lossless`)</td></tr>
+  <tr><th>Extra options</th><td>`method` (0-6)<br>`use-nice` (boolean)<br>`try-common-system-paths` (boolean)<br> `try-supplied-binary-for-os` (boolean)<br>`autofilter` (boolean)<br>`size-in-percentage` (number / null)<br>`command-line-options` (string)<br>`low-memory` (boolean)</td></tr>
 </table>
 
 [cwebp](https://developers.google.com/speed/webp/docs/cwebp) is a WebP conversion command line converter released by Google. Our implementation ships with precompiled binaries for Linux, FreeBSD, WinNT, Darwin and SunOS. If however a cwebp binary is found in a usual location, that binary will be preferred. It is executed with [exec()](http://php.net/manual/en/function.exec.php).
@@ -86,7 +86,7 @@ See [the wiki](https://github.com/rosell-dk/webp-convert/wiki/Installing-cwebp--
   <tr><th>Performance</th><td>Depends on the server where [webp-convert-cloud-service](https://github.com/rosell-dk/webp-convert-cloud-service) is set up, and the speed of internet connections. But perhaps ~1000ms to convert a 40kb image</td></tr>
   <tr><th>Reliability</th><td>Great (depends on the reliability on the server where it is set up)</td></tr>
   <tr><th>Availability</th><td>Should work on <em>almost</em> any webhost</td></tr>
-  <tr><th>General options supported</th><td>All (`quality`, `metadata`, `method`, `low-memory`, `lossless`)</td></tr>
+  <tr><th>General options supported</th><td>All (`quality`, `metadata`, `lossless`)</td></tr>
   <tr><th>Extra options (old api)</th><td>`url`, `secret`</td></tr>
   <tr><th>Extra options (new api)</th><td>`url`, `api-version`, `api-key`, `crypt-api-key-in-transfer`</td></tr>
 </table>
@@ -213,9 +213,9 @@ Due to a [bug](https://bugs.php.net/bug.php?id=66590), some versions sometimes c
 <table>
   <tr><th>Requirements</th><td>Imagick PHP extension (compiled with WebP support)</td></tr>
   <tr><th>Quality</th><td>Poor. [See this issue]( https://github.com/rosell-dk/webp-convert/issues/43)</td></tr>
-  <tr><th>General options supported</th><td>`quality`, `method`, `low-memory`, `lossless`</td></tr>
+  <tr><th>General options supported</th><td>`quality`</td></tr>
   <tr><th>Extra options</th><td>None</td></tr>
-  <tr><th>Performance</th><td>~20-320ms to convert a 40kb image (depending on `method` option)</td></tr>
+  <tr><th>Performance</th><td>~20-320ms to convert a 40kb image</td></tr>
   <tr><th>Reliability</th><td>No problems detected so far</td></tr>
   <tr><th>Availability</th><td>Probably only available on few shared hosts (if any)</td></tr>
 </table>

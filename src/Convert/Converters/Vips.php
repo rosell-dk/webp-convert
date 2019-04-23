@@ -46,6 +46,10 @@ class Vips extends AbstractConverter
     {
         // It seems that png and jpeg are always supported by Vips
         // - so nothing needs to be done here
+
+        if (function_exists('vips_version')) {
+            $this->logLn('vips version: ' . vips_version());
+        }
     }
 
     protected function doActualConvert()
@@ -60,9 +64,6 @@ class Vips extends AbstractConverter
         return;
         */
 
-        if (function_exists('vips_version')) {
-            $this->logLn('vips version: ' . vips_version());
-        }
 
         // We are currently using vips_image_new_from_file(), but we could consider
         // calling vips_jpegload / vips_pngload instead
@@ -90,7 +91,7 @@ class Vips extends AbstractConverter
 
         $im = array_shift($result);
 
-        $this->logLn('lossless:' . ($this->options['lossless'] ? 'yes' : 'no'));
+        //$this->logLn('lossless:' . ($this->options['lossless'] ? 'yes' : 'no'));
 
         // for some reason, vips_webpsave function is unavailable on at least one system, so we
         // use vips_call instead.

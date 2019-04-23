@@ -256,7 +256,7 @@ abstract class AbstractConverter
 
     private function runActualConvert()
     {
-        if ($this->processLosslessAuto && ($this->options['lossless'] == 'auto') && $this->supportsLossless) {
+        if ($this->processLosslessAuto && ($this->options['lossless'] === 'auto') && $this->supportsLossless) {
             $destination = $this->destination;
             $destinationLossless =  $this->destination . '.lossless';
             $destinationLossy =  $this->destination . '.lossy';
