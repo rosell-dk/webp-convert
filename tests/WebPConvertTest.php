@@ -170,7 +170,7 @@ https://phpunit.readthedocs.io/en/7.1/writing-tests-for-phpunit.html#testing-exc
     }
 
     /**
-     * Test ConversionDeclinedException by testing Gd.
+     * Test ConversionSkippedException by testing Gd.
      */
      /*
     public function testDeclined()
@@ -198,10 +198,10 @@ https://phpunit.readthedocs.io/en/7.1/writing-tests-for-phpunit.html#testing-exc
         } catch (\WebPConvert\Convert\Exceptions\SystemRequirementsNotMetException $e) {
             // converter isn't operational, so we cannot make the unit test
             return;
-        } catch (\WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException $e) {
+        } catch (\WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException $e) {
             // Yeah, this is what we want to test.
 
-            $this->expectException(\WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException::class);
+            $this->expectException(\WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException::class);
             WebPConvert::convert($source, $destination, $options);
         }
     }*/

@@ -11,7 +11,7 @@ use WebPConvert\Exceptions\WebPConvertException;
  *
  *  WebpConvertException
  *      ConversionFailedException
- *          ConversionDeclinedException
+ *          ConversionSkippedException
  *          ConverterNotOperationalException
  *              SystemRequirementsNotMetException
  *          FileSystemProblemsException

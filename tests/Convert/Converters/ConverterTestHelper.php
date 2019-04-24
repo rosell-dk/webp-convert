@@ -10,7 +10,7 @@
 namespace WebPConvert\Tests\Convert\Converters;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\UnhandledException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -34,7 +34,7 @@ class ConverterTestHelper
         } catch (SystemRequirementsNotMetException $e) {
             // System requirements are not met, so could not make the test
             return;
-        } catch (ConversionDeclinedException $e) {
+        } catch (ConversionSkippedException $e) {
             // Yeah, this is what we wanted to test. And it went well!
             $testCase->assertTrue(true);
         } catch (ConversionFailedException $e) {

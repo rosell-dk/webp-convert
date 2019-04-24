@@ -2,6 +2,7 @@
 
 namespace WebPConvert\Convert\BaseConverters\BaseTraits;
 
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidOptionTypeException;
 
 trait OptionsTrait
@@ -24,7 +25,7 @@ trait OptionsTrait
         ['default-quality', 'number', 75],
         ['metadata', 'string', 'none'],
         ['lossless', 'boolean|string', false],
-        ['skip-pngs', 'boolean', false],
+        ['skip', 'boolean', false],
     ];
 
     /**
@@ -118,6 +119,20 @@ trait OptionsTrait
                 }
             }
         }
+
+        if ($this->options['skip']) {            
+            if (($this->getMimeTypeOfSource() == 'image/png') && isset($this->options['png']['skip'])) {
+                throw new ConversionSkippedException(
+                    'skipped conversion (configured to do so for PNG)'
+                );
+            } else {
+                throw new ConversionSkippedException(
+                    'skipped conversion (configured to do so)'
+                );
+
+            }
+        }
+
     }
 
     /**
@@ -148,13 +163,10 @@ trait OptionsTrait
         if ($this->getMimeTypeOfSource() == 'png') {
             // skip png's ?
             if ($this->options['skip-pngs']) {
-                throw new ConversionDeclinedException(
+                throw new ConversionSkippedException(
                     'PNG file skipped (configured to do so)'
                 );
             }
-
-            // Force lossless option to true for PNG images
-            $this->options['lossless'] = true;
         }
 
 

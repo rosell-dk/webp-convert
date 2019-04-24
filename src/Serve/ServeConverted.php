@@ -3,7 +3,7 @@ namespace WebPConvert\Serve;
 
 use WebPConvert\WebPConvert;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFileException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFolderException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFoundException;
@@ -160,7 +160,7 @@ class ServeConverted extends ServeBase
             // operational
             $description = 'No converters could convert the image';
             $msg = $e->getMessage();
-        } catch (ConversionDeclinedException $e) {
+        } catch (ConversionSkippedException $e) {
             // (no converters could convert the image. At least one converter declined
             $description = 'No converters could/wanted to convert the image';
             $msg = $e->getMessage();

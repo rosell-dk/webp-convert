@@ -9,7 +9,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFou
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -172,7 +172,7 @@ class Stack extends AbstractConverter
                 }
                 //$this->logLn($e->getTraceAsString());
                 $anyRuntimeErrors = true;
-            } catch (ConversionDeclinedException $e) {
+            } catch (ConversionSkippedException $e) {
                 $this->logLn($e->getMessage());
             }
 
