@@ -105,6 +105,8 @@ abstract class AbstractConverter
     /**
      *  Default display name is simply the class name (short).
      *  Converters can override this.
+     *
+     * @return string  A display name, ie "Gd"
      */
     protected static function getConverterDisplayName()
     {
@@ -112,16 +114,26 @@ abstract class AbstractConverter
         return substr(strrchr('\\' . static::class, '\\'), 1);
     }
 
+    /**
+     * Create an instance of this class
+     *
+     * @param  string  $source       The path to the file to convert
+     * @param  string  $destination  The path to save the converted file to
+     * @param  array   $options      (optional)
+     * @param  \WebPConvert\Loggers\BaseLogger   $logger       (optional)
+     *
+     * @return static
+     */
     public static function createInstance($source, $destination, $options = [], $logger = null)
     {
         return new static($source, $destination, $options, $logger);
     }
 
     /**
-     *
-     *
+     *  Handle errors during conversion.
+     *  The function is a callback used with "set_error_handler". It logs 
      */
-    public function errorHandler($errno, $errstr, $errfile, $errline)
+    private function errorHandler($errno, $errstr, $errfile, $errline)
     {
         /*
         We do NOT do the following (even though it is generally recommended):
