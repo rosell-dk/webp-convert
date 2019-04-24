@@ -25,7 +25,7 @@
       "phpunit build-tests-webp-convert",
       "phpunit --bootstrap tests/bootstrap-webp-convert-test.php tests"
     ],
-    "test-src": "phpunit",
+    "test-src": "phpunit  --debug --coverage-text --coverage-clover=coverage.clover",
     "phpunit": "phpunit",
     "cs-fix-all": [
       "php-cs-fixer fix src"

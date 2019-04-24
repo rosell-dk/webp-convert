@@ -20,7 +20,7 @@
 
     <filter>
         <whitelist>
-            <directory>./</directory>
+            <directory suffix=".php">src/</directory>
             <exclude>
                 <directory>./vendor</directory>
                 <directory>./tests</directory>
@@ -29,4 +29,12 @@
             </exclude>
         </whitelist>
     </filter>
+
+    <logging>
+        <log type="junit" target="build/report.junit.xml"/>
+        <log type="coverage-clover" target="build/logs/clover.xml"/>
+        <log type="coverage-text" target="build/coverage.txt"/>
+        <!--<log type="coverage-html" target="build/coverage"/>-->
+    </logging>
+
 </phpunit>
