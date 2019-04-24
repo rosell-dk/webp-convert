@@ -13,17 +13,18 @@ class Cwebp extends AbstractExecConverter
 
     protected function getOptionDefinitionsExtra()
     {
-        // TODO: near_lossless
         return [
-            ['use-nice', 'boolean', false],
-            ['try-common-system-paths', 'boolean', true],
-            ['try-supplied-binary-for-os', 'boolean', true],
-            ['size-in-percentage', 'number', null],
+            ['autofilter', 'boolean', false],
             ['command-line-options', 'string', ''],
-            ['rel-path-to-precompiled-binaries', 'string', './Binaries'],
             ['low-memory', 'boolean', false],
             ['method', 'number', 6],
             ['near-lossless', 'integer', 60],
+            ['rel-path-to-precompiled-binaries', 'string', './Binaries'],
+            ['size-in-percentage', 'number', null],
+            ['try-common-system-paths', 'boolean', true],
+            ['try-supplied-binary-for-os', 'boolean', true],
+            ['use-nice', 'boolean', false],
+
         ];
     }
 
@@ -107,6 +108,9 @@ class Cwebp extends AbstractExecConverter
             }
         }
 
+        if ($options['autofilter'] === true) {
+            $commandOptionsArray[] = '-af';
+        }
 
         // Built-in method option
         $commandOptionsArray[] = '-m ' . strval($options['method']);
