@@ -2,7 +2,6 @@
 
 namespace WebPConvert\Convert\BaseConverters\BaseTraits;
 
-
 trait WarningLoggerTrait
 {
     abstract protected function logLn($msg, $style = '');
@@ -80,5 +79,4 @@ trait WarningLoggerTrait
     {
         restore_error_handler();
     }
-
 }
