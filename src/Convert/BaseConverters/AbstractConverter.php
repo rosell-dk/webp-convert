@@ -17,6 +17,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 use WebPConvert\Convert\BaseConverters\BaseTraits\AutoQualityTrait;
 use WebPConvert\Convert\BaseConverters\BaseTraits\LoggerTrait;
 use WebPConvert\Convert\BaseConverters\BaseTraits\OptionsTrait;
+use WebPConvert\Convert\BaseConverters\BaseTraits\WarningLoggerTrait;
 use WebPConvert\Loggers\BaseLogger;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
@@ -26,6 +27,7 @@ abstract class AbstractConverter
     use AutoQualityTrait;
     use LoggerTrait;
     use OptionsTrait;
+    use WarningLoggerTrait;
 
     /**
      * The actual conversion must be done by a concrete class.
@@ -129,65 +131,6 @@ abstract class AbstractConverter
         return new static($source, $destination, $options, $logger);
     }
 
-    /**
-     *  Handle errors during conversion.
-     *  The function is a callback used with "set_error_handler". It logs 
-     */
-    private function errorHandler($errno, $errstr, $errfile, $errline)
-    {
-        /*
-        We do NOT do the following (even though it is generally recommended):
-
-        if (!(error_reporting() & $errno)) {
-            // This error code is not included in error_reporting, so let it fall
-            // through to the standard PHP error handler
-            return false;
-        }
-
-        - Because we want to log all warnings and errors (also the ones that was suppressed with @)
-        https://secure.php.net/manual/en/language.operators.errorcontrol.php
-        */
-
-        $errorTypes = [
-            E_WARNING =>             "Warning",
-            E_NOTICE =>              "Notice",
-            E_USER_ERROR =>          "User Error",
-            E_USER_WARNING =>        "User Warning",
-            E_USER_NOTICE =>         "User Notice",
-            E_STRICT =>              "Strict Notice",
-            E_DEPRECATED =>          "Deprecated",
-            E_USER_DEPRECATED =>     "User Deprecated",
-
-            /*
-            The following can never be catched by a custom error handler:
-            E_PARSE, E_ERROR, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING
-
-            We do do not trigger the following, but actually, triggering warnings and notices
-            is perhaps a good alternative to calling logLn
-            E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE
-            */
-        ];
-
-        if (isset($errorTypes[$errno])) {
-            $errType = $errorTypes[$errno];
-        } else {
-            $errType = "Unknown error ($errno)";
-        }
-
-        $msg = $errType . ': ' . $errstr . ' in ' . $errfile . ', line ' . $errline . ', PHP ' . PHP_VERSION .
-            ' (' . PHP_OS . ')';
-        $this->logLn($msg);
-
-        if ($errno == E_USER_ERROR) {
-            // trigger error.
-            // unfortunately, we can only catch user errors
-            throw new ConversionFailedException('Uncaught error in converter', $msg);
-        }
-
-        // We do not return false, because we want to keep this little secret.
-        //return false;   // let PHP handle the error from here
-    }
-
     //$instance->logLn($instance->getConverterDisplayName() . ' converter ignited');
     //$instance->logLn(self::getConverterDisplayName() . ' converter ignited');
 
@@ -195,8 +138,8 @@ abstract class AbstractConverter
     {
         $this->beginTime = microtime(true);
 
-        //set_error_handler(array($this, "warningHandler"), E_WARNING);
-        set_error_handler(array($this, "errorHandler"));
+        $this->activateWarningLogger();
+        //set_error_handler(array($this, "errorHandler"));
 
         try {
             // Prepare options
@@ -220,18 +163,18 @@ abstract class AbstractConverter
             $this->checkConvertability();
             $this->runActualConvert();
         } catch (ConversionFailedException $e) {
-            restore_error_handler();
+            $this->deactivateWarningLogger();
             throw $e;
         } catch (\Exception $e) {
-            restore_error_handler();
+            $this->deactivateWarningLogger();
             throw new UnhandledException('Conversion failed due to uncaught exception', 0, $e);
         } catch (\Error $e) {
-            restore_error_handler();
+            $this->deactivateWarningLogger();
             // https://stackoverflow.com/questions/7116995/is-it-possible-in-php-to-prevent-fatal-error-call-to-undefined-function
             //throw new UnhandledException('Conversion failed due to uncaught error', 0, $e);
             throw $e;
         }
-        restore_error_handler();
+        $this->deactivateWarningLogger();
 
         $source = $this->source;
         $destination = $this->destination;

@@ -21,7 +21,14 @@ trait LoggerTrait
         $this->logger = $logger;
     }
 
-    public function logLn($msg, $style = '')
+    /**
+     * Write a line to the logger.
+     *
+     * @param  string  $msg    The line to write.
+     * @param  string  $style  (optional) Ie "italic" or "bold"
+     * @return void
+     */
+    protected function logLn($msg, $style = '')
     {
         $this->logger->logLn($msg, $style);
     }
