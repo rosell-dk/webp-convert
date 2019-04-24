@@ -97,6 +97,13 @@ class ServeBase
     {
         if (!empty($this->options['cache-control-header'])) {
             $this->header('Cache-Control: ' . $this->options['cache-control-header'], true);
+
+            // Add exprires header too (#126)
+            // Check string for something like this: max-age:86400
+            if (preg_match('#max-age\\s*=\\s*(\\d*)#', $this->options['cache-control-header'], $matches)) {
+                $seconds = $matches[1];
+                $this->header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + intval($seconds)));
+            }
         }
     }
 
