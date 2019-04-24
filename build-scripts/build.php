@@ -15,7 +15,7 @@ $filesInWod1 = [
 // Build "webp-on-demand-1.php" (for non-composer projects)
 
 PhpMerger::generate([
-    'destination' => '../build/webp-on-demand-1.inc',
+    'destination' => '../src-build/webp-on-demand-1.inc',
 
     'jobs' => [
         [
@@ -88,7 +88,7 @@ $jobsEverything = [
 
 // Build "webp-convert.inc", containing the entire library (for the lazy ones)
 PhpMerger::generate([
-    'destination' => '../build/webp-convert.inc',
+    'destination' => '../src-build/webp-convert.inc',
     'jobs' => $jobsEverything
 ]);
 
@@ -98,6 +98,6 @@ $jobsWod2[0]['exclude'] = $filesInWod1;
 // Build "webp-on-demand-2.inc"
 // It must contain everything EXCEPT those classes that were included in 'webp-on-demand-1.inc'
 PhpMerger::generate([
-    'destination' => '../build/webp-on-demand-2.inc',
+    'destination' => '../src-build/webp-on-demand-2.inc',
     'jobs' => $jobsWod2
 ]);

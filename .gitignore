@@ -5,3 +5,5 @@ composer.phar
 /tests/*.webp
 /tests/images/*.webp
 .idea
+/build
+coverage.clover

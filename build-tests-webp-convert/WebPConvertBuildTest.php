@@ -17,7 +17,7 @@ class WebPConvertBuildTest extends TestCase
 
     public function testWebPConvertBuildNotCompletelyBroken()
     {
-        require __DIR__ . '/../build/webp-convert.inc';
+        require __DIR__ . '/../src-build/webp-convert.inc';
 
         $source = __DIR__ . '/images/png-without-extension';
 

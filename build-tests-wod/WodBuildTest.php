@@ -17,7 +17,7 @@ class WodBuildTest extends TestCase
      */
      public function testWodBuildNotCompletelyBroken()
     {
-        $buildDir = __DIR__ . '/../build';
+        $buildDir = __DIR__ . '/../src-build';
         $wod1 = $buildDir . '/webp-on-demand-1.inc';
         $wod2 = $buildDir . '/webp-on-demand-2.inc';
 

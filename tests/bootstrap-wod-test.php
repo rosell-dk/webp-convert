@@ -1,6 +1,6 @@
 <?php
-require __DIR__ . '/../build/webp-on-demand-1.inc';
-require __DIR__ . '/../build/webp-on-demand-2.inc';
+require __DIR__ . '/../src-build/webp-on-demand-1.inc';
+require __DIR__ . '/../src-build/webp-on-demand-2.inc';
 
 spl_autoload_register('webpconvert_disable_autoload', true, true);
 function webpconvert_disable_autoload($class) {

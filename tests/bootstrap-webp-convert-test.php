@@ -1,5 +1,5 @@
 <?php
-require __DIR__ . '/../build/webp-convert.inc';
+require __DIR__ . '/../src-build/webp-convert.inc';
 
 spl_autoload_register('webpconvert_disable_autoload', true, true);
 function webpconvert_disable_autoload($class) {
