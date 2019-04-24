@@ -59,23 +59,43 @@ In more detail, the implementation does this:
 - If [`nice`]( https://en.wikipedia.org/wiki/Nice_(Unix)) command is found on host, binary is executed with low priority in order to save system resources
 - Permissions of the generated file are set to be the same as parent folder
 
-#### The `method` option
-This parameter controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. 0 is fastest. 6 results in best quality.
+### Cwebp options
 
-#### The `size-in-percentage` option
-This option sets the file size, *cwebp* should aim for, in percentage of the original. If you for example set it to *45*, and the source file is 100 kb, *cwebp* will try to create a file with size 45 kb (we use the `-size` option). This is an excellent alternative to the "quality:auto" option. If the quality detection isn't working on your system (and you do not have the rights to install imagick or gmagick), you should consider using this options instead. *Cwebp* is generally able to create webp files with the same quality at about 45% the size. So *45* would be a good choice. The option overrides the quality option. And note that it slows down the conversion - it takes about 2.5 times longer to do a conversion this way, than when quality is specified. Default is *off* (null)
+The following options are supported, besides the general options (such as quality, lossless etc):
+
+| Option                     | Type                      | Default                    |
+| -------------------------- | ------------------------- | -------------------------- |
+| autofilter                 | boolean                   | false                      |
+| command-line-options       | string                    | ''                         |
+| low-memory                 | boolean                   | false                      |
+| method                     | integer (0-6)             | 6                          |
+| near-lossless              | integer (0-100)           | 60                         |
+| size-in-percentage         | integer (0-100) (or null) | null                       |
+| rel-path-to-precompiled-binaries | string              | './Binaries'               |
+| size-in-percentage         | number (or null)          | is_null                    |
+| try-common-system-paths    | boolean                   | true                       |
+| try-supplied-binary-for-os | boolean                   | true                       |
+| use-nice                   | boolean                   | false                      |
+
+Descriptions (only of some of the options):
 
 #### the `autofilter` option
 Turns auto-filter on. This algorithm will spend additional time optimizing the filtering strength to reach a well-balanced quality. Unfortunately, it is extremely expensive in terms of computation. It takes about 5-10 times longer to do a conversion. A 1MB picture which perhaps typically takes about 2 seconds to convert, will takes about 15 seconds to convert with auto-filter. So in most cases, you will want to leave this at its default, which is off.
 
-#### the `low-memory` option
-Reduce memory usage of lossy encoding at the cost of ~30% longer encoding time and marginally larger output size. Default: `false`. Read more in [the docs](https://developers.google.com/speed/webp/docs/cwebp). Default: *false*
-
 #### the `command-line-options` option
 This allows you to set any parameter available for cwebp in the same way as you would do when executing *cwebp*. You could ie set it to "-sharpness 5 -mt -crop 10 10 40 40". Read more about all the available parameters in [the docs](https://developers.google.com/speed/webp/docs/cwebp)
 
+#### the `low-memory` option
+Reduce memory usage of lossy encoding at the cost of ~30% longer encoding time and marginally larger output size. Default: `false`. Read more in [the docs](https://developers.google.com/speed/webp/docs/cwebp). Default: *false*
+
+#### The `method` option
+This parameter controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. 0 is fastest. 6 results in best quality.
+
 #### the `near-lossless` option
 Specify the level of near-lossless image preprocessing. This option adjusts pixel values to help compressibility, but has minimal impact on the visual quality. It triggers lossless compression mode automatically. The range is 0 (maximum preprocessing) to 100 (no preprocessing). The typical value is around 60. Read more [here](https://groups.google.com/a/webmproject.org/forum/#!topic/webp-discuss/0GmxDmlexek). Default: 60
+
+#### The `size-in-percentage` option
+This option sets the file size, *cwebp* should aim for, in percentage of the original. If you for example set it to *45*, and the source file is 100 kb, *cwebp* will try to create a file with size 45 kb (we use the `-size` option). This is an excellent alternative to the "quality:auto" option. If the quality detection isn't working on your system (and you do not have the rights to install imagick or gmagick), you should consider using this options instead. *Cwebp* is generally able to create webp files with the same quality at about 45% the size. So *45* would be a good choice. The option overrides the quality option. And note that it slows down the conversion - it takes about 2.5 times longer to do a conversion this way, than when quality is specified. Default is *off* (null)
 
 
 #### final words on cwebp
