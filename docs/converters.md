@@ -9,20 +9,34 @@ Speed-wise, there is too little difference for it to matter, considering that im
 
 Of course, as we here have to call a binary directly, *cwebp* requires the *exec* function to be enabled, and that the webserver user is allowed to execute the `cwebp` binary (either at known system locations, or one of the precompiled binaries, that comes with this library).
 
-[`imagick`](#imagick) does not support any special webp options, but is at least able to strip all metadata, if metadata is set to none. Imagick has a very nice feature - that it is able to detect the quality of a jpeg file. This enables it to automatically use same quality for destination as for source, which eliminates the risk of setting quality higher for the destination than for source (the result of that is that the file size gets higher, but the quality remains the same). As the other converters lends this capability from Imagick, this is however no reason for using Imagick rather than the other converters.
+[`vips`](#vips) (**new in 2.0**) works by using the vips extension, if available. Vips is great! It offers many webp options, it is fast and installation is easier than imagick and gd, as it does not need to be configured for webp support.
 
-[`gmagick`](#gmagick) uses the *gmagick* extension. It is very similar to *imagick*.
+[`imagick`](#imagick) does not support any special webp options, but is at least able to strip all metadata, if metadata is set to none. Imagick has a very nice feature - that it is able to detect the quality of a jpeg file. This enables it to automatically use same quality for destination as for source, which eliminates the risk of setting quality higher for the destination than for source (the result of that is that the file size gets higher, but the quality remains the same). As the other converters lends this capability from Imagick, this is however no reason for using Imagick rather than the other converters. Requirements: Imagick PHP extension compiled with WebP support
 
-[`gd`](#gd) uses the *Gd* extension to do the conversion. The *Gd* extension is pretty common, so the main feature of this converter is that it may work out of the box. It does not support any webp options, and does not support stripping metadata.
+[`gmagick`](#gmagick) uses the *gmagick* extension. It is very similar to *imagick*. Requirements:  Gmagick PHP extension compiled with WebP support.
 
-[`wpc`](#wpc) is an open source cloud service for converting images to webp. To use it, you must either install [webp-convert-cloud-service](https://github.com/rosell-dk/webp-convert-cloud-service) directly on a remote server, or install the Wordpress plugin, [WebP Express](https://github.com/rosell-dk/webp-express) in Wordpress. Btw: Beware that upload limits will prevent conversion of big images. The converter checks your *php.ini* settings and abandons upload right away, if an image is larger than your *upload_max_filesize* or your *post_max_size* setting.
+[`gd`](#gd) uses the *Gd* extension to do the conversion. The *Gd* extension is pretty common, so the main feature of this converter is that it may work out of the box. It does not support any webp options, and does not support stripping metadata. Requirements: GD PHP extension compiled with WebP support.
 
-[`ewww`](#ewww) is also a cloud service. Not free, but cheap enough to be considered *practically* free. It produces webp files a bit smalle than the rest. It seems to produce same size as *cwebp*, when method is set to 3. Unfortunately, *ewww* does not support quality=auto, like *wpc*, and it does not support *size-in-percentage* like *cwebp*, either. I have requested such features, and he is considering... As with *wpc*, beware of upload limits.
+[`wpc`](#wpc) is an open source cloud service for converting images to webp. To use it, you must either install [webp-convert-cloud-service](https://github.com/rosell-dk/webp-convert-cloud-service) directly on a remote server, or install the Wordpress plugin, [WebP Express](https://github.com/rosell-dk/webp-express) in Wordpress. Btw: Beware that upload limits will prevent conversion of big images. The converter checks your *php.ini* settings and abandons upload right away, if an image is larger than your *upload_max_filesize* or your *post_max_size* setting. Requirements: Access to a running service. The service can be installed  [directly](https://github.com/rosell-dk/webp-convert-cloud-service) or by using [this Wordpress plugin](https://wordpress.org/plugins/webp-express/)
+
+[`ewww`](#ewww) is also a cloud service. Not free, but cheap enough to be considered *practically* free. It supports lossless encoding, but this cannot be controlled. *Ewww* always uses lossy encoding for jpeg and lossless for png. For jpegs this is usually a good choice, however, many pngs are compressed better using lossy encoding. As lossless cannot be controlled, the "lossless:auto" option cannot be used for automatically trying both lossy and lossless and picking the smallest file. Also, unfortunately, *ewww* does not support quality=auto, like *wpc*, and it does not support *size-in-percentage* like *cwebp*, either. I have requested such features, and he is considering... As with *wpc*, beware of upload limits. Requirements: A key to the *EWWW Image Optimizer* cloud service. Can be purchaced [here](https://ewww.io/plans/)
 
 [`stack`](#stack) takes a stack of converters and tries it from the top, until success. The main convert method actually calls this converter. Stacks within stacks are supported (not really needed, though).
 
 
 **Summary:**
+
+|                                            | cwebp     | vips   | imagick / gmagick | imagickbinary | gd        | ewww   |
+| ------------------------------------------ | --------- | ------ | ----------------- | ------------- | --------- | ------ |
+| supports lossless encoding ?               | yes       | yes    | no                | no            | no        | yes    |
+| supports lossless auto ?                   | yes       | yes    | no                | no            | no        | no     |
+| supports near-lossless ?                   | yes       | yes    | no                | no            | no        | ?      |
+| supports metadata stripping / preserving   | yes       | yes    | yes               | no            | no        | ?      |
+| supports setting alpha quality             | no        | yes    | no                | no            | no        | no     |
+| supports fixed quality (for lossy)         | yes       | yes    | yes               | yes           | yes       | yes    |
+| supports auto quality without help         | no        | no     | yes               | yes           | no        | no     |
+
+
 
 *WebPConvert* currently supports the following converters:
 
