@@ -232,6 +232,11 @@ namespace WebPConvert\Tests\Convert\Converters {
             $gdExposer = new GdExposer($gd);
             $image = $gdExposer->createImageResource();
 
+            // The next requires imagewebp...
+            if (!function_exists('imagewebp')) {
+                return;
+            }
+
             // This image is not true color.
             // Trying to convert it fails (empty string is generated)
             // Assert that I am right!
@@ -240,7 +245,7 @@ namespace WebPConvert\Tests\Convert\Converters {
             $output = ob_get_clean();
             $this->assertSame($output, '');
 
-            // similary, we should get an exception when calling tryConverting ('Gd failed: imagewebp() returned empty string')            
+            // similary, we should get an exception when calling tryConverting ('Gd failed: imagewebp() returned empty string')
             $this->expectException(ConversionFailedException::class);
             $gdExposer->tryConverting($image);
 
