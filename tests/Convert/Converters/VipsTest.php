@@ -44,6 +44,17 @@ class VipsTest extends TestCase
         return new VipsExposer($this->createVips($src, $options));
     }
 
+    private function isVipsOperational()
+    {
+        try {
+            $vips->checkOperationality();
+            $vips->checkConvertability();
+        } catch (\Exception $e) {
+            return false;
+        }
+        return true;
+    }
+
     public function testCreateParamsForVipsWebPSave1()
     {
         $options = [
@@ -82,6 +93,11 @@ class VipsTest extends TestCase
 
     public function testCreateImageResource1()
     {
+        // Exit if vips is not operational
+        if (!$this->isVipsOperational()) {
+            return;
+        }
+
         $source = self::$imageDir . '/non-existing';
         $vips = new Vips($source, $source . '.webp', []);
         $vipsExposer = new VipsExposer($vips);
@@ -136,15 +152,12 @@ class VipsTest extends TestCase
     public function testWebpsave()
     {
         reset_pretending();
-        
+
         $vips = $this->createVips('test.png', []);
         $vipsExposer = new VipsExposer($vips);
 
         // Exit if vips is not operational
-        try {
-            $vips->checkOperationality();
-            $vips->checkConvertability();
-        } catch (\Exception $e) {
+        if (!$this->isVipsOperational()) {
             return;
         }
 
