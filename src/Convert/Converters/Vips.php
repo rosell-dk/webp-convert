@@ -144,7 +144,7 @@ class Vips extends AbstractConverter
      * Tries to create image resource and save it as webp using the calculated options.
      * Vips fails when a parameter is not supported, but we detect this and unset that parameter and try again
      * (repeat until success).
-     *       
+     *
      * @throws  ConversionFailedException  if conversion fails.
      */
     protected function doActualConvert()
