@@ -161,6 +161,7 @@ class ConverterTestHelper
 
     public static function runAllConvertTests($testCase, $converterClassName, $converterOptions = [])
     {
+        $converterOptions['lossless'] = 'auto';
         self::testConvert($testCase, $converterClassName, $converterOptions);
         self::testTargetNotFound($testCase, $converterClassName, $converterOptions);
         self::testInvalidDestinationFolder($testCase, $converterClassName, $converterOptions);
