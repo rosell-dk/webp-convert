@@ -60,20 +60,14 @@ class Vips extends AbstractConverter
         $this->logLn('vips extension version: ' . phpversion('vips'));
     }
 
-    protected function doActualConvert()
+    /**
+     * Create vips image resource from source file
+     *
+     * @throws  ConversionFailedException  if image resource cannot be created
+     * @return  resource  vips image resource
+     */
+    private function createImageResource()
     {
-/*
-        $im = \Jcupitt\Vips\Image::newFromFile($this->source);
-        //$im->writeToFile(__DIR__ . '/images/small-vips.webp', ["Q" => 10]);
-
-        $im->webpsave($this->destination, [
-            "Q" => 80,
-            //'near_lossless' => true
-        ]);
-        return;*/
-
-
-
         // We are currently using vips_image_new_from_file(), but we could consider
         // calling vips_jpegload / vips_pngload instead
         $result = /** @scrutinizer ignore-call */ vips_image_new_from_file($this->source, []);
@@ -99,7 +93,16 @@ class Vips extends AbstractConverter
         }
 
         $im = array_shift($result);
+        return $im;
+    }
 
+    /**
+     * Create parameters for webpsave
+     *
+     * @return  array  the parameters as an array
+     */
+    private function createParamsForVipsWebPSave()
+    {
         // webpsave options are described here:
         // https://jcupitt.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave
 
@@ -132,6 +135,33 @@ class Vips extends AbstractConverter
                 $options['Q'] = $this->options['near-lossless'];
             }
         }
+        return $options;
+    }
+
+    /**
+     * Convert with vips extension.
+     *
+     * Tries to create image resource and save it as webp using the calculated options.
+     * Vips fails when a parameter is not supported, but we detect this and unset that parameter and try again
+     * (repeat until success).
+     *       
+     * @throws  ConversionFailedException  if conversion fails.
+     */
+    protected function doActualConvert()
+    {
+/*
+        $im = \Jcupitt\Vips\Image::newFromFile($this->source);
+        //$im->writeToFile(__DIR__ . '/images/small-vips.webp', ["Q" => 10]);
+
+        $im->webpsave($this->destination, [
+            "Q" => 80,
+            //'near_lossless' => true
+        ]);
+        return;*/
+
+        $im = $this->createImageResource();
+        $options = $this->createParamsForVipsWebPSave();
+
 
         $done = false;
 
