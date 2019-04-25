@@ -63,6 +63,12 @@ namespace WebPConvert\Tests\Convert\Converters {
             return new Gd($source, $source . '.webp');
         }
 
+        private function createGdExposer($src)
+        {
+            $gd = $this->createGd($src);
+            return new GdExposer($gd);
+        }
+
         private static function resetPretending()
         {
             global $pretend;
@@ -145,6 +151,7 @@ namespace WebPConvert\Tests\Convert\Converters {
 
         public function testSource()
         {
+
             $source = self::$imageDir . '/test.png';
             $gd = new Gd($source, $source . '.webp');
 
@@ -226,11 +233,8 @@ namespace WebPConvert\Tests\Convert\Converters {
 
         public function testConvertFailure()
         {
-            $gd = $this->createGd('not-true-color.png');
+            $gdExposer = $this->createGdExposer('not-true-color.png');
             self::resetPretending();
-
-            $gdExposer = new GdExposer($gd);
-            $image = $gdExposer->createImageResource();
 
             // The next requires imagewebp...
             if (!function_exists('imagewebp')) {
