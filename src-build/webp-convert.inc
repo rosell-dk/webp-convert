@@ -2972,6 +2972,38 @@ class Vips extends AbstractConverter
      *
      * Tries to create image resource and save it as webp using the calculated options.
      * Vips fails when a parameter is not supported, but we detect this and unset that parameter and try again
+     * (recursively call itself until there is no more of these kind of errors).
+     *
+     * @param  resource  $im  A vips image resource to save
+     * @throws  ConversionFailedException  if conversion fails.
+     */
+    private function webpsave($im, $options)
+    {
+        $result = /** @scrutinizer ignore-call */ vips_call('webpsave', $im, $this->destination, $options);
+
+        if ($result === -1) {
+            $message = /** @scrutinizer ignore-call */ vips_error_buffer();
+
+            // If the error
+            if (preg_match("#no property named .(.*).#", $message, $matches)) {
+                $nameOfPropertyNotFound = $matches[1];
+                $this->logLn(
+                    'Your version of vipslib does not support the "' . $nameOfPropertyNotFound . '" property. ' .
+                    'The option is ignored.'
+                );
+                unset($options[$nameOfPropertyNotFound]);
+                $this->webpsave($im, $options);
+            } else {
+                throw new ConversionFailedException($message);
+            }
+        }
+    }
+
+    /**
+     * Convert with vips extension.
+     *
+     * Tries to create image resource and save it as webp using the calculated options.
+     * Vips fails when a parameter is not supported, but we detect this and unset that parameter and try again
      * (repeat until success).
      *
      * @throws  ConversionFailedException  if conversion fails.
@@ -2990,34 +3022,7 @@ class Vips extends AbstractConverter
 
         $im = $this->createImageResource();
         $options = $this->createParamsForVipsWebPSave();
-
-
-        $done = false;
-
-        // A bit unusual loop.
-        // Iterations happens when vips errors out because of unsupported properties
-        // in that case, we remove that property and try again.
-        while (!$done) {
-            $result = /** @scrutinizer ignore-call */ vips_call('webpsave', $im, $this->destination, $options);
-
-            if ($result === -1) {
-                $message = /** @scrutinizer ignore-call */ vips_error_buffer();
-
-                // If the error
-                if (preg_match("#no property named .(.*).#", $message, $matches)) {
-                    $nameOfPropertyNotFound = $matches[1];
-                    $this->logLn(
-                        'Your version of vipslib does not support the "' . $nameOfPropertyNotFound . '" property. ' .
-                        'The option is ignored.'
-                    );
-                    unset($options[$nameOfPropertyNotFound]);
-                } else {
-                    throw new ConversionFailedException($message);
-                }
-            } else {
-                $done = true;
-            }
-        }
+        $this->webpsave($im, $options);
     }
 }
 
