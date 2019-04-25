@@ -9,6 +9,10 @@ use PHPUnit\Framework\TestCase;
 
 class WarningsIntoExceptionsTest extends TestCase
 {
+    public function testNothing()
+    {
+        $this->assertTrue(true);
+    }
 /*
     private static $imgDir = __DIR__ . '/../../images';
 
