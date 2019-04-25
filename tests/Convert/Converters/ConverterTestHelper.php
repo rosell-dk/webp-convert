@@ -119,12 +119,12 @@ class ConverterTestHelper
      * - It must not return anything (as of 2.0, there is no return value)
      * - If conversion is successful, there must be a file at the destination
      */
-    public static function testConvert($testCase, $converterClassName, $converterOptions)
+    public static function testConvert($src, $testCase, $converterClassName, $converterOptions)
     {
 
         try {
-            $source = (__DIR__ . '/../../test.jpg');
-            $destination = (__DIR__ . '/../../test.webp');
+            $source = (__DIR__ . '/../../' . $src);
+            $destination = (__DIR__ . '/../../' . $src . '.webp');
 
             $result = self::callConvert($converterClassName, $source, $destination, $converterOptions);
 
@@ -162,7 +162,10 @@ class ConverterTestHelper
     public static function runAllConvertTests($testCase, $converterClassName, $converterOptions = [])
     {
         $converterOptions['lossless'] = 'auto';
-        self::testConvert($testCase, $converterClassName, $converterOptions);
+        self::testConvert('test.jpg', $testCase, $converterClassName, $converterOptions);
+        self::testConvert('test.png', $testCase, $converterClassName, $converterOptions);
+        //self::testConvert('not-true-color.png', $testCase, $converterClassName, $converterOptions);
+
         self::testTargetNotFound($testCase, $converterClassName, $converterOptions);
         self::testInvalidDestinationFolder($testCase, $converterClassName, $converterOptions);
     }

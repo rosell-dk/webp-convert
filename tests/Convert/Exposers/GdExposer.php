@@ -19,7 +19,41 @@ class GdExposer extends AbstractConverterExposer {
 
     public function createImageResource()
     {
-        return $this->callPrivateFunction('createImageResource');
+        return $this->callPrivateFunction('createImageResource', null, 2);
+    }
+
+
+    public function makeTrueColorUsingWorkaround(&$image)
+    {
+        return $this->callPrivateFunctionByRef('makeTrueColorUsingWorkaround', null, $image);
+
+//        return $this->callPrivateFunction('makeTrueColorUsingWorkaround', null, $image);
+    /*
+       The following would also work:
+
+        $cb = function(&$image) {
+            echo 'callback:...' . gettype($image);
+            return $this->makeTrueColorUsingWorkaround($image);
+        };
+        //$class = get_class(Gd::class);
+        $functionNowBinded = $cb->bindTo($this->objectToExposeFrom, Gd::class);
+
+        return $functionNowBinded($image);*/
+    }
+
+    public function trySettingAlphaBlending(&$image)
+    {
+        return $this->callPrivateFunctionByRef('trySettingAlphaBlending', null, $image);
+    }
+
+    public function tryToMakeTrueColorIfNot(&$image)
+    {
+        return $this->callPrivateFunctionByRef('tryToMakeTrueColorIfNot', null, $image);
+    }
+
+    public function tryConverting(&$image)
+    {
+        return $this->callPrivateFunctionByRef('tryConverting', null, $image);
     }
 
 

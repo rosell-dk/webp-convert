@@ -7,7 +7,7 @@ use WebPConvert\Tests\Convert\TestConverters\ExposedCloudConverter;
 
 use PHPUnit\Framework\TestCase;
 
-class AbstractConverterTest extends TestCase
+class AbstractCloudConverterTest extends TestCase
 {
 
 
