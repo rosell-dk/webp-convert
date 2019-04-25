@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 class WarningsIntoExceptionsTest extends TestCase
 {
-
+/*
     private static $imgDir = __DIR__ . '/../../images';
 
     public function testUserWarning()
@@ -34,7 +34,7 @@ class WarningsIntoExceptionsTest extends TestCase
         // trigger build-in warning (chmod expects exactly two parameters)
         chmod('hth');
         WarningsIntoExceptions::deactivate();
-    }
+    }*/
 
 
 /*
