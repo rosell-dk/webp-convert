@@ -100,8 +100,6 @@ class Gd extends AbstractConverter
                 'imagefilledrectangle', 'imagecopy', 'imagedestroy', 'imagesx', 'imagesy'])) {
             $dst = imagecreatetruecolor(imagesx($image), imagesy($image));
 
-            $image = $dst; return true;
-
             if ($dst === false) {
                 return false;
             }
