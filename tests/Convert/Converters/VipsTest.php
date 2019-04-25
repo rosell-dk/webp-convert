@@ -135,6 +135,8 @@ class VipsTest extends TestCase
 
     public function testWebpsave()
     {
+        reset_pretending();
+        
         $vips = $this->createVips('test.png', []);
         $vipsExposer = new VipsExposer($vips);
 
