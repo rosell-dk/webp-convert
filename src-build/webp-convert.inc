@@ -7,7 +7,6 @@
 namespace WebPConvert\Convert\BaseConverters;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\UnhandledException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFileException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFolderException;
@@ -80,7 +79,7 @@ abstract class AbstractConverter
      *
      * @return  void
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
     }
 
@@ -92,7 +91,7 @@ abstract class AbstractConverter
      *
      * @return  void
      */
-    protected function checkConvertability()
+    public function checkConvertability()
     {
     }
 
@@ -470,7 +469,7 @@ abstract class AbstractCloudConverter extends AbstractConverter
      * Check if specific file is convertable with current converter / converter settings.
      *
      */
-    protected function checkConvertability()
+    public function checkConvertability()
     {
         $this->testFilesizeRequirements();
     }
@@ -492,7 +491,7 @@ abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
      * @throws  SystemRequirementsNotMetException
      * @return  void
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         parent::checkOperationality();
 
@@ -582,7 +581,7 @@ abstract class AbstractExecConverter extends AbstractConverter
      * @throws  SystemRequirementsNotMetException
      * @return  void
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         if (!function_exists('exec')) {
             throw new SystemRequirementsNotMetException('exec() is not enabled.');
@@ -648,7 +647,7 @@ use WebPConvert\Exceptions\WebPConvertException;
  *
  *  WebpConvertException
  *      ConversionFailedException
- *          ConversionDeclinedException
+ *          ConversionSkippedException
  *          ConverterNotOperationalException
  *              SystemRequirementsNotMetException
  *          FileSystemProblemsException
@@ -860,6 +859,7 @@ trait LoggerTrait
 
 namespace WebPConvert\Convert\BaseConverters\BaseTraits;
 
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidOptionTypeException;
 
 trait OptionsTrait
@@ -882,7 +882,7 @@ trait OptionsTrait
         ['default-quality', 'number', 75],
         ['metadata', 'string', 'none'],
         ['lossless', 'boolean|string', false],
-        ['skip-pngs', 'boolean', false],
+        ['skip', 'boolean', false],
     ];
 
     /**
@@ -976,6 +976,20 @@ trait OptionsTrait
                 }
             }
         }
+
+        if ($this->options['skip']) {            
+            if (($this->getMimeTypeOfSource() == 'image/png') && isset($this->options['png']['skip'])) {
+                throw new ConversionSkippedException(
+                    'skipped conversion (configured to do so for PNG)'
+                );
+            } else {
+                throw new ConversionSkippedException(
+                    'skipped conversion (configured to do so)'
+                );
+
+            }
+        }
+
     }
 
     /**
@@ -1006,13 +1020,10 @@ trait OptionsTrait
         if ($this->getMimeTypeOfSource() == 'png') {
             // skip png's ?
             if ($this->options['skip-pngs']) {
-                throw new ConversionDeclinedException(
+                throw new ConversionSkippedException(
                     'PNG file skipped (configured to do so)'
                 );
             }
-
-            // Force lossless option to true for PNG images
-            $this->options['lossless'] = true;
         }
 
 
@@ -1119,17 +1130,18 @@ class Cwebp extends AbstractExecConverter
 
     protected function getOptionDefinitionsExtra()
     {
-        // TODO: near_lossless
         return [
-            ['use-nice', 'boolean', false],
-            ['try-common-system-paths', 'boolean', true],
-            ['try-supplied-binary-for-os', 'boolean', true],
-            ['size-in-percentage', 'number', null],
+            ['autofilter', 'boolean', false],
             ['command-line-options', 'string', ''],
-            ['rel-path-to-precompiled-binaries', 'string', './Binaries'],
             ['low-memory', 'boolean', false],
             ['method', 'number', 6],
             ['near-lossless', 'integer', 60],
+            ['rel-path-to-precompiled-binaries', 'string', './Binaries'],
+            ['size-in-percentage', 'number', null],
+            ['try-common-system-paths', 'boolean', true],
+            ['try-supplied-binary-for-os', 'boolean', true],
+            ['use-nice', 'boolean', false],
+
         ];
     }
 
@@ -1213,6 +1225,9 @@ class Cwebp extends AbstractExecConverter
             }
         }
 
+        if ($options['autofilter'] === true) {
+            $commandOptionsArray[] = '-af';
+        }
 
         // Built-in method option
         $commandOptionsArray[] = '-m ' . strval($options['method']);
@@ -1264,7 +1279,7 @@ class Cwebp extends AbstractExecConverter
         return $commandOptions;
     }
 
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         $options = $this->options;
         if (!$options['try-supplied-binary-for-os'] && !$options['try-common-system-paths']) {
@@ -1483,7 +1498,7 @@ class Ewww extends AbstractCloudCurlConverter
      * @throws SystemRequirementsNotMetException  if system requirements are not met (curl)
      * @throws ConverterNotOperationalException   if key is missing or invalid, or quota has exceeded
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         // First check for curl requirements
         parent::checkOperationality();
@@ -1759,7 +1774,6 @@ class Ewww extends AbstractCloudCurlConverter
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\BaseConverters\AbstractConverter;
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInputException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
@@ -1781,7 +1795,7 @@ class Gd extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         if (!extension_loaded('gd')) {
             throw new SystemRequirementsNotMetException('Required Gd extension is not available.');
@@ -1799,7 +1813,7 @@ class Gd extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if Gd has been compiled without support for image type
      */
-    protected function checkConvertability()
+    public function checkConvertability()
     {
         $mimeType = $this->getMimeTypeOfSource();
         switch ($mimeType) {
@@ -1846,14 +1860,18 @@ class Gd extends AbstractConverter
      * @return boolean  TRUE if the convertion was complete, or if the source image already is a true color image,
      *          otherwise FALSE is returned.
      */
-    private static function makeTrueColorUsingWorkaround(&$image)
+    private function makeTrueColorUsingWorkaround(&$image)
     {
+        //return $this->makeTrueColor($image);
+        /*
         if (function_exists('imageistruecolor') && imageistruecolor($image)) {
             return true;
-        }
+        }*/
         if (self::functionsExist(['imagecreatetruecolor', 'imagealphablending', 'imagecolorallocatealpha',
                 'imagefilledrectangle', 'imagecopy', 'imagedestroy', 'imagesx', 'imagesy'])) {
             $dst = imagecreatetruecolor(imagesx($image), imagesy($image));
+
+            $image = $dst; return true;
 
             if ($dst === false) {
                 return false;
@@ -1904,13 +1922,13 @@ class Gd extends AbstractConverter
      * @return boolean  TRUE if the convertion was complete, or if the source image already is a true color image,
      *          otherwise FALSE is returned.
      */
-    private static function makeTrueColor(&$image)
+    private function makeTrueColor(&$image)
     {
         if (function_exists('imagepalettetotruecolor')) {
             return imagepalettetotruecolor($image);
         } else {
             // imagepalettetotruecolor() is not available on this system. Using custom implementation instead
-            return self::makeTrueColorUsingWorkaround($image);
+            return $this->makeTrueColorUsingWorkaround($image);
         }
     }
 
@@ -1995,31 +2013,36 @@ class Gd extends AbstractConverter
     /**
      *
      * @param  resource  $image
-     * @return void
+     * @return boolean  true if alpha blending was set successfully, false otherwise
      */
     protected function trySettingAlphaBlending($image)
     {
         if (function_exists('imagealphablending')) {
             if (!imagealphablending($image, true)) {
                 $this->logLn('Warning: imagealphablending() failed');
+                return false;
             }
         } else {
             $this->logLn(
                 'Warning: imagealphablending() is not available on your system.' .
                 ' Converting PNGs with transparency might fail on some systems'
             );
+            return false;
         }
 
         if (function_exists('imagesavealpha')) {
             if (!imagesavealpha($image, true)) {
                 $this->logLn('Warning: imagesavealpha() failed');
+                return false;
             }
         } else {
             $this->logLn(
                 'Warning: imagesavealpha() is not available on your system. ' .
                 'Converting PNGs with transparency might fail on some systems'
             );
+            return false;
         }
+        return true;
     }
 
     protected function errorHandlerWhileCreatingWebP($errno, $errstr, $errfile, $errline)
@@ -2027,6 +2050,7 @@ class Gd extends AbstractConverter
         $this->errorNumberWhileCreating = $errno;
         $this->errorMessageWhileCreating = $errstr . ' in ' . $errfile . ', line ' . $errline .
             ', PHP ' . PHP_VERSION . ' (' . PHP_OS . ')';
+        //return false;
     }
 
     /**
@@ -2063,7 +2087,8 @@ class Gd extends AbstractConverter
         $q = $this->getCalculatedQuality();
 
         ob_start();
-        //$success = imagewebp($image);
+
+        //$success = imagewebp($image, $this->destination, $q);
         $success = imagewebp($image, null, $q);
 
         if (!$success) {
@@ -2085,6 +2110,13 @@ class Gd extends AbstractConverter
         }
         $output = ob_get_clean();
         restore_error_handler();
+
+        if ($output == '') {
+            $this->destroyAndRemove($image);
+            throw new ConversionFailedException(
+                'Gd failed: imagewebp() returned empty string'
+            );
+        }
 
         // --------------------------------- (end of danger zone).
 
@@ -2173,7 +2205,7 @@ class Gd extends AbstractConverter
         $this->tryToMakeTrueColorIfNot($image);
 
 
-        if ($this->getMimeTypeOfSource() == 'png') {
+        if ($this->getMimeTypeOfSource() == 'image/png') {
             // Try to set alpha blending
             $this->trySettingAlphaBlending($image);
         }
@@ -2214,7 +2246,7 @@ class Gmagick extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         if (!extension_loaded('Gmagick')) {
             throw new SystemRequirementsNotMetException('Required Gmagick extension is not available.');
@@ -2238,7 +2270,7 @@ class Gmagick extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if Gmagick does not support image type
      */
-    protected function checkConvertability()
+    public function checkConvertability()
     {
         $im = new \Gmagick();
         $mimeType = $this->getMimeTypeOfSource();
@@ -2364,7 +2396,7 @@ class Imagick extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         if (!extension_loaded('imagick')) {
             throw new SystemRequirementsNotMetException('Required iMagick extension is not available.');
@@ -2388,7 +2420,7 @@ class Imagick extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if Imagick does not support image type
      */
-    protected function checkConvertability()
+    public function checkConvertability()
     {
         $im = new \Imagick();
         $mimeType = $this->getMimeTypeOfSource();
@@ -2551,7 +2583,7 @@ class ImagickBinary extends AbstractExecConverter
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         if (!self::imagickInstalled()) {
             throw new SystemRequirementsNotMetException('imagick is not installed');
@@ -2613,7 +2645,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFou
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -2667,7 +2699,7 @@ class Stack extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         if (count($this->options) == 0) {
             throw new ConverterNotOperationalException(
@@ -2776,7 +2808,7 @@ class Stack extends AbstractConverter
                 }
                 //$this->logLn($e->getTraceAsString());
                 $anyRuntimeErrors = true;
-            } catch (ConversionDeclinedException $e) {
+            } catch (ConversionSkippedException $e) {
                 $this->logLn($e->getMessage());
             }
 
@@ -2828,7 +2860,7 @@ class Vips extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         if (!extension_loaded('vips')) {
             throw new SystemRequirementsNotMetException('Required Vips extension is not available.');
@@ -2850,7 +2882,7 @@ class Vips extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if Vips does not support image type
      */
-    protected function checkConvertability()
+    public function checkConvertability()
     {
         // It seems that png and jpeg are always supported by Vips
         // - so nothing needs to be done here
@@ -2861,20 +2893,14 @@ class Vips extends AbstractConverter
         $this->logLn('vips extension version: ' . phpversion('vips'));
     }
 
-    protected function doActualConvert()
+    /**
+     * Create vips image resource from source file
+     *
+     * @throws  ConversionFailedException  if image resource cannot be created
+     * @return  resource  vips image resource
+     */
+    private function createImageResource()
     {
-/*
-        $im = \Jcupitt\Vips\Image::newFromFile($this->source);
-        //$im->writeToFile(__DIR__ . '/images/small-vips.webp', ["Q" => 10]);
-
-        $im->webpsave($this->destination, [
-            "Q" => 80,
-            //'near_lossless' => true
-        ]);
-        return;*/
-
-
-
         // We are currently using vips_image_new_from_file(), but we could consider
         // calling vips_jpegload / vips_pngload instead
         $result = /** @scrutinizer ignore-call */ vips_image_new_from_file($this->source, []);
@@ -2900,7 +2926,16 @@ class Vips extends AbstractConverter
         }
 
         $im = array_shift($result);
+        return $im;
+    }
 
+    /**
+     * Create parameters for webpsave
+     *
+     * @return  array  the parameters as an array
+     */
+    private function createParamsForVipsWebPSave()
+    {
         // webpsave options are described here:
         // https://jcupitt.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave
 
@@ -2933,6 +2968,33 @@ class Vips extends AbstractConverter
                 $options['Q'] = $this->options['near-lossless'];
             }
         }
+        return $options;
+    }
+
+    /**
+     * Convert with vips extension.
+     *
+     * Tries to create image resource and save it as webp using the calculated options.
+     * Vips fails when a parameter is not supported, but we detect this and unset that parameter and try again
+     * (repeat until success).
+     *       
+     * @throws  ConversionFailedException  if conversion fails.
+     */
+    protected function doActualConvert()
+    {
+/*
+        $im = \Jcupitt\Vips\Image::newFromFile($this->source);
+        //$im->writeToFile(__DIR__ . '/images/small-vips.webp', ["Q" => 10]);
+
+        $im->webpsave($this->destination, [
+            "Q" => 80,
+            //'near_lossless' => true
+        ]);
+        return;*/
+
+        $im = $this->createImageResource();
+        $options = $this->createParamsForVipsWebPSave();
+
 
         $done = false;
 
@@ -3220,7 +3282,7 @@ namespace WebPConvert\Convert\Exceptions\ConversionFailed;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
-class ConversionDeclinedException extends ConversionFailedException
+class ConversionSkippedException extends ConversionFailedException
 {
     public $description = 'The converter declined converting';
 }
@@ -4044,6 +4106,13 @@ class ServeBase
     {
         if (!empty($this->options['cache-control-header'])) {
             $this->header('Cache-Control: ' . $this->options['cache-control-header'], true);
+
+            // Add exprires header too (#126)
+            // Check string for something like this: max-age:86400
+            if (preg_match('#max-age\\s*=\\s*(\\d*)#', $this->options['cache-control-header'], $matches)) {
+                $seconds = $matches[1];
+                $this->header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + intval($seconds)));
+            }
         }
     }
 
@@ -4175,7 +4244,7 @@ namespace WebPConvert\Serve;
 
 use WebPConvert\WebPConvert;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionDeclinedException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFileException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFolderException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFoundException;
@@ -4332,7 +4401,7 @@ class ServeConverted extends ServeBase
             // operational
             $description = 'No converters could convert the image';
             $msg = $e->getMessage();
-        } catch (ConversionDeclinedException $e) {
+        } catch (ConversionSkippedException $e) {
             // (no converters could convert the image. At least one converter declined
             $description = 'No converters could/wanted to convert the image';
             $msg = $e->getMessage();
