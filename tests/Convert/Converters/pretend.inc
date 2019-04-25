@@ -4,7 +4,8 @@ namespace {
     $pretend = [
         'functionsNotExisting' => [],
         'functionsExisting' => [],
-        'extensionsNotExisting' => []
+        'extensionsNotExisting' => [],
+        'extensionsExisting' => []
     ];
     $hasDeclaredMockFunctions = false;
 
@@ -14,7 +15,8 @@ namespace {
         $pretend = [
             'functionsNotExisting' => [],
             'functionsExisting' => [],
-            'extensionsNotExisting' => []
+            'extensionsNotExisting' => [],
+            'extensionsExisting' => []
         ];
 
     }
@@ -43,6 +45,9 @@ namespace WebPConvert\Convert\Converters {
             global $pretend;
             if (in_array($extension, $pretend['extensionsNotExisting'])) {
                 return false;
+            }
+            if (in_array($function, $pretend['extensionsExisting'])) {
+                return true;
             }
             return \extension_loaded($extension);
         }

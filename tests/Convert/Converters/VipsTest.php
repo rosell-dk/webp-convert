@@ -4,6 +4,7 @@ namespace WebPConvert\Tests\Convert\Converters;
 
 use WebPConvert\Convert\Converters\Vips;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Tests\Convert\Exposers\VipsExposer;
 
 use PHPUnit\Framework\TestCase;
@@ -79,7 +80,18 @@ class VipsTest extends TestCase
         $this->assertFalse(isset($vipsParams['alpha_q']));
     }
 
-    // pretend imagewebp is missing
+    public function testCreateImageResource1()
+    {
+        $source = self::$imageDir . '/non-existing';
+        $vips = new Vips($source, $source . '.webp', []);
+        $vipsExposer = new VipsExposer($vips);
+
+        // It must fail because it should not be able to create resource when file does not exist
+        $this->expectException(ConversionFailedException::class);
+
+        $vipsExposer->createImageResource();
+    }
+
     public function testNotOperational1()
     {
         global $pretend;
@@ -87,8 +99,68 @@ class VipsTest extends TestCase
         $vips = $this->createVips('test.png');
         reset_pretending();
 
+        // pretend vips_image_new_from_file
         $pretend['functionsNotExisting'] = ['vips_image_new_from_file'];
         $this->expectException(SystemRequirementsNotMetException::class);
         $vips->checkOperationality();
     }
+
+    public function testNotOperational2()
+    {
+        global $pretend;
+
+        $vips = $this->createVips('test.png');
+        reset_pretending();
+
+        // pretend vips_image_new_from_file
+        $pretend['extensionsNotExisting'] = ['vips'];
+        $this->expectException(SystemRequirementsNotMetException::class);
+        $vips->checkOperationality();
+    }
+
+    public function testOperational1()
+    {
+        global $pretend;
+
+        $vips = $this->createVips('test.png');
+        reset_pretending();
+
+        // pretend vips_image_new_from_file
+        $pretend['functionsExisting'] = ['vips_image_new_from_file'];
+        $pretend['extensionsExisting'] = ['vips'];
+        $vips->checkOperationality();
+
+        $this->addToAssertionCount(1);
+    }
+
+    public function testWebpsave()
+    {
+        $vips = $this->createVips('test.png', []);
+        $vipsExposer = new VipsExposer($vips);
+
+        try {
+            $vips->checkOperationality();
+        } catch (\Exception $e) {
+            return;
+        }
+
+        $im = $vipsExposer->createImageResource();
+        $options = $vipsExposer->createParamsForVipsWebPSave();
+        $options['non-existing-option'] = true;
+        $vipsExposer->webpsave($im, $options);
+
+    }
+/*
+    public function testDoActualConvert()
+    {
+
+        $options = [
+            'alpha-quality' => 100
+        ];
+        $vipsExposer = $this->createVipsExposer('test.png', $options);
+
+        $vips = $this->createVips('not-existing.png');
+
+        $this->addToAssertionCount(1);
+    }*/
 }

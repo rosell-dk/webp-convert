@@ -22,5 +22,18 @@ class VipsExposer extends AbstractConverterExposer {
         return $this->callPrivateFunction('createParamsForVipsWebPSave', null);
     }
 
+    public function createImageResource()
+    {
+        return $this->callPrivateFunction('createImageResource', null);
+    }
 
+    public function doActualConvert()
+    {
+        return $this->callPrivateFunction('doActualConvert', null);
+    }
+
+    public function webpsave($im, $options)
+    {
+        return $this->callPrivateFunction('webpsave', null, $im, $options);
+    }
 }
