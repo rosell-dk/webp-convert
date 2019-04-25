@@ -14,7 +14,7 @@ class VipsTest extends TestCase
 
     public function __construct()
     {
-        require_once('pretend.inc');
+        //require_once('pretend.inc');
     }
 
     public function testConvert()
@@ -138,8 +138,10 @@ class VipsTest extends TestCase
         $vips = $this->createVips('test.png', []);
         $vipsExposer = new VipsExposer($vips);
 
+        // Exit if vips is not operational
         try {
             $vips->checkOperationality();
+            $vips->checkConvertability();
         } catch (\Exception $e) {
             return;
         }
@@ -164,3 +166,5 @@ class VipsTest extends TestCase
         $this->addToAssertionCount(1);
     }*/
 }
+
+require_once('pretend.inc');

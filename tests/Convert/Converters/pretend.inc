@@ -46,7 +46,7 @@ namespace WebPConvert\Convert\Converters {
             if (in_array($extension, $pretend['extensionsNotExisting'])) {
                 return false;
             }
-            if (in_array($function, $pretend['extensionsExisting'])) {
+            if (in_array($extension, $pretend['extensionsExisting'])) {
                 return true;
             }
             return \extension_loaded($extension);
