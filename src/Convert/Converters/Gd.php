@@ -24,7 +24,7 @@ class Gd extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         if (!extension_loaded('gd')) {
             throw new SystemRequirementsNotMetException('Required Gd extension is not available.');
@@ -42,7 +42,7 @@ class Gd extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if Gd has been compiled without support for image type
      */
-    protected function checkConvertability()
+    public function checkConvertability()
     {
         $mimeType = $this->getMimeTypeOfSource();
         switch ($mimeType) {
@@ -89,14 +89,18 @@ class Gd extends AbstractConverter
      * @return boolean  TRUE if the convertion was complete, or if the source image already is a true color image,
      *          otherwise FALSE is returned.
      */
-    private static function makeTrueColorUsingWorkaround(&$image)
+    private function makeTrueColorUsingWorkaround(&$image)
     {
+        //return $this->makeTrueColor($image);
+        /*
         if (function_exists('imageistruecolor') && imageistruecolor($image)) {
             return true;
-        }
+        }*/
         if (self::functionsExist(['imagecreatetruecolor', 'imagealphablending', 'imagecolorallocatealpha',
                 'imagefilledrectangle', 'imagecopy', 'imagedestroy', 'imagesx', 'imagesy'])) {
             $dst = imagecreatetruecolor(imagesx($image), imagesy($image));
+
+            $image = $dst; return true;
 
             if ($dst === false) {
                 return false;
@@ -147,13 +151,13 @@ class Gd extends AbstractConverter
      * @return boolean  TRUE if the convertion was complete, or if the source image already is a true color image,
      *          otherwise FALSE is returned.
      */
-    private static function makeTrueColor(&$image)
+    private function makeTrueColor(&$image)
     {
         if (function_exists('imagepalettetotruecolor')) {
             return imagepalettetotruecolor($image);
         } else {
             // imagepalettetotruecolor() is not available on this system. Using custom implementation instead
-            return self::makeTrueColorUsingWorkaround($image);
+            return $this->makeTrueColorUsingWorkaround($image);
         }
     }
 
@@ -238,31 +242,36 @@ class Gd extends AbstractConverter
     /**
      *
      * @param  resource  $image
-     * @return void
+     * @return boolean  true if alpha blending was set successfully, false otherwise
      */
     protected function trySettingAlphaBlending($image)
     {
         if (function_exists('imagealphablending')) {
             if (!imagealphablending($image, true)) {
                 $this->logLn('Warning: imagealphablending() failed');
+                return false;
             }
         } else {
             $this->logLn(
                 'Warning: imagealphablending() is not available on your system.' .
                 ' Converting PNGs with transparency might fail on some systems'
             );
+            return false;
         }
 
         if (function_exists('imagesavealpha')) {
             if (!imagesavealpha($image, true)) {
                 $this->logLn('Warning: imagesavealpha() failed');
+                return false;
             }
         } else {
             $this->logLn(
                 'Warning: imagesavealpha() is not available on your system. ' .
                 'Converting PNGs with transparency might fail on some systems'
             );
+            return false;
         }
+        return true;
     }
 
     protected function errorHandlerWhileCreatingWebP($errno, $errstr, $errfile, $errline)
@@ -270,6 +279,7 @@ class Gd extends AbstractConverter
         $this->errorNumberWhileCreating = $errno;
         $this->errorMessageWhileCreating = $errstr . ' in ' . $errfile . ', line ' . $errline .
             ', PHP ' . PHP_VERSION . ' (' . PHP_OS . ')';
+        //return false;
     }
 
     /**
@@ -306,7 +316,8 @@ class Gd extends AbstractConverter
         $q = $this->getCalculatedQuality();
 
         ob_start();
-        //$success = imagewebp($image);
+
+        //$success = imagewebp($image, $this->destination, $q);
         $success = imagewebp($image, null, $q);
 
         if (!$success) {
@@ -328,6 +339,13 @@ class Gd extends AbstractConverter
         }
         $output = ob_get_clean();
         restore_error_handler();
+
+        if ($output == '') {
+            $this->destroyAndRemove($image);
+            throw new ConversionFailedException(
+                'Gd failed: imagewebp() returned empty string'
+            );
+        }
 
         // --------------------------------- (end of danger zone).
 
@@ -416,7 +434,7 @@ class Gd extends AbstractConverter
         $this->tryToMakeTrueColorIfNot($image);
 
 
-        if ($this->getMimeTypeOfSource() == 'png') {
+        if ($this->getMimeTypeOfSource() == 'image/png') {
             // Try to set alpha blending
             $this->trySettingAlphaBlending($image);
         }
