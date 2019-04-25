@@ -19,7 +19,7 @@ class GdExposer extends AbstractConverterExposer {
 
     public function createImageResource()
     {
-        return $this->callPrivateFunction('createImageResource', null, 2);
+        return $this->callPrivateFunction('createImageResource', null);
     }
 
 
