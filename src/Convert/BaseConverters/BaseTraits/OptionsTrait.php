@@ -120,7 +120,7 @@ trait OptionsTrait
             }
         }
 
-        if ($this->options['skip']) {            
+        if ($this->options['skip']) {
             if (($this->getMimeTypeOfSource() == 'image/png') && isset($this->options['png']['skip'])) {
                 throw new ConversionSkippedException(
                     'skipped conversion (configured to do so for PNG)'
@@ -129,10 +129,8 @@ trait OptionsTrait
                 throw new ConversionSkippedException(
                     'skipped conversion (configured to do so)'
                 );
-
             }
         }
-
     }
 
     /**
