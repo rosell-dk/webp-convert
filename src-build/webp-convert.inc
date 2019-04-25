@@ -977,7 +977,7 @@ trait OptionsTrait
             }
         }
 
-        if ($this->options['skip']) {            
+        if ($this->options['skip']) {
             if (($this->getMimeTypeOfSource() == 'image/png') && isset($this->options['png']['skip'])) {
                 throw new ConversionSkippedException(
                     'skipped conversion (configured to do so for PNG)'
@@ -986,10 +986,8 @@ trait OptionsTrait
                 throw new ConversionSkippedException(
                     'skipped conversion (configured to do so)'
                 );
-
             }
         }
-
     }
 
     /**
@@ -1870,8 +1868,6 @@ class Gd extends AbstractConverter
         if (self::functionsExist(['imagecreatetruecolor', 'imagealphablending', 'imagecolorallocatealpha',
                 'imagefilledrectangle', 'imagecopy', 'imagedestroy', 'imagesx', 'imagesy'])) {
             $dst = imagecreatetruecolor(imagesx($image), imagesy($image));
-
-            $image = $dst; return true;
 
             if ($dst === false) {
                 return false;
@@ -2977,7 +2973,7 @@ class Vips extends AbstractConverter
      * Tries to create image resource and save it as webp using the calculated options.
      * Vips fails when a parameter is not supported, but we detect this and unset that parameter and try again
      * (repeat until success).
-     *       
+     *
      * @throws  ConversionFailedException  if conversion fails.
      */
     protected function doActualConvert()
