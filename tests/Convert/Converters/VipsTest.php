@@ -37,17 +37,40 @@ class VipsTest extends TestCase
         return new VipsExposer($this->createVips($src, $options));
     }
 
-    public function testCreateParamsForVipsWebPSave()
+    public function testCreateParamsForVipsWebPSave1()
     {
         $options = [
             'lossless' => true,
             'smart-subsample' => true,
+            'near-lossless' => 90,
+            'lossless' => true,
+            'preset' => 1,
         ];
         $vipsExposer = $this->createVipsExposer('test.png', $options);
 
         $vipsParams = $vipsExposer->createParamsForVipsWebPSave();
+
+        // Check some options that are straightforwardly copied
         $this->assertSame($options['lossless'], $vipsParams['lossless']);
-        $this->assertSame($options['smart_subsample'], $vipsParams['smart-subsample']);
+        $this->assertSame($options['smart-subsample'], $vipsParams['smart_subsample']);
+        $this->assertSame($options['preset'], $vipsParams['preset']);
+
+        // When near-lossless is set, the value should be copied to Q
+        $this->assertSame($options['near-lossless'], $vipsParams['Q']);
+    }
+
+    public function testCreateParamsForVipsWebPSave2()
+    {
+        $options = [
+            'alpha-quality' => 100
+        ];
+        $vipsExposer = $this->createVipsExposer('test.png', $options);
+
+        $vipsParams = $vipsExposer->createParamsForVipsWebPSave();
+
+        // Some options are only set if they differ from default
+        $this->assertFalse(isset($vipsParams['smart_subsample']));
+        $this->assertFalse(isset($vipsParams['alpha_q']));
 
     }
 }
