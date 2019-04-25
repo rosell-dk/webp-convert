@@ -14,7 +14,7 @@ abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
      * @throws  SystemRequirementsNotMetException
      * @return  void
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         parent::checkOperationality();
 

@@ -27,7 +27,7 @@ class Vips extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         if (!extension_loaded('vips')) {
             throw new SystemRequirementsNotMetException('Required Vips extension is not available.');
@@ -49,7 +49,7 @@ class Vips extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if Vips does not support image type
      */
-    protected function checkConvertability()
+    public function checkConvertability()
     {
         // It seems that png and jpeg are always supported by Vips
         // - so nothing needs to be done here

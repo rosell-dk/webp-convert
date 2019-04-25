@@ -51,7 +51,7 @@ class ImagickBinary extends AbstractExecConverter
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         if (!self::imagickInstalled()) {
             throw new SystemRequirementsNotMetException('imagick is not installed');

@@ -63,7 +63,7 @@ class Stack extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         if (count($this->options) == 0) {
             throw new ConverterNotOperationalException(

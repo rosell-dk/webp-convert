@@ -26,7 +26,7 @@ class Gmagick extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         if (!extension_loaded('Gmagick')) {
             throw new SystemRequirementsNotMetException('Required Gmagick extension is not available.');
@@ -50,7 +50,7 @@ class Gmagick extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if Gmagick does not support image type
      */
-    protected function checkConvertability()
+    public function checkConvertability()
     {
         $im = new \Gmagick();
         $mimeType = $this->getMimeTypeOfSource();

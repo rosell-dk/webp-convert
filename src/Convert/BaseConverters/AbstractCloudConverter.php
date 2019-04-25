@@ -104,7 +104,7 @@ abstract class AbstractCloudConverter extends AbstractConverter
      * Check if specific file is convertable with current converter / converter settings.
      *
      */
-    protected function checkConvertability()
+    public function checkConvertability()
     {
         $this->testFilesizeRequirements();
     }

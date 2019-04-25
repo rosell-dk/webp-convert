@@ -78,7 +78,7 @@ abstract class AbstractConverter
      *
      * @return  void
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
     }
 
@@ -90,7 +90,7 @@ abstract class AbstractConverter
      *
      * @return  void
      */
-    protected function checkConvertability()
+    public function checkConvertability()
     {
     }
 

@@ -162,7 +162,7 @@ class Cwebp extends AbstractExecConverter
         return $commandOptions;
     }
 
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         $options = $this->options;
         if (!$options['try-supplied-binary-for-os'] && !$options['try-common-system-paths']) {

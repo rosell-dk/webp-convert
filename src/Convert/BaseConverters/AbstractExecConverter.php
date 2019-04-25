@@ -52,7 +52,7 @@ abstract class AbstractExecConverter extends AbstractConverter
      * @throws  SystemRequirementsNotMetException
      * @return  void
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         if (!function_exists('exec')) {
             throw new SystemRequirementsNotMetException('exec() is not enabled.');

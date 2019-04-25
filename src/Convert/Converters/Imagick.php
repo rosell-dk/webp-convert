@@ -27,7 +27,7 @@ class Imagick extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         if (!extension_loaded('imagick')) {
             throw new SystemRequirementsNotMetException('Required iMagick extension is not available.');
@@ -51,7 +51,7 @@ class Imagick extends AbstractConverter
      *
      * @throws SystemRequirementsNotMetException  if Imagick does not support image type
      */
-    protected function checkConvertability()
+    public function checkConvertability()
     {
         $im = new \Imagick();
         $mimeType = $this->getMimeTypeOfSource();

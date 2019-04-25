@@ -24,7 +24,7 @@ class Ewww extends AbstractCloudCurlConverter
      * @throws SystemRequirementsNotMetException  if system requirements are not met (curl)
      * @throws ConverterNotOperationalException   if key is missing or invalid, or quota has exceeded
      */
-    protected function checkOperationality()
+    public function checkOperationality()
     {
         // First check for curl requirements
         parent::checkOperationality();
