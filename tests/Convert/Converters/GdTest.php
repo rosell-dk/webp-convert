@@ -241,6 +241,8 @@ namespace WebPConvert\Tests\Convert\Converters {
                 return;
             }
 
+            $image = $gdExposer->createImageResource();
+
             // This image is not true color.
             // Trying to convert it fails (empty string is generated)
             // Assert that I am right!
