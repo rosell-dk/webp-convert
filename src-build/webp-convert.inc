@@ -22,6 +22,13 @@ use WebPConvert\Loggers\BaseLogger;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 
+/**
+ * Base for all converter classes.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 abstract class AbstractConverter
 {
     use AutoQualityTrait;
@@ -1122,6 +1129,13 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 
+/**
+ * Convert images to webp by calling cwebp binary.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class Cwebp extends AbstractExecConverter
 {
     protected $supportsLossless = true;
@@ -1479,6 +1493,13 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
+/**
+ * Convert images to webp using ewww cloud service.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class Ewww extends AbstractCloudCurlConverter
 {
     protected $supportsLossless = false;
@@ -1776,6 +1797,13 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInputException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
+/**
+ * Convert images to webp using gd extension.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class Gd extends AbstractConverter
 {
     protected $supportsLossless = false;
@@ -2224,10 +2252,17 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
+/**
+ * Convert images to webp using Gmagick extension.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class Gmagick extends AbstractConverter
 {
     protected $supportsLossless = false;
-    
+
     protected function getOptionDefinitionsExtra()
     {
         return [];
@@ -2374,10 +2409,17 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
+/**
+ * Convert images to webp using Imagick extension.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class Imagick extends AbstractConverter
 {
     protected $supportsLossless = false;
-    
+
     protected function getOptionDefinitionsExtra()
     {
         return [];
@@ -2537,12 +2579,20 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
-// To futher improve this converter, I could check out:
-// https://github.com/Orbitale/ImageMagickPHP
+/**
+ * Convert images to webp by calling imagick binary.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class ImagickBinary extends AbstractExecConverter
 {
+    // To futher improve this converter, I could check out:
+    // https://github.com/Orbitale/ImageMagickPHP
+
     protected $supportsLossless = false;
-    
+
     protected function getOptionDefinitionsExtra()
     {
         return [
@@ -2645,11 +2695,18 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
+/**
+ * Convert images to webp by trying a stack of converters until success.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class Stack extends AbstractConverter
 {
     protected $processLosslessAuto = false;
     protected $supportsLossless = true;
-    
+
     protected function getOptionDefinitionsExtra()
     {
         return [
@@ -2837,6 +2894,13 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 //require '/home/rosell/.composer/vendor/autoload.php';
 
+/**
+ * Convert images to webp using Vips extension.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class Vips extends AbstractConverter
 {
     protected $supportsLossless = true;
@@ -3035,6 +3099,13 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
+/**
+ * Convert images to webp using Wpc (a cloud converter based on WebP Convert).
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class Wpc extends AbstractCloudCurlConverter
 {
     protected $processLosslessAuto = true;
