@@ -60,12 +60,12 @@ abstract class AbstractConverter
 
 
     /** @var string  The filename of the image to convert (complete path) */
-    public $source;
+    protected $source;
 
     /** @var string  Where to save the webp (complete path) */
-    public $destination;
+    protected $destination;
 
-    /** @var string  Where to save the webp (complete path) */
+    /** @var string|false  Where to save the webp (complete path) */
     private $sourceMimeType;
 
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
@@ -285,7 +285,9 @@ abstract class AbstractConverter
      * - By setting file extension to "jpg", one can lure our library into trying to convert a file, which isn't a jpg.
      * hmm, seems very unlikely, though not unthinkable that one of the converters could be exploited
      *
-     * @return  string|false
+     * @return  string|false|null mimetype (if it is an image, and type could be determined / guessed),
+     *    false (if it is not an image type that the server knowns about)
+     *    or null (if nothing can be determined)
      */
     public function getMimeTypeOfSource()
     {
@@ -308,8 +310,10 @@ abstract class AbstractConverter
 
         // Check if the provided file's mime type is valid
         $fileMimeType = $this->getMimeTypeOfSource();
-        if ($fileMimeType === false) {
+        if ($fileMimeType === null) {
             throw new InvalidImageTypeException('Image type could not be detected');
+        } elseif ($fileMimeType === false) {
+            throw new InvalidImageTypeException('File seems not to be an image.');
         } elseif (!in_array($fileMimeType, self::$allowedMimeTypes)) {
             throw new InvalidImageTypeException('Unsupported mime type: ' . $fileMimeType);
         }

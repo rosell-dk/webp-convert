@@ -178,37 +178,31 @@ class Gd extends AbstractConverter
         // In case of failure, image will be false
 
         $mimeType = $this->getMimeTypeOfSource();
-        if ($mimeType === false) {
-            throw new InvalidInputException(
-                'Mime type could not be determined'
-            );
-        }
 
-        switch ($mimeType) {
-            case 'image/png':
-                $image = imagecreatefrompng($this->source);
-                if ($image === false) {
-                    throw new ConversionFailedException(
-                        'Gd failed when trying to load/create image (imagecreatefrompng() failed)'
-                    );
-                }
-                break;
-
-            case 'image/jpeg':
-                $image = imagecreatefromjpeg($this->source);
-                if ($image === false) {
-                    throw new ConversionFailedException(
-                        'Gd failed when trying to load/create image (imagecreatefromjpeg() failed)'
-                    );
-                }
-                break;
-
-            default:
-                throw new InvalidInputException(
-                    'Unsupported mime type:' . $mimeType
+        if ($mimeType == 'image/png') {
+            $image = imagecreatefrompng($this->source);
+            if ($image === false) {
+                throw new ConversionFailedException(
+                    'Gd failed when trying to load/create image (imagecreatefrompng() failed)'
                 );
+            }
+            return $image;
         }
-        return $image;
+
+        if ($mimeType == 'image/jpeg') {
+            $image = imagecreatefromjpeg($this->source);
+            if ($image === false) {
+                throw new ConversionFailedException(
+                    'Gd failed when trying to load/create image (imagecreatefromjpeg() failed)'
+                );
+            }
+            return $image;
+        }
+
+        /*
+        throw new InvalidInputException(
+            'Unsupported mime type:' . $mimeType
+        );*/
     }
 
     /**
