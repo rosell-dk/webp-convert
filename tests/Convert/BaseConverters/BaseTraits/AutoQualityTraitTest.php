@@ -1,23 +1,16 @@
 <?php
 
-/**
- * WebPConvert - Convert JPEG & PNG to WebP with PHP
- *
- * @link https://github.com/rosell-dk/webp-convert
- * @license MIT
- */
+namespace WebPConvert\Tests\Convert\BaseConverters\BaseTraits;
 
-namespace WebPConvert\Tests\Convert;
-
-use WebPConvert\Convert\QualityProcessor;
+//use WebPConvert\Convert\BaseConverters\AbstractCloudConverter;
 use WebPConvert\Tests\Convert\TestConverters\SuccessGuaranteedConverter;
 
 use PHPUnit\Framework\TestCase;
 
-class QualityProcessorTest extends TestCase
+class AutoQualityTraitTest extends TestCase
 {
 
-    private static $imgDir = __DIR__ . '/../images';
+    private static $imgDir = __DIR__ . '/../../../images';
 
     public function testFixedQuality()
     {
@@ -31,14 +24,13 @@ class QualityProcessorTest extends TestCase
             ]
         );
 
-        $qp = new QualityProcessor($converter);
-        $result = $qp->getCalculatedQuality();
+        $result = $converter->getCalculatedQuality();
         $this->assertSame(75, $result);
 
-        $this->assertFalse($qp->isQualityDetectionRequiredButFailing());
+        $this->assertFalse($converter->isQualityDetectionRequiredButFailing());
 
         // Test that it is still the same (testing caching)
-        $this->assertFalse($qp->isQualityDetectionRequiredButFailing());
+        $this->assertFalse($converter->isQualityDetectionRequiredButFailing());
 
     }
 
@@ -54,8 +46,7 @@ class QualityProcessorTest extends TestCase
             ]
         );
 
-        $qp = new QualityProcessor($converter);
-        $result = $qp->getCalculatedQuality();
+        $result = $converter->getCalculatedQuality();
 
         $this->assertSame(70, $result);
     }
@@ -72,8 +63,7 @@ class QualityProcessorTest extends TestCase
             ]
         );
 
-        $qp = new QualityProcessor($converter);
-        $result = $qp->getCalculatedQuality();
+        $result = $converter->getCalculatedQuality();
 
         // "Cheating" a bit here...
         // - If quality detection fails, it will be 61 (because default-quality is set to 61)
@@ -93,12 +83,13 @@ class QualityProcessorTest extends TestCase
             ]
         );
 
-        $qp = new QualityProcessor($converter);
+        //$this->assertTrue(file_exists(self::$imgDir . '/small-q61.jpg'));
+        //$this->assertEquals('image/jpeg', $converter->getMimeTypeOfSource());
 
-        $this->assertSame(60, $qp->getCalculatedQuality());
+        $this->assertSame(60, $converter->getCalculatedQuality());
 
         // Test that it is still the same (testing caching)
-        $this->assertSame(60, $qp->getCalculatedQuality());
+        $this->assertSame(60, $converter->getCalculatedQuality());
     }
 
     public function testAutoQualityMaxQualityOnNonJpeg()
@@ -113,13 +104,11 @@ class QualityProcessorTest extends TestCase
             ]
         );
 
-        $qp = new QualityProcessor($converter);
-
-        $this->assertSame(70, $qp->getCalculatedQuality());
-        $this->assertFalse($qp->isQualityDetectionRequiredButFailing());
+        $this->assertSame(60, $converter->getCalculatedQuality());
+        $this->assertFalse($converter->isQualityDetectionRequiredButFailing());
     }
 
-    public function testAutoQualityOnQualityDetectionFail()
+    public function testAutoQualityOnQualityDetectionFail1()
     {
         $converter = SuccessGuaranteedConverter::createInstance(
             self::$imgDir . '/non-existing.jpg',
@@ -131,31 +120,44 @@ class QualityProcessorTest extends TestCase
             ]
         );
 
-        $qp = new QualityProcessor($converter);
+        $this->assertFalse(file_exists(self::$imgDir . '/non-existing.jpg'));
 
-        $this->assertSame(60, $qp->getCalculatedQuality());
-        $this->assertTrue($qp->isQualityDetectionRequiredButFailing());
+        // MimeType guesser returns false when mime type cannot be established.
+        $this->assertEquals(false, $converter->getMimeTypeOfSource());
+
+        // - so this can actually not be used for testing isQualityDetectionRequiredButFailing
+
+        //$this->assertSame(60, $converter->getCalculatedQuality());
+        //$this->assertTrue($converter->isQualityDetectionRequiredButFailing());
     }
 
-
-    public function testIsQualitySetToAutoAndDidQualityDetectionFail()
+    public function testAutoQualityOnQualityDetectionFail2()
     {
         $converter = SuccessGuaranteedConverter::createInstance(
-            self::$imgDir . '/non-existant.jpg',
-            self::$imgDir . '/non-existant.webp',
+            self::$imgDir . '/text-with-jpg-extension.jpg',
+            self::$imgDir . '/text-with-jpg-extension.jpg.webp',
             [
-                'max-quality' => 60,
+                'max-quality' => 70,
                 'quality' => 'auto',
-                'default-quality' => 70,
+                'default-quality' => 60,
             ]
         );
 
-        $qp = new QualityProcessor($converter);
-        $this->assertTrue($qp->isQualityDetectionRequiredButFailing());
+        $this->assertFalse(file_exists(self::$imgDir . '/non-existing.jpg'));
+
+        // We are using the lenient MimeType guesser.
+        // So we get "image/jpeg" even though the file is not a jpeg file
+        $this->assertEquals('image/jpeg', $converter->getMimeTypeOfSource());
+
+        // Now we got a file that we should not be able to detect quality of
+        // lets validate that statement:
+
+        $this->assertTrue($converter->isQualityDetectionRequiredButFailing());
 
         // Test that it is still the same (testing caching)
-        $this->assertTrue($qp->isQualityDetectionRequiredButFailing());
-    }
+        $this->assertTrue($converter->isQualityDetectionRequiredButFailing());
 
+        $this->assertSame(60, $converter->getCalculatedQuality());
+    }
 
 }

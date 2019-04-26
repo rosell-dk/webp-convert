@@ -126,17 +126,6 @@ class Stack extends AbstractConverter
 
             $converterOptions = array_merge($defaultConverterOptions, $converterOptions);
 
-            // TODO:
-            // Reuse QualityProcessor of previous, unless quality option is overridden
-            // ON the other hand: With the recent change, the quality is not detected until a
-            // converter needs it (after operation checks). So such feature will rarely be needed now
-
-            // If quality is different, we must recalculate
-            /*
-            if ($converterOptions['quality'] != $defaultConverterOptions['quality']) {
-                unset($converterOptions['_calculated_quality']);
-            }*/
-
             $beginTime = microtime(true);
 
             $className = self::getClassNameOfConverter($converterId);

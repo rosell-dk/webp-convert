@@ -1,9 +1,14 @@
 <?php
 
-namespace WebPConvert\Helpers;
+namespace WebPConvert\Convert\Helpers;
 
-use WebPConvert\Helpers\WarningsIntoExceptions;
-
+/**
+ * Try to detect quality of a jpeg image using various tools.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class JpegQualityDetector
 {
 

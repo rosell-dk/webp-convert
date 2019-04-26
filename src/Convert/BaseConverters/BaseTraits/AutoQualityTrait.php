@@ -2,7 +2,7 @@
 
 namespace WebPConvert\Convert\BaseConverters\BaseTraits;
 
-use WebPConvert\Helpers\JpegQualityDetector;
+use WebPConvert\Convert\Helpers\JpegQualityDetector;
 
 trait AutoQualityTrait
 {
@@ -91,7 +91,8 @@ trait AutoQualityTrait
                 }
                 $q = min($q, $options['max-quality']);
             } else {
-                $q = $options['default-quality'];
+                //$q = $options['default-quality'];
+                $q = min($options['default-quality'], $options['max-quality']);
                 $logger->logLn('Quality: ' . $q . '. ');
             }
         } else {
