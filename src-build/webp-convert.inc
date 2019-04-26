@@ -661,7 +661,7 @@ class WebPConvert
 
 namespace WebPConvert\Convert\BaseConverters\BaseTraits;
 
-use WebPConvert\Helpers\JpegQualityDetector;
+use WebPConvert\Convert\Helpers\JpegQualityDetector;
 
 trait AutoQualityTrait
 {
@@ -750,7 +750,8 @@ trait AutoQualityTrait
                 }
                 $q = min($q, $options['max-quality']);
             } else {
-                $q = $options['default-quality'];
+                //$q = $options['default-quality'];
+                $q = min($options['default-quality'], $options['max-quality']);
                 $logger->logLn('Quality: ' . $q . '. ');
             }
         } else {
@@ -2762,17 +2763,6 @@ class Stack extends AbstractConverter
 
             $converterOptions = array_merge($defaultConverterOptions, $converterOptions);
 
-            // TODO:
-            // Reuse QualityProcessor of previous, unless quality option is overridden
-            // ON the other hand: With the recent change, the quality is not detected until a
-            // converter needs it (after operation checks). So such feature will rarely be needed now
-
-            // If quality is different, we must recalculate
-            /*
-            if ($converterOptions['quality'] != $defaultConverterOptions['quality']) {
-                unset($converterOptions['_calculated_quality']);
-            }*/
-
             $beginTime = microtime(true);
 
             $className = self::getClassNameOfConverter($converterId);
@@ -3455,205 +3445,12 @@ class TargetNotFoundException extends InvalidInputException
 namespace WebPConvert\Convert\Helpers;
 
 /**
- * Get/parse shorthandsize strings from php.ini as bytes.
- *
- * Parse strings like "1k" into bytes (1024).
+ * Try to detect quality of a jpeg image using various tools.
  *
  * @package    WebPConvert
  * @author     Bjørn Rosell <it@rosell.dk>
  * @since      Class available since Release 2.0.0
  */
-class PhpIniSizes
-{
-
-    /**
-     * Parse a shordhandsize string as the ones returned by ini_get()
-     *
-     * Parse a shorthandsize string having the syntax allowed in php.ini and returned by ini_get().
-     * Ie "1K" => 1024.
-     * Strings without units are also accepted.
-     * The shorthandbytes syntax is described here: https://www.php.net/manual/en/faq.using.php#faq.using.shorthandbytes
-     *
-     * @param  string  $shortHandSize  A size string of the type returned by ini_get()
-     * @return float|false  The parsed size (beware: it is float, do not check high numbers for equality),
-     *                      or false if parse error
-     */
-    public static function parseShortHandSize($shortHandSize)
-    {
-
-        $result = preg_match("#^\\s*(\\d+(?:\\.\\d+)?)([bkmgtpezy]?)\\s*$#i", $shortHandSize, $matches);
-        if ($result !== 1) {
-            return false;
-        }
-
-        // Truncate, because that is what php does.
-        $digitsValue = floor($matches[1]);
-
-        if ((count($matches) >= 3) && ($matches[2] != '')) {
-            $unit = $matches[2];
-
-            // Find the position of the unit in the ordered string which is the power
-            // of magnitude to multiply a kilobyte by.
-            $position = stripos('bkmgtpezy', $unit);
-
-            return floatval($digitsValue * pow(1024, $position));
-        } else {
-            return $digitsValue;
-        }
-    }
-
-    /*
-    * Get the size of an php.ini option.
-    *
-    * Calls ini_get() and parses the size to a number.
-    * If the configuration option is null, does not exist, or cannot be parsed as a shorthandsize, false is returned
-    *
-    * @param  string  $varname  The configuration option name.
-    * @return float|false  The parsed size or false if the configuration option does not exist
-    */
-    public static function getIniBytes($iniVarName)
-    {
-        $iniVarValue = ini_get($iniVarName);
-        if (($iniVarValue == '') || $iniVarValue === false) {
-            return false;
-        }
-        return self::parseShortHandSize($iniVarValue);
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Convert;
-
-use WebPConvert\Helpers\JpegQualityDetector;
-
-class QualityProcessor
-{
-
-    private $converter;
-    private $processed = false;
-    private $qualityCouldNotBeDetected = false;
-    private $calculatedQuality;
-
-    public function __construct($converter)
-    {
-        $this->converter = $converter;
-    }
-
-    private function processIfNotAlready()
-    {
-        if (!$this->processed) {
-            $this->processed = true;
-            $this->proccess();
-        }
-    }
-
-    /**
-     *  Determine if quality detection is required but failing.
-     *
-     *  It is considered "required" when:
-     *  - Mime type is "image/jpeg"
-     *  - Quality is set to "auto"
-     *
-     *  @return  boolean
-     */
-    public function isQualityDetectionRequiredButFailing()
-    {
-        $this->processIfNotAlready();
-        return $this->qualityCouldNotBeDetected;
-    }
-
-    /**
-     *  Get calculated quality.
-     *
-     *  If mime type is something else than "image/jpeg", the "default-quality" option is returned
-     *  Same thing for jpeg, when the "quality" option is set to a number (rather than "auto").
-     *
-     *  Otherwise:
-     *  If quality cannot be detetected, the "default-quality" option is returned.
-     *  If quality can be detetected, the lowest value of this and the "max-quality" option is returned
-     *
-     *  @return  int
-     */
-    public function getCalculatedQuality()
-    {
-        $this->processIfNotAlready();
-        return $this->calculatedQuality;
-    }
-
-
-    private function proccess()
-    {
-        $options = $this->converter->options;
-        $logger = $this->converter->logger;
-        $source = $this->converter->source;
-
-        $q = $options['quality'];
-        if ($q == 'auto') {
-            if (($this->converter->getMimeTypeOfSource() == 'image/jpeg')) {
-                $q = JpegQualityDetector::detectQualityOfJpg($source);
-                if (is_null($q)) {
-                    $q = $options['default-quality'];
-                    $logger->logLn(
-                        'Quality of source could not be established (Imagick or GraphicsMagick is required)' .
-                        ' - Using default instead (' . $options['default-quality'] . ').'
-                    );
-
-                    $this->qualityCouldNotBeDetected = true;
-                } else {
-                    if ($q > $options['max-quality']) {
-                        $logger->logLn(
-                            'Quality of source is ' . $q . '. ' .
-                            'This is higher than max-quality, so using max-quality instead (' .
-                                $options['max-quality'] . ')'
-                        );
-                    } else {
-                        $logger->logLn('Quality set to same as source: ' . $q);
-                    }
-                }
-                $q = min($q, $options['max-quality']);
-            } else {
-                $q = $options['default-quality'];
-                $logger->logLn('Quality: ' . $q . '. ');
-            }
-        } else {
-            $logger->logLn(
-                'Quality: ' . $q . '. ' .
-                'Consider setting quality to "auto" instead. It is generally a better idea'
-            );
-        }
-        $this->calculatedQuality = $q;
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Exceptions;
-
-use WebPConvert\Exceptions\WebPConvertException;
-
-/**
- *  WebPConvertException is the base exception for all exceptions in this library.
- *
- *  Note that the parameters for the constructor differs from that of the Exception class.
- *  We do not use exception code here, but are instead allowing two version of the error message:
- *  a short version and a long version.
- *  The short version may not contain special characters or dynamic content.
- *  The detailed version may.
- *  If the detailed version isn't provided, getDetailedMessage will return the short version.
- *
- */
-class WarningException extends WebPConvertException
-{
-    public $description = 'A warning was issued and turned into an exception';
-}
-
-?><?php
-
-namespace WebPConvert\Helpers;
-
-use WebPConvert\Helpers\WarningsIntoExceptions;
-
 class JpegQualityDetector
 {
 
@@ -3754,6 +3551,99 @@ class JpegQualityDetector
 
         return $quality;
     }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Helpers;
+
+/**
+ * Get/parse shorthandsize strings from php.ini as bytes.
+ *
+ * Parse strings like "1k" into bytes (1024).
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class PhpIniSizes
+{
+
+    /**
+     * Parse a shordhandsize string as the ones returned by ini_get()
+     *
+     * Parse a shorthandsize string having the syntax allowed in php.ini and returned by ini_get().
+     * Ie "1K" => 1024.
+     * Strings without units are also accepted.
+     * The shorthandbytes syntax is described here: https://www.php.net/manual/en/faq.using.php#faq.using.shorthandbytes
+     *
+     * @param  string  $shortHandSize  A size string of the type returned by ini_get()
+     * @return float|false  The parsed size (beware: it is float, do not check high numbers for equality),
+     *                      or false if parse error
+     */
+    public static function parseShortHandSize($shortHandSize)
+    {
+
+        $result = preg_match("#^\\s*(\\d+(?:\\.\\d+)?)([bkmgtpezy]?)\\s*$#i", $shortHandSize, $matches);
+        if ($result !== 1) {
+            return false;
+        }
+
+        // Truncate, because that is what php does.
+        $digitsValue = floor($matches[1]);
+
+        if ((count($matches) >= 3) && ($matches[2] != '')) {
+            $unit = $matches[2];
+
+            // Find the position of the unit in the ordered string which is the power
+            // of magnitude to multiply a kilobyte by.
+            $position = stripos('bkmgtpezy', $unit);
+
+            return floatval($digitsValue * pow(1024, $position));
+        } else {
+            return $digitsValue;
+        }
+    }
+
+    /*
+    * Get the size of an php.ini option.
+    *
+    * Calls ini_get() and parses the size to a number.
+    * If the configuration option is null, does not exist, or cannot be parsed as a shorthandsize, false is returned
+    *
+    * @param  string  $varname  The configuration option name.
+    * @return float|false  The parsed size or false if the configuration option does not exist
+    */
+    public static function getIniBytes($iniVarName)
+    {
+        $iniVarValue = ini_get($iniVarName);
+        if (($iniVarValue == '') || $iniVarValue === false) {
+            return false;
+        }
+        return self::parseShortHandSize($iniVarValue);
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Exceptions;
+
+use WebPConvert\Exceptions\WebPConvertException;
+
+/**
+ *  WebPConvertException is the base exception for all exceptions in this library.
+ *
+ *  Note that the parameters for the constructor differs from that of the Exception class.
+ *  We do not use exception code here, but are instead allowing two version of the error message:
+ *  a short version and a long version.
+ *  The short version may not contain special characters or dynamic content.
+ *  The detailed version may.
+ *  If the detailed version isn't provided, getDetailedMessage will return the short version.
+ *
+ */
+class WarningException extends WebPConvertException
+{
+    public $description = 'A warning was issued and turned into an exception';
 }
 
 ?><?php
@@ -4721,24 +4611,48 @@ class ServeExistingOrHandOver extends ServeBase
 
 namespace ImageMimeTypeGuesser\Detectors;
 
+use ImageMimeTypeGuesser\Detectors\AbstractDetector;
+
 abstract class AbstractDetector
 {
-
+    /**
+     * Try to detect mime type of image
+     *
+     * Returns:
+     * - mime type (string) (if it is in fact an image, and type could be determined)
+     * - false (if it is not an image type that the server knowns about)
+     * - null  (if nothing can be determined)
+     *
+     * @param  string  $filePath  The path to the file
+     * @return string|false|null  mimetype (if it is an image, and type could be determined),
+     *    false (if it is not an image type that the server knowns about)
+     *    or null (if nothing can be determined)
+     */
     abstract protected function doDetect($filePath);
 
+    /**
+     * Create an instance of this class
+     *
+     * @param  string  $filePath  The path to the file
+     * @return static
+     */
     public static function createInstance()
     {
         return new static();
     }
 
     /**
+     * Detect mime type of file (for images only)
      *
+     * Returns:
+     * - mime type (string) (if it is in fact an image, and type could be determined)
+     * - false (if it is not an image type that the server knowns about)
+     * - null  (if nothing can be determined)
      *
-     *  Like all detectors, it returns:
-     *  - null  (if it cannot be determined)
-     *  - false (if it can be determined that this is not an image)
-     *  - mime  (if it is in fact an image, and type could be determined)
-     *  @return  mime | null | false.
+     * @param  string  $filePath  The path to the file
+     * @return string|false|null  mimetype (if it is an image, and type could be determined),
+     *    false (if it is not an image type that the server knowns about)
+     *    or null (if nothing can be determined)
      */
     public static function detect($filePath)
     {
@@ -4765,28 +4679,62 @@ class GuessFromExtension
 
 
     /**
-     *  Make a wild guess based on file extension
+     *  Make a wild guess based on file extension.
+     *
      *  - and I mean wild!
      *
      *  Only most popular image types are recognized.
      *  Many are not. See this list: https://www.iana.org/assignments/media-types/media-types.xhtml
      *                - and the constants here: https://secure.php.net/manual/en/function.exif-imagetype.php
+     *
+     *  If no mapping found, nothing is returned
+     *
      *  TODO: jp2, jpx, ...
+     * Returns:
+     * - mimetype (if file extension could be mapped to an image type),
+     * - false (if file extension could be mapped to a type known not to be an image type)
+     * - null (if file extension could not be mapped to any mime type, using our little list)
+     *
+     * @param  string  $filePath  The path to the file
+     * @return string|false|null  mimetype (if file extension could be mapped to an image type),
+     *    false (if file extension could be mapped to a type known not to be an image type)
+     *    or null (if file extension could not be mapped to any mime type, using our little list)
      */
     public static function guess($filePath)
     {
-        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
-        $fileExtension = strtolower($fileExtension);
+        if (!@file_exists($filePath)) {
+            return false;
+        }
+        /*
+        Not using pathinfo, as it is locale aware, and I'm not sure if that could lead to problems
 
+        if (!function_exists('pathinfo')) {
+            // This is really a just in case! - We do not expect this to happen.
+            // - in fact we have a test case asserting that this does not happen.
+            return null;
+            //
+            $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
+            $fileExtension = strtolower($fileExtension);
+        }*/
+
+        $result = preg_match('#\\.([^.]*)$#', $filePath, $matches);
+        if ($result !== 1) {
+            return null;
+        }
+        $fileExtension = $matches[1];
+
+        // Trivial image mime types
+        if (in_array($fileExtension, ['bmp', 'gif', 'jpeg', 'png', 'tiff', 'webp'])) {
+            return 'image/' . $fileExtension;
+        }
+
+        // Common extensions that are definitely not images
+        if (in_array($fileExtension, ['txt', 'doc', 'zip', 'gz', 'exe'])) {
+            return false;
+        }
+
+        // Non-trivial image mime types
         switch ($fileExtension) {
-            case 'bmp':
-            case 'gif':
-            case 'jpeg':
-            case 'png':
-            case 'tiff':
-            case 'webp':
-                return 'image/' . $fileExtension;
-
             case 'ico':
                 return 'image/vnd.microsoft.icon';      // or perhaps 'x-icon' ?
 
@@ -4799,14 +4747,20 @@ class GuessFromExtension
             case 'tif':
                 return 'image/tiff';
         }
-        return false;
+
+        // We do not know this extension, return null
+        return null;
     }
+
 }
 
 ?><?php
 
 /**
  * ImageMimeTypeGuesser - Detect / guess mime type of an image
+ *
+ * The library is born out of a discussion here:
+ * https://github.com/rosell-dk/webp-convert/issues/98
  *
  * @link https://github.com/rosell-dk/image-mime-type-guesser
  * @license MIT
@@ -4821,31 +4775,38 @@ class ImageMimeTypeGuesser
 
 
     /**
-     *  Try to detect mime type of image using "stack" detector (all available methods, until one succeeds)
+     * Try to detect mime type of image using all available detectors (the "stack" detector).
      *
-     *  returns:
-     *  - null  (if it cannot be determined)
-     *  - false (if it is not an image that the server knows about)
-     *  - mime  (if it is in fact an image, and type could be determined)
-     *  @return  mime type | null | false.
+     * Returns:
+     * - mime type (string) (if it is in fact an image, and type could be determined)
+     * - false (if it is not an image type that the server knowns about)
+     * - null  (if nothing can be determined)
+     *
+     * @param  string  $filePath  The path to the file
+     * @return string|false|null  mimetype (if it is an image, and type could be determined),
+     *    false (if it is not an image type that the server knowns about)
+     *    or null (if nothing can be determined)
      */
     public static function detect($filePath)
     {
-        // Result of the discussion here:
-        // https://github.com/rosell-dk/webp-convert/issues/98
-
         return Stack::detect($filePath);
     }
 
     /**
-     *  Try to detect mime type of image using "stack" detector (all available methods, until one succeeds)
-     *  If that fails, fall back to wild west guessing based solely on file extension, which always has an answer
-     *  (this method never returns null)
+     * Try to detect mime type of image. If that fails, make a guess based on the file extension.
      *
-     *  returns:
-     *  - false (if it is not an image that the server knows about)
-     *  - mime  (if it looks like an image)
-     *  @return  mime type | false.
+     * Try to detect mime type of image using "stack" detector (all available methods, until one succeeds)
+     * If that fails (null), fall back to wild west guessing based solely on file extension.
+     *
+     * Returns:
+     * - mime type (string) (if it is an image, and type could be determined / mapped from file extension))
+     * - false (if it is not an image type that the server knowns about)
+     * - null  (if nothing can be determined)
+     *
+     * @param  string  $filePath  The path to the file
+     * @return string|false|null  mimetype (if it is an image, and type could be determined),
+     *    false (if it is not an image type that the server knowns about)
+     *    or null (if nothing can be determined)
      */
     public static function guess($filePath)
     {
@@ -4859,15 +4820,20 @@ class ImageMimeTypeGuesser
     }
 
     /**
-     *  Try to detect mime type of image using "stack" detector (all available methods, until one succeeds)
-     *  But do not take no for an answer, as "no", really only means that the server has not registred that mime type
+     * Try to detect mime type of image. If that fails, make a guess based on the file extension.
      *
-     *  (this method never returns null)
+     * Try to detect mime type of image using "stack" detector (all available methods, until one succeeds)
+     * If that fails (false or null), fall back to wild west guessing based solely on file extension.
      *
-     *  returns:
-     *  - false (if it can be determined that this is not an image)
-     *  - mime  (if it looks like an image)
-     *  @return  mime type | false.
+     * Returns:
+     * - mime type (string) (if it is an image, and type could be determined / mapped from file extension)
+     * - false (if it is not an image type that the server knowns about)
+     * - null  (if nothing can be determined)
+     *
+     * @param  string  $filePath  The path to the file
+     * @return string|false|null  mimetype (if it is an image, and type could be determined / guessed),
+     *    false (if it is not an image type that the server knowns about)
+     *    or null (if nothing can be determined)
      */
     public static function lenientGuess($filePath)
     {
@@ -4886,17 +4852,37 @@ class ImageMimeTypeGuesser
     }
 
 
-
-    public static function guessIsIn($filePath, $mimeTypes)
-    {
-        return in_array(self::guess($filePath), $mimeTypes);
-    }
-
+    /**
+     * Check if the *detected* mime type is in a list of accepted mime types.
+     *
+     * @param  string  $filePath  The path to the file
+     * @param  string[]  $mimeTypes  Mime types to accept
+     * @return bool  Whether the detected mime type is in the $mimeTypes array or not
+     */
     public static function detectIsIn($filePath, $mimeTypes)
     {
         return in_array(self::detect($filePath), $mimeTypes);
     }
 
+    /**
+     * Check if the *guessed* mime type is in a list of accepted mime types.
+     *
+     * @param  string  $filePath  The path to the file
+     * @param  string[]  $mimeTypes  Mime types to accept
+     * @return bool  Whether the detected / guessed mime type is in the $mimeTypes array or not
+     */
+    public static function guessIsIn($filePath, $mimeTypes)
+    {
+        return in_array(self::guess($filePath), $mimeTypes);
+    }
+
+    /**
+     * Check if the *leniently guessed* mime type is in a list of accepted mime types.
+     *
+     * @param  string  $filePath  The path to the file
+     * @param  string[]  $mimeTypes  Mime types to accept
+     * @return bool  Whether the detected / leniently guessed mime type is in the $mimeTypes array or not
+     */
     public static function lenientGuessIsIn($filePath, $mimeTypes)
     {
         return in_array(self::lenientGuess($filePath), $mimeTypes);
@@ -4913,13 +4899,17 @@ class ExifImageType extends AbstractDetector
 {
 
     /**
-     *  Try to detect mime type of image using "exif_imagetype"
+     * Try to detect mime type of image using *exif_imagetype*.
      *
-     *  Like all detectors, it returns:
-     *  - null  (if it cannot be determined)
-     *  - false (if it can be determined that this is not an image)
-     *  - mime  (if it is in fact an image, and type could be determined)
-     *  @return  mime | null | false.
+     * Returns:
+     * - mime type (string) (if it is in fact an image, and type could be determined)
+     * - false (if it is not an image type that the server knowns about)
+     * - null  (if nothing can be determined)
+     *
+     * @param  string  $filePath  The path to the file
+     * @return string|false|null  mimetype (if it is an image, and type could be determined),
+     *    false (if it is not an image type that the server knowns about)
+     *    or null (if nothing can be determined)
      */
     protected function doDetect($filePath)
     {
@@ -4936,7 +4926,7 @@ class ExifImageType extends AbstractDetector
 //                throw($e);
             }
         }
-        return;
+        return null;
     }
 }
 
@@ -4948,13 +4938,17 @@ class FInfo extends AbstractDetector
 {
 
     /**
-     *  Try to detect mime type of image using finfo
+     * Try to detect mime type of image using *finfo* class.
      *
-     *  Like all detectors, it returns:
-     *  - null  (if it cannot be determined)
-     *  - false (if it can be determined that this is not an image)
-     *  - mime  (if it is in fact an image, and type could be determined)
-     *  @return  mime | null | false.
+     * Returns:
+     * - mime type (string) (if it is in fact an image, and type could be determined)
+     * - false (if it is not an image type that the server knowns about)
+     * - null  (if nothing can be determined)
+     *
+     * @param  string  $filePath  The path to the file
+     * @return string|false|null  mimetype (if it is an image, and type could be determined),
+     *    false (if it is not an image type that the server knowns about)
+     *    or null (if nothing can be determined)
      */
     protected function doDetect($filePath)
     {
@@ -4970,9 +4964,8 @@ class FInfo extends AbstractDetector
             } else {
                 return false;
             }
-
-            return $type;
         }
+        return null;
     }
 }
 
@@ -4984,13 +4977,17 @@ class GetImageSize extends AbstractDetector
 {
 
     /**
-     *  Try to detect mime type of image using "getimagesize"
+     * Try to detect mime type of image using *getimagesize()*.
      *
-     *  Like all detectors, it returns:
-     *  - null  (if it cannot be determined)
-     *  - false (if it can be determined that this is not an image)
-     *  - mime  (if it is in fact an image, and type could be determined)
-     *  @return  mime | null | false.
+     * Returns:
+     * - mime type (string) (if it is in fact an image, and type could be determined)
+     * - false (if it is not an image type that the server knowns about)
+     * - null  (if nothing can be determined)
+     *
+     * @param  string  $filePath  The path to the file
+     * @return string|false|null  mimetype (if it is an image, and type could be determined),
+     *    false (if it is not an image type that the server knowns about)
+     *    or null (if nothing can be determined)
      */
     protected function doDetect($filePath)
     {
@@ -5001,9 +4998,11 @@ class GetImageSize extends AbstractDetector
                 $imageSize = getimagesize($filePath);
                 return (isset($imageSize['mime']) ? $imageSize['mime'] : false);
             } catch (\Exception $e) {
-                // well well, don't let this stop us either
+                // well well, don't let this stop us either                
+                return null;
             }
         }
+        return null;
     }
 }
 
@@ -5015,13 +5014,17 @@ class MimeContentType extends AbstractDetector
 {
 
     /**
-     *  Try to detect mime type of image using "mime_content_type"
+     * Try to detect mime type of image using *mime_content_type()*.
      *
-     *  Like all detectors, it returns:
-     *  - null  (if it cannot be determined)
-     *  - false (if it can be determined that this is not an image)
-     *  - mime  (if it is in fact an image, and type could be determined)
-     *  @return  mime | null | false.
+     * Returns:
+     * - mime type (string) (if it is in fact an image, and type could be determined)
+     * - false (if it is not an image type that the server knowns about)
+     * - null  (if nothing can be determined)
+     *
+     * @param  string  $filePath  The path to the file
+     * @return string|false|null  mimetype (if it is an image, and type could be determined),
+     *    false (if it is not an image type that the server knowns about)
+     *    or null (if nothing can be determined)
      */
     protected function doDetect($filePath)
     {
@@ -5041,6 +5044,56 @@ class MimeContentType extends AbstractDetector
                 // we are unstoppable!
             }
         }
+        return null;
+    }
+}
+
+?><?php
+
+namespace ImageMimeTypeGuesser\Detectors;
+
+use \ImageMimeTypeGuesser\Detectors\AbstractDetector;
+
+class SniffFirstFourBytes extends AbstractDetector
+{
+
+    /**
+     * Try to detect mime type by sniffing the first four bytes.
+     *
+     * Credits: Based on the code here: http://phil.lavin.me.uk/2011/12/php-accurately-detecting-the-type-of-a-file/
+     *
+     * Returns:
+     * - mime type (string) (if it is in fact an image, and type could be determined)
+     * - false (if it is not an image type that the server knowns about)
+     * - null  (if nothing can be determined)
+     *
+     * @param  string  $filePath  The path to the file
+     * @return string|false|null  mimetype (if it is an image, and type could be determined),
+     *    false (if it is not an image type that the server knowns about)
+     *    or null (if nothing can be determined)
+     */
+    protected function doDetect($filePath)
+    {
+        // PNG, GIF, JFIF JPEG, EXIF JPEF (respectively)
+        $known = [
+            '89504E47' => 'image/png',
+            '47494638' => 'image/gif',
+            'FFD8FFE0' => 'image/jpeg',  //  JFIF JPEG
+            'FFD8FFE1' => 'image/jpeg',  //  EXIF JPEG
+        ];
+
+        $handle = @fopen($filePath, 'r');
+        if ($handle === false) {
+            return null;
+        }
+        $firstFour = @fread($handle, 4);
+        if ($firstFour === false) {
+            return null;
+        }
+        $key = strtoupper(bin2hex($firstFour));
+        if (isset($known[$key])) {
+            return $known[$key];
+        }
     }
 }
 
@@ -5050,22 +5103,27 @@ namespace ImageMimeTypeGuesser\Detectors;
 
 class Stack extends AbstractDetector
 {
-
     /**
-     *  Try to detect mime type of image using all available detectors
-     *  returns:
-     *  - null  (if it cannot be determined)
-     *  - false (if it can be determined that this is not an image)
-     *  - mime  (if it is in fact an image, and type could be determined)
-     *  @return  mime | null | false.
+     * Try to detect mime type of image using all available detectors.
+     *
+     * Returns:
+     * - mime type (string) (if it is in fact an image, and type could be determined)
+     * - false (if it is not an image type that the server knowns about)
+     * - null  (if nothing can be determined)
+     *
+     * @param  string  $filePath  The path to the file
+     * @return string|false|null  mimetype (if it is an image, and type could be determined),
+     *    false (if it is not an image type that the server knowns about)
+     *    or null (if nothing can be determined)
      */
     protected function doDetect($filePath)
     {
         $detectors = [
             'ExifImageType',
-            'GetImageSize',
             'FInfo',
-            'MimeContentType'
+            'SniffFirstFourBytes',
+            'GetImageSize',
+            'MimeContentType',
         ];
 
         foreach ($detectors as $className) {
@@ -5078,7 +5136,7 @@ class Stack extends AbstractDetector
             }
         }
 
-        return;     // undetermined
+        return null;     // undetermined
     }
 }
 
