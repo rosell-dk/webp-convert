@@ -1,5 +1,5 @@
 <?php
-// TODO: Quality option
+
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\BaseConverters\AbstractExecConverter;
@@ -72,6 +72,7 @@ class ImagickBinary extends AbstractExecConverter
     protected function doActualConvert()
     {
         //$this->logLn('Using quality:' . $this->getCalculatedQuality());
+        
         // Should we use "magick" or "convert" command?
         // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
         // Should we perhaps try both?
