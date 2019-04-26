@@ -65,8 +65,9 @@ abstract class AbstractConverter
     /** @var string  Where to save the webp (complete path) */
     public $destination;
 
-    public $beginTime;
-    public $sourceMimeType;
+    /** @var string  Where to save the webp (complete path) */
+    private $sourceMimeType;
+
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
 
     /**
@@ -142,7 +143,7 @@ abstract class AbstractConverter
 
     public function doConvert()
     {
-        $this->beginTime = microtime(true);
+        $beginTime = microtime(true);
 
         $this->activateWarningLogger();
         //set_error_handler(array($this, "errorHandler"));
@@ -194,7 +195,7 @@ abstract class AbstractConverter
             if (!isset($this->options['_suppress_success_message'])) {
                 $this->ln();
                 $msg = 'Converted image in ' .
-                    round((microtime(true) - $this->beginTime) * 1000) . ' ms';
+                    round((microtime(true) - $beginTime) * 1000) . ' ms';
 
                 $sourceSize = @filesize($source);
                 if ($sourceSize !== false) {
