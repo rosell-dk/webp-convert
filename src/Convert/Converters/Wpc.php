@@ -7,6 +7,13 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
+/**
+ * Convert images to webp using Wpc (a cloud converter based on WebP Convert).
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class Wpc extends AbstractCloudCurlConverter
 {
     protected $processLosslessAuto = true;

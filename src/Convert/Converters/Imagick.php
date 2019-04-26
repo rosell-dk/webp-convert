@@ -9,10 +9,17 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
+/**
+ * Convert images to webp using Imagick extension.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class Imagick extends AbstractConverter
 {
     protected $supportsLossless = false;
-    
+
     protected function getOptionDefinitionsExtra()
     {
         return [];

@@ -13,11 +13,18 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
+/**
+ * Convert images to webp by trying a stack of converters until success.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class Stack extends AbstractConverter
 {
     protected $processLosslessAuto = false;
     protected $supportsLossless = true;
-    
+
     protected function getOptionDefinitionsExtra()
     {
         return [

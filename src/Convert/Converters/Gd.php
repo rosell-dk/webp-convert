@@ -7,6 +7,13 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInputException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
+/**
+ * Convert images to webp using gd extension.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class Gd extends AbstractConverter
 {
     protected $supportsLossless = false;

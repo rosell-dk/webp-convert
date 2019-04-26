@@ -21,6 +21,13 @@ use WebPConvert\Loggers\BaseLogger;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 
+/**
+ * Base for all converter classes.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 abstract class AbstractConverter
 {
     use AutoQualityTrait;

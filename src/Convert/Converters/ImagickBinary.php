@@ -9,12 +9,20 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
-// To futher improve this converter, I could check out:
-// https://github.com/Orbitale/ImageMagickPHP
+/**
+ * Convert images to webp by calling imagick binary.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class ImagickBinary extends AbstractExecConverter
 {
+    // To futher improve this converter, I could check out:
+    // https://github.com/Orbitale/ImageMagickPHP
+
     protected $supportsLossless = false;
-    
+
     protected function getOptionDefinitionsExtra()
     {
         return [

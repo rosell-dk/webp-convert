@@ -8,6 +8,13 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 //require '/home/rosell/.composer/vendor/autoload.php';
 
+/**
+ * Convert images to webp using Vips extension.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class Vips extends AbstractConverter
 {
     protected $supportsLossless = true;
