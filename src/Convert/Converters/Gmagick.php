@@ -124,6 +124,7 @@ class Gmagick extends AbstractConverter
 
         // Ps: Imagick automatically uses same quality as source, when no quality is set
         // This feature is however not present in Gmagick
+        // TODO: However, it might be possible after all - see #91
         $im->setcompressionquality($this->getCalculatedQuality());
 
         try {
