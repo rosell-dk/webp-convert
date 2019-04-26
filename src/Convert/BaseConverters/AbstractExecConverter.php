@@ -9,24 +9,6 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 
 abstract class AbstractExecConverter extends AbstractConverter
 {
-    protected static function escapeFilename($string)
-    {
-        // Escaping whitespace
-        $string = preg_replace('/\s/', '\\ ', $string);
-
-        // filter_var() is should normally be available, but it is not always
-        // - https://stackoverflow.com/questions/11735538/call-to-undefined-function-filter-var
-        if (function_exists('filter_var')) {
-            // Sanitize quotes
-            $string = filter_var($string, FILTER_SANITIZE_MAGIC_QUOTES);
-
-            // Stripping control characters
-            // see https://stackoverflow.com/questions/12769462/filter-flag-strip-low-vs-filter-flag-strip-high
-            $string = filter_var($string, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW);
-        }
-
-        return $string;
-    }
 
     protected static function hasNiceSupport()
     {
