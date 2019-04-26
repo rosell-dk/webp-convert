@@ -25,10 +25,22 @@ class AbstractConverterTest extends TestCase
 
     public function testMimeTypeGuesser()
     {
+        /*
         $this->assertEquals('image/jpeg', ExposedConverter::exposedGetMimeType(self::$imgDir . '/test.jpg'));
         $this->assertEquals('image/png', ExposedConverter::exposedGetMimeType(self::$imgDir . '/test.png'));
 
         $mimeTypeMaybeDetected = ExposedConverter::exposedGetMimeType(self::$imgDir . '/png-without-extension');
+        */
+        $successConverterJpeg = SuccessGuaranteedConverter::createInstance(self::$imgDir . '/test.jpg', '');
+        $this->assertEquals('image/jpeg', $successConverterJpeg->getMimeTypeOfSource());
+
+        $successConverterPng = SuccessGuaranteedConverter::createInstance(self::$imgDir . '/test.png', '');
+        $this->assertEquals('image/png', $successConverterPng->getMimeTypeOfSource());
+
+        $successConverterPngMaybeDetected = SuccessGuaranteedConverter::createInstance(self::$imgDir . '/png-without-extension', '');
+
+        $mimeTypeMaybeDetected = $successConverterPngMaybeDetected->getMimeTypeOfSource();
+
         if ($mimeTypeMaybeDetected === false) {
             // It was not detected, and that is ok!
             // - it is not possible to detect mime type on all platforms. In case it could not be detected,

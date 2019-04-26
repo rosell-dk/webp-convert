@@ -22,6 +22,7 @@ class ExposedConverter extends AbstractConverter {
         file_put_contents($this->destination, 'we-pretend-this-is-a-valid-webp!');
     }
 
+/*
     public static function exposedGetMimeType($filePath)
     {
         $instance = self::createInstance(
@@ -29,5 +30,5 @@ class ExposedConverter extends AbstractConverter {
             $filePath . '.webp'
         );
         return $instance->getMimeTypeOfSource();
-    }
+    }*/
 }
