@@ -7,9 +7,21 @@ use WebPConvert\Convert\BaseConverters\AbstractConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
+/**
+ * Base for converters that uses the "exec" function.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 abstract class AbstractExecConverter extends AbstractConverter
 {
 
+    /**
+     * Helper function for examining if "nice" command is available
+     *
+     * @return  boolean  true if nice is available
+     */
     protected static function hasNiceSupport()
     {
         exec("nice 2>&1", $niceOutput);
@@ -29,7 +41,7 @@ abstract class AbstractExecConverter extends AbstractConverter
     }
 
     /**
-     * Check basis operationality of exec converters.
+     * Check basic operationality of exec converters (that the "exec" function is available)
      *
      * @throws  SystemRequirementsNotMetException
      * @return  void

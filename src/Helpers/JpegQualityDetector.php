@@ -4,7 +4,7 @@ namespace WebPConvert\Helpers;
 
 use WebPConvert\Helpers\WarningsIntoExceptions;
 
-abstract class JpegQualityDetector
+class JpegQualityDetector
 {
 
     /**
