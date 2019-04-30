@@ -168,16 +168,6 @@ class Wpc extends AbstractCloudCurlConverter
             }
         }
 
-
-        // Try one host at the time
-        // TODO: shuffle the array first
-        /*
-        foreach ($options['web-services'] as $webService) {
-
-        }sourceMimeType
-        */
-
-
         curl_setopt_array($ch, [
             CURLOPT_URL => $options['url'],
             CURLOPT_POST => 1,
