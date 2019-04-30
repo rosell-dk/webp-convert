@@ -134,7 +134,12 @@ class WodBuildTest extends TestCase
             [
                 'reconvert' => true,
                 'require-for-conversion' => $wod2,
-                //'converters' => ['imagick'],
+                'converters' => [
+                    'imagick',
+                    'gd',
+                    'cwebp',
+                    '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+                ],
             ]
         );
         ob_end_clean();

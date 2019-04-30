@@ -29,6 +29,13 @@ class WebPConvertBuildTest extends TestCase
             [
                 'reconvert' => true,
                 //'converters' => ['imagick'],
+                'converters' => [
+                    'imagick',
+                    'gd',
+                    'cwebp',
+                    'vips',
+                    '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+                ],
             ]
         );
         ob_end_clean();
