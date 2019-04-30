@@ -183,7 +183,6 @@ class Report
 
             //echo '<p>Rethrowing exception for your convenience</p>';
             //throw ($e);
-            exit;
         }
         ?>
     </body>
