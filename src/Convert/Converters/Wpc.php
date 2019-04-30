@@ -46,17 +46,20 @@ class Wpc extends AbstractCloudCurlConverter
         return $salt;
     }
 
-    protected function doActualConvert()
+    /**
+     * Check operationality of Wpc converter.
+     *
+     * @throws SystemRequirementsNotMetException  if system requirements are not met (curl)
+     * @throws ConverterNotOperationalException   if key is missing or invalid, or quota has exceeded
+     */
+    public function checkOperationality()
     {
+        // First check for curl requirements
+        parent::checkOperationality();
+
         $options = $this->options;
 
         $apiVersion = $options['api-version'];
-
-        if (!function_exists('curl_file_create')) {
-            throw new SystemRequirementsNotMetException(
-                'Required curl_file_create() PHP function is not available (requires PHP > 5.5).'
-            );
-        }
 
         if ($apiVersion == 0) {
             if (!empty($options['secret'])) {
@@ -90,6 +93,25 @@ class Wpc extends AbstractCloudCurlConverter
                 'or the WebP Express plugin for Wordpress - and supply the url.'
             );
         }
+    }
+
+    /**
+     * Check if specific file is convertable with current converter / converter settings.
+     *
+     */
+    public function checkConvertability()
+    {
+        // First check for upload limits (abstract cloud converter)
+        parent::checkConvertability();
+
+        // TODO: some from below can be moved up here
+    }
+
+    protected function doActualConvert()
+    {
+        $options = $this->options;
+
+        $apiVersion = $options['api-version'];
 
         // Got some code here:
         // https://coderwall.com/p/v4ps1a/send-a-file-via-post-with-curl-and-php
@@ -152,7 +174,7 @@ class Wpc extends AbstractCloudCurlConverter
         /*
         foreach ($options['web-services'] as $webService) {
 
-        }
+        }sourceMimeType
         */
 
 
