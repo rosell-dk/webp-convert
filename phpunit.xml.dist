@@ -11,6 +11,7 @@
          processIsolation="false"
          stopOnFailure="false"
          bootstrap="vendor/autoload.php"
+
 >
     <testsuites>
         <testsuite name="WebPConvert Test Suite">

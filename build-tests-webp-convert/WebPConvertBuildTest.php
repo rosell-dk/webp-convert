@@ -19,24 +19,21 @@ class WebPConvertBuildTest extends TestCase
     {
         require __DIR__ . '/../src-build/webp-convert.inc';
 
-        $source = __DIR__ . '/images/png-without-extension';
+        $source = __DIR__ . '/../tests/images/png-without-extension';
+        $this->assertTrue(file_exists($source));
 
+        ob_start();
         WebPConvert::convertAndServe(
             $source,
             $source . '.webp',
             [
                 'reconvert' => true,
                 //'converters' => ['imagick'],
-                'aboutToServeImageCallBack' => function() {
-                    return false;
-                },
-                'aboutToPerformFailActionCallback' => function() {
-                    return false;
-                }
             ]
         );
+        ob_end_clean();
         $this->addToAssertionCount(1);
 
     }
-
 }
+require_once(__DIR__ . '/../tests/Serve/mock-header.inc');

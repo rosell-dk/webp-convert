@@ -4,7 +4,9 @@ namespace WebPConvert;
 
 //use WebPConvert\Convert\Converters\ConverterHelper;
 use WebPConvert\Convert\Converters\Stack;
-use WebPConvert\Serve\ServeExistingOrHandOver;
+//use WebPConvert\Serve\ServeExistingOrHandOver;
+use WebPConvert\Serve\ServeConvertedWebP;
+use WebPConvert\Serve\ServeConvertedWebPWithErrorHandling;
 
 class WebPConvert
 {
@@ -27,6 +29,12 @@ class WebPConvert
 
     public static function convertAndServe($source, $destination, $options = [])
     {
-        return ServeExistingOrHandOver::serveConverted($source, $destination, $options);
+        //return ServeExistingOrHandOver::serveConverted($source, $destination, $options);
+        //if (isset($options['handle-errors']) && $options['handle-errors'] === true) {
+        if (isset($options['fail']) && ($options['fail'] != 'throw')) {
+            ServeConvertedWebPWithErrorHandling::serve($source, $destination, $options);
+        } else {
+            ServeConvertedWebP::serve($source, $destination, $options);
+        }
     }
 }

@@ -153,6 +153,12 @@ https://phpunit.readthedocs.io/en/7.1/writing-tests-for-phpunit.html#testing-exc
         //$this->assertTrue($result);
     }
 
+    public function warningHandler($errno, $errstr, $errfile, $errline)
+    {
+        //echo 'warning handler here';
+        //return false;
+    }
+
     public function testInvalidDestinationFolder()
     {
 
@@ -161,12 +167,32 @@ https://phpunit.readthedocs.io/en/7.1/writing-tests-for-phpunit.html#testing-exc
         // - if I did not do that, the exception would not be CreateDestinationFolderException
 
         $this->expectException(CreateDestinationFolderException::class);
+        //$this->expectException(\Exception::class);
+
+
+        // Set error handler in order to suppress warnings.
+        // (we probably get a warning because mkdir() does not have permission to create the dir it is asked to)
+        $handler = set_error_handler(
+            array($this, "warningHandler"),
+            E_WARNING | E_USER_WARNING | E_NOTICE | E_USER_NOTICE | E_USER_ERROR
+        );
+        //echo 'previously defined handler:' . print_r($handler, true);*/
+
+        /*
+        set_error_handler(
+            array($this, "warningHandler"),
+            E_ALL
+        );
+
+        chown();*/
 
         // I here assume that no system grants write access to their root folder
         // this is perhaps wrong to assume?
         $destinationFolder = '/you-can-delete-me/';
 
         WebPConvert::convert(__DIR__ . '/test.jpg', $destinationFolder . 'you-can-delete-me.webp');
+
+        restore_error_handler();
     }
 
     /**

@@ -6,9 +6,18 @@ require_once('PHPMerger.php');
 //use PHPMerger;
 
 
-$filesInWod1 = [
+/*$filesInWod1 = [
     '/Serve/ServeBase.php',
     '/Serve/ServeExistingOrHandOver.php',
+    '/WebPConvert.php'
+];*/
+
+$filesInWod1 = [
+    '/Serve/ServeConvertedWebP.php',
+    '/Serve/ServeConvertedWebPWithErrorHandling.php',
+    '/Serve/DecideWhatToServe.php',
+    '/Serve/ServeFile.php',
+    '/Serve/Header.php',
     '/WebPConvert.php'
 ];
 
@@ -65,6 +74,7 @@ $jobsEverything = [
             'Helpers',
             'Loggers',
             'Serve',
+            'Serve/Exceptions',
         ],
         'exclude' => [
         ]

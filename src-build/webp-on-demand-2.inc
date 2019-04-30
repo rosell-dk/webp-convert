@@ -61,12 +61,12 @@ abstract class AbstractConverter
 
 
     /** @var string  The filename of the image to convert (complete path) */
-    public $source;
+    protected $source;
 
     /** @var string  Where to save the webp (complete path) */
-    public $destination;
+    protected $destination;
 
-    /** @var string  Where to save the webp (complete path) */
+    /** @var string|false  Where to save the webp (complete path) */
     private $sourceMimeType;
 
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
@@ -286,7 +286,9 @@ abstract class AbstractConverter
      * - By setting file extension to "jpg", one can lure our library into trying to convert a file, which isn't a jpg.
      * hmm, seems very unlikely, though not unthinkable that one of the converters could be exploited
      *
-     * @return  string|false
+     * @return  string|false|null mimetype (if it is an image, and type could be determined / guessed),
+     *    false (if it is not an image type that the server knowns about)
+     *    or null (if nothing can be determined)
      */
     public function getMimeTypeOfSource()
     {
@@ -309,8 +311,10 @@ abstract class AbstractConverter
 
         // Check if the provided file's mime type is valid
         $fileMimeType = $this->getMimeTypeOfSource();
-        if ($fileMimeType === false) {
+        if ($fileMimeType === null) {
             throw new InvalidImageTypeException('Image type could not be detected');
+        } elseif ($fileMimeType === false) {
+            throw new InvalidImageTypeException('File seems not to be an image.');
         } elseif (!in_array($fileMimeType, self::$allowedMimeTypes)) {
             throw new InvalidImageTypeException('Unsupported mime type: ' . $fileMimeType);
         }
@@ -965,6 +969,7 @@ trait WarningLoggerTrait
 {
     abstract protected function logLn($msg, $style = '');
 
+    public $previousErrorHandler;
     /**
      *  Handle errors during conversion.
      *  The function is a callback used with "set_error_handler". It logs
@@ -1023,12 +1028,23 @@ trait WarningLoggerTrait
             throw new ConversionFailedException('Uncaught error in converter', $msg);
         }*/
 
-        return false;   // let PHP handle the error from here
+        //echo 'previously defined handler:' . print_r($this->previousErrorHandler, true);
+
+        return call_user_func($this->previousErrorHandler, $errno, $errstr, $errfile, $errline);
+        //return $this->previousErrorHandler;
     }
+
+    /*
+    public function get_error_handler(){
+        $handler = set_error_handler(function(){});
+        restore_error_handler();
+        echo 'handler:' . $handler;
+        return $handler;
+    }*/
 
     protected function activateWarningLogger()
     {
-        set_error_handler(
+        $this->previousErrorHandler = set_error_handler(
             array($this, "warningHandler"),
             E_WARNING | E_USER_WARNING | E_NOTICE | E_USER_NOTICE | E_USER_ERROR
         );
@@ -1888,37 +1904,31 @@ class Gd extends AbstractConverter
         // In case of failure, image will be false
 
         $mimeType = $this->getMimeTypeOfSource();
-        if ($mimeType === false) {
-            throw new InvalidInputException(
-                'Mime type could not be determined'
-            );
-        }
 
-        switch ($mimeType) {
-            case 'image/png':
-                $image = imagecreatefrompng($this->source);
-                if ($image === false) {
-                    throw new ConversionFailedException(
-                        'Gd failed when trying to load/create image (imagecreatefrompng() failed)'
-                    );
-                }
-                break;
-
-            case 'image/jpeg':
-                $image = imagecreatefromjpeg($this->source);
-                if ($image === false) {
-                    throw new ConversionFailedException(
-                        'Gd failed when trying to load/create image (imagecreatefromjpeg() failed)'
-                    );
-                }
-                break;
-
-            default:
-                throw new InvalidInputException(
-                    'Unsupported mime type:' . $mimeType
+        if ($mimeType == 'image/png') {
+            $image = imagecreatefrompng($this->source);
+            if ($image === false) {
+                throw new ConversionFailedException(
+                    'Gd failed when trying to load/create image (imagecreatefrompng() failed)'
                 );
+            }
+            return $image;
         }
-        return $image;
+
+        if ($mimeType == 'image/jpeg') {
+            $image = imagecreatefromjpeg($this->source);
+            if ($image === false) {
+                throw new ConversionFailedException(
+                    'Gd failed when trying to load/create image (imagecreatefromjpeg() failed)'
+                );
+            }
+            return $image;
+        }
+
+        /*
+        throw new InvalidInputException(
+            'Unsupported mime type:' . $mimeType
+        );*/
     }
 
     /**
@@ -2676,7 +2686,7 @@ class Stack extends AbstractConverter
      */
     public function checkOperationality()
     {
-        if (count($this->options) == 0) {
+        if (count($this->options['converters']) == 0) {
             throw new ConverterNotOperationalException(
                 'Converter stack is empty! - no converters to try, no conversion can be made!'
             );
@@ -2696,13 +2706,14 @@ class Stack extends AbstractConverter
 
         // If we have set converter options for a converter, which is not in the converter array,
         // then we add it to the array
+        /*
         if (isset($options['converter-options'])) {
             foreach ($options['converter-options'] as $converterName => $converterOptions) {
                 if (!in_array($converterName, $options['converters'])) {
                     $options['converters'][] = $converterName;
                 }
             }
-        }
+        }*/
 
         //$this->logLn('converters: ' . print_r($options['converters'], true));
 
@@ -2714,6 +2725,7 @@ class Stack extends AbstractConverter
         $defaultConverterOptions['_suppress_success_message'] = true;
 
         $anyRuntimeErrors = false;
+
         foreach ($options['converters'] as $converter) {
             if (is_array($converter)) {
                 $converterId = $converter['converter'];
@@ -3943,6 +3955,10 @@ class Report
         // We could display warning if unknown options are set
         // but that requires that WebPConvert also describes its general options
 
+//        $echoLogger = new EchoLogger();
+//        WebPConvert::convert($source, $destination, $options, $echoLogger);
+
+
         try {
             $echoLogger = new EchoLogger();
             WebPConvert::convert($source, $destination, $options, $echoLogger);
@@ -3952,6 +3968,9 @@ class Report
             $msg = $e->getMessage();
 
             echo '<b>' . $msg . '</b>';
+
+            //echo '<p>Rethrowing exception for your convenience</p>';
+            //throw ($e);
             exit;
         }
         ?>
@@ -3965,340 +3984,95 @@ class Report
 namespace WebPConvert\Serve;
 
 use WebPConvert\WebPConvert;
-use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFileException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFolderException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFoundException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
-use WebPConvert\Loggers\BufferLogger;
-use WebPConvert\Serve\Report;
+use WebPConvert\Serve\DecideWhatToServe;
+use WebPConvert\Serve\Header;
+use WebPConvert\Serve\Exceptions\ServeFailedException;
 
 /**
- * This class must serves a converted image (either a fresh convertion, the destionation, or
- * the original). Upon failure, the fail action given in the options will be exectuted
+ * Serve a freshly converted image.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
  */
-class ServeConverted extends ServeBase
+class ServeFreshConversion
 {
 
-    /*
-    Not used, currently...
-    private function addXOptionsHeader()
+    public static function serve($source, $destination, $options = [])
     {
-        if ($this->options['add-x-header-options']) {
-            $this->header('X-WebP-Convert-Options:' . Report::getPrintableOptionsAsString($this->options));
-        }
-    }
-    */
-
-    private function addHeadersPreventingCaching()
-    {
-        $this->header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-        $this->header("Cache-Control: post-check=0, pre-check=0", false);
-        $this->header("Pragma: no-cache");
-    }
-
-    public function serve404()
-    {
-        $protocol = isset($_SERVER["SERVER_PROTOCOL"]) ? $_SERVER["SERVER_PROTOCOL"] : 'HTTP/1.0';
-        $this->header($protocol . " 404 Not Found");
-    }
-
-    public function serveOriginal()
-    {
-        if (!$this->callAboutToServeImageCallBack('source')) {
-            return true;    // we shall not trigger the fail callback
-        }
-
-        if ($this->options['add-content-type-header']) {
-            $arr = explode('.', $this->source);
-            $ext = array_pop($arr);
-            switch (strtolower($ext)) {
-                case 'jpg':
-                case 'jpeg':
-                    $this->header('Content-type: image/jpeg');
-                    break;
-                case 'png':
-                    $this->header('Content-type: image/png');
-                    break;
-            }
-        }
-
-        $this->addVaryHeader();
-
-        switch ($this->whyServingThis) {
-            case 'source-lighter':
-            case 'explicitly-told-to':
-                $this->addCacheControlHeader();
-                $this->addLastModifiedHeader(@filemtime($this->source));
-                break;
-            default:
-                $this->addHeadersPreventingCaching();
-        }
-
-        if (@readfile($this->source) === false) {
-            $this->header('X-WebP-Convert: Could not read file');
-            return false;
-        }
-        return true;
-    }
-
-    public function serveFreshlyConverted()
-    {
-
-        $criticalFail = false;
-        $bufferLogger = new BufferLogger();
 
         try {
-            WebPConvert::convert($this->source, $this->destination, $this->options, $bufferLogger);
+            WebPConvert::convert($source, $destination, $options);
 
             // We are here, so it was successful :)
+            // If destination is smaller than source, we should serve destination. Otherwise we should serve source.
+            // We can use DecideWhatToServe for that purpose.
+            // However, we must make sure it does not answer "fresh-conversion" or "report"
 
-            // Serve source if it is smaller than destination
-            $filesizeDestination = @filesize($this->destination);
-            $filesizeSource = @filesize($this->source);
-            if (($filesizeSource !== false) &&
-                ($filesizeDestination !== false) &&
-                ($filesizeDestination > $filesizeSource)) {
-                $this->whatToServe = 'original';
-                $this->whyServingThis = 'source-lighter';
-                return $this->serveOriginal();
-            }
+            // Unset "reconvert", so we do not get "fresh-conversion"
+            unset($options['reconvert']);
 
-            if (!$this->callAboutToServeImageCallBack('fresh-conversion')) {
-                return;
-            }
-            if ($this->options['add-content-type-header']) {
-                $this->header('Content-type: image/webp');
-            }
-            if ($this->whyServingThis == 'explicitly-told-to') {
-                $this->addXStatusHeader(
-                    'Serving freshly converted image (was explicitly told to reconvert)'
-                );
-            } elseif ($this->whyServingThis == 'source-modified') {
-                $this->addXStatusHeader(
-                    'Serving freshly converted image (the original had changed)'
-                );
-            } elseif ($this->whyServingThis == 'no-existing') {
-                $this->addXStatusHeader(
-                    'Serving freshly converted image (there were no existing to serve)'
-                );
-            } else {
-                $this->addXStatusHeader(
-                    'Serving freshly converted image (dont know why!)'
-                );
-            }
+            // Unset "show-report", so we do not get "report"
+            unset($options['show-report']);
 
-            if ($this->options['add-vary-header']) {
-                $this->header('Vary: Accept');
-            }
+            list($whatToServe, $whyToServe, $msg) = DecideWhatToServe::decide($source, $destination, $options);
 
-            if ($this->whyServingThis == 'no-existing') {
-                $this->addCacheControlHeader();
-            } else {
-                $this->addHeadersPreventingCaching();
-            }
-            $this->addLastModifiedHeader(time());
+            switch ($whatToServe) {
+                case 'source':
+                    Header::addHeader('X-WebP-Convert-Action: ' . $msg);
+                    ServeConvertedWebP::serveOriginal($source, $options);
+                    break;
+                case 'destination':
+                    ServeConvertedWebP::serveDestination($destination, $options);
+                    break;
 
-            // Should we add Content-Length header?
-            // $this->header('Content-Length: ' . filesize($file));
-            if (@readfile($this->destination)) {
-                return true;
-            } else {
-                $this->fail('Error', 'could not read the freshly converted file');
-                return false;
-            }
-        } catch (InvalidImageTypeException $e) {
-            $criticalFail = true;
-            $description = 'Invalid file extension';
-            $msg = $e->getMessage();
-        } catch (TargetNotFoundException $e) {
-            $criticalFail = true;
-            $description = 'Source file not found';
-            $msg = $e->getMessage();
-        } catch (ConversionFailedException $e) {
-            // No converters could convert the image. At least one converter failed, even though it appears to be
-            // operational
-            $description = 'No converters could convert the image';
-            $msg = $e->getMessage();
-        } catch (ConversionSkippedException $e) {
-            // (no converters could convert the image. At least one converter declined
-            $description = 'No converters could/wanted to convert the image';
-            $msg = $e->getMessage();
-        } catch (ConverterNotFoundException $e) {
-            $description = 'A converter was not found!';
-            $msg = $e->getMessage();
-        } catch (CreateDestinationFileException $e) {
-            $description = 'Cannot create destination file';
-            $msg = $e->getMessage();
-        } catch (CreateDestinationFolderException $e) {
-            $description = 'Cannot create destination folder';
-            $msg = $e->getMessage();
-        } catch (\Exception $e) {
-            $description = 'An unanticipated exception was thrown';
-            $msg = $e->getMessage();
-        }
-
-        // Next line is commented out, because we need to be absolute sure that the details does not violate syntax
-        // We could either try to filter it, or we could change WebPConvert, such that it only provides safe texts.
-        // $this->header('X-WebP-Convert-And-Serve-Details: ' . $bufferLogger->getText());
-
-        $this->fail('Conversion failed', $description, $criticalFail);
-        return false;
-        //echo '<p>This is how conversion process went:</p>' . $bufferLogger->getHtml();
-    }
-
-    protected function serveErrorMessageImage($msg)
-    {
-        // Generate image containing error message
-        if ($this->options['add-content-type-header']) {
-            $this->header('Content-type: image/gif');
-        }
-
-        try {
-            if (function_exists('imagecreatetruecolor') &&
-                function_exists('imagestring') &&
-                function_exists('imagecolorallocate') &&
-                function_exists('imagegif')
-            ) {
-                $image = imagecreatetruecolor(620, 200);
-                if ($image !== false) {
-                    imagestring($image, 1, 5, 5, $msg, imagecolorallocate($image, 233, 214, 291));
-                    // echo imagewebp($image);
-                    echo imagegif($image);
-                    imagedestroy($image);
-                    return;
-                }
+                case 'fresh-conversion':
+                    // intentional fall through
+                case 'report':
+                    // intentional fall through
+                default:
+                    throw new ServeFailedException(
+                        'DecideWhatToServe was supposed to return either "source" or "destination". ' .
+                        'However, it returned: "' . $whatToServe . '"'
+                    );
+                    break;
             }
         } catch (\Exception $e) {
-            //
-        }
-
-        // Above failed.
-        // TODO: what to do?
-    }
-
-    /**
-     *
-     * @return  void
-     */
-    protected function fail($title, $description, $critical = false)
-    {
-        $action = $critical ? $this->options['fail-when-original-unavailable'] : $this->options['fail'];
-
-        if (isset($this->options['aboutToPerformFailActionCallback'])) {
-            if (call_user_func(
-                $this->options['aboutToPerformFailActionCallback'],
-                $title,
-                $description,
-                $action,
-                $this
-            ) === false) {
-                return;
-            }
-        }
-
-        $this->addXStatusHeader('Failed (' . $description . ')');
-
-        $this->addHeadersPreventingCaching();
-
-        $title = 'Conversion failed';
-        switch ($action) {
-            case 'serve-original':
-                if (!$this->serveOriginal()) {
-                    $this->serve404();
-                };
-                break;
-            case '404':
-                $this->serve404();
-                break;
-            case 'report-as-image':
-                // todo: handle if this fails
-                $this->serveErrorMessageImage($title . '. ' . $description);
-                break;
-            case 'report':
-                echo '<h1>' . $title . '</h1>' . $description;
-                break;
+            throw $e;
         }
     }
+}
 
-    /**
-     *
-     * @return  void
-     */
-    protected function criticalFail($title, $description)
-    {
-        $this->fail($title, $description, true);
-    }
+?><?php
 
-    /**
-     *  Serve the thing specified in $whatToServe and $whyServingThis
-     *  These are first set my the decideWhatToServe() method, but may later change, if a fresh
-     *  conversion is made
-     */
-    public function serve()
-    {
+namespace WebPConvert\Serve\Exceptions;
 
-        //$this->addXOptionsHeader();
+use WebPConvert\Exceptions\WebPConvertException;
 
-        switch ($this->whatToServe) {
-            case 'destination':
-                return $this->serveExisting();
-            case 'source':
-                if ($this->whyServingThis == 'explicitly-told-to') {
-                    $this->addXStatusHeader(
-                        'Serving original image (was explicitly told to)'
-                    );
-                } else {
-                    $this->addXStatusHeader(
-                        'Serving original image (it is smaller than the already converted)'
-                    );
-                }
-                if (!$this->serveOriginal()) {
-                    $this->criticalFail('Error', 'could not serve original');
-                    return false;
-                }
-                return true;
-            case 'fresh-conversion':
-                return $this->serveFreshlyConverted();
-            case 'critical-fail':
-                $this->criticalFail('Error', $this->whyServingThis);
-                return false;
-            case 'fail':
-                $this->fail('Error', $this->whyServingThis);
-                return false;
-            case 'report':
-                $this->addXStatusHeader('Reporting...');
-                Report::convertAndReport($this->source, $this->destination, $this->options);
-                return true;  // yeah, lets say that a report is always a success, even if conversion is a failure
-        }
-    }
-
-    public function decideWhatToServeAndServeIt()
-    {
-        $this->decideWhatToServe();
-        return $this->serve();
-    }
-
-    /**
-     * Main method
-     */
-    public static function serveConverted($source, $destination, $options)
-    {
-        if (isset($options['fail']) && ($options['fail'] == 'original')) {
-            $options['fail'] = 'serve-original';
-        }
-        // For backward compatability:
-        if (isset($options['critical-fail']) && !isset($options['fail-when-original-unavailable'])) {
-            $options['fail-when-original-unavailable'] = $options['critical-fail'];
-        }
-
-        $cs = new static($source, $destination, $options);
-
-        return $cs->decideWhatToServeAndServeIt();
-    }
+/**
+ *  ConversionFailedException is the base exception in the hierarchy for conversion errors.
+ *
+ *  Exception hierarchy from here:
+ *
+ *  WebpConvertException
+ *      ConversionFailedException
+ *          ConversionSkippedException
+ *          ConverterNotOperationalException
+ *              SystemRequirementsNotMetException
+ *          FileSystemProblemsException
+ *              CreateDestinationFileException
+ *              CreateDestinationFolderException
+ *          InvalidInputException
+ *              ConverterNotFoundException
+ *              InvalidImageTypeException
+ *              InvalidOptionTypeException
+ *              TargetNotFoundException
+ *          UnhandledException
+ */
+class ServeFailedException extends WebPConvertException
+{
+    public $description = 'Failed serving';
 }
 
 ?><?php

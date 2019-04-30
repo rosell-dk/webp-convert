@@ -6,6 +6,7 @@ trait WarningLoggerTrait
 {
     abstract protected function logLn($msg, $style = '');
 
+    public $previousErrorHandler;
     /**
      *  Handle errors during conversion.
      *  The function is a callback used with "set_error_handler". It logs
@@ -64,12 +65,23 @@ trait WarningLoggerTrait
             throw new ConversionFailedException('Uncaught error in converter', $msg);
         }*/
 
-        return false;   // let PHP handle the error from here
+        //echo 'previously defined handler:' . print_r($this->previousErrorHandler, true);
+
+        return call_user_func($this->previousErrorHandler, $errno, $errstr, $errfile, $errline);
+        //return $this->previousErrorHandler;
     }
+
+    /*
+    public function get_error_handler(){
+        $handler = set_error_handler(function(){});
+        restore_error_handler();
+        echo 'handler:' . $handler;
+        return $handler;
+    }*/
 
     protected function activateWarningLogger()
     {
-        set_error_handler(
+        $this->previousErrorHandler = set_error_handler(
             array($this, "warningHandler"),
             E_WARNING | E_USER_WARNING | E_NOTICE | E_USER_NOTICE | E_USER_ERROR
         );

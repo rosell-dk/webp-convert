@@ -12,16 +12,58 @@ use PHPUnit\Framework\TestCase;
 class WodBuildTest extends TestCase
 {
 
+    private static $buildDir = __DIR__ . '/../src-build';
+
+    public function autoloadingDisallowed($class) {
+        throw new Exception('no autoloading expected! ' . $class);
+    }
+
+    public function autoloaderLoad($class) {
+        if (strpos($class, 'WebPConvert\\') === 0) {
+            require_once self::$buildDir . '/webp-on-demand-2.inc';
+        }
+    }
+
     /**
      * @runInSeparateProcess
      */
-     public function testWodBuildNotCompletelyBroken()
+    public function testWodBuildWithoutAutoload()
     {
-        $buildDir = __DIR__ . '/../src-build';
-        $wod1 = $buildDir . '/webp-on-demand-1.inc';
-        $wod2 = $buildDir . '/webp-on-demand-2.inc';
+        // The following should NOT trigger autoloader, because ALL functionality for
+        // serving existing is in webp-on-demand-1.php
 
-        $this->assertTrue(file_exists($buildDir), 'build dir not found!');
+        $wod1 = self::$buildDir . '/webp-on-demand-1.inc';
+        $this->assertTrue(file_exists($wod1), 'webp-on-demand-1.inc not found!');
+        require_once $wod1;
+
+        spl_autoload_register([self::class, 'autoloaderLoad'], true, true);
+
+        $source = __DIR__ . '/../tests/images/png-without-extension';
+        $this->assertTrue(file_exists($source));
+
+        ob_start();
+        WebPConvert::convertAndServe(
+            $source,
+            $source,
+            [
+                //'reconvert' => true,
+                //'converters' => ['imagick'],
+            ]
+        );
+        ob_end_clean();
+        spl_autoload_unregister([self::class, 'autoloaderLoad']);
+
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testWodBuildWithAutoload()
+    {
+        $wod1 = self::$buildDir . '/webp-on-demand-1.inc';
+        $wod2 = self::$buildDir . '/webp-on-demand-2.inc';
+
+        $this->assertTrue(file_exists(self::$buildDir), 'build dir not found!');
         $this->assertTrue(file_exists($wod1), 'webp-on-demand-1.inc not found!');
         $this->assertTrue(file_exists($wod2), 'webp-on-demand-2.inc not found!');
 
@@ -40,10 +82,11 @@ class WodBuildTest extends TestCase
         Tests: 1, Assertions: 3, Errors: 1.
         Script phpunit handling the test event returned with error code 2
         */
-        require $wod1;
+        require_once $wod1;
 
 
-        $source = __DIR__ . '/images/png-without-extension';
+        $source = __DIR__ . '/../tests/images/png-without-extension';
+        $this->assertTrue(file_exists($source));
 
         /*
         We do not try/catch the following.
@@ -62,6 +105,8 @@ class WodBuildTest extends TestCase
         Tests: 1, Assertions: 3, Errors: 1.
         Script phpunit handling the test event returned with error code 2
         */
+
+        /*
         WebPConvert::convertAndServe(
             $source,
             $source . '.webp',
@@ -78,6 +123,24 @@ class WodBuildTest extends TestCase
                 }
             ]
         );
+        */
+
+        spl_autoload_register([self::class, 'autoloaderLoad'], true, true);
+
+        ob_start();
+        WebPConvert::convertAndServe(
+            $source,
+            $source . '.webp',
+            [
+                'reconvert' => true,
+                'require-for-conversion' => $wod2,
+                //'converters' => ['imagick'],
+            ]
+        );
+        ob_end_clean();
+        spl_autoload_unregister([self::class, 'autoloaderLoad']);
+
         $this->addToAssertionCount(1);
     }
 }
+require_once(__DIR__ . '/../tests/Serve/mock-header.inc');

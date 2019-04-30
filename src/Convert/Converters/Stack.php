@@ -72,7 +72,7 @@ class Stack extends AbstractConverter
      */
     public function checkOperationality()
     {
-        if (count($this->options) == 0) {
+        if (count($this->options['converters']) == 0) {
             throw new ConverterNotOperationalException(
                 'Converter stack is empty! - no converters to try, no conversion can be made!'
             );
@@ -92,13 +92,14 @@ class Stack extends AbstractConverter
 
         // If we have set converter options for a converter, which is not in the converter array,
         // then we add it to the array
+        /*
         if (isset($options['converter-options'])) {
             foreach ($options['converter-options'] as $converterName => $converterOptions) {
                 if (!in_array($converterName, $options['converters'])) {
                     $options['converters'][] = $converterName;
                 }
             }
-        }
+        }*/
 
         //$this->logLn('converters: ' . print_r($options['converters'], true));
 
@@ -110,6 +111,7 @@ class Stack extends AbstractConverter
         $defaultConverterOptions['_suppress_success_message'] = true;
 
         $anyRuntimeErrors = false;
+
         foreach ($options['converters'] as $converter) {
             if (is_array($converter)) {
                 $converterId = $converter['converter'];

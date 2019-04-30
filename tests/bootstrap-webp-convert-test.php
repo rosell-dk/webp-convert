@@ -11,5 +11,10 @@ function webpconvert_disable_autoload($class) {
                 'But that means it was not included in the build! "' . $class . '"');
             //require_once WEBPEXPRESS_PLUGIN_DIR . '/lib/classes/' . substr($class, 12) . '.php';
         }
+        if (strpos($class, 'ImageMimeTypeGuesser\\') === 0) {
+            throw new \Exception(
+                'Autoloader was about to autoload a ImageMimeTypeGuesser class. ' .
+                'But that means it was not included in the build! "' . $class . '"');
+        }
     }
 }

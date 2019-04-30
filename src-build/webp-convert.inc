@@ -61,12 +61,12 @@ abstract class AbstractConverter
 
 
     /** @var string  The filename of the image to convert (complete path) */
-    public $source;
+    protected $source;
 
     /** @var string  Where to save the webp (complete path) */
-    public $destination;
+    protected $destination;
 
-    /** @var string  Where to save the webp (complete path) */
+    /** @var string|false  Where to save the webp (complete path) */
     private $sourceMimeType;
 
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
@@ -286,7 +286,9 @@ abstract class AbstractConverter
      * - By setting file extension to "jpg", one can lure our library into trying to convert a file, which isn't a jpg.
      * hmm, seems very unlikely, though not unthinkable that one of the converters could be exploited
      *
-     * @return  string|false
+     * @return  string|false|null mimetype (if it is an image, and type could be determined / guessed),
+     *    false (if it is not an image type that the server knowns about)
+     *    or null (if nothing can be determined)
      */
     public function getMimeTypeOfSource()
     {
@@ -309,8 +311,10 @@ abstract class AbstractConverter
 
         // Check if the provided file's mime type is valid
         $fileMimeType = $this->getMimeTypeOfSource();
-        if ($fileMimeType === false) {
+        if ($fileMimeType === null) {
             throw new InvalidImageTypeException('Image type could not be detected');
+        } elseif ($fileMimeType === false) {
+            throw new InvalidImageTypeException('File seems not to be an image.');
         } elseif (!in_array($fileMimeType, self::$allowedMimeTypes)) {
             throw new InvalidImageTypeException('Unsupported mime type: ' . $fileMimeType);
         }
@@ -630,7 +634,8 @@ namespace WebPConvert;
 
 //use WebPConvert\Convert\Converters\ConverterHelper;
 use WebPConvert\Convert\Converters\Stack;
-use WebPConvert\Serve\ServeExistingOrHandOver;
+//use WebPConvert\Serve\ServeExistingOrHandOver;
+use WebPConvert\Serve\ServeConvertedWebP;
 
 class WebPConvert
 {
@@ -653,7 +658,13 @@ class WebPConvert
 
     public static function convertAndServe($source, $destination, $options = [])
     {
-        return ServeExistingOrHandOver::serveConverted($source, $destination, $options);
+        //return ServeExistingOrHandOver::serveConverted($source, $destination, $options);
+        //if (isset($options['handle-errors']) && $options['handle-errors'] === true) {
+        if (isset($options['fail']) && ($options['fail'] != 'throw')) {
+            ServeConvertedWebPWithErrorHandling::serve($source, $destination, $options);
+        } else {
+            ServeConvertedWebP::serve($source, $destination, $options);
+        }
     }
 }
 
@@ -998,6 +1009,7 @@ trait WarningLoggerTrait
 {
     abstract protected function logLn($msg, $style = '');
 
+    public $previousErrorHandler;
     /**
      *  Handle errors during conversion.
      *  The function is a callback used with "set_error_handler". It logs
@@ -1056,12 +1068,23 @@ trait WarningLoggerTrait
             throw new ConversionFailedException('Uncaught error in converter', $msg);
         }*/
 
-        return false;   // let PHP handle the error from here
+        //echo 'previously defined handler:' . print_r($this->previousErrorHandler, true);
+
+        return call_user_func($this->previousErrorHandler, $errno, $errstr, $errfile, $errline);
+        //return $this->previousErrorHandler;
     }
+
+    /*
+    public function get_error_handler(){
+        $handler = set_error_handler(function(){});
+        restore_error_handler();
+        echo 'handler:' . $handler;
+        return $handler;
+    }*/
 
     protected function activateWarningLogger()
     {
-        set_error_handler(
+        $this->previousErrorHandler = set_error_handler(
             array($this, "warningHandler"),
             E_WARNING | E_USER_WARNING | E_NOTICE | E_USER_NOTICE | E_USER_ERROR
         );
@@ -1921,37 +1944,31 @@ class Gd extends AbstractConverter
         // In case of failure, image will be false
 
         $mimeType = $this->getMimeTypeOfSource();
-        if ($mimeType === false) {
-            throw new InvalidInputException(
-                'Mime type could not be determined'
-            );
-        }
 
-        switch ($mimeType) {
-            case 'image/png':
-                $image = imagecreatefrompng($this->source);
-                if ($image === false) {
-                    throw new ConversionFailedException(
-                        'Gd failed when trying to load/create image (imagecreatefrompng() failed)'
-                    );
-                }
-                break;
-
-            case 'image/jpeg':
-                $image = imagecreatefromjpeg($this->source);
-                if ($image === false) {
-                    throw new ConversionFailedException(
-                        'Gd failed when trying to load/create image (imagecreatefromjpeg() failed)'
-                    );
-                }
-                break;
-
-            default:
-                throw new InvalidInputException(
-                    'Unsupported mime type:' . $mimeType
+        if ($mimeType == 'image/png') {
+            $image = imagecreatefrompng($this->source);
+            if ($image === false) {
+                throw new ConversionFailedException(
+                    'Gd failed when trying to load/create image (imagecreatefrompng() failed)'
                 );
+            }
+            return $image;
         }
-        return $image;
+
+        if ($mimeType == 'image/jpeg') {
+            $image = imagecreatefromjpeg($this->source);
+            if ($image === false) {
+                throw new ConversionFailedException(
+                    'Gd failed when trying to load/create image (imagecreatefromjpeg() failed)'
+                );
+            }
+            return $image;
+        }
+
+        /*
+        throw new InvalidInputException(
+            'Unsupported mime type:' . $mimeType
+        );*/
     }
 
     /**
@@ -2709,7 +2726,7 @@ class Stack extends AbstractConverter
      */
     public function checkOperationality()
     {
-        if (count($this->options) == 0) {
+        if (count($this->options['converters']) == 0) {
             throw new ConverterNotOperationalException(
                 'Converter stack is empty! - no converters to try, no conversion can be made!'
             );
@@ -2729,13 +2746,14 @@ class Stack extends AbstractConverter
 
         // If we have set converter options for a converter, which is not in the converter array,
         // then we add it to the array
+        /*
         if (isset($options['converter-options'])) {
             foreach ($options['converter-options'] as $converterName => $converterOptions) {
                 if (!in_array($converterName, $options['converters'])) {
                     $options['converters'][] = $converterName;
                 }
             }
-        }
+        }*/
 
         //$this->logLn('converters: ' . print_r($options['converters'], true));
 
@@ -2747,6 +2765,7 @@ class Stack extends AbstractConverter
         $defaultConverterOptions['_suppress_success_message'] = true;
 
         $anyRuntimeErrors = false;
+
         foreach ($options['converters'] as $converter) {
             if (is_array($converter)) {
                 $converterId = $converter['converter'];
@@ -3810,6 +3829,130 @@ class VoidLogger extends BaseLogger
 ?><?php
 namespace WebPConvert\Serve;
 
+//use WebPConvert\Serve\Report;
+
+/**
+ * Decide what to serve based on options, file sizes and file modification dates.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class DecideWhatToServe
+{
+
+    public static $defaultOptions = [
+        'reconvert' => false,
+        'serve-original' => false,
+        'show-report' => false,
+    ];
+
+    /**
+     * Decides what to serve.
+     *
+     * It both decides what to serve and supplies the reason behind.
+     * The possible combinations are:
+     *
+     * - "destination"  (serve existing converted image at the destination path)
+     *      - "no-reason-not-to"
+     * - "source"
+     *      - "explicitly-told-to"
+     *      - "source-lighter"
+     * - "fresh-conversion" (note: this may still fail)
+     *      - "explicitly-told-to"
+     *      - "source-modified"
+     *      - "no-existing"
+     * - "fail"
+     *       - "Missing destination argument"
+     * - "critical-fail"   (a failure where the source file cannot be served)
+     *       - "missing-source-argument"
+     *       - "source-not-found"
+     * - "report"
+     *
+     * @return  array  Three items: what to serve (id), why to serve (id) and suggested message
+     */
+    public static function decide($source, $destination, $options)
+    {
+        $options = array_merge(self::$defaultOptions, $options);
+
+        if ($options['show-report']) {
+            return ['report', 'explicitly-told-to', 'Serving report (explicitly told to)'];
+        }
+        if ($options['serve-original']) {
+            return ['source', 'explicitly-told-to', 'Serving original image (was explicitly told to)'];
+        }
+        if ($options['reconvert']) {
+            return ['fresh-conversion', 'explicitly-told-to', 'Serving fresh conversion (was explicitly told to)'];
+        }
+
+        if (@file_exists($destination)) {
+            // Reconvert if existing conversion is older than the original
+            $timestampSource = @filemtime($source);
+            $timestampDestination = @filemtime($destination);
+            if (($timestampSource !== false) &&
+                ($timestampDestination !== false) &&
+                ($timestampSource > $timestampDestination)) {
+                return [
+                    'fresh-conversion',
+                    'source-modified',
+                    'Serving fresh conversion ' .
+                        '(the existing conversion is discarded because original has been modified since then)'
+                ];
+            }
+
+            // Serve source if it is smaller than destination
+            $filesizeDestination = @filesize($destination);
+            $filesizeSource = @filesize($source);
+            if (($filesizeSource !== false) &&
+                ($filesizeDestination !== false) &&
+                ($filesizeDestination > $filesizeSource)) {
+                return [
+                    'source',
+                    'source-lighter',
+                    'Serving original image (it is smaller than the already converted)'
+                ];
+            }
+
+            // Destination exists, and there is no reason left not to serve it
+            return ['destination', 'no-reason-not-to', 'Serving existing conversion'];
+        } else {
+            return [
+                'fresh-conversion',
+                'no-existing',
+                'Serving fresh conversion (there were no existing conversion to serve)'
+            ];
+        }
+    }
+}
+
+?><?php
+namespace WebPConvert\Serve;
+
+/**
+ * Add / Set HTTP header.
+ *
+ * This class does nothing more than adding two convenience functions for calling the "header" function.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class Header
+{
+    public static function addHeader($header)
+    {
+        header($header, false);
+    }
+
+    public static function setHeader($header)
+    {
+        header($header, true);
+    }
+}
+
+?><?php
+namespace WebPConvert\Serve;
+
 use WebPConvert\WebPConvert;
 use WebPConvert\Loggers\EchoLogger;
 
@@ -3976,6 +4119,10 @@ class Report
         // We could display warning if unknown options are set
         // but that requires that WebPConvert also describes its general options
 
+//        $echoLogger = new EchoLogger();
+//        WebPConvert::convert($source, $destination, $options, $echoLogger);
+
+
         try {
             $echoLogger = new EchoLogger();
             WebPConvert::convert($source, $destination, $options, $echoLogger);
@@ -3985,6 +4132,9 @@ class Report
             $msg = $e->getMessage();
 
             echo '<b>' . $msg . '</b>';
+
+            //echo '<p>Rethrowing exception for your convenience</p>';
+            //throw ($e);
             exit;
         }
         ?>
@@ -3997,31 +4147,33 @@ class Report
 ?><?php
 namespace WebPConvert\Serve;
 
-//use WebPConvert\Serve\Report;
+use WebPConvert\Serve\DecideWhatToServe;
+use WebPConvert\Serve\Header;
+use WebPConvert\Serve\Report;
+use WebPConvert\Serve\ServeFile;
 
-class ServeBase
+use WebPConvert\Serve\Exceptions\ServeFailedException;
+
+use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
+
+/**
+ * Serve a converted webp image.
+ *
+ * The webp that is served might end up being one of these:
+ * - a fresh convertion
+ * - the destionation
+ * - the original
+ *
+ * Exactly which is a decision based upon options, file sizes and file modification dates (see DecideWhatToServe class)
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class ServeConvertedWebP
 {
-    public $source;
-    public $destination;
-    public $options;
 
-    // These two fellows are first set when decideWhatToServe is called
-    // However, if it is decided to serve a fresh conversion, they might get modified.
-    // If that for example results in a file larger than source, $whatToServe will change
-    // from 'fresh-conversion' to 'original', and $whyServingThis will change to 'source-lighter'
-    public $whatToServe = '';
-    public $whyServingThis = '';
-
-    public function __construct($source, $destination, $options)
-    {
-
-        $this->source = $source;
-        $this->destination = $destination;
-        $this->options = array_merge(self::$defaultOptions, $options);
-
-        $this->setErrorReporting();
-    }
-
+/*
     public static $defaultOptions = [
         'add-content-type-header' => true,
         'add-last-modified-header' => true,
@@ -4038,190 +4190,212 @@ class ServeBase
         'reconvert' => false,
         'serve-original' => false,
         'show-report' => false,
+    ];*/
+
+    public static function serveOriginal($source, $options)
+    {
+        $contentType = ImageMimeTypeGuesser::lenientGuess($source);
+        if ($contentType === false) {
+            throw new ServeFailedException('Rejecting to serve original (it is not an image)');
+        } elseif ($contentType === null) {
+            throw new ServeFailedException('Rejecting to serve original (mime type cannot be determined)');
+        } else {
+            ServeFile::serve($source, $contentType, $options);
+        }
+    }
+
+    public static function serveDestination($destination, $options)
+    {
+        ServeFile::serve($destination, 'image/webp', $options);
+    }
+
+    /**
+     * Serve converted webp.
+     *
+     * @throws  ServeFailedException  If an argument is invalid or source file does not exists
+     * @return  void
+     */
+    public static function serve($source, $destination, $options = [])
+    {
+        if (empty($source)) {
+            throw new ServeFailedException('Source argument missing');
+        }
+        if (empty($destination)) {
+            throw new ServeFailedException('Destination argument missing');
+        }
+        if (@!file_exists($source)) {
+            throw new ServeFailedException('Source file was not found');
+        }
+
+        list($whatToServe, $whyToServe, $msg) = DecideWhatToServe::decide($source, $destination, $options);
+
+        Header::setHeader('X-WebP-Convert-Action: ' . $msg);
+
+        switch ($whatToServe) {
+            case 'destination':
+                self::serveDestination($destination, $options);
+                break;
+
+            case 'source':
+                self::serveOriginal($source, $options);
+                break;
+
+            case 'fresh-conversion':
+                ServeFreshConversion::serve($source, $destination, $options);
+                break;
+
+            case 'report':
+                Report::convertAndReport($source, $destination, $options);
+                break;
+        }
+    }
+}
+
+?><?php
+namespace WebPConvert\Serve;
+
+use WebPConvert\Serve\Header;
+use WebPConvert\Serve\Report;
+use WebPConvert\Serve\ServeConvertedWeb;
+
+/**
+ * Serve a converted webp image and handle errors.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class ServeConvertedWebPWithErrorHandling
+{
+
+    public static $defaultOptions = [
+        'fail' => 'original',
+        'fail-when-original-unavailable' => '404',
     ];
 
-    protected function setErrorReporting()
+    private static function addHeadersPreventingCaching()
     {
-        if (($this->options['error-reporting'] === true) ||
-            (($this->options['error-reporting'] === 'auto') && ($this->options['show-report'] === true))
-        ) {
-            error_reporting(E_ALL);
-            ini_set('display_errors', 'On');
-        } elseif (($this->options['error-reporting'] === false) ||
-            (($this->options['error-reporting'] === 'auto') && ($this->options['show-report'] === false))
-        ) {
-            error_reporting(0);
-            ini_set('display_errors', 'Off');
-        }
+        Header::setHeader("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+        Header::addHeader("Cache-Control: post-check=0, pre-check=0");
+        Header::setHeader("Pragma: no-cache");
     }
 
-    protected function header($header, $replace = true)
+    public static function performFailAction($fail, $failIfFailFails, $source, $destination, $options)
     {
-        header($header, $replace);
-    }
+        self::addHeadersPreventingCaching();
 
-    public function addXStatusHeader($text)
-    {
-        if ($this->options['add-x-header-status']) {
-            $this->header('X-WebP-Convert-Status: ' . $text, true);
+        switch ($fail) {
+            case 'original':
+                try {
+                    ServeConvertedWebP::serveOriginal($source, $destination, $options);
+                } catch (\Exception $e) {
+                    self::performFailAction($failIfFailFails, '404', $source, $destination, $options);
+                }
+                break;
+
+            case '404':
+                $protocol = isset($_SERVER["SERVER_PROTOCOL"]) ? $_SERVER["SERVER_PROTOCOL"] : 'HTTP/1.0';
+                Header::setHeader($protocol . " 404 Not Found");
+                break;
+
+            case 'report':
+                $options['show-report'] = true;
+                Report::convertAndReport($source, $destination, $options);
+                break;
+
+            case 'report-as-image':
+                // TODO
+                break;
         }
-    }
-
-    public function addVaryHeader()
-    {
-        if ($this->options['add-vary-header']) {
-            $this->header('Vary: Accept');
-        }
-    }
-
-    public function addContentTypeHeader($cType)
-    {
-        if ($this->options['add-content-type-header']) {
-            $this->header('Content-type: ' . $cType);
-        }
-    }
-
-    /* $timestamp  Unix timestamp */
-    public function addLastModifiedHeader($timestamp)
-    {
-        if ($this->options['add-last-modified-header']) {
-            $this->header("Last-Modified: " . gmdate("D, d M Y H:i:s", $timestamp) ." GMT", true);
-        }
-    }
-
-    public function addCacheControlHeader()
-    {
-        if (!empty($this->options['cache-control-header'])) {
-            $this->header('Cache-Control: ' . $this->options['cache-control-header'], true);
-
-            // Add exprires header too (#126)
-            // Check string for something like this: max-age:86400
-            if (preg_match('#max-age\\s*=\\s*(\\d*)#', $this->options['cache-control-header'], $matches)) {
-                $seconds = $matches[1];
-                $this->header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + intval($seconds)));
-            }
-        }
-    }
-
-    public function serveExisting()
-    {
-        if (!$this->callAboutToServeImageCallBack('destination')) {
-            return;
-        }
-
-        $this->addXStatusHeader('Serving existing converted image');
-        $this->addVaryHeader();
-        $this->addContentTypeHeader('image/webp');
-        $this->addCacheControlHeader();
-        $this->addLastModifiedHeader(@filemtime($this->destination));
-
-        if (@readfile($this->destination) === false) {
-            $this->header('X-WebP-Convert-Error: Could not read file');
-            return false;
-        }
-        return true;
     }
 
     /**
-     *   Called immidiately before serving image (either original, already converted or fresh)
-     *   $whatToServe can be 'source' | 'destination' | 'fresh-conversion'
-     *   $whyServingThis can be:
-     *   for 'source':
-     *       - "explicitly-told-to"     (when the "original" option is set)
-     *       - "source-lighter"         (when original image is actually smaller than the converted)
-     *   for 'fresh-conversion':
-     *       - "explicitly-told-to"     (when the "reconvert" option is set)
-     *       - "source-modified"        (when source is newer than existing)
-     *       - "no-existing"            (when there is no existing at the destination)
-     *   for 'destination':
-     *       - "no-reason-not-to"       (it is lighter than source, its not older,
-     *                                   and we were not told to do otherwise)
+     * Serve webp image and handle errors.
+     *
+     * @throws  ServeFailedException  If an argument is invalid or source file does not exists
+     * @return  void
      */
-    protected function callAboutToServeImageCallBack($whatToServe)
+    public static function serve($source, $destination, $options = [])
     {
-        if (!isset($this->options['aboutToServeImageCallBack'])) {
-            return true;
+        $options = array_merge(self::$defaultOptions, $options);
+
+        try {
+            ServeConvertedWebP::serve($source, $destination, $options);
+        } catch (\Exception $e) {
+            self::performFailAction(
+                $options['fail'],
+                $options['fail-when-original-unavailable'],
+                $source,
+                $destination,
+                $options
+            );
         }
-        $result = call_user_func(
-            $this->options['aboutToServeImageCallBack'],
-            $whatToServe,
-            $this->whyServingThis,
-            $this
-        );
-        return ($result !== false);
     }
+}
+
+?><?php
+namespace WebPConvert\Serve;
+
+//use WebPConvert\Serve\Report;
+use WebPConvert\Serve\Header;
+use WebPConvert\Serve\Exceptions\ServeFailedException;
+
+/**
+ * Serve a file (send to standard output)
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class ServeFile
+{
+
+    public static $defaultOptions = [
+        'add-vary-accept-header' => true,
+        'set-content-type-header' => true,
+        'set-last-modified-header' => true,
+        'set-cache-control-header' => true,
+        'cache-control-header' => 'public, max-age=86400',
+    ];
 
     /**
-     *  Decides what to serve.
-     *  Returns array. First item is what to do, second is additional info.
-     *  First item can be one of these:
-     *  - "destination"  (serve existing converted image at the destination path)
-     *       - "no-reason-not-to"
-     *  - "source"
-     *       - "explicitly-told-to"
-     *       - "source-lighter"
-     *  - "fresh-conversion" (note: this may still fail)
-     *       - "explicitly-told-to"
-     *       - "source-modified"
-     *       - "no-existing"
-     *  - "fail"
-     *        - "Missing destination argument"
-     *  - "critical-fail"   (a failure where the source file cannot be served)
-     *        - "Missing source argument"
-     *        - "Source file was not found!"
-     *  - "report"
+     * Serve existing file
+     *
+     * @throws ServeFailedException  if serving failed
+     * @return  void
      */
-    public function decideWhatToServe()
+    public static function serve($filename, $contentType, $options)
     {
-        $decisionArr = $this->doDecideWhatToServe();
-        $this->whatToServe = $decisionArr[0];
-        $this->whyServingThis = $decisionArr[1];
-    }
+        $options = array_merge(self::$defaultOptions, $options);
 
-    private function doDecideWhatToServe()
-    {
-        if (empty($this->source)) {
-            return ['critical-fail', 'Missing source argument'];
-        }
-        if (@!file_exists($this->source)) {
-            return ['critical-fail', 'Source file was not found!'];
-        }
-        if (empty($this->destination)) {
-            return ['fail', 'Missing destination argument'];
-        }
-        if ($this->options['show-report']) {
-            return ['report', ''];
-        }
-        if ($this->options['serve-original']) {
-            return ['source', 'explicitly-told-to'];
-        }
-        if ($this->options['reconvert']) {
-            return ['fresh-conversion', 'explicitly-told-to'];
+        if ($options['set-last-modified-header'] === true) {
+            Header::setHeader("Last-Modified: " . gmdate("D, d M Y H:i:s", @filemtime($filename)) ." GMT");
         }
 
-        if (@file_exists($this->destination)) {
-            // Reconvert if source file is newer than destination
-            $timestampSource = @filemtime($this->source);
-            $timestampDestination = @filemtime($this->destination);
-            if (($timestampSource !== false) &&
-                ($timestampDestination !== false) &&
-                ($timestampSource > $timestampDestination)) {
-                return ['fresh-conversion', 'source-modified'];
+        if ($options['set-content-type-header'] === true) {
+            Header::setHeader('Content-type: ' . $contentType);
+        }
+
+        if ($options['add-vary-accept-header'] === true) {
+            Header::addHeader('Vary: Accept');
+        }
+
+        if ($options['set-cache-control-header'] === true) {
+            if (!empty($options['cache-control-header'])) {
+                Header::setHeader('Cache-Control: ' . $options['cache-control-header'], true);
+
+                // Add exprires header too (#126)
+                // Check string for something like this: max-age:86400
+                if (preg_match('#max-age\\s*=\\s*(\\d*)#', $options['cache-control-header'], $matches)) {
+                    $seconds = $matches[1];
+                    Header::setHeader('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + intval($seconds)));
+                }
             }
+        }
 
-            // Serve source if it is smaller than destination
-            $filesizeDestination = @filesize($this->destination);
-            $filesizeSource = @filesize($this->source);
-            if (($filesizeSource !== false) &&
-                ($filesizeDestination !== false) &&
-                ($filesizeDestination > $filesizeSource)) {
-                return ['source', 'source-lighter'];
-            }
-
-            // Destination exists, and there is no reason left not to serve it
-            return ['destination', 'no-reason-not-to'];
-        } else {
-            return ['fresh-conversion', 'no-existing'];
+        if (@readfile($filename) === false) {
+            Header::addHeader('X-WebP-Convert-Error: Could not read file');
+            throw new ServeFailedException('Could not read file');
         }
     }
 }
@@ -4230,381 +4404,95 @@ class ServeBase
 namespace WebPConvert\Serve;
 
 use WebPConvert\WebPConvert;
-use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFileException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFolderException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFoundException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
-use WebPConvert\Loggers\BufferLogger;
-use WebPConvert\Serve\Report;
+use WebPConvert\Serve\DecideWhatToServe;
+use WebPConvert\Serve\Header;
+use WebPConvert\Serve\Exceptions\ServeFailedException;
 
 /**
- * This class must serves a converted image (either a fresh convertion, the destionation, or
- * the original). Upon failure, the fail action given in the options will be exectuted
+ * Serve a freshly converted image.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
  */
-class ServeConverted extends ServeBase
+class ServeFreshConversion
 {
 
-    /*
-    Not used, currently...
-    private function addXOptionsHeader()
+    public static function serve($source, $destination, $options = [])
     {
-        if ($this->options['add-x-header-options']) {
-            $this->header('X-WebP-Convert-Options:' . Report::getPrintableOptionsAsString($this->options));
-        }
-    }
-    */
-
-    private function addHeadersPreventingCaching()
-    {
-        $this->header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-        $this->header("Cache-Control: post-check=0, pre-check=0", false);
-        $this->header("Pragma: no-cache");
-    }
-
-    public function serve404()
-    {
-        $protocol = isset($_SERVER["SERVER_PROTOCOL"]) ? $_SERVER["SERVER_PROTOCOL"] : 'HTTP/1.0';
-        $this->header($protocol . " 404 Not Found");
-    }
-
-    public function serveOriginal()
-    {
-        if (!$this->callAboutToServeImageCallBack('source')) {
-            return true;    // we shall not trigger the fail callback
-        }
-
-        if ($this->options['add-content-type-header']) {
-            $arr = explode('.', $this->source);
-            $ext = array_pop($arr);
-            switch (strtolower($ext)) {
-                case 'jpg':
-                case 'jpeg':
-                    $this->header('Content-type: image/jpeg');
-                    break;
-                case 'png':
-                    $this->header('Content-type: image/png');
-                    break;
-            }
-        }
-
-        $this->addVaryHeader();
-
-        switch ($this->whyServingThis) {
-            case 'source-lighter':
-            case 'explicitly-told-to':
-                $this->addCacheControlHeader();
-                $this->addLastModifiedHeader(@filemtime($this->source));
-                break;
-            default:
-                $this->addHeadersPreventingCaching();
-        }
-
-        if (@readfile($this->source) === false) {
-            $this->header('X-WebP-Convert: Could not read file');
-            return false;
-        }
-        return true;
-    }
-
-    public function serveFreshlyConverted()
-    {
-
-        $criticalFail = false;
-        $bufferLogger = new BufferLogger();
 
         try {
-            WebPConvert::convert($this->source, $this->destination, $this->options, $bufferLogger);
+            WebPConvert::convert($source, $destination, $options);
 
             // We are here, so it was successful :)
+            // If destination is smaller than source, we should serve destination. Otherwise we should serve source.
+            // We can use DecideWhatToServe for that purpose.
+            // However, we must make sure it does not answer "fresh-conversion" or "report"
 
-            // Serve source if it is smaller than destination
-            $filesizeDestination = @filesize($this->destination);
-            $filesizeSource = @filesize($this->source);
-            if (($filesizeSource !== false) &&
-                ($filesizeDestination !== false) &&
-                ($filesizeDestination > $filesizeSource)) {
-                $this->whatToServe = 'original';
-                $this->whyServingThis = 'source-lighter';
-                return $this->serveOriginal();
-            }
+            // Unset "reconvert", so we do not get "fresh-conversion"
+            unset($options['reconvert']);
 
-            if (!$this->callAboutToServeImageCallBack('fresh-conversion')) {
-                return;
-            }
-            if ($this->options['add-content-type-header']) {
-                $this->header('Content-type: image/webp');
-            }
-            if ($this->whyServingThis == 'explicitly-told-to') {
-                $this->addXStatusHeader(
-                    'Serving freshly converted image (was explicitly told to reconvert)'
-                );
-            } elseif ($this->whyServingThis == 'source-modified') {
-                $this->addXStatusHeader(
-                    'Serving freshly converted image (the original had changed)'
-                );
-            } elseif ($this->whyServingThis == 'no-existing') {
-                $this->addXStatusHeader(
-                    'Serving freshly converted image (there were no existing to serve)'
-                );
-            } else {
-                $this->addXStatusHeader(
-                    'Serving freshly converted image (dont know why!)'
-                );
-            }
+            // Unset "show-report", so we do not get "report"
+            unset($options['show-report']);
 
-            if ($this->options['add-vary-header']) {
-                $this->header('Vary: Accept');
-            }
+            list($whatToServe, $whyToServe, $msg) = DecideWhatToServe::decide($source, $destination, $options);
 
-            if ($this->whyServingThis == 'no-existing') {
-                $this->addCacheControlHeader();
-            } else {
-                $this->addHeadersPreventingCaching();
-            }
-            $this->addLastModifiedHeader(time());
+            switch ($whatToServe) {
+                case 'source':
+                    Header::addHeader('X-WebP-Convert-Action: ' . $msg);
+                    ServeConvertedWebP::serveOriginal($source, $options);
+                    break;
+                case 'destination':
+                    ServeConvertedWebP::serveDestination($destination, $options);
+                    break;
 
-            // Should we add Content-Length header?
-            // $this->header('Content-Length: ' . filesize($file));
-            if (@readfile($this->destination)) {
-                return true;
-            } else {
-                $this->fail('Error', 'could not read the freshly converted file');
-                return false;
-            }
-        } catch (InvalidImageTypeException $e) {
-            $criticalFail = true;
-            $description = 'Invalid file extension';
-            $msg = $e->getMessage();
-        } catch (TargetNotFoundException $e) {
-            $criticalFail = true;
-            $description = 'Source file not found';
-            $msg = $e->getMessage();
-        } catch (ConversionFailedException $e) {
-            // No converters could convert the image. At least one converter failed, even though it appears to be
-            // operational
-            $description = 'No converters could convert the image';
-            $msg = $e->getMessage();
-        } catch (ConversionSkippedException $e) {
-            // (no converters could convert the image. At least one converter declined
-            $description = 'No converters could/wanted to convert the image';
-            $msg = $e->getMessage();
-        } catch (ConverterNotFoundException $e) {
-            $description = 'A converter was not found!';
-            $msg = $e->getMessage();
-        } catch (CreateDestinationFileException $e) {
-            $description = 'Cannot create destination file';
-            $msg = $e->getMessage();
-        } catch (CreateDestinationFolderException $e) {
-            $description = 'Cannot create destination folder';
-            $msg = $e->getMessage();
-        } catch (\Exception $e) {
-            $description = 'An unanticipated exception was thrown';
-            $msg = $e->getMessage();
-        }
-
-        // Next line is commented out, because we need to be absolute sure that the details does not violate syntax
-        // We could either try to filter it, or we could change WebPConvert, such that it only provides safe texts.
-        // $this->header('X-WebP-Convert-And-Serve-Details: ' . $bufferLogger->getText());
-
-        $this->fail('Conversion failed', $description, $criticalFail);
-        return false;
-        //echo '<p>This is how conversion process went:</p>' . $bufferLogger->getHtml();
-    }
-
-    protected function serveErrorMessageImage($msg)
-    {
-        // Generate image containing error message
-        if ($this->options['add-content-type-header']) {
-            $this->header('Content-type: image/gif');
-        }
-
-        try {
-            if (function_exists('imagecreatetruecolor') &&
-                function_exists('imagestring') &&
-                function_exists('imagecolorallocate') &&
-                function_exists('imagegif')
-            ) {
-                $image = imagecreatetruecolor(620, 200);
-                if ($image !== false) {
-                    imagestring($image, 1, 5, 5, $msg, imagecolorallocate($image, 233, 214, 291));
-                    // echo imagewebp($image);
-                    echo imagegif($image);
-                    imagedestroy($image);
-                    return;
-                }
+                case 'fresh-conversion':
+                    // intentional fall through
+                case 'report':
+                    // intentional fall through
+                default:
+                    throw new ServeFailedException(
+                        'DecideWhatToServe was supposed to return either "source" or "destination". ' .
+                        'However, it returned: "' . $whatToServe . '"'
+                    );
+                    break;
             }
         } catch (\Exception $e) {
-            //
+            throw $e;
         }
-
-        // Above failed.
-        // TODO: what to do?
-    }
-
-    /**
-     *
-     * @return  void
-     */
-    protected function fail($title, $description, $critical = false)
-    {
-        $action = $critical ? $this->options['fail-when-original-unavailable'] : $this->options['fail'];
-
-        if (isset($this->options['aboutToPerformFailActionCallback'])) {
-            if (call_user_func(
-                $this->options['aboutToPerformFailActionCallback'],
-                $title,
-                $description,
-                $action,
-                $this
-            ) === false) {
-                return;
-            }
-        }
-
-        $this->addXStatusHeader('Failed (' . $description . ')');
-
-        $this->addHeadersPreventingCaching();
-
-        $title = 'Conversion failed';
-        switch ($action) {
-            case 'serve-original':
-                if (!$this->serveOriginal()) {
-                    $this->serve404();
-                };
-                break;
-            case '404':
-                $this->serve404();
-                break;
-            case 'report-as-image':
-                // todo: handle if this fails
-                $this->serveErrorMessageImage($title . '. ' . $description);
-                break;
-            case 'report':
-                echo '<h1>' . $title . '</h1>' . $description;
-                break;
-        }
-    }
-
-    /**
-     *
-     * @return  void
-     */
-    protected function criticalFail($title, $description)
-    {
-        $this->fail($title, $description, true);
-    }
-
-    /**
-     *  Serve the thing specified in $whatToServe and $whyServingThis
-     *  These are first set my the decideWhatToServe() method, but may later change, if a fresh
-     *  conversion is made
-     */
-    public function serve()
-    {
-
-        //$this->addXOptionsHeader();
-
-        switch ($this->whatToServe) {
-            case 'destination':
-                return $this->serveExisting();
-            case 'source':
-                if ($this->whyServingThis == 'explicitly-told-to') {
-                    $this->addXStatusHeader(
-                        'Serving original image (was explicitly told to)'
-                    );
-                } else {
-                    $this->addXStatusHeader(
-                        'Serving original image (it is smaller than the already converted)'
-                    );
-                }
-                if (!$this->serveOriginal()) {
-                    $this->criticalFail('Error', 'could not serve original');
-                    return false;
-                }
-                return true;
-            case 'fresh-conversion':
-                return $this->serveFreshlyConverted();
-            case 'critical-fail':
-                $this->criticalFail('Error', $this->whyServingThis);
-                return false;
-            case 'fail':
-                $this->fail('Error', $this->whyServingThis);
-                return false;
-            case 'report':
-                $this->addXStatusHeader('Reporting...');
-                Report::convertAndReport($this->source, $this->destination, $this->options);
-                return true;  // yeah, lets say that a report is always a success, even if conversion is a failure
-        }
-    }
-
-    public function decideWhatToServeAndServeIt()
-    {
-        $this->decideWhatToServe();
-        return $this->serve();
-    }
-
-    /**
-     * Main method
-     */
-    public static function serveConverted($source, $destination, $options)
-    {
-        if (isset($options['fail']) && ($options['fail'] == 'original')) {
-            $options['fail'] = 'serve-original';
-        }
-        // For backward compatability:
-        if (isset($options['critical-fail']) && !isset($options['fail-when-original-unavailable'])) {
-            $options['fail-when-original-unavailable'] = $options['critical-fail'];
-        }
-
-        $cs = new static($source, $destination, $options);
-
-        return $cs->decideWhatToServeAndServeIt();
     }
 }
 
 ?><?php
-namespace WebPConvert\Serve;
 
-use WebPConvert\Serve\ServeBase;
-use WebPConvert\Serve\ServeConverted;
+namespace WebPConvert\Serve\Exceptions;
+
+use WebPConvert\Exceptions\WebPConvertException;
 
 /**
- * This class must determine if an existing converted image can and should be served.
- * If so, it must serve it.
- * If not, it must hand the task over to ConvertAndServe
+ *  ConversionFailedException is the base exception in the hierarchy for conversion errors.
  *
- * The reason for doing it like this is that we want existing images to be served as fast as
- * possible, because that is the thing that will happen most of the time.
+ *  Exception hierarchy from here:
  *
- * Anything else, such as error handling and creating new conversion is handed off
- * (and only autoloaded when needed)
+ *  WebpConvertException
+ *      ConversionFailedException
+ *          ConversionSkippedException
+ *          ConverterNotOperationalException
+ *              SystemRequirementsNotMetException
+ *          FileSystemProblemsException
+ *              CreateDestinationFileException
+ *              CreateDestinationFolderException
+ *          InvalidInputException
+ *              ConverterNotFoundException
+ *              InvalidImageTypeException
+ *              InvalidOptionTypeException
+ *              TargetNotFoundException
+ *          UnhandledException
  */
-
-class ServeExistingOrHandOver extends ServeBase
+class ServeFailedException extends WebPConvertException
 {
-
-    /**
-     * Main method
-     */
-    public static function serveConverted($source, $destination, $options)
-    {
-        $server = new ServeExistingOrHandOver($source, $destination, $options);
-
-        $server->decideWhatToServe();
-        if ($server->whatToServe == 'destination') {
-            return $server->serveExisting();
-        } else {
-            // Load extra php classes, if told to
-            if (isset($options['require-for-conversion'])) {
-                require($options['require-for-conversion']);
-            }
-            ServeConverted::serveConverted($source, $destination, $options);
-        }
-    }
+    public $description = 'Failed serving';
 }
 
 ?><?php
