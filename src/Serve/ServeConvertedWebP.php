@@ -49,11 +49,11 @@ class ServeConvertedWebP
     public static function serveOriginal($source, $options)
     {
         $contentType = ImageMimeTypeGuesser::lenientGuess($source);
-        if ($contentType === false) {
-            throw new ServeFailedException('Rejecting to serve original (it is not an image)');
-        } elseif ($contentType === null) {
+        if (is_null($contentType)) {
             throw new ServeFailedException('Rejecting to serve original (mime type cannot be determined)');
-        } else {
+        } elseif ($contentType === false) {
+            throw new ServeFailedException('Rejecting to serve original (it is not an image)');
+        }  else {
             ServeFile::serve($source, $contentType, $options);
         }
     }
