@@ -15,7 +15,7 @@ class WodBuildTest extends TestCase
     private static $buildDir = __DIR__ . '/../src-build';
 
     public function autoloadingDisallowed($class) {
-        throw new Exception('no autoloading expected! ' . $class);
+        throw new \Exception('no autoloading expected! ' . $class);
     }
 
     public function autoloaderLoad($class) {
