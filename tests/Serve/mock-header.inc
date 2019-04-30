@@ -35,6 +35,11 @@ namespace WebPConvert\Serve {
 
             return false;
         }
+
+        public static function getNumHeaders() {
+            return count(self::$headers);
+        }
+
     }
 
     //use WebPConvert\Tests\Serve\MockedHeader;
