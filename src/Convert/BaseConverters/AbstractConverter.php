@@ -310,7 +310,7 @@ abstract class AbstractConverter
 
         // Check if the provided file's mime type is valid
         $fileMimeType = $this->getMimeTypeOfSource();
-        if ($fileMimeType === null) {
+        if (is_null($fileMimeType)) {
             throw new InvalidImageTypeException('Image type could not be detected');
         } elseif ($fileMimeType === false) {
             throw new InvalidImageTypeException('File seems not to be an image.');
