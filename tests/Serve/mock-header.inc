@@ -21,7 +21,8 @@ namespace WebPConvert\Serve {
 
         public static function hasHeader($header)
         {
-            return in_array($header, array_column(self::$headers, 0));
+            $headerValues = array_column(self::$headers, 0);
+            return in_array($header, $headerValues);
         }
 
         public static function hasHeaderContaining($headerText)
