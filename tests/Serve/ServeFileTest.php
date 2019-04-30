@@ -25,6 +25,9 @@ class ServeFileTest extends TestCase
         // Test that content of file was send to output
         $this->assertEquals("text\n", $result);
 
+        $headers = MockedHeader::getHeaders();
+        $this->assertGreaterThanOrEqual(1, MockedHeader::getNumHeaders());
+
         // Test that headers were set as expected
         $this->assertTrue(MockedHeader::hasHeader('Content-type: image/webp'));
         $this->assertTrue(MockedHeader::hasHeader('Vary: Accept'));
@@ -63,7 +66,12 @@ class ServeFileTest extends TestCase
         $this->assertEquals("text\n", $result);
 
         // Test that headers were set as expected
-        
+        // We actually expect that none are added.
+
+        $headers = MockedHeader::getHeaders();
+        $this->assertEquals(0, MockedHeader::getNumHeaders());
+
+
         // TODO:The following fails on travis. WHY???
         //$this->assertFalse(MockedHeader::hasHeader('Content-type: image/webp'));
 
