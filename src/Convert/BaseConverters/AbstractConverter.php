@@ -65,7 +65,7 @@ abstract class AbstractConverter
     /** @var string  Where to save the webp (complete path) */
     protected $destination;
 
-    /** @var string|false  Where to save the webp (complete path) */
+    /** @var string|false|null  Where to save the webp (complete path) */
     private $sourceMimeType;
 
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
