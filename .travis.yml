@@ -30,7 +30,7 @@ script:
 
 after_script:
   - |
-    if [[ UPLOADCOVERAGE == 1 ]]; then
+    if [[ $UPLOADCOVERAGE == 1 ]]; then
       wget https://scrutinizer-ci.com/ocular.phar
       php ocular.phar code-coverage:upload --format=php-clover coverage.clover
     fi
