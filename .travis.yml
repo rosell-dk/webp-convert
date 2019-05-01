@@ -19,6 +19,15 @@ matrix:
     - php: 7.3
       env: PHPSTAN=1
 
+addons:
+  apt:
+    packages:
+      - libjpeg-dev
+      - libpng-dev
+      - libgif-dev
+      - libgif-dev
+      - libwebp
+
 before_script:
   - (composer self-update; true)
   - composer install
@@ -30,7 +39,7 @@ script:
 
 after_script:
   - |
-    if [[ UPLOADCOVERAGE = 1 ]]; then
+    if [[ UPLOADCOVERAGE == 1 ]]; then
       wget https://scrutinizer-ci.com/ocular.phar
       php ocular.phar code-coverage:upload --format=php-clover coverage.clover
     fi
