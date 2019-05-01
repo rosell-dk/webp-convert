@@ -78,13 +78,21 @@ class Wpc extends AbstractCloudCurlConverter
                     );
                 }
             }
-        }
+        } elseif ($apiVersion == 1) {
+            if ($options['crypt-api-key-in-transfer']) {
+                if (!function_exists('crypt')) {
+                    throw new ConverterNotOperationalException(
+                        'Configured to crypt the api-key, but crypt() function is not available.'
+                    );
+                }
 
-        if ($apiVersion == 1) {
-        /*
-                if (count($options['web-services']) == 0) {
-                    throw new SystemRequirementsNotMetException('No remote host has been set up');
-                }*/
+                if (!defined('CRYPT_BLOWFISH')) {
+                    throw new ConverterNotOperationalException(
+                        'Configured to crypt the api-key. ' .
+                        'That requires Blowfish encryption, which is not available on your current setup.'
+                    );
+                }
+            }
         }
 
         if ($options['url'] == '') {
@@ -107,18 +115,9 @@ class Wpc extends AbstractCloudCurlConverter
         // TODO: some from below can be moved up here
     }
 
-    protected function doActualConvert()
+    private function createOptionsToSend()
     {
-        $options = $this->options;
-
-        $apiVersion = $options['api-version'];
-
-        // Got some code here:
-        // https://coderwall.com/p/v4ps1a/send-a-file-via-post-with-curl-and-php
-
-        $ch = self::initCurl();
-
-        $optionsToSend = $options;
+        $optionsToSend = $this->options;
 
         if ($this->isQualityDetectionRequiredButFailing()) {
             // quality was set to "auto", but we could not meassure the quality of the jpeg locally
@@ -131,47 +130,47 @@ class Wpc extends AbstractCloudCurlConverter
         unset($optionsToSend['converters']);
         unset($optionsToSend['secret']);
 
+        return $optionsToSend;
+    }
+
+    private function createPostData()
+    {
+        $options = $this->options;
+
         $postData = [
             'file' => curl_file_create($this->source),
-            'options' => json_encode($optionsToSend),
+            'options' => json_encode($this->createOptionsToSend()),
             'servername' => (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '')
         ];
 
+        $apiVersion = $options['api-version'];
+
         if ($apiVersion == 0) {
             $postData['hash'] = md5(md5_file($this->source) . $options['secret']);
-        }
-
-        if ($apiVersion == 1) {
+        } elseif ($apiVersion == 1) {
             $apiKey = $options['api-key'];
 
             if ($options['crypt-api-key-in-transfer']) {
-                if (CRYPT_BLOWFISH == 1) {
-                    $salt = self::createRandomSaltForBlowfish();
-                    $postData['salt'] = $salt;
+                $salt = self::createRandomSaltForBlowfish();
+                $postData['salt'] = $salt;
 
-                    // Strip off the first 28 characters (the first 6 are always "$2y$10$". The next 22 is the salt)
-                    $postData['api-key-crypted'] = substr(crypt($apiKey, '$2y$10$' . $salt . '$'), 28);
-                } else {
-                    if (!function_exists('crypt')) {
-                        throw new ConverterNotOperationalException(
-                            'Configured to crypt the api-key, but crypt() function is not available.'
-                        );
-                    } else {
-                        throw new ConverterNotOperationalException(
-                            'Configured to crypt the api-key. ' .
-                            'That requires Blowfish encryption, which is not available on your current setup.'
-                        );
-                    }
-                }
+                // Strip off the first 28 characters (the first 6 are always "$2y$10$". The next 22 is the salt)
+                $postData['api-key-crypted'] = substr(crypt($apiKey, '$2y$10$' . $salt . '$'), 28);
             } else {
                 $postData['api-key'] = $apiKey;
             }
         }
+        return $postData;
+    }
+
+    protected function doActualConvert()
+    {
+        $ch = self::initCurl();
 
         curl_setopt_array($ch, [
-            CURLOPT_URL => $options['url'],
+            CURLOPT_URL => $this->options['url'],
             CURLOPT_POST => 1,
-            CURLOPT_POSTFIELDS => $postData,
+            CURLOPT_POSTFIELDS => $this->createPostData(),
             CURLOPT_BINARYTRANSFER => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER => false,
@@ -243,27 +242,6 @@ class Wpc extends AbstractCloudCurlConverter
         if (!$success) {
             throw new ConversionFailedException('Error saving file. Check file permissions');
         }
-        /*
-                $curlOptions = [
-                    'api_key' => $options['key'],
-                    'webp' => '1',
-                    'file' => curl_file_create($this->source),
-                    'domain' => $_SERVER['HTTP_HOST'],
-                    'quality' => $options['quality'],
-                    'metadata' => ($options['metadata'] == 'none' ? '0' : '1')
-                ];
 
-                curl_setopt_array($ch, [
-                    CURLOPT_URL => "https://optimize.exactlywww.com/v2/",
-                    CURLOPT_HTTPHEADER => [
-                        'User-Agent: WebPConvert',
-                        'Accept: image/*'
-                    ],
-                    CURLOPT_POSTFIELDS => $curlOptions,
-                    CURLOPT_BINARYTRANSFER => true,
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_HEADER => false,
-                    CURLOPT_SSL_VERIFYPEER => false
-                ]);*/
     }
 }
