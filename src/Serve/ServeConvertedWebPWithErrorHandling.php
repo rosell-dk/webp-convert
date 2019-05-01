@@ -5,6 +5,7 @@ use WebPConvert\Serve\Header;
 use WebPConvert\Serve\Report;
 use WebPConvert\Serve\ServeConvertedWeb;
 use WebPConvert\Serve\Exceptions\ServeFailedException;
+
 /**
  * Serve a converted webp image and handle errors.
  *

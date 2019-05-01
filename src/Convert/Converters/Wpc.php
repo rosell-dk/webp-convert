@@ -242,6 +242,5 @@ class Wpc extends AbstractCloudCurlConverter
         if (!$success) {
             throw new ConversionFailedException('Error saving file. Check file permissions');
         }
-
     }
 }

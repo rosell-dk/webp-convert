@@ -53,7 +53,7 @@ class ServeConvertedWebP
             throw new ServeFailedException('Rejecting to serve original (mime type cannot be determined)');
         } elseif ($contentType === false) {
             throw new ServeFailedException('Rejecting to serve original (it is not an image)');
-        }  else {
+        } else {
             ServeFile::serve($source, $contentType, $options);
         }
     }
