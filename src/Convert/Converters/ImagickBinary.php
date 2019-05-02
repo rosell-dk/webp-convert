@@ -39,19 +39,15 @@ class ImagickBinary extends AbstractExecConverter
     // Check if webp delegate is installed
     public static function webPDelegateInstalled()
     {
-        /* HM. We should not rely on grep being available
-        $command = 'convert -list configure | grep -i "delegates" | grep -i webp';
-        exec($command, $output, $returnCode);
-        return (count($output) > 0);
-        */
-        $command = 'convert -version';
-        exec($command, $output, $returnCode);
+        exec('convert -list configure', $output, $returnCode);
         foreach ($output as $line) {
-            if (preg_match('/Delegate.*webp.*/i', $line)) {
+            if (preg_match('/DELEGATE.*webp.*/i', $line)) {
                 return true;
             }
         }
         return false;
+
+        // PS, convert -version does not output delegates on travis, so it is not reliable
     }
 
     /**
@@ -72,7 +68,7 @@ class ImagickBinary extends AbstractExecConverter
     protected function doActualConvert()
     {
         //$this->logLn('Using quality:' . $this->getCalculatedQuality());
-        
+
         // Should we use "magick" or "convert" command?
         // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
         // Should we perhaps try both?
