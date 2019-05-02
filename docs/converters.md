@@ -179,13 +179,23 @@ WebPConvert::convert($source, $destination, [
     'converter-options' => [
         'wpc' => [
             'api-version' => 1,
-            'url' => 'http://example.com/wpc.php',
+            'url' => 'https://example.com/wpc.php',
             'api-key' => 'my dog is white',
             'crypt-api-key-in-transfer' => true
         ],
     ]
 ));
 ```
+
+In 2.0, you can alternatively set the api key and urls through through the *WPC_API_KEY* and *WPC_API_URL* environment variables. This is a safer place to store it.
+
+To set an environment variable in Apache, you can use the `SetEnv` directory. Ie, place something like the following in your virtual host / or .htaccess file (replace the key with the one you purchased!)
+
+```
+SetEnv WPC_API_KEY my-dog-is-dashed
+SetEnv WPC_API_URL https://wpc.example.com/wpc.php
+```
+
 
 #### Example, old API:
 
@@ -195,7 +205,7 @@ WebPConvert::convert($source, $destination, [
     'converters' => ['cwebp', 'wpc'],
     'converter-options' => [
         'wpc' => [
-            'url' => 'http://example.com/wpc.php',
+            'url' => 'https://example.com/wpc.php',
             'secret' => 'my dog is white',
         ],
     ]

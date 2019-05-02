@@ -6,6 +6,7 @@ use WebPConvert\Convert\BaseConverters\AbstractCloudCurlConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\AccessDeniedException;
 
 /**
  * Convert images to webp using Wpc (a cloud converter based on WebP Convert).
@@ -23,8 +24,8 @@ class Wpc extends AbstractCloudCurlConverter
     {
         return [
             ['api-version', 'number', 0],                     /* Can currently be 0 or 1 */
-            ['secret', 'string', 'my dog is white', true],    /* only in api v.0 */
-            ['api-key', 'string', 'my dog is white', true],   /* new in api v.1 (renamed 'secret' to 'api-key') */
+            ['secret', 'string', '', true],    /* only in api v.0 */
+            ['api-key', 'string', '', true],   /* new in api v.1 (renamed 'secret' to 'api-key') */
             ['url', 'string', '', true, true],
             ['crypt-api-key-in-transfer', 'boolean', false],  /* new in api v.1 */
         ];
@@ -47,6 +48,45 @@ class Wpc extends AbstractCloudCurlConverter
     }
 
     /**
+     * Get api key from options or environment variable
+     *
+     * @return string  api key or empty string if none is set
+     */
+    private function getApiKey()
+    {
+        if ($this->options['api-version'] == 0) {
+            if (!empty($this->options['secret'])) {
+                return $this->options['secret'];
+            }
+        } elseif ($this->options['api-version'] == 1) {
+            if (!empty($this->options['api-key'])) {
+                return $this->options['api-key'];
+            }
+        }
+        if (!empty(getenv('WPC_API_KEY'))) {
+            return getenv('WPC_API_KEY');
+        }
+        return '';
+    }
+
+    /**
+     * Get url from options or environment variable
+     *
+     * @return string  URL to WPC or empty string if none is set
+     */
+    private function getApiUrl()
+    {
+        if (!empty($this->options['url'])) {
+            return $this->options['url'];
+        }
+        if (!empty(getenv('WPC_API_URL'))) {
+            return getenv('WPC_API_URL');
+        }
+        return '';
+    }
+
+
+    /**
      * Check operationality of Wpc converter.
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met (curl)
@@ -62,7 +102,7 @@ class Wpc extends AbstractCloudCurlConverter
         $apiVersion = $options['api-version'];
 
         if ($apiVersion == 0) {
-            if (!empty($options['secret'])) {
+            if (!empty($this->getApiKey())) {
                 // if secret is set, we need md5() and md5_file() functions
                 if (!function_exists('md5')) {
                     throw new ConverterNotOperationalException(
@@ -95,7 +135,7 @@ class Wpc extends AbstractCloudCurlConverter
             }
         }
 
-        if ($options['url'] == '') {
+        if ($this->getApiUrl() == '') {
             throw new ConverterNotOperationalException(
                 'Missing URL. You must install Webp Convert Cloud Service on a server, ' .
                 'or the WebP Express plugin for Wordpress - and supply the url.'
@@ -129,6 +169,8 @@ class Wpc extends AbstractCloudCurlConverter
 
         unset($optionsToSend['converters']);
         unset($optionsToSend['secret']);
+        unset($optionsToSend['api-key']);
+        unset($optionsToSend['url']);
 
         return $optionsToSend;
     }
@@ -145,10 +187,12 @@ class Wpc extends AbstractCloudCurlConverter
 
         $apiVersion = $options['api-version'];
 
+        $apiKey = $this->getApiKey();
+
         if ($apiVersion == 0) {
-            $postData['hash'] = md5(md5_file($this->source) . $options['secret']);
+            $postData['hash'] = md5(md5_file($this->source) . $apiKey);
         } elseif ($apiVersion == 1) {
-            $apiKey = $options['api-key'];
+            //$this->logLn('api key: ' . $apiKey);
 
             if ($options['crypt-api-key-in-transfer']) {
                 $salt = self::createRandomSaltForBlowfish();
@@ -167,8 +211,10 @@ class Wpc extends AbstractCloudCurlConverter
     {
         $ch = self::initCurl();
 
+        //$this->logLn('api url: ' . $this->getApiUrl());
+
         curl_setopt_array($ch, [
-            CURLOPT_URL => $this->options['url'],
+            CURLOPT_URL => $this->getApiUrl(),
             CURLOPT_POST => 1,
             CURLOPT_POSTFIELDS => $this->createPostData(),
             CURLOPT_BINARYTRANSFER => true,
@@ -207,7 +253,7 @@ class Wpc extends AbstractCloudCurlConverter
                                 $responseObj['errorMessage'] . '"'
                             );
                         case 1:
-                            throw new ConverterNotOperationalException(
+                            throw new AccessDeniedException(
                                 'Access denied. ' . $responseObj['errorMessage']
                             );
                         default:
