@@ -37,7 +37,7 @@ class ImagickBinaryTest extends TestCase
             //$bufferLogger->getText()
             throw $e;
         } catch (ConverterNotOperationalException $e) {
-            //throw $e;
+            // (SystemRequirementsNotMetException is also a ConverterNotOperationalException)
             // this is ok.
             return;
         }
