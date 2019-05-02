@@ -424,7 +424,7 @@ class WebPConvert
      * @param  string  $destination  Where to store the converted file (absolute path, no backslashes).
      * @param  array   $options      (optional) Array of named options, such as 'quality' and 'metadata'.
      * @param   \WebPConvert\Loggers\BaseLogger $logger (optional)
-     *     
+     *
      * @throws \WebPConvert\Exceptions\WebPConvertException
      * @return void
     */
