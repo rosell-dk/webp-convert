@@ -24,9 +24,14 @@ class WebPConvert
     /**
      * Convert jpeg or png into webp
      *
-     * @param  string  $source  Absolute path to image to be converted (no backslashes). Image must be jpeg or png
-     * @param  string  $destination  Absolute path (no backslashes)
-     * @param  array   $options  Array of named options, such as 'quality' and 'metadata'
+     * Convenience method for calling Stack::convert.
+     *
+     * @param  string  $source       The image to convert (absolute,no backslashes)
+     *                               Image must be jpeg or png.
+     * @param  string  $destination  Where to store the converted file (absolute path, no backslashes).
+     * @param  array   $options      (optional) Array of named options, such as 'quality' and 'metadata'.
+     * @param   \WebPConvert\Loggers\BaseLogger $logger (optional)
+     *     
      * @throws \WebPConvert\Exceptions\WebPConvertException
      * @return void
     */

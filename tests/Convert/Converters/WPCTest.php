@@ -13,6 +13,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\InvalidApiKeyException;
+use WebPConvert\Loggers\BufferLogger;
 
 use PHPUnit\Framework\TestCase;
 
@@ -42,19 +43,28 @@ class WpcTest extends TestCase
 
         $source = $this->imageDir . '/test.png';
 
+        $bufferLogger = new BufferLogger();
+
         try {
             Wpc::convert($source, $source . '.webp', [
                 'api-version' => 0,
                 'url' => getenv('WPC_API_URL_API0')
-            ]);
+            ], $bufferLogger);
+
             $this->addToAssertionCount(1);
         } catch (ConversionFailedException $e) {
 
             // we accept one failure that seems to happen when WPC gets stressed:
             if (strpos($e->getMessage(), 'unable to open image') === false) {
+
+                if ($e->getMessage() == 'Error saving file. Check file permissions') {
+                    throw new ConversionFailedException(
+                        'Failed saving file. Here is the log:' . $bufferLogger->getText()
+                    );
+                }
+
                 throw $e;
             }
-
         }
     }
 
@@ -65,23 +75,29 @@ class WpcTest extends TestCase
         }
 
         $source = $this->imageDir . '/test.png';
+        $bufferLogger = new BufferLogger();
 
         try {
             Wpc::convert($source, $source . '.webp', [
                 'api-version' => 1,
                 'crypt-api-key-in-transfer' => true
-            ]);
+            ], $bufferLogger);
             $this->addToAssertionCount(1);
         } catch (ConversionFailedException $e) {
 
             // we accept one failure that seems to happen when WPC gets stressed:
             if (strpos($e->getMessage(), 'unable to open image') === false) {
+
+                if ($e->getMessage() == 'Error saving file. Check file permissions') {
+                    throw new ConversionFailedException(
+                        'Failed saving file. Here is the log:' . $bufferLogger->getText()
+                    );
+                }
+
                 throw $e;
             }
-
         }
     }
-
 
     public function testWrongSecretButRightUrl()
     {
@@ -90,7 +106,8 @@ class WpcTest extends TestCase
         }
 
         $source = $this->imageDir . '/test.png';
-        
+        $bufferLogger = new BufferLogger();
+
         /*$this->expectException(InvalidApiKeyException::class);
 
         Wpc::convert($this->imageDir . '/test.png', $this->imageDir . '/test.webp', [
@@ -103,13 +120,20 @@ class WpcTest extends TestCase
             Wpc::convert($source, $source . '.webp', [
                 'api-version' => 1,
                 'crypt-api-key-in-transfer' => true
-            ]);
+            ], $bufferLogger);
         } catch (InvalidApiKeyException $e) {
             $this->addToAssertionCount(1);
         } catch (ConversionFailedException $e) {
 
             // we accept one failure that seems to happen when WPC gets stressed:
             if (strpos($e->getMessage(), 'unable to open image') === false) {
+
+                if ($e->getMessage() == 'Error saving file. Check file permissions') {
+                    throw new ConversionFailedException(
+                        'Failed saving file. Here is the log:' . $bufferLogger->getText()
+                    );
+                }
+
                 throw $e;
             }
 
