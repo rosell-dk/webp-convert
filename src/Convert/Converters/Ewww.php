@@ -26,6 +26,23 @@ class Ewww extends AbstractCloudCurlConverter
     }
 
     /**
+     * Get api key from options or environment variable
+     *
+     * @return string|false  api key or false if none is set
+     */
+    private function getKey()
+    {
+        if (!empty($this->options['key'])) {
+            return $this->options['key'];
+        }
+        if (!empty(getenv('EWWW_KEY'))) {
+            return getenv('EWWW_KEY');
+        }
+        return false;
+    }
+
+
+    /**
      * Check operationality of Ewww converter.
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met (curl)
@@ -38,16 +55,19 @@ class Ewww extends AbstractCloudCurlConverter
 
         $options = $this->options;
 
-        if ($options['key'] == '') {
+        $apiKey = $this->getKey();
+
+        if ($apiKey === false) {
             throw new ConverterNotOperationalException('Missing API key.');
         }
-        if (strlen($options['key']) < 20) {
+
+        if (strlen($apiKey) < 20) {
             throw new ConverterNotOperationalException(
                 'Key is invalid. Keys are supposed to be 32 characters long - your key is much shorter'
             );
         }
 
-        $keyStatus = self::getKeyStatus($options['key']);
+        $keyStatus = self::getKeyStatus($apiKey);
         switch ($keyStatus) {
             case 'great':
                 break;
@@ -70,8 +90,10 @@ class Ewww extends AbstractCloudCurlConverter
 
         $ch = self::initCurl();
 
-        $curlOptions = [
-            'api_key' => $options['key'],
+        //$this->logLn('api key:' . $this->getKey());
+
+        $postData = [
+            'api_key' => $this->getKey(),
             'webp' => '1',
             'file' => curl_file_create($this->source),
             'domain' => $_SERVER['HTTP_HOST'],
@@ -87,7 +109,7 @@ class Ewww extends AbstractCloudCurlConverter
                 'User-Agent: WebPConvert',
                 'Accept: image/*'
             ],
-            CURLOPT_POSTFIELDS => $curlOptions,
+            CURLOPT_POSTFIELDS => $postData,
             CURLOPT_BINARYTRANSFER => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER => false,
