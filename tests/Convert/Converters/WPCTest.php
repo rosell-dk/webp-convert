@@ -12,50 +12,72 @@ use WebPConvert\Convert\Converters\Wpc;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\AccessDeniedException;
 
 use PHPUnit\Framework\TestCase;
 
 class WpcTest extends TestCase
 {
 
-    public function testConvert()
+
+    public $imageDir = __DIR__ . '/../../images/';
+
+    public function testApi0()
     {
+        if (!empty(getenv('WPC_API_URL_API0'))) {
+            ConverterTestHelper::runAllConvertTests($this, 'Wpc', [
+                'api-version' => 0,
+                'url' => getenv('WPC_API_URL_API0')
+            ]);
+        }
+    }
+
+    public function testApi1()
+    {
+        if (empty(getenv('WPC_API_URL')) || empty(getenv('WPC_API_KEY'))) {
+            return;
+        }
+
         ConverterTestHelper::runAllConvertTests($this, 'Wpc', [
-            'url' => 'https://wpc.bitwise-it.dk/wpc/wpc.php',
-            'secret' => 'insert-right-secret-for-proper-testing'
+            'api-version' => 1,
+            'crypt-api-key-in-transfer' => true
         ]);
     }
 
     public function testWrongSecretButRightUrl()
     {
-        $this->expectException(ConverterNotOperationalException::class);
+        if (empty(getenv('WPC_API_URL'))) {
+            return;
+        }
 
-        Wpc::convert(__DIR__ . '/../../test.jpg', __DIR__ . '/../../test.webp', [
-            'url' => 'https://wpc.bitwise-it.dk/wpc/wpc.php',
+        $this->expectException(AccessDeniedException::class);
+
+        Wpc::convert($this->imageDir . '/test.png', $this->imageDir . '/test.webp', [
+            'api-version' => 0,
+            'url' => getenv('WPC_API_URL'),
             'secret' => 'purposely-wrong-secret!'
         ]);
     }
 
+/*
     public function testMissingURL()
     {
         $this->expectException(ConverterNotOperationalException::class);
 
-        Wpc::convert(__DIR__ . '/../../test.jpg', __DIR__ . '/../../test.webp', [
+        Wpc::convert($this->imageDir . '/test.png', $this->imageDir . '/test.webp', [
             'url' => '',
             'secret' => 'bad dog!',
         ]);
-    }
+    }*/
 
     public function testBadURL()
     {
         $this->expectException(ConverterNotOperationalException::class);
 
-        Wpc::convert(__DIR__ . '/../../test.jpg', __DIR__ . '/../../test.webp', [
+        Wpc::convert($this->imageDir . '/test.png', $this->imageDir . '/test.webp', [
             'url' => 'badurl!',
             'secret' => 'bad dog!',
         ]);
     }
-
-
 
 }
