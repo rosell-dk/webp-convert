@@ -3272,6 +3272,15 @@ class Wpc extends AbstractCloudCurlConverter
             );
         }
 
+        // Check for empty response
+        if (empty($response)) {
+            throw new ConversionFailedException(
+                'Error: Unexpected result. We got nothing back. ' .
+                    'HTTP CODE: ' . $httpCode . '. ' .
+                    'Content type:' . curl_getinfo($ch, CURLINFO_CONTENT_TYPE)
+            );
+        };
+
         // The WPC cloud service either returns an image or an error message
         // Images has application/octet-stream.
         // Verify that we got an image back.
@@ -3306,18 +3315,13 @@ class Wpc extends AbstractCloudCurlConverter
                 );
             }
 
-            if (empty($response)) {
-                $errorMsg = 'Error: Unexpected result. We got nothing back. HTTP CODE: ' . $httpCode;
-                throw new ConversionFailedException($errorMsg);
-            } else {
-                $errorMsg = 'Error: Unexpected result. We did not receive an image. We received: "';
-                $errorMsg .= str_replace("\r", '', str_replace("\n", '', htmlentities(substr($response, 0, 400))));
-                throw new ConversionFailedException($errorMsg . '..."');
-            }
+            $errorMsg = 'Error: Unexpected result. We did not receive an image. We received: "';
+            $errorMsg .= str_replace("\r", '', str_replace("\n", '', htmlentities(substr($response, 0, 400))));
+            throw new ConversionFailedException($errorMsg . '..."');
             //throw new ConverterNotOperationalException($response);
         }
 
-        $success = @file_put_contents($this->destination, $response);
+        $success = file_put_contents($this->destination, $response);
         curl_close($ch);
 
         if (!$success) {

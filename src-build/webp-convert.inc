@@ -638,15 +638,30 @@ use WebPConvert\Convert\Converters\Stack;
 use WebPConvert\Serve\ServeConvertedWebP;
 use WebPConvert\Serve\ServeConvertedWebPWithErrorHandling;
 
+/**
+ * Convert images to webp and/or serve them.
+ *
+ * This class is just a couple of convenience methods for doing conversion and/or
+ * serving.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class WebPConvert
 {
 
     /**
      * Convert jpeg or png into webp
      *
-     * @param  string  $source  Absolute path to image to be converted (no backslashes). Image must be jpeg or png
-     * @param  string  $destination  Absolute path (no backslashes)
-     * @param  array   $options  Array of named options, such as 'quality' and 'metadata'
+     * Convenience method for calling Stack::convert.
+     *
+     * @param  string  $source       The image to convert (absolute,no backslashes)
+     *                               Image must be jpeg or png.
+     * @param  string  $destination  Where to store the converted file (absolute path, no backslashes).
+     * @param  array   $options      (optional) Array of named options, such as 'quality' and 'metadata'.
+     * @param   \WebPConvert\Loggers\BaseLogger $logger (optional)
+     *     
      * @throws \WebPConvert\Exceptions\WebPConvertException
      * @return void
     */
@@ -3313,6 +3328,15 @@ class Wpc extends AbstractCloudCurlConverter
             );
         }
 
+        // Check for empty response
+        if (empty($response)) {
+            throw new ConversionFailedException(
+                'Error: Unexpected result. We got nothing back. ' .
+                    'HTTP CODE: ' . $httpCode . '. ' .
+                    'Content type:' . curl_getinfo($ch, CURLINFO_CONTENT_TYPE)
+            );
+        };
+
         // The WPC cloud service either returns an image or an error message
         // Images has application/octet-stream.
         // Verify that we got an image back.
@@ -3347,18 +3371,13 @@ class Wpc extends AbstractCloudCurlConverter
                 );
             }
 
-            if (empty($response)) {
-                $errorMsg = 'Error: Unexpected result. We got nothing back. HTTP CODE: ' . $httpCode;
-                throw new ConversionFailedException($errorMsg);
-            } else {
-                $errorMsg = 'Error: Unexpected result. We did not receive an image. We received: "';
-                $errorMsg .= str_replace("\r", '', str_replace("\n", '', htmlentities(substr($response, 0, 400))));
-                throw new ConversionFailedException($errorMsg . '..."');
-            }
+            $errorMsg = 'Error: Unexpected result. We did not receive an image. We received: "';
+            $errorMsg .= str_replace("\r", '', str_replace("\n", '', htmlentities(substr($response, 0, 400))));
+            throw new ConversionFailedException($errorMsg . '..."');
             //throw new ConverterNotOperationalException($response);
         }
 
-        $success = @file_put_contents($this->destination, $response);
+        $success = file_put_contents($this->destination, $response);
         curl_close($ch);
 
         if (!$success) {
@@ -4258,6 +4277,13 @@ class ServeConvertedWebP
         'show-report' => false,
     ];*/
 
+    /**
+     * Serve original file (source).
+     *
+     * @param   string  $source              path to source file
+     * @param   array   $options (optional)  options for serving
+     * @throws  ServeFailedException  if source is not an image or mime type cannot be determined
+     */
     public static function serveOriginal($source, $options)
     {
         $contentType = ImageMimeTypeGuesser::lenientGuess($source);
@@ -4277,6 +4303,10 @@ class ServeConvertedWebP
 
     /**
      * Serve converted webp.
+     *
+     * @param   string  $source              path to source file
+     * @param   string  $destination         path to destination
+     * @param   array   $options (optional)  options for serving/converting
      *
      * @throws  ServeFailedException  If an argument is invalid or source file does not exists
      * @return  void
