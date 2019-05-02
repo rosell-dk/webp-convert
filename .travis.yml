@@ -8,6 +8,11 @@ php:
 
 dist: xenial
 
+addons:
+  apt:
+    packages:
+      - libjpeg-dev
+      
 sudo: false
 
 matrix:
