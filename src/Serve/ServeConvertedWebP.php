@@ -65,7 +65,7 @@ class ServeConvertedWebP
         }
     }
 
-    private static function serveDestination($destination, $options)
+    public static function serveDestination($destination, $options)
     {
         ServeFile::serve($destination, 'image/webp', $options);
     }
