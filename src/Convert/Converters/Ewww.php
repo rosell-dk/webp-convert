@@ -5,6 +5,7 @@ namespace WebPConvert\Convert\Converters;
 use WebPConvert\Convert\BaseConverters\AbstractCloudCurlConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\InvalidApiKeyException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
 /**
@@ -56,11 +57,11 @@ class Ewww extends AbstractCloudCurlConverter
         $apiKey = $this->getKey();
 
         if ($apiKey === false) {
-            throw new ConverterNotOperationalException('Missing API key.');
+            throw new InvalidApiKeyException('Missing API key.');
         }
 
         if (strlen($apiKey) < 20) {
-            throw new ConverterNotOperationalException(
+            throw new InvalidApiKeyException(
                 'Key is invalid. Keys are supposed to be 32 characters long - your key is much shorter'
             );
         }
@@ -73,7 +74,7 @@ class Ewww extends AbstractCloudCurlConverter
                 throw new ConverterNotOperationalException('quota has exceeded');
                 break;
             case 'invalid':
-                throw new ConverterNotOperationalException('key is invalid');
+                throw new InvalidApiKeyException('key is invalid');
                 break;
         }
     }
@@ -136,7 +137,7 @@ class Ewww extends AbstractCloudCurlConverter
                 //echo $response;
                 //self::blacklistKey($key);
                 //throw new SystemRequirementsNotMetException('The key is invalid. Blacklisted it!');
-                throw new ConverterNotOperationalException('The key is invalid');
+                throw new InvalidApiKeyException('The key is invalid');
             }
 
             throw new ConversionFailedException(

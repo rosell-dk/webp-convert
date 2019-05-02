@@ -6,7 +6,7 @@ use WebPConvert\Convert\BaseConverters\AbstractCloudCurlConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\AccessDeniedException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\InvalidApiKeyException;
 
 /**
  * Convert images to webp using Wpc (a cloud converter based on WebP Convert).
@@ -253,7 +253,7 @@ class Wpc extends AbstractCloudCurlConverter
                                 $responseObj['errorMessage'] . '"'
                             );
                         case 1:
-                            throw new AccessDeniedException(
+                            throw new InvalidApiKeyException(
                                 'Access denied. ' . $responseObj['errorMessage']
                             );
                         default:

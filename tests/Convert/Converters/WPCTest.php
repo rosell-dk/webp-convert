@@ -12,7 +12,7 @@ use WebPConvert\Convert\Converters\Wpc;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\AccessDeniedException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\InvalidApiKeyException;
 
 use PHPUnit\Framework\TestCase;
 
@@ -42,6 +42,8 @@ class WpcTest extends TestCase
             'api-version' => 1,
             'crypt-api-key-in-transfer' => true
         ]);
+
+        // TODO: Also test without crypt
     }
 
     public function testWrongSecretButRightUrl()
@@ -50,7 +52,7 @@ class WpcTest extends TestCase
             return;
         }
 
-        $this->expectException(AccessDeniedException::class);
+        $this->expectException(InvalidApiKeyException::class);
 
         Wpc::convert($this->imageDir . '/test.png', $this->imageDir . '/test.webp', [
             'api-version' => 0,

@@ -4,7 +4,7 @@ namespace WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationa
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 
-class AccessDeniedException extends ConverterNotOperationalException
+class InvalidApiKeyException extends ConverterNotOperationalException
 {
     public $description = 'The converter is not operational (access denied)';
 }
