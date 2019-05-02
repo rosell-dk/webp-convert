@@ -1,10 +1,17 @@
 
-convert -version | grep 'webp' && {
+# Got the script from here:
+# https://stackoverflow.com/questions/41138404/how-to-install-newer-imagemagick-with-webp-support-in-travis-ci-container
+
+
+convert -list delegate | grep 'webp =>' && {
     echo "Imagick is not already compiled with webp. Nothing to do :)" &&
     echo ":)"
 }
 
-convert -version | grep 'webp' || {
+#convert -version | grep 'webp' || {
+
+
+convert -list delegate | grep 'webp =>' || {
     export CORES=$(nproc) &&
     export LIBWEBP_VERSION=1.0.2 &&
     export IMAGEMAGICK_VERSION=7.0.8-43 &&
