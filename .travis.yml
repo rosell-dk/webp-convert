@@ -12,7 +12,9 @@ addons:
   apt:
     packages:
       - libjpeg-dev
-      
+      - libpng-dev
+      - libwebp-dev
+
 sudo: false
 
 matrix:
