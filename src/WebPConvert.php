@@ -8,6 +8,16 @@ use WebPConvert\Convert\Converters\Stack;
 use WebPConvert\Serve\ServeConvertedWebP;
 use WebPConvert\Serve\ServeConvertedWebPWithErrorHandling;
 
+/**
+ * Convert images to webp and/or serve them.
+ *
+ * This class is just a couple of convenience methods for doing conversion and/or
+ * serving.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class WebPConvert
 {
 
