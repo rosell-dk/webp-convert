@@ -282,7 +282,7 @@ class Wpc extends AbstractCloudCurlConverter
             //throw new ConverterNotOperationalException($response);
         }
 
-        $success = @file_put_contents($this->destination, $response);
+        $success = file_put_contents($this->destination, $response);
         curl_close($ch);
 
         if (!$success) {
