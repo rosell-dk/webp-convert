@@ -70,3 +70,9 @@ Run this before pushing anything to github. "ci" btw stands for *continuous inte
 ```
 composer ci
 ```
+
+## Generating api docs
+Install phpdox and run it in the project root:
+```
+phpdox
+```
