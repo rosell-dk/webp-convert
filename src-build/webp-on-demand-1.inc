@@ -50,10 +50,10 @@ class ServeConvertedWebP
     public static function serveOriginal($source, $options)
     {
         $contentType = ImageMimeTypeGuesser::lenientGuess($source);
-        if ($contentType === false) {
-            throw new ServeFailedException('Rejecting to serve original (it is not an image)');
-        } elseif ($contentType === null) {
+        if (is_null($contentType)) {
             throw new ServeFailedException('Rejecting to serve original (mime type cannot be determined)');
+        } elseif ($contentType === false) {
+            throw new ServeFailedException('Rejecting to serve original (it is not an image)');
         } else {
             ServeFile::serve($source, $contentType, $options);
         }
@@ -112,6 +112,7 @@ namespace WebPConvert\Serve;
 use WebPConvert\Serve\Header;
 use WebPConvert\Serve\Report;
 use WebPConvert\Serve\ServeConvertedWeb;
+use WebPConvert\Serve\Exceptions\ServeFailedException;
 
 /**
  * Serve a converted webp image and handle errors.
@@ -142,7 +143,7 @@ class ServeConvertedWebPWithErrorHandling
         switch ($fail) {
             case 'original':
                 try {
-                    ServeConvertedWebP::serveOriginal($source, $destination, $options);
+                    ServeConvertedWebP::serveOriginal($source, $options);
                 } catch (\Exception $e) {
                     self::performFailAction($failIfFailFails, '404', $source, $destination, $options);
                 }
@@ -336,7 +337,7 @@ class ServeFile
 
         if ($options['set-cache-control-header'] === true) {
             if (!empty($options['cache-control-header'])) {
-                Header::setHeader('Cache-Control: ' . $options['cache-control-header'], true);
+                Header::setHeader('Cache-Control: ' . $options['cache-control-header']);
 
                 // Add exprires header too (#126)
                 // Check string for something like this: max-age:86400
@@ -387,6 +388,7 @@ namespace WebPConvert;
 use WebPConvert\Convert\Converters\Stack;
 //use WebPConvert\Serve\ServeExistingOrHandOver;
 use WebPConvert\Serve\ServeConvertedWebP;
+use WebPConvert\Serve\ServeConvertedWebPWithErrorHandling;
 
 class WebPConvert
 {

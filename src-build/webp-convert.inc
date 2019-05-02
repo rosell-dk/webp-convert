@@ -66,7 +66,7 @@ abstract class AbstractConverter
     /** @var string  Where to save the webp (complete path) */
     protected $destination;
 
-    /** @var string|false  Where to save the webp (complete path) */
+    /** @var string|false|null  Where to save the webp (complete path) */
     private $sourceMimeType;
 
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
@@ -311,7 +311,7 @@ abstract class AbstractConverter
 
         // Check if the provided file's mime type is valid
         $fileMimeType = $this->getMimeTypeOfSource();
-        if ($fileMimeType === null) {
+        if (is_null($fileMimeType)) {
             throw new InvalidImageTypeException('Image type could not be detected');
         } elseif ($fileMimeType === false) {
             throw new InvalidImageTypeException('File seems not to be an image.');
@@ -636,6 +636,7 @@ namespace WebPConvert;
 use WebPConvert\Convert\Converters\Stack;
 //use WebPConvert\Serve\ServeExistingOrHandOver;
 use WebPConvert\Serve\ServeConvertedWebP;
+use WebPConvert\Serve\ServeConvertedWebPWithErrorHandling;
 
 class WebPConvert
 {
@@ -1488,6 +1489,23 @@ class Ewww extends AbstractCloudCurlConverter
     }
 
     /**
+     * Get api key from options or environment variable
+     *
+     * @return string|false  api key or false if none is set
+     */
+    private function getKey()
+    {
+        if (!empty($this->options['key'])) {
+            return $this->options['key'];
+        }
+        if (!empty(getenv('EWWW_API_KEY'))) {
+            return getenv('EWWW_API_KEY');
+        }
+        return false;
+    }
+
+
+    /**
      * Check operationality of Ewww converter.
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met (curl)
@@ -1498,18 +1516,19 @@ class Ewww extends AbstractCloudCurlConverter
         // First check for curl requirements
         parent::checkOperationality();
 
-        $options = $this->options;
+        $apiKey = $this->getKey();
 
-        if ($options['key'] == '') {
+        if ($apiKey === false) {
             throw new ConverterNotOperationalException('Missing API key.');
         }
-        if (strlen($options['key']) < 20) {
+
+        if (strlen($apiKey) < 20) {
             throw new ConverterNotOperationalException(
                 'Key is invalid. Keys are supposed to be 32 characters long - your key is much shorter'
             );
         }
 
-        $keyStatus = self::getKeyStatus($options['key']);
+        $keyStatus = self::getKeyStatus($apiKey);
         switch ($keyStatus) {
             case 'great':
                 break;
@@ -1532,11 +1551,12 @@ class Ewww extends AbstractCloudCurlConverter
 
         $ch = self::initCurl();
 
-        $curlOptions = [
-            'api_key' => $options['key'],
+        //$this->logLn('api key:' . $this->getKey());
+
+        $postData = [
+            'api_key' => $this->getKey(),
             'webp' => '1',
             'file' => curl_file_create($this->source),
-            'domain' => $_SERVER['HTTP_HOST'],
             'quality' => $this->getCalculatedQuality(),
             'metadata' => ($options['metadata'] == 'none' ? '0' : '1')
         ];
@@ -1549,7 +1569,7 @@ class Ewww extends AbstractCloudCurlConverter
                 'User-Agent: WebPConvert',
                 'Accept: image/*'
             ],
-            CURLOPT_POSTFIELDS => $curlOptions,
+            CURLOPT_POSTFIELDS => $postData,
             CURLOPT_BINARYTRANSFER => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER => false,
@@ -3061,6 +3081,7 @@ use WebPConvert\Convert\BaseConverters\AbstractCloudCurlConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\AccessDeniedException;
 
 /**
  * Convert images to webp using Wpc (a cloud converter based on WebP Convert).
@@ -3078,8 +3099,8 @@ class Wpc extends AbstractCloudCurlConverter
     {
         return [
             ['api-version', 'number', 0],                     /* Can currently be 0 or 1 */
-            ['secret', 'string', 'my dog is white', true],    /* only in api v.0 */
-            ['api-key', 'string', 'my dog is white', true],   /* new in api v.1 (renamed 'secret' to 'api-key') */
+            ['secret', 'string', '', true],    /* only in api v.0 */
+            ['api-key', 'string', '', true],   /* new in api v.1 (renamed 'secret' to 'api-key') */
             ['url', 'string', '', true, true],
             ['crypt-api-key-in-transfer', 'boolean', false],  /* new in api v.1 */
         ];
@@ -3101,20 +3122,62 @@ class Wpc extends AbstractCloudCurlConverter
         return $salt;
     }
 
-    protected function doActualConvert()
+    /**
+     * Get api key from options or environment variable
+     *
+     * @return string  api key or empty string if none is set
+     */
+    private function getApiKey()
     {
+        if ($this->options['api-version'] == 0) {
+            if (!empty($this->options['secret'])) {
+                return $this->options['secret'];
+            }
+        } elseif ($this->options['api-version'] == 1) {
+            if (!empty($this->options['api-key'])) {
+                return $this->options['api-key'];
+            }
+        }
+        if (!empty(getenv('WPC_API_KEY'))) {
+            return getenv('WPC_API_KEY');
+        }
+        return '';
+    }
+
+    /**
+     * Get url from options or environment variable
+     *
+     * @return string  URL to WPC or empty string if none is set
+     */
+    private function getApiUrl()
+    {
+        if (!empty($this->options['url'])) {
+            return $this->options['url'];
+        }
+        if (!empty(getenv('WPC_API_URL'))) {
+            return getenv('WPC_API_URL');
+        }
+        return '';
+    }
+
+
+    /**
+     * Check operationality of Wpc converter.
+     *
+     * @throws SystemRequirementsNotMetException  if system requirements are not met (curl)
+     * @throws ConverterNotOperationalException   if key is missing or invalid, or quota has exceeded
+     */
+    public function checkOperationality()
+    {
+        // First check for curl requirements
+        parent::checkOperationality();
+
         $options = $this->options;
 
         $apiVersion = $options['api-version'];
 
-        if (!function_exists('curl_file_create')) {
-            throw new SystemRequirementsNotMetException(
-                'Required curl_file_create() PHP function is not available (requires PHP > 5.5).'
-            );
-        }
-
         if ($apiVersion == 0) {
-            if (!empty($options['secret'])) {
+            if (!empty($this->getApiKey())) {
                 // if secret is set, we need md5() and md5_file() functions
                 if (!function_exists('md5')) {
                     throw new ConverterNotOperationalException(
@@ -3130,28 +3193,46 @@ class Wpc extends AbstractCloudCurlConverter
                     );
                 }
             }
+        } elseif ($apiVersion == 1) {
+            if ($options['crypt-api-key-in-transfer']) {
+                if (!function_exists('crypt')) {
+                    throw new ConverterNotOperationalException(
+                        'Configured to crypt the api-key, but crypt() function is not available.'
+                    );
+                }
+
+                if (!defined('CRYPT_BLOWFISH')) {
+                    throw new ConverterNotOperationalException(
+                        'Configured to crypt the api-key. ' .
+                        'That requires Blowfish encryption, which is not available on your current setup.'
+                    );
+                }
+            }
         }
 
-        if ($apiVersion == 1) {
-        /*
-                if (count($options['web-services']) == 0) {
-                    throw new SystemRequirementsNotMetException('No remote host has been set up');
-                }*/
-        }
-
-        if ($options['url'] == '') {
+        if ($this->getApiUrl() == '') {
             throw new ConverterNotOperationalException(
                 'Missing URL. You must install Webp Convert Cloud Service on a server, ' .
                 'or the WebP Express plugin for Wordpress - and supply the url.'
             );
         }
+    }
 
-        // Got some code here:
-        // https://coderwall.com/p/v4ps1a/send-a-file-via-post-with-curl-and-php
+    /**
+     * Check if specific file is convertable with current converter / converter settings.
+     *
+     */
+    public function checkConvertability()
+    {
+        // First check for upload limits (abstract cloud converter)
+        parent::checkConvertability();
 
-        $ch = self::initCurl();
+        // TODO: some from below can be moved up here
+    }
 
-        $optionsToSend = $options;
+    private function createOptionsToSend()
+    {
+        $optionsToSend = $this->options;
 
         if ($this->isQualityDetectionRequiredButFailing()) {
             // quality was set to "auto", but we could not meassure the quality of the jpeg locally
@@ -3163,58 +3244,54 @@ class Wpc extends AbstractCloudCurlConverter
 
         unset($optionsToSend['converters']);
         unset($optionsToSend['secret']);
+        unset($optionsToSend['api-key']);
+        unset($optionsToSend['url']);
+
+        return $optionsToSend;
+    }
+
+    private function createPostData()
+    {
+        $options = $this->options;
 
         $postData = [
             'file' => curl_file_create($this->source),
-            'options' => json_encode($optionsToSend),
+            'options' => json_encode($this->createOptionsToSend()),
             'servername' => (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '')
         ];
 
-        if ($apiVersion == 0) {
-            $postData['hash'] = md5(md5_file($this->source) . $options['secret']);
-        }
+        $apiVersion = $options['api-version'];
 
-        if ($apiVersion == 1) {
-            $apiKey = $options['api-key'];
+        $apiKey = $this->getApiKey();
+
+        if ($apiVersion == 0) {
+            $postData['hash'] = md5(md5_file($this->source) . $apiKey);
+        } elseif ($apiVersion == 1) {
+            //$this->logLn('api key: ' . $apiKey);
 
             if ($options['crypt-api-key-in-transfer']) {
-                if (CRYPT_BLOWFISH == 1) {
-                    $salt = self::createRandomSaltForBlowfish();
-                    $postData['salt'] = $salt;
+                $salt = self::createRandomSaltForBlowfish();
+                $postData['salt'] = $salt;
 
-                    // Strip off the first 28 characters (the first 6 are always "$2y$10$". The next 22 is the salt)
-                    $postData['api-key-crypted'] = substr(crypt($apiKey, '$2y$10$' . $salt . '$'), 28);
-                } else {
-                    if (!function_exists('crypt')) {
-                        throw new ConverterNotOperationalException(
-                            'Configured to crypt the api-key, but crypt() function is not available.'
-                        );
-                    } else {
-                        throw new ConverterNotOperationalException(
-                            'Configured to crypt the api-key. ' .
-                            'That requires Blowfish encryption, which is not available on your current setup.'
-                        );
-                    }
-                }
+                // Strip off the first 28 characters (the first 6 are always "$2y$10$". The next 22 is the salt)
+                $postData['api-key-crypted'] = substr(crypt($apiKey, '$2y$10$' . $salt . '$'), 28);
             } else {
                 $postData['api-key'] = $apiKey;
             }
         }
+        return $postData;
+    }
 
+    protected function doActualConvert()
+    {
+        $ch = self::initCurl();
 
-        // Try one host at the time
-        // TODO: shuffle the array first
-        /*
-        foreach ($options['web-services'] as $webService) {
-
-        }
-        */
-
+        //$this->logLn('api url: ' . $this->getApiUrl());
 
         curl_setopt_array($ch, [
-            CURLOPT_URL => $options['url'],
+            CURLOPT_URL => $this->getApiUrl(),
             CURLOPT_POST => 1,
-            CURLOPT_POSTFIELDS => $postData,
+            CURLOPT_POSTFIELDS => $this->createPostData(),
             CURLOPT_BINARYTRANSFER => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER => false,
@@ -3251,7 +3328,7 @@ class Wpc extends AbstractCloudCurlConverter
                                 $responseObj['errorMessage'] . '"'
                             );
                         case 1:
-                            throw new ConverterNotOperationalException(
+                            throw new AccessDeniedException(
                                 'Access denied. ' . $responseObj['errorMessage']
                             );
                         default:
@@ -3286,28 +3363,6 @@ class Wpc extends AbstractCloudCurlConverter
         if (!$success) {
             throw new ConversionFailedException('Error saving file. Check file permissions');
         }
-        /*
-                $curlOptions = [
-                    'api_key' => $options['key'],
-                    'webp' => '1',
-                    'file' => curl_file_create($this->source),
-                    'domain' => $_SERVER['HTTP_HOST'],
-                    'quality' => $options['quality'],
-                    'metadata' => ($options['metadata'] == 'none' ? '0' : '1')
-                ];
-
-                curl_setopt_array($ch, [
-                    CURLOPT_URL => "https://optimize.exactlywww.com/v2/",
-                    CURLOPT_HTTPHEADER => [
-                        'User-Agent: WebPConvert',
-                        'Accept: image/*'
-                    ],
-                    CURLOPT_POSTFIELDS => $curlOptions,
-                    CURLOPT_BINARYTRANSFER => true,
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_HEADER => false,
-                    CURLOPT_SSL_VERIFYPEER => false
-                ]);*/
     }
 }
 
@@ -3380,6 +3435,17 @@ class UnhandledException extends ConversionFailedException
         );
         //$this->$message = 'hello.' . $message . ' ' . $previous->getMessage();
     }*/
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
+
+class AccessDeniedException extends ConverterNotOperationalException
+{
+    public $description = 'The converter is not operational (access denied)';
 }
 
 ?><?php
@@ -4135,7 +4201,6 @@ class Report
 
             //echo '<p>Rethrowing exception for your convenience</p>';
             //throw ($e);
-            exit;
         }
         ?>
     </body>
@@ -4195,10 +4260,10 @@ class ServeConvertedWebP
     public static function serveOriginal($source, $options)
     {
         $contentType = ImageMimeTypeGuesser::lenientGuess($source);
-        if ($contentType === false) {
-            throw new ServeFailedException('Rejecting to serve original (it is not an image)');
-        } elseif ($contentType === null) {
+        if (is_null($contentType)) {
             throw new ServeFailedException('Rejecting to serve original (mime type cannot be determined)');
+        } elseif ($contentType === false) {
+            throw new ServeFailedException('Rejecting to serve original (it is not an image)');
         } else {
             ServeFile::serve($source, $contentType, $options);
         }
@@ -4257,6 +4322,7 @@ namespace WebPConvert\Serve;
 use WebPConvert\Serve\Header;
 use WebPConvert\Serve\Report;
 use WebPConvert\Serve\ServeConvertedWeb;
+use WebPConvert\Serve\Exceptions\ServeFailedException;
 
 /**
  * Serve a converted webp image and handle errors.
@@ -4287,7 +4353,7 @@ class ServeConvertedWebPWithErrorHandling
         switch ($fail) {
             case 'original':
                 try {
-                    ServeConvertedWebP::serveOriginal($source, $destination, $options);
+                    ServeConvertedWebP::serveOriginal($source, $options);
                 } catch (\Exception $e) {
                     self::performFailAction($failIfFailFails, '404', $source, $destination, $options);
                 }
@@ -4382,7 +4448,7 @@ class ServeFile
 
         if ($options['set-cache-control-header'] === true) {
             if (!empty($options['cache-control-header'])) {
-                Header::setHeader('Cache-Control: ' . $options['cache-control-header'], true);
+                Header::setHeader('Cache-Control: ' . $options['cache-control-header']);
 
                 // Add exprires header too (#126)
                 // Check string for something like this: max-age:86400
