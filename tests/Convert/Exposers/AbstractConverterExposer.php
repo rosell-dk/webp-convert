@@ -3,7 +3,7 @@
 namespace WebPConvert\Tests\Convert\Exposers;
 
 use WebPConvert\Convert\BaseConverters\AbstractConverter;
-
+use WebPConvert\Tests\BaseExposer;
 
 /**
  * Class for exposing otherwise unaccessible methods of AbstractConverter,

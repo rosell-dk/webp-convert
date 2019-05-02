@@ -1,8 +1,6 @@
 <?php
 
-namespace WebPConvert\Tests\Convert\Exposers;
-
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
+namespace WebPConvert\Tests;
 
 /**
  * Class for exposing otherwise unaccessible methods of classes

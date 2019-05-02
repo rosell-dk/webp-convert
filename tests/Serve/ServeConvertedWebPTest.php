@@ -6,6 +6,8 @@ use WebPConvert\Serve\ServeConvertedWebP;
 use WebPConvert\Serve\MockedHeader;
 use WebPConvert\Serve\Exceptions\ServeFailedException;
 
+use ServeConvertedWebPExposer;
+
 use PHPUnit\Framework\TestCase;
 
 class ServeConvertedWebPTest extends TestCase
