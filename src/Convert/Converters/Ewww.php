@@ -94,7 +94,6 @@ class Ewww extends AbstractCloudCurlConverter
             'api_key' => $this->getKey(),
             'webp' => '1',
             'file' => curl_file_create($this->source),
-            //'domain' => $_SERVER['HTTP_HOST'],
             'quality' => $this->getCalculatedQuality(),
             'metadata' => ($options['metadata'] == 'none' ? '0' : '1')
         ];
