@@ -35,8 +35,8 @@ class Ewww extends AbstractCloudCurlConverter
         if (!empty($this->options['key'])) {
             return $this->options['key'];
         }
-        if (!empty(getenv('EWWW_KEY'))) {
-            return getenv('EWWW_KEY');
+        if (!empty(getenv('EWWW_API_KEY'))) {
+            return getenv('EWWW_API_KEY');
         }
         return false;
     }

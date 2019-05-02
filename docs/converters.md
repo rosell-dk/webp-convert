@@ -252,12 +252,12 @@ WebPConvert::convert($source, $destination, [
     ]
 ));
 ```
-In 2.0, you can alternatively set the api key by through the *EWWW_KEY* environment variable. This is a safer place to store it.
+In 2.0, you can alternatively set the api key by through the *EWWW_API_KEY* environment variable. This is a safer place to store it.
 
 To set an environment variable in Apache, you can use the `SetEnv` directory. Ie, place something like the following in your virtual host / or .htaccess file (replace the key with the one you purchased!)
 
 ```
-	SetEnv EWWW_KEY sP3LyPpsKWZy8CVBTYegzEGN6VsKKKKA
+	SetEnv EWWW_API_KEY sP3LyPpsKWZy8CVBTYegzEGN6VsKKKKA
 ```
 
 ## gd

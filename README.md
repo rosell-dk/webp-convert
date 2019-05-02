@@ -64,7 +64,7 @@ $success = WebPConvert::convert($source, $destination, [
 
 **NOTE: In 2.0.0, WebPConvert will not return any value. Failure is handled purely by exceptions (1.3, also throws exceptions, but not when the failure is that no converters were operational)**
 
-PS: In 2.0, you can alternatively set the third party credentials by setting environment variables ("EWWW_KEY", "WPC_API_KEY" and "WPC_API_URL").
+PS: In 2.0, you can alternatively set the third party credentials by setting environment variables ("EWWW_API_KEY", "WPC_API_KEY" and "WPC_API_URL").
 
 
 To convert using a specific conversion method, simply set the *converters* option so it only has that method.
