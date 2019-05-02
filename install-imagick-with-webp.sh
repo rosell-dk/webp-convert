@@ -4,12 +4,11 @@
 
 
 convert -list delegate | grep 'webp =>' && {
-    echo "Imagick is not already compiled with webp. Nothing to do :)" &&
+    echo "Imagick is already compiled with webp. Nothing to do :)" &&
     echo ":)"
 }
 
 #convert -version | grep 'webp' || {
-
 
 convert -list delegate | grep 'webp =>' || {
     export CORES=$(nproc) &&
