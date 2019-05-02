@@ -39,12 +39,22 @@ class ImagickBinary extends AbstractExecConverter
     // Check if webp delegate is installed
     public static function webPDelegateInstalled()
     {
-        exec('convert -list configure', $output, $returnCode);
+
+        exec('convert -list delegate', $output, $returnCode);
         foreach ($output as $line) {
-            if (preg_match('/DELEGATE.*webp.*/i', $line)) {
+            if (preg_match('#webp\\s*=#i', $line)) {
                 return true;
             }
         }
+
+        // try other command
+        exec('convert -list configure', $output, $returnCode);
+        foreach ($output as $line) {
+            if (preg_match('#DELEGATE.*webp#i', $line)) {
+                return true;
+            }
+        }
+
         return false;
 
         // PS, convert -version does not output delegates on travis, so it is not reliable
