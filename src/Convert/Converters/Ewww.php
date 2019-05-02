@@ -53,8 +53,6 @@ class Ewww extends AbstractCloudCurlConverter
         // First check for curl requirements
         parent::checkOperationality();
 
-        $options = $this->options;
-
         $apiKey = $this->getKey();
 
         if ($apiKey === false) {
@@ -96,7 +94,7 @@ class Ewww extends AbstractCloudCurlConverter
             'api_key' => $this->getKey(),
             'webp' => '1',
             'file' => curl_file_create($this->source),
-            'domain' => $_SERVER['HTTP_HOST'],
+            //'domain' => $_SERVER['HTTP_HOST'],
             'quality' => $this->getCalculatedQuality(),
             'metadata' => ($options['metadata'] == 'none' ? '0' : '1')
         ];
