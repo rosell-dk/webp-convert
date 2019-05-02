@@ -5,6 +5,16 @@ namespace WebPConvert\Convert\BaseConverters;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\BaseConverters\AbstractConverter;
 
+/**
+ * Base for converters that uses a cloud service and curl
+ *
+ * Handles checking that curl extension is loaded and functional.
+ * Also provides a little helper for initializing curl (which throws in case of error)
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
 {
 
@@ -34,7 +44,7 @@ abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
     }
 
     /**
-     *  Init curl.
+     * Init curl.
      *
      * @throws  SystemRequirementsNotMetException  if curl could not be initialized
      * @return  resource  curl handle
