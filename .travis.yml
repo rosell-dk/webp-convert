@@ -30,6 +30,7 @@ matrix:
 
 before_install:
   - bash install-imagick-with-webp.sh
+  - pecl install imagick
 
 before_script:
   - (composer self-update; true)
