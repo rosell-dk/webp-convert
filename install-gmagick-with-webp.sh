@@ -8,6 +8,7 @@ gm -version | grep -i 'WebP.*yes' && {
 
 }
 
+ls $HOME/opt/bin
 
 gm -version | grep -i 'WebP.*yes' || {
     echo "Gmagick is not compiled with webp... Doing that!" &&
@@ -22,7 +23,7 @@ gm -version | grep -i 'WebP.*yes' || {
     ./configure --prefix=$HOME/opt --with-webp=yes &&
     make &&
     make install &&
-    gm -version
+    #$HOME/opt/bin/gm -version
 }
 
 #convert -version | grep 'webp' || {
