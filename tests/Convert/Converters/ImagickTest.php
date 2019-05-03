@@ -19,6 +19,7 @@ class ImagickTest extends TestCase
         if (!extension_loaded('imagick')) {
             return;
         }
+        //if (!class_exists('\\Imagick')) {}
 
         $im = new \Imagick();
 
@@ -30,6 +31,9 @@ class ImagickTest extends TestCase
 
     public function testThatImagickFunctionsUsedDoesNotThrow()
     {
+        if (!extension_loaded('imagick')) {
+            return;
+        }
         $im = new \Imagick(self::$imageDir . '/test.jpg');
         $im->setImageFormat('JPEG');
         $im->stripImage();
