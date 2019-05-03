@@ -28,7 +28,13 @@ class Stack extends AbstractConverter
     protected function getOptionDefinitionsExtra()
     {
         return [
-            ['converters', 'array', ['cwebp', 'vips', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'gmagickbinary'], true],
+            [
+                'converters',
+                'array', [
+                    'cwebp', 'vips', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'gmagickbinary'
+                ],
+                true
+            ],
         ];
     }
 
