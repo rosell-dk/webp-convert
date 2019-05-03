@@ -28,18 +28,21 @@ class Stack extends AbstractConverter
     protected function getOptionDefinitionsExtra()
     {
         return [
-            ['converters', 'array', ['cwebp', 'vips', 'gd', 'imagick', 'gmagick', 'imagickbinary'], true],
+            ['converters', 'array', ['cwebp', 'vips', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'gmagickbinary'], true],
         ];
     }
 
     public static $availableConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'wpc', 'ewww'];
-    public static $localConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary'];
+    public static $localConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'gmagickbinary'];
 
     public static function converterIdToClassname($converterId)
     {
         switch ($converterId) {
             case 'imagickbinary':
                 $classNameShort = 'ImagickBinary';
+                break;
+            case 'gmagickbinary':
+                $classNameShort = 'GmagickBinary';
                 break;
             default:
                 $classNameShort = ucfirst($converterId);
