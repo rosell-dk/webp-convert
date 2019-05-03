@@ -5,13 +5,14 @@ gm -version | grep -i 'WebP.*yes' && {
 
 }
 
+#wget ftp://ftp.graphicsmagick.org/pub/GraphicsMagick/GraphicsMagick-LATEST.tar.gz &&
+#tar xvfz GraphicsMagick-LATEST.tar.gz &&
+
 gm -version | grep -i 'WebP.*yes' || {
     echo "Gmagick is not compiled with webp... Doing that!" &&
     cd /tmp &&
-    wget ftp://ftp.graphicsmagick.org/pub/GraphicsMagick/GraphicsMagick-LATEST.tar.gz &&
-    tar xvfz GraphicsMagick-LATEST.tar.gz &&
     cd GraphicsMagick-* &&
-    ./configure --enable-shared --with-webp=yes &&
+    ./configure --prefix=$HOME/opt --with-webp=yes &&
     make &&
     make install &&
     gm -version
