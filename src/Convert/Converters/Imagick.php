@@ -47,8 +47,7 @@ class Imagick extends AbstractConverter
         }
 
         $im = new \Imagick();
-
-        if (!in_array('WEBP', $im->queryFormats())) {
+        if (!in_array('WEBP', $im->queryFormats('WEBP'))) {
             throw new SystemRequirementsNotMetException('iMagick was compiled without WebP support.');
         }
     }
@@ -64,14 +63,14 @@ class Imagick extends AbstractConverter
         $mimeType = $this->getMimeTypeOfSource();
         switch ($mimeType) {
             case 'image/png':
-                if (!in_array('PNG', $im->queryFormats())) {
+                if (!in_array('PNG', $im->queryFormats('PNG'))) {
                     throw new SystemRequirementsNotMetException(
                         'Imagick has been compiled without PNG support and can therefore not convert this PNG image.'
                     );
                 }
                 break;
             case 'image/jpeg':
-                if (!in_array('JPEG', $im->queryFormats())) {
+                if (!in_array('JPEG', $im->queryFormats('JPEG'))) {
                     throw new SystemRequirementsNotMetException(
                         'Imagick has been compiled without Jpeg support and can therefore not convert this Jpeg image.'
                     );
