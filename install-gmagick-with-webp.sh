@@ -22,9 +22,10 @@ gm -version | grep -i 'WebP.*yes' || {
     cd GraphicsMagick-* &&
     ./configure --prefix=$HOME/opt --with-webp=yes &&
     make &&
-    make install &&
-    #$HOME/opt/bin/gm -version
+    make install
 }
+
+#$HOME/opt/bin/gm -version
 
 #convert -version | grep 'webp' || {
 
