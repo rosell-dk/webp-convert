@@ -18,11 +18,12 @@ gm -version | grep -i 'WebP.*yes' || {
     #curl -O https://sourceforge.net/projects/graphicsmagick/files/graphicsmagick/1.3.31/GraphicsMagick-1.3.31.tar.gz &&
     #tar zxvf GraphicsMagick-1.3.31.tar.gz &&
     wget http://78.108.103.11/MIRROR/ftp/GraphicsMagick/GraphicsMagick-LATEST.tar.gz &&
-    tar xvfz GraphicsMagick-LATEST.tar.gz &&
+    tar xfz GraphicsMagick-LATEST.tar.gz &&
     cd GraphicsMagick-* &&
     ./configure --prefix=$HOME/opt --with-webp=yes &&
     make &&
-    make install
+    make install &&
+    ldconfig
 }
 
 #$HOME/opt/bin/gm -version
