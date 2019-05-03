@@ -8,6 +8,10 @@ language: php
 
 dist: xenial
 
+cache:
+  directories:
+  - "$HOME/opt"     # cache our imagick install
+
 addons:
   apt:
     packages:
@@ -30,6 +34,9 @@ matrix:
       env: TESTSRCBUILD=1
 
 before_install:
+  # Update PATH so that travis can find our imagemagick / gmagick
+  - export PATH=$HOME/opt/bin:$PATH
+
   # install imagick with webp support (if not already there) and update library paths
   - bash install-imagick-with-webp.sh
   - export LD_FLAGS=-L$HOME/opt/lib
@@ -40,16 +47,18 @@ before_install:
   - echo '' | pecl install imagick
 
   # gmagick
-  # Hm, not working yet. When I get to install the extension I get the message:
+
+  - bash install-gmagick-with-webp.sh
+
+  # Hm, extension is not working yet. When I get to install the extension I get the message:
   #    "Please provide a path to GraphicsMagick-config program."
   #    According to here: https://stackoverflow.com/questions/8626558/please-provide-the-prefix-of-graphicsmagick-installation-autodetect
   #    it is because the libgraphicsmagick1-dev package is not installed
   #    But is that needed when we are building ?
-  
-  #- bash install-gmagick-with-webp.sh
   #- echo '' | pecl install gmagick-beta
 
 before_script:
+  - echo $PATH
   - (composer self-update; true)
   - composer install
   - if [[ $PHPSTAN == 1 ]]; then composer require --dev phpstan/phpstan:"^0.11.5"; fi
