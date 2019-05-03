@@ -17,15 +17,20 @@
       "@test-webp-convert-build",
       "@test-src"
     ],
+    "test-src-build": [
+        "@test-wod-build",
+        "@test-webp-convert-build"
+    ],
     "test-wod-build": [
-      "phpunit build-tests-wod",
-      "phpunit --bootstrap tests/bootstrap-wod-test.php tests"
+      "phpunit --no-coverage build-tests-wod",
+      "phpunit --no-coverage --bootstrap tests/bootstrap-wod-test.php tests"
     ],
     "test-webp-convert-build": [
-      "phpunit build-tests-webp-convert",
-      "phpunit --bootstrap tests/bootstrap-webp-convert-test.php tests"
+      "phpunit --no-coverage build-tests-webp-convert",
+      "phpunit --no-coverage --bootstrap tests/bootstrap-webp-convert-test.php tests"
     ],
     "test-src": "phpunit",
+    "testing": "phpunit --no-coverage tests/Convert/Converters/ImagickTest.php",
     "phpunit": "phpunit",
     "cs-fix-all": [
       "php-cs-fixer fix src"

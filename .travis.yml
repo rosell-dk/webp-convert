@@ -23,24 +23,27 @@ matrix:
     #- php: 5.6
     #  env: UPLOADCOVERAGE=1
     #- php: 7.3
-    #  env: PHPSTAN=1
     - name: "Testing imagick install script"
       php: 7.1
       env: UPLOADCOVERAGE=1
+      env: PHPSTAN=1
+      env: TESTSRCBUILD=1
 
 before_install:
   - bash install-imagick-with-webp.sh
   - echo '' | pecl install imagick
   - bash install-gmagick-with-webp.sh
+  - echo '' | pecl install gmagick-beta
 
 before_script:
   - (composer self-update; true)
   - composer install
-  - if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.3" ]]; then composer require --dev phpstan/phpstan:"^0.11.5"; fi
+  - if [[ $PHPSTAN == 1 ]]; then composer require --dev phpstan/phpstan:"^0.11.5"; fi
 
 script:
-  - composer test
-  - if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.3" ]]; then vendor/bin/phpstan analyse src --level=4; fi
+  - if [[ $TESTSRCBUILD == 1 ]]; then composer test-src-build; fi
+  - composer test-src
+  - if [[ $PHPSTAN == 1 ]]; then vendor/bin/phpstan analyse src --level=4; fi
 
 after_script:
   - |
