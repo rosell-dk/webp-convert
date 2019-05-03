@@ -40,8 +40,14 @@ before_install:
   - echo '' | pecl install imagick
 
   # gmagick
-  - bash install-gmagick-with-webp.sh
-  - echo '' | pecl install gmagick-beta
+  # Hm, not working yet. When I get to install the extension I get the message:
+  #    "Please provide a path to GraphicsMagick-config program."
+  #    According to here: https://stackoverflow.com/questions/8626558/please-provide-the-prefix-of-graphicsmagick-installation-autodetect
+  #    it is because the libgraphicsmagick1-dev package is not installed
+  #    But is that needed when we are building ?
+  
+  #- bash install-gmagick-with-webp.sh
+  #- echo '' | pecl install gmagick-beta
 
 before_script:
   - (composer self-update; true)

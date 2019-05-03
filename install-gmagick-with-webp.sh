@@ -20,7 +20,7 @@ gm -version | grep -i 'WebP.*yes' || {
     wget http://78.108.103.11/MIRROR/ftp/GraphicsMagick/GraphicsMagick-LATEST.tar.gz &&
     tar xfz GraphicsMagick-LATEST.tar.gz &&
     cd GraphicsMagick-* &&
-    ./configure --prefix=$HOME/opt &&
+    ./configure --prefix=$HOME/opt --with-webp=yes &&
     make &&
     make install
 }
@@ -33,3 +33,4 @@ gm -version | grep -i 'WebP.*yes' || {
 
 #convert -list delegate | grep 'webp =>' || {
 #}
+##libgraphicsmagick1-dev
