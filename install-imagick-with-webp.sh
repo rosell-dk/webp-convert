@@ -10,7 +10,7 @@ convert -list delegate | grep 'webp =>' && {
 
 #convert -version | grep 'webp' || {
 
-convert -list delegate | grep 'webp =>' && {
+convert -list delegate | grep 'webp =>' || {
     export CORES=$(nproc) &&
     export LIBWEBP_VERSION=1.0.2 &&
     export IMAGEMAGICK_VERSION=7.0.8-43 &&
