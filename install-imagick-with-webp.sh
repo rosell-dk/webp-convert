@@ -10,7 +10,7 @@ convert -list delegate | grep 'webp =>' && {
 
 #convert -version | grep 'webp' || {
 
-convert -list delegate | grep 'webp =>' || {
+convert -list delegate | grep 'webp =>' && {
     export CORES=$(nproc) &&
     export LIBWEBP_VERSION=1.0.2 &&
     export IMAGEMAGICK_VERSION=7.0.8-43 &&
@@ -26,7 +26,7 @@ convert -list delegate | grep 'webp =>' || {
     curl -O https://www.imagemagick.org/download/ImageMagick-$IMAGEMAGICK_VERSION.tar.gz &&
     tar xvzf ImageMagick-$IMAGEMAGICK_VERSION.tar.gz &&
     cd ImageMagick-* &&
-    ./configure --prefix=$HOME/opt &&
+    ./configure --prefix=$HOME/opt --with-webp=yes &&
     make -j$CORES &&
     make install -j$CORES &&
     $HOME/opt/bin/magick -version | grep $IMAGEMAGICK_VERSION
