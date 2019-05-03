@@ -28,10 +28,12 @@ matrix:
     - name: "Testing imagick install script"
       php: 7.1
       #dist: xenial
-      dist: bionic
+      #dist: bionic
+      dist: trusty
       env: UPLOADCOVERAGE=1
       env: PHPSTAN=1
       env: TESTSRCBUILD=1
+  #allow_failures:
 
 before_install:
   # Update PATH so that travis can find our imagemagick / gmagick
