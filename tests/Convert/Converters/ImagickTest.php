@@ -17,6 +17,9 @@ class ImagickTest extends TestCase
     public function testQueryFormats()
     {
         if (!extension_loaded('imagick')) {
+            $this->markTestSkipped(
+              'The imagick extension is not available.'
+            );
             return;
         }
         //if (!class_exists('\\Imagick')) {}
@@ -32,6 +35,9 @@ class ImagickTest extends TestCase
     public function testThatImagickFunctionsUsedDoesNotThrow()
     {
         if (!extension_loaded('imagick')) {
+            $this->markTestSkipped(
+              'The imagick extension is not available.'
+            );
             return;
         }
         $im = new \Imagick(self::$imageDir . '/test.jpg');
