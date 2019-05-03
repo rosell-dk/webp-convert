@@ -29,8 +29,8 @@
       "phpunit --no-coverage build-tests-webp-convert",
       "phpunit --no-coverage --bootstrap tests/bootstrap-webp-convert-test.php tests"
     ],
-    "test-src": "phpunit",
-    "testing": "phpunit --no-coverage tests/Convert/Converters/ImagickTest.php",
+    "test-src": "phpunit --coverage-text",
+    "testing": "phpunit --coverage-text tests/Convert/Converters/ImagickTest.php",
     "phpunit": "phpunit",
     "cs-fix-all": [
       "php-cs-fixer fix src"
