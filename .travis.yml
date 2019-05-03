@@ -6,8 +6,6 @@ language: php
 #  - 7.2
 #  - 7.3
 
-dist: xenial
-
 cache:
   directories:
   - "$HOME/opt"     # cache our imagick install
@@ -29,6 +27,7 @@ matrix:
     #- php: 7.3
     - name: "Testing imagick install script"
       php: 7.1
+      dist: xenial
       env: UPLOADCOVERAGE=1
       env: PHPSTAN=1
       env: TESTSRCBUILD=1
