@@ -30,8 +30,16 @@ matrix:
       env: TESTSRCBUILD=1
 
 before_install:
+  # install imagick with webp support (if not already there) and update library paths
   - bash install-imagick-with-webp.sh
+  - export LD_FLAGS=-L$HOME/opt/lib
+  - export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:$HOME/opt/lib
+  - export CPATH=$CPATH:$HOME/opt/include
+
+  # install imagick extension (if not already there)
   - echo '' | pecl install imagick
+
+  # gmagick
   - bash install-gmagick-with-webp.sh
   - echo '' | pecl install gmagick-beta
 
