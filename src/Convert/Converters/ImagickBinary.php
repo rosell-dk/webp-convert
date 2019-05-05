@@ -98,6 +98,9 @@ class ImagickBinary extends AbstractExecConverter
 
         $command = 'convert ' . implode(' ', $commandArguments);
 
+        // also try common system paths?, or perhaps allow path to be set in environment?
+        //$command = '/home/rosell/opt/bin/magick ' . implode(' ', $commandArguments);
+
         $useNice = (($this->options['use-nice']) && self::hasNiceSupport()) ? true : false;
         if ($useNice) {
             $this->logLn('using nice');
