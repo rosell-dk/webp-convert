@@ -2,8 +2,14 @@
 
 namespace WebPConvert\Tests\Convert\Converters;
 
+use WebPConvert\Convert\Converters\Imagick;
+
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @coversDefaultClass WebPConvert\Convert\Converters\Imagick
+ * @covers WebPConvert\Convert\Converters\Imagick
+ */
 class ImagickTest extends TestCase
 {
 
@@ -14,6 +20,9 @@ class ImagickTest extends TestCase
         ConverterTestHelper::runAllConvertTests($this, 'Imagick');
     }
 
+    /**
+     * @coversNothing
+     */
     public function testQueryFormats()
     {
         if (!extension_loaded('imagick')) {
@@ -32,6 +41,9 @@ class ImagickTest extends TestCase
         $this->assertEquals(count($im->queryFormats('*')), count($im->queryFormats()));
     }
 
+    /**
+     * @coversNothing
+     */
     public function testThatImagickFunctionsUsedDoesNotThrow()
     {
         if (!extension_loaded('imagick')) {
