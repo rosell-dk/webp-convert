@@ -53,7 +53,7 @@ class ServeConvertedWebP
      * @param   array   $options (optional)  options for serving
      * @throws  ServeFailedException  if source is not an image or mime type cannot be determined
      */
-    public static function serveOriginal($source, $options)
+    public static function serveOriginal($source, $options = [])
     {
         $contentType = ImageMimeTypeGuesser::lenientGuess($source);
         if (is_null($contentType)) {
@@ -65,7 +65,7 @@ class ServeConvertedWebP
         }
     }
 
-    public static function serveDestination($destination, $options)
+    public static function serveDestination($destination, $options = [])
     {
         ServeFile::serve($destination, 'image/webp', $options);
     }
