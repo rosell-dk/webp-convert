@@ -1,3 +1,8 @@
+
+# Other projects which deals with images in PHP and uses travis:
+# https://github.com/JBZoo/Image
+# https://travis-ci.org/peter279k/php-image-converter/builds
+
 language: php
 
 #php:
@@ -6,6 +11,9 @@ language: php
 #  - 7.2
 #  - 7.3
 
+# cache composer?
+#   https://blog.wyrihaximus.net/2015/07/composer-cache-on-travis/
+#   https://github.com/thephpleague/glide/blob/master/.travis.yml
 cache:
   directories:
   - "$HOME/opt"     # cache our imagick install
@@ -27,9 +35,9 @@ matrix:
     #- php: 7.3
     - name: "Testing imagick install script"
       php: 7.1
-      #dist: xenial
+      #dist: trusty
+      dist: xenial
       #dist: bionic
-      dist: trusty
       env: UPLOADCOVERAGE=1
       env: PHPSTAN=1
       env: TESTSRCBUILD=1
