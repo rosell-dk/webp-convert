@@ -17,6 +17,7 @@ language: php
 cache:
   directories:
   - "$HOME/opt"     # cache our imagick install
+  - $HOME/vips
 
 addons:
   apt:
@@ -24,6 +25,19 @@ addons:
       - libjpeg-dev
       - libpng-dev
       - libwebp-dev
+
+      # following for vips (taken from https://github.com/libvips/php-vips/blob/master/.travis.yml)
+      - gobject-introspection
+      - libcfitsio3-dev
+      - libfftw3-dev
+      - libgif-dev
+      - libgs-dev
+      - libgsf-1-dev
+      - libmatio-dev
+      - libopenslide-dev
+      - liborc-0.4-dev
+      - libpango1.0-dev
+      - libpoppler-glib-dev
 
 sudo: false
 
@@ -41,9 +55,28 @@ matrix:
       env: UPLOADCOVERAGE=1
       env: PHPSTAN=1
       env: TESTSRCBUILD=1
+      env: VIPS_VERSION="8.6.3"
   #allow_failures:
 
 before_install:
+  # VIPS
+  - export PATH=$HOME/vips/bin:$PATH
+  - export LD_LIBRARY_PATH=$HOME/vips/lib:$LD_LIBRARY_PATH
+  - export PKG_CONFIG_PATH=$HOME/vips/lib/pkgconfig:$PKG_CONFIG_PATH
+  - export PYTHONPATH=$HOME/vips/lib/python2.7/site-packages:$PYTHONPATH
+  - export GI_TYPELIB_PATH=$HOME/vips/lib/girepository-1.0:$GI_TYPELIB_PATH
+  - bash install-vips.sh
+    --disable-debug
+    --disable-dependency-tracking
+    --disable-introspection
+    --disable-static
+    --enable-gtk-doc-html=no
+    --enable-gtk-doc=no
+    --enable-pyvips8=no
+    --without-orc
+    --without-python
+  - yes '' | pecl install vips
+
   # Update PATH so that travis can find our imagemagick / gmagick
   #- export PATH=$HOME/opt/bin:$PATH
 
