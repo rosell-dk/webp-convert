@@ -33,6 +33,7 @@ class Imagick extends AbstractConverter
      * We do not check for this here, as the converter could still be used for the other.
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met
+     * @return void
      */
     public function checkOperationality()
     {
