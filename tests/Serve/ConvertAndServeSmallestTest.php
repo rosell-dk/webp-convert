@@ -7,12 +7,12 @@ use WebPConvert\WebPConvert;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
 use WebPConvert\Serve\MockedHeader;
-use WebPConvert\Serve\ServeFreshConversion;
+use WebPConvert\Serve\ConvertAndServeSmallest;
 use WebPConvert\Serve\Exceptions\ServeFailedException;
 
 use PHPUnit\Framework\TestCase;
 
-class ServeFreshConversionTest extends TestCase
+class ConvertAndServeSmallestTest extends TestCase
 {
 
     public static $imageFolder = __DIR__ . '/../images';
@@ -48,7 +48,7 @@ class ServeFreshConversionTest extends TestCase
         $this->assertTrue(file_exists($source));
 
         ob_start();
-        ServeFreshConversion::serve($source, $source . '.webp', [
+        ConvertAndServeSmallest::serve($source, $source . '.webp', [
             'serve-original' => true,
             'converters' => [
                 '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
@@ -75,7 +75,7 @@ class ServeFreshConversionTest extends TestCase
         $this->expectException(ConversionFailedException::class);
 
         $source = self::$imageFolder . '/test.png';
-        ServeFreshConversion::serve($source, $source . '.webp', [
+        ConvertAndServeSmallest::serve($source, $source . '.webp', [
             'serve-original' => true,
             'converters' => [
                 '\\WebPConvert\\Tests\\Convert\\TestConverters\\FailureGuaranteedConverter'

@@ -114,7 +114,7 @@ class ServeConvertedWebP
                 break;
 
             case 'fresh-conversion':
-                ServeFreshConversion::serve($source, $destination, $options);
+                ConvertAndServeSmallest::serve($source, $destination, $options);
                 break;
 
             case 'report':

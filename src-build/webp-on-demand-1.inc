@@ -53,8 +53,9 @@ class ServeConvertedWebP
      * @param   string  $source              path to source file
      * @param   array   $options (optional)  options for serving
      * @throws  ServeFailedException  if source is not an image or mime type cannot be determined
+     * @return  void
      */
-    public static function serveOriginal($source, $options)
+    public static function serveOriginal($source, $options = [])
     {
         $contentType = ImageMimeTypeGuesser::lenientGuess($source);
         if (is_null($contentType)) {
@@ -66,7 +67,14 @@ class ServeConvertedWebP
         }
     }
 
-    public static function serveDestination($destination, $options)
+    /**
+     * Serve destination file.
+     *
+     * @param   string  $destination         path to destination file
+     * @param   array   $options (optional)  options for serving (such as which headers to add)
+     * @return  void
+     */
+    public static function serveDestination($destination, $options = [])
     {
         ServeFile::serve($destination, 'image/webp', $options);
     }
@@ -107,7 +115,7 @@ class ServeConvertedWebP
                 break;
 
             case 'fresh-conversion':
-                ServeFreshConversion::serve($source, $destination, $options);
+                ConvertAndServeSmallest::serve($source, $destination, $options);
                 break;
 
             case 'report':
@@ -140,6 +148,11 @@ class ServeConvertedWebPWithErrorHandling
         'fail-when-original-unavailable' => '404',
     ];
 
+    /**
+     *  Add headers for preventing caching.
+     *
+     *  @return  void
+     */
     private static function addHeadersPreventingCaching()
     {
         Header::setHeader("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -147,6 +160,16 @@ class ServeConvertedWebPWithErrorHandling
         Header::setHeader("Pragma: no-cache");
     }
 
+    /**
+     * Perform fail action.
+     *
+     * @param  string  $fail                Action to perform (original | 404 | report)
+     * @param  string  $failIfFailFails     Action to perform if $fail action fails
+     * @param  string  $source              path to source file
+     * @param  string  $destination         path to destination
+     * @param  array   $options (optional)  options for serving/converting
+     * @return void
+     */
     public static function performFailAction($fail, $failIfFailFails, $source, $destination, $options)
     {
         self::addHeadersPreventingCaching();
@@ -325,12 +348,24 @@ class ServeFile
     ];
 
     /**
-     * Serve existing file
+     * Serve existing file.
+     *
+     * @param  string              $filename     File to serve (absolute path)
+     * @param  string              $contentType  Content-type (used to set header).
+     *                                           Only used when the "set-content-type-header" option is set.
+     *                                           Set to ie "image/jpeg" for serving jpeg file.
+     * @param  array[string]mixed  $options      (optional)
+     *       Supported options:
+     *       'add-vary-accept-header'  => (boolean)   Whether to add *Vary: Accept* header or not. Default: true.
+     *       'set-content-type-header' => (boolean)   Whether to set *Content-type* header or not. Default: true.
+     *       'set-last-modified-header' => (boolean)  Whether to set *Last-Modified* header or not. Default: true.
+     *       'set-cache-control-header' => (boolean)  Whether to set *Cache-Control* header or not. Default: true.
+     *       'cache-control-header' => string         Cache control header. Default: "public, max-age=86400"
      *
      * @throws ServeFailedException  if serving failed
      * @return  void
      */
-    public static function serve($filename, $contentType, $options)
+    public static function serve($filename, $contentType, $options = [])
     {
         $options = array_merge(self::$defaultOptions, $options);
 
@@ -380,11 +415,21 @@ namespace WebPConvert\Serve;
  */
 class Header
 {
+    /**
+     * Convenience function for adding header (append).
+     *
+     * @return void
+     */
     public static function addHeader($header)
     {
         header($header, false);
     }
 
+    /**
+     * Convenience function for replacing header.
+     *
+     * @return void
+     */
     public static function setHeader($header)
     {
         header($header, true);

@@ -2548,6 +2548,7 @@ class Imagick extends AbstractConverter
      * We do not check for this here, as the converter could still be used for the other.
      *
      * @throws SystemRequirementsNotMetException  if system requirements are not met
+     * @return void
      */
     public function checkOperationality()
     {
@@ -2781,6 +2782,9 @@ class ImagickBinary extends AbstractExecConverter
         $commandArguments[] = escapeshellarg('webp:' . $this->destination);
 
         $command = 'convert ' . implode(' ', $commandArguments);
+
+        // also try common system paths?, or perhaps allow path to be set in environment?
+        //$command = '/home/rosell/opt/bin/magick ' . implode(' ', $commandArguments);
 
         $useNice = (($this->options['use-nice']) && self::hasNiceSupport()) ? true : false;
         if ($useNice) {
@@ -4037,6 +4041,101 @@ class VoidLogger extends BaseLogger
 ?><?php
 namespace WebPConvert\Serve;
 
+use WebPConvert\WebPConvert;
+
+use WebPConvert\Serve\DecideWhatToServe;
+use WebPConvert\Serve\Header;
+use WebPConvert\Serve\Exceptions\ServeFailedException;
+
+/**
+ * Convert image to webp and serve it or the original (whichever is smallest).
+ *
+ * Converts and serves the conversion, unless:
+ * - If the converted file turns out to be larger than the original, the original will be served.
+ * - If the "serve-original" option is set, the original image even when it is larger than the converted
+ * - If conversion fails, an exception is thrown.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ *
+ * @see        WebPConvert::convert()   For the available conversion options
+ * @see        ServeFile::serve()       For the available serve options (headers)
+ */
+class ConvertAndServeSmallest
+{
+
+    /**
+     * Convert image to webp and serve it or the original (whichever is smallest).
+     *
+     * Converts and serves the conversion, unless:
+     * - If the converted file turns out to be larger than the original, the original will be served.
+     * - If the "serve-original" option is set, the original image will be served rather than the converted.
+     * - If conversion fails, an exception is thrown.
+     *
+     * @param  string              $source        The path to the file to convert
+     * @param  string              $destination   The path to save the converted file to
+     * @param  array[string]mixed  $options       (optional)
+     *       Supported options:
+     *       - All options supported by WebPConvert::convert()
+     *       - All options supported by ServeFile::serve()
+     *       - The "serve-original" option, effected by DecideWhatToServe::decide
+     *
+     * @see        WebPConvert::convert()   For the available conversion options
+     * @see        ServeFile::serve()       For the available serve options (headers)
+     *
+     * @throws ServeFailedException  if serving failed
+     * @throws ConversionFailedException  if conversion failed
+     * @return  void
+     */
+    public static function serve($source, $destination, $options = [])
+    {
+
+        try {
+            WebPConvert::convert($source, $destination, $options);
+
+            // We are here, so it was successful :)
+            // If destination is smaller than source, we should serve destination. Otherwise we should serve source.
+            // We can use DecideWhatToServe for that purpose.
+            // However, we must make sure it does not answer "fresh-conversion" or "report"
+
+            // Unset "reconvert", so we do not get "fresh-conversion"
+            unset($options['reconvert']);
+
+            // Unset "show-report", so we do not get "report"
+            unset($options['show-report']);
+
+            list($whatToServe, $whyToServe, $msg) = DecideWhatToServe::decide($source, $destination, $options);
+
+            switch ($whatToServe) {
+                case 'source':
+                    Header::addHeader('X-WebP-Convert-Action: ' . $msg);
+                    ServeConvertedWebP::serveOriginal($source, $options);
+                    break;
+                case 'destination':
+                    ServeConvertedWebP::serveDestination($destination, $options);
+                    break;
+
+                case 'fresh-conversion':
+                    // intentional fall through
+                case 'report':
+                    // intentional fall through
+                default:
+                    throw new ServeFailedException(
+                        'DecideWhatToServe was supposed to return either "source" or "destination". ' .
+                        'However, it returned: "' . $whatToServe . '"'
+                    );
+                    break;
+            }
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+}
+
+?><?php
+namespace WebPConvert\Serve;
+
 //use WebPConvert\Serve\Report;
 
 /**
@@ -4147,11 +4246,21 @@ namespace WebPConvert\Serve;
  */
 class Header
 {
+    /**
+     * Convenience function for adding header (append).
+     *
+     * @return void
+     */
     public static function addHeader($header)
     {
         header($header, false);
     }
 
+    /**
+     * Convenience function for replacing header.
+     *
+     * @return void
+     */
     public static function setHeader($header)
     {
         header($header, true);
@@ -4405,8 +4514,9 @@ class ServeConvertedWebP
      * @param   string  $source              path to source file
      * @param   array   $options (optional)  options for serving
      * @throws  ServeFailedException  if source is not an image or mime type cannot be determined
+     * @return  void
      */
-    public static function serveOriginal($source, $options)
+    public static function serveOriginal($source, $options = [])
     {
         $contentType = ImageMimeTypeGuesser::lenientGuess($source);
         if (is_null($contentType)) {
@@ -4418,7 +4528,14 @@ class ServeConvertedWebP
         }
     }
 
-    public static function serveDestination($destination, $options)
+    /**
+     * Serve destination file.
+     *
+     * @param   string  $destination         path to destination file
+     * @param   array   $options (optional)  options for serving (such as which headers to add)
+     * @return  void
+     */
+    public static function serveDestination($destination, $options = [])
     {
         ServeFile::serve($destination, 'image/webp', $options);
     }
@@ -4459,7 +4576,7 @@ class ServeConvertedWebP
                 break;
 
             case 'fresh-conversion':
-                ServeFreshConversion::serve($source, $destination, $options);
+                ConvertAndServeSmallest::serve($source, $destination, $options);
                 break;
 
             case 'report':
@@ -4492,6 +4609,11 @@ class ServeConvertedWebPWithErrorHandling
         'fail-when-original-unavailable' => '404',
     ];
 
+    /**
+     *  Add headers for preventing caching.
+     *
+     *  @return  void
+     */
     private static function addHeadersPreventingCaching()
     {
         Header::setHeader("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -4499,6 +4621,16 @@ class ServeConvertedWebPWithErrorHandling
         Header::setHeader("Pragma: no-cache");
     }
 
+    /**
+     * Perform fail action.
+     *
+     * @param  string  $fail                Action to perform (original | 404 | report)
+     * @param  string  $failIfFailFails     Action to perform if $fail action fails
+     * @param  string  $source              path to source file
+     * @param  string  $destination         path to destination
+     * @param  array   $options (optional)  options for serving/converting
+     * @return void
+     */
     public static function performFailAction($fail, $failIfFailFails, $source, $destination, $options)
     {
         self::addHeadersPreventingCaching();
@@ -4578,12 +4710,24 @@ class ServeFile
     ];
 
     /**
-     * Serve existing file
+     * Serve existing file.
+     *
+     * @param  string              $filename     File to serve (absolute path)
+     * @param  string              $contentType  Content-type (used to set header).
+     *                                           Only used when the "set-content-type-header" option is set.
+     *                                           Set to ie "image/jpeg" for serving jpeg file.
+     * @param  array[string]mixed  $options      (optional)
+     *       Supported options:
+     *       'add-vary-accept-header'  => (boolean)   Whether to add *Vary: Accept* header or not. Default: true.
+     *       'set-content-type-header' => (boolean)   Whether to set *Content-type* header or not. Default: true.
+     *       'set-last-modified-header' => (boolean)  Whether to set *Last-Modified* header or not. Default: true.
+     *       'set-cache-control-header' => (boolean)  Whether to set *Cache-Control* header or not. Default: true.
+     *       'cache-control-header' => string         Cache control header. Default: "public, max-age=86400"
      *
      * @throws ServeFailedException  if serving failed
      * @return  void
      */
-    public static function serve($filename, $contentType, $options)
+    public static function serve($filename, $contentType, $options = [])
     {
         $options = array_merge(self::$defaultOptions, $options);
 
@@ -4615,70 +4759,6 @@ class ServeFile
         if (@readfile($filename) === false) {
             Header::addHeader('X-WebP-Convert-Error: Could not read file');
             throw new ServeFailedException('Could not read file');
-        }
-    }
-}
-
-?><?php
-namespace WebPConvert\Serve;
-
-use WebPConvert\WebPConvert;
-
-use WebPConvert\Serve\DecideWhatToServe;
-use WebPConvert\Serve\Header;
-use WebPConvert\Serve\Exceptions\ServeFailedException;
-
-/**
- * Serve a freshly converted image.
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-class ServeFreshConversion
-{
-
-    public static function serve($source, $destination, $options = [])
-    {
-
-        try {
-            WebPConvert::convert($source, $destination, $options);
-
-            // We are here, so it was successful :)
-            // If destination is smaller than source, we should serve destination. Otherwise we should serve source.
-            // We can use DecideWhatToServe for that purpose.
-            // However, we must make sure it does not answer "fresh-conversion" or "report"
-
-            // Unset "reconvert", so we do not get "fresh-conversion"
-            unset($options['reconvert']);
-
-            // Unset "show-report", so we do not get "report"
-            unset($options['show-report']);
-
-            list($whatToServe, $whyToServe, $msg) = DecideWhatToServe::decide($source, $destination, $options);
-
-            switch ($whatToServe) {
-                case 'source':
-                    Header::addHeader('X-WebP-Convert-Action: ' . $msg);
-                    ServeConvertedWebP::serveOriginal($source, $options);
-                    break;
-                case 'destination':
-                    ServeConvertedWebP::serveDestination($destination, $options);
-                    break;
-
-                case 'fresh-conversion':
-                    // intentional fall through
-                case 'report':
-                    // intentional fall through
-                default:
-                    throw new ServeFailedException(
-                        'DecideWhatToServe was supposed to return either "source" or "destination". ' .
-                        'However, it returned: "' . $whatToServe . '"'
-                    );
-                    break;
-            }
-        } catch (\Exception $e) {
-            throw $e;
         }
     }
 }

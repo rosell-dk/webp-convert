@@ -26,9 +26,17 @@ class ServeFile
     /**
      * Serve existing file.
      *
-     * @param  string  $filename     File to serve (absolute path)
-     * @param  string  $contentType  Content-type (used to set header, if the "set-content-type-header" is set)
-     * @param  array   $options      (optional) Options regarding which headers to set
+     * @param  string              $filename     File to serve (absolute path)
+     * @param  string              $contentType  Content-type (used to set header).
+     *                                           Only used when the "set-content-type-header" option is set.
+     *                                           Set to ie "image/jpeg" for serving jpeg file.
+     * @param  array[string]mixed  $options      (optional)
+     *       Supported options:
+     *       'add-vary-accept-header'  => (boolean)   Whether to add *Vary: Accept* header or not. Default: true.
+     *       'set-content-type-header' => (boolean)   Whether to set *Content-type* header or not. Default: true.
+     *       'set-last-modified-header' => (boolean)  Whether to set *Last-Modified* header or not. Default: true.
+     *       'set-cache-control-header' => (boolean)  Whether to set *Cache-Control* header or not. Default: true.
+     *       'cache-control-header' => string         Cache control header. Default: "public, max-age=86400"
      *
      * @throws ServeFailedException  if serving failed
      * @return  void
