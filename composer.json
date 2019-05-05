@@ -30,8 +30,7 @@
       "phpunit --no-coverage --bootstrap tests/bootstrap-webp-convert-test.php tests"
     ],
     "test-src": "phpunit --coverage-text",
-    "testing": "phpunit --coverage-text tests/Convert/Converters/ImagickTest.php",
-    "phpunit": "phpunit",
+    "phpunit": "phpunit --coverage-text",
     "cs-fix-all": [
       "php-cs-fixer fix src"
     ],

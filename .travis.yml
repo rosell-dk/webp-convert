@@ -15,9 +15,10 @@ language: php
 #   https://blog.wyrihaximus.net/2015/07/composer-cache-on-travis/
 #   https://github.com/thephpleague/glide/blob/master/.travis.yml
 cache:
+  #apt: true
   directories:
-  - "$HOME/opt"     # cache our imagick install
-  - $HOME/vips
+    - "$HOME/opt"     # cache our imagick install
+    - $HOME/vips
 
 addons:
   apt:
@@ -56,6 +57,7 @@ matrix:
       env: PHPSTAN=1
       env: TESTSRCBUILD=1
       env: VIPS_VERSION="8.6.3"
+      #env: VIPS_VERSION="8.7.4"
   #allow_failures:
 
 before_install:
