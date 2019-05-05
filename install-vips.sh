@@ -24,7 +24,7 @@ fi
 rm -rf $HOME/vips
 echo "wget: $vips_site/v$VIPS_VERSION/vips-$VIPS_VERSION.tar.gz"
 wget $vips_site/v$VIPS_VERSION/vips-$VIPS_VERSION.tar.gz
-tar xf vips-VIPS_VERSION.tar.gz
+tar xf vips-$VIPS_VERSION.tar.gz
 cd vips-$VIPS_VERSION
 CXXFLAGS=-D_GLIBCXX_USE_CXX11_ABI=0 ./configure --prefix=$HOME/vips $*
 make && make install
