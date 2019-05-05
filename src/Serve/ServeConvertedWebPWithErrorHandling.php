@@ -21,6 +21,11 @@ class ServeConvertedWebPWithErrorHandling
         'fail-when-original-unavailable' => '404',
     ];
 
+    /**
+     *  Add headers for preventing caching.
+     *
+     *  @return  void
+     */
     private static function addHeadersPreventingCaching()
     {
         Header::setHeader("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -28,6 +33,16 @@ class ServeConvertedWebPWithErrorHandling
         Header::setHeader("Pragma: no-cache");
     }
 
+    /**
+     * Perform fail action.
+     *
+     * @param  string  $fail                Action to perform (original | 404 | report)
+     * @param  string  $failIfFailFails     Action to perform if $fail action fails
+     * @param  string  $source              path to source file
+     * @param  string  $destination         path to destination
+     * @param  array   $options (optional)  options for serving/converting
+     * @return void
+     */
     public static function performFailAction($fail, $failIfFailFails, $source, $destination, $options)
     {
         self::addHeadersPreventingCaching();

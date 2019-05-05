@@ -24,12 +24,16 @@ class ServeFile
     ];
 
     /**
-     * Serve existing file
+     * Serve existing file.
+     *
+     * @param  string  $filename     File to serve (absolute path)
+     * @param  string  $contentType  Content-type (used to set header, if the "set-content-type-header" is set)
+     * @param  array   $options      (optional) Options regarding which headers to set
      *
      * @throws ServeFailedException  if serving failed
      * @return  void
      */
-    public static function serve($filename, $contentType, $options)
+    public static function serve($filename, $contentType, $options = [])
     {
         $options = array_merge(self::$defaultOptions, $options);
 

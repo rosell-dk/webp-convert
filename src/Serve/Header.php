@@ -12,11 +12,21 @@ namespace WebPConvert\Serve;
  */
 class Header
 {
+    /**
+     * Convenience function for adding header (append).
+     *
+     * @return void
+     */
     public static function addHeader($header)
     {
         header($header, false);
     }
 
+    /**
+     * Convenience function for replacing header.
+     *
+     * @return void
+     */
     public static function setHeader($header)
     {
         header($header, true);

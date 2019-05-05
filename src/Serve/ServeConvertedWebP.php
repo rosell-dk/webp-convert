@@ -52,6 +52,7 @@ class ServeConvertedWebP
      * @param   string  $source              path to source file
      * @param   array   $options (optional)  options for serving
      * @throws  ServeFailedException  if source is not an image or mime type cannot be determined
+     * @return  void
      */
     public static function serveOriginal($source, $options = [])
     {
@@ -65,6 +66,13 @@ class ServeConvertedWebP
         }
     }
 
+    /**
+     * Serve destination file.
+     *
+     * @param   string  $destination         path to destination file
+     * @param   array   $options (optional)  options for serving (such as which headers to add)
+     * @return  void
+     */
     public static function serveDestination($destination, $options = [])
     {
         ServeFile::serve($destination, 'image/webp', $options);
