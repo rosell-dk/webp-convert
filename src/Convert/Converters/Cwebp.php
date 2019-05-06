@@ -54,6 +54,17 @@ class Cwebp extends AbstractExecConverter
         'Linux' => [ 'cwebp-linux', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568']
     ];
 
+    public function checkOperationality()
+    {
+        $options = $this->options;
+        if (!$options['try-supplied-binary-for-os'] && !$options['try-common-system-paths']) {
+            throw new ConverterNotOperationalException(
+                'Configured to neither look for cweb binaries in common system locations, ' .
+                'nor to use one of the supplied precompiled binaries. But these are the only ways ' .
+                'this converter can convert images. No conversion can be made!'
+            );
+        }
+    }
 
     private function executeBinary($binary, $commandOptions, $useNice)
     {
@@ -94,9 +105,6 @@ class Cwebp extends AbstractExecConverter
             // Image quality
             $commandOptionsArray[] = '-q ' . $this->getCalculatedQuality();
         }
-
-
-        $commandOptionsArray[] = ($options['lossless'] ? '-lossless' : '');
 
         // Losless PNG conversion
         if ($options['lossless'] === true) {
@@ -167,18 +175,6 @@ class Cwebp extends AbstractExecConverter
         $this->logLn('command line options:' . $commandOptions);
 
         return $commandOptions;
-    }
-
-    public function checkOperationality()
-    {
-        $options = $this->options;
-        if (!$options['try-supplied-binary-for-os'] && !$options['try-common-system-paths']) {
-            throw new ConverterNotOperationalException(
-                'Configured to neither look for cweb binaries in common system locations, ' .
-                'nor to use one of the supplied precompiled binaries. But these are the only ways ' .
-                'this converter can convert images. No conversion can be made!'
-            );
-        }
     }
 
     /**
