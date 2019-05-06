@@ -85,12 +85,10 @@ class ServeConvertedWebPWithErrorHandling
      * @param   string  $destination         path to destination
      * @param   array   $options (optional)  options for serving/converting
      *       Supported options:
-     *       - 'fail'       * @throws \WebPConvert\Exceptions\WebPConvertException
-     * @return void
-=> (string)    Action to take on failure (404 | original | report).
+     *       - 'fail' => (string)    Action to take on failure (404 | original | report).
      *               '404' is recommended for development and 'original' is recommended for production.
      *               Default: 'original'.
-     *       - 'fail-when-original-unavailable'  => (string)    Action to take if fail action also fails. Default: '404'.
+     *       - 'fail-when-original-unavailable'  => (string) Action to take if fail action also fails. Default: '404'.
      *       - All options supported by WebPConvert::convert()
      *       - All options supported by ServeFile::serve()
      *       - All options supported by DecideWhatToServe::decide)
