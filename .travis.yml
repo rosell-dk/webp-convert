@@ -89,7 +89,7 @@ before_install:
   - export CPATH=$CPATH:$HOME/opt/include
 
   # install imagick extension (if not already there)
-  #- echo '' | pecl install imagick
+  - echo '' | pecl install imagick
 
   # GMagick
 
