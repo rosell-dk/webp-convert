@@ -86,31 +86,33 @@ class Cwebp extends AbstractExecConverter
     {
         $options = $this->options;
 
-        $commandOptionsArray = [];
+        $cmdOptions = [];
 
         // Metadata (all, exif, icc, xmp or none (default))
         // Comma-separated list of existing metadata to copy from input to output
-        $commandOptionsArray[] = '-metadata ' . $options['metadata'];
+        $cmdOptions[] = '-metadata ' . $options['metadata'];
 
         // Size
+        $addedSizeOption = false;
         if (!is_null($options['size-in-percentage'])) {
-            $sizeSource =  filesize($this->source);
+            $sizeSource = filesize($this->source);
             if ($sizeSource !== false) {
                 $targetSize = floor($sizeSource * $options['size-in-percentage'] / 100);
+                $cmdOptions[] = '-size ' . $targetSize;
+                $addedSizeOption = true;
             }
         }
-        if (isset($targetSize)) {
-            $commandOptionsArray[] = '-size ' . $targetSize;
-        } else {
-            // Image quality
-            $commandOptionsArray[] = '-q ' . $this->getCalculatedQuality();
+
+        // quality
+        if (!$addedSizeOption) {
+            $cmdOptions[] = '-q ' . $this->getCalculatedQuality();
         }
 
         // Losless PNG conversion
         if ($options['lossless'] === true) {
             // No need to add -lossless when near-lossless is used
             if ($options['near-lossless'] === 100) {
-                $commandOptionsArray[] = '-lossless';
+                $cmdOptions[] = '-lossless';
             }
         }
 
@@ -119,20 +121,20 @@ class Cwebp extends AbstractExecConverter
             // We only let near_lossless have effect when lossless is set.
             // otherwise lossless auto would not work as expected
             if ($options['lossless'] === true) {
-                $commandOptionsArray[] ='-near_lossless ' . $options['near-lossless'];
+                $cmdOptions[] ='-near_lossless ' . $options['near-lossless'];
             }
         }
 
         if ($options['autofilter'] === true) {
-            $commandOptionsArray[] = '-af';
+            $cmdOptions[] = '-af';
         }
 
         // Built-in method option
-        $commandOptionsArray[] = '-m ' . strval($options['method']);
+        $cmdOptions[] = '-m ' . strval($options['method']);
 
         // Built-in low memory option
         if ($options['low-memory']) {
-            $commandOptionsArray[] = '-low_memory';
+            $cmdOptions[] = '-low_memory';
         }
 
         // command-line-options
@@ -147,7 +149,7 @@ class Cwebp extends AbstractExecConverter
                     if ($cName == '') {
                         continue;
                     }
-                    $commandOptionsArray[] = '-' . $cName;
+                    $cmdOptions[] = '-' . $cName;
                 } else {
                     $cName = substr($cmdOption, 0, $pos);
                     $cValues = substr($cmdOption, $pos + 1);
@@ -156,22 +158,22 @@ class Cwebp extends AbstractExecConverter
                         $cArg = escapeshellarg($cArg);
                     }
                     $cValues = implode(' ', $cValuesArr);
-                    $commandOptionsArray[] = '-' . $cName . ' ' . $cValues;
+                    $cmdOptions[] = '-' . $cName . ' ' . $cValues;
                 }
             }
         }
 
         // Source file
-        $commandOptionsArray[] = escapeshellarg($this->source);
+        $cmdOptions[] = escapeshellarg($this->source);
 
         // Output
-        $commandOptionsArray[] = '-o ' . escapeshellarg($this->destination);
+        $cmdOptions[] = '-o ' . escapeshellarg($this->destination);
 
         // Redirect stderr to same place as stdout
         // https://www.brianstorti.com/understanding-shell-script-idiom-redirect/
-        $commandOptionsArray[] = '2>&1';
+        $cmdOptions[] = '2>&1';
 
-        $commandOptions = implode(' ', $commandOptionsArray);
+        $commandOptions = implode(' ', $cmdOptions);
         $this->logLn('command line options:' . $commandOptions);
 
         return $commandOptions;
