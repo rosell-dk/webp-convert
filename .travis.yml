@@ -17,7 +17,7 @@ language: php
 cache:
   #apt: true
   directories:
-    - "$HOME/opt"     # cache our imagick install
+    - "$HOME/opt"     # cache our imagick/gmagick install
     - $HOME/vips
 
 addons:
@@ -53,10 +53,11 @@ matrix:
       #dist: trusty
       dist: xenial
       #dist: bionic
-      env: UPLOADCOVERAGE=1
-      env: PHPSTAN=1
-      env: TESTSRCBUILD=1
-      env: VIPS_VERSION="8.6.3"
+      env:
+      - UPLOADCOVERAGE=1
+      - PHPSTAN=1
+      - TESTSRCBUILD=1
+      - VIPS_VERSION="8.6.3"
       #env: VIPS_VERSION="8.7.4"
   #allow_failures:
 
