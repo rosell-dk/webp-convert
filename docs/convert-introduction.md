@@ -98,7 +98,7 @@ Note that only the *cwebp* and the *vips* converters supports this feature &ndas
 ### Near-lossless
 *cwebp* and *vips* supports "near-lossless" mode. Near lossless produces a webp with lossless encoding but adjusts pixel values to help compressibility. The result is a smaller file. The price is described as a minimal impact on the visual quality.
 
-As unnecessary large conversions are rarely desirable, this library per default sets near-lossless to 60.
+As unnecessary large conversions are rarely desirable, this library per default sets near-lossless to 60. To disable near-lossless, set it to 100.
 
 You can read more about the near-lossless mode [here](https://groups.google.com/a/webmproject.org/forum/#!topic/webp-discuss/0GmxDmlexek)
 
