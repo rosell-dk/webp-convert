@@ -94,6 +94,7 @@ before_install:
   # GMagick
 
   - bash install-gmagick-with-webp.sh
+  - export GMAGICK_PATH=$HOME/opt/bin
 
   # Hm, extension is not working yet. When I get to install the extension I get the message:
   #    "Please provide a path to GraphicsMagick-config program."
