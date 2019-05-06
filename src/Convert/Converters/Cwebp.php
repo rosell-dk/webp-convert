@@ -37,8 +37,8 @@ class Cwebp extends AbstractExecConverter
 
     // System paths to look for cwebp binary
     private static $cwebpDefaultPaths = [
-        //'/usr/bin/cwebp',
-        //'/usr/local/bin/cwebp',
+        '/usr/bin/cwebp',
+        '/usr/local/bin/cwebp',
         '/usr/gnu/bin/cwebp',
         '/usr/syno/bin/cwebp'
     ];
