@@ -1210,12 +1210,12 @@ class Cwebp extends AbstractExecConverter
             ['try-common-system-paths', 'boolean', true],
             ['try-supplied-binary-for-os', 'boolean', true],
             ['use-nice', 'boolean', false],
-
         ];
     }
 
     // System paths to look for cwebp binary
     private static $cwebpDefaultPaths = [
+        'cwebp',
         '/usr/bin/cwebp',
         '/usr/local/bin/cwebp',
         '/usr/gnu/bin/cwebp',
@@ -1233,6 +1233,17 @@ class Cwebp extends AbstractExecConverter
         'Linux' => [ 'cwebp-linux', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568']
     ];
 
+    public function checkOperationality()
+    {
+        $options = $this->options;
+        if (!$options['try-supplied-binary-for-os'] && !$options['try-common-system-paths']) {
+            throw new ConverterNotOperationalException(
+                'Configured to neither look for cweb binaries in common system locations, ' .
+                'nor to use one of the supplied precompiled binaries. But these are the only ways ' .
+                'this converter can convert images. No conversion can be made!'
+            );
+        }
+    }
 
     private function executeBinary($binary, $commandOptions, $useNice)
     {
@@ -1273,9 +1284,6 @@ class Cwebp extends AbstractExecConverter
             // Image quality
             $commandOptionsArray[] = '-q ' . $this->getCalculatedQuality();
         }
-
-
-        $commandOptionsArray[] = ($options['lossless'] ? '-lossless' : '');
 
         // Losless PNG conversion
         if ($options['lossless'] === true) {
@@ -1348,18 +1356,195 @@ class Cwebp extends AbstractExecConverter
         return $commandOptions;
     }
 
-    public function checkOperationality()
+    /**
+     *
+     *
+     * @return  string  Error message if failure, empty string if successful
+     */
+    private function composeErrorMessageForCommonSystemPathsFailures($failureCodes)
     {
-        $options = $this->options;
-        if (!$options['try-supplied-binary-for-os'] && !$options['try-common-system-paths']) {
-            throw new ConverterNotOperationalException(
-                'Configured to neither look for cweb binaries in common system locations, ' .
-                'nor to use one of the supplied precompiled binaries. But these are the only ways ' .
-                'this converter can convert images. No conversion can be made!'
-            );
+        if (count($failureCodes) == 1) {
+            switch ($failureCodes[0]) {
+                case 126:
+                    return 'Permission denied. The user that the command was run with (' .
+                        shell_exec('whoami') . ') does not have permission to execute any of the ' .
+                        'cweb binaries found in common system locations. ';
+                case 127:
+                    return 'Found no cwebp binaries in any common system locations. ';
+                default:
+                    return 'Tried executing cwebp binaries in common system locations. ' .
+                        'All failed (exit code: ' . $failureCodes[0] . '). ';
+            }
+        } else {
+            /**
+             * $failureCodesBesides127 is used to check first position ($failureCodesBesides127[0])
+             * however position can vary as index can be 1 or something else. array_values() would
+             * always start from 0.
+             */
+            $failureCodesBesides127 = array_values(array_diff($failureCodes, [127]));
+
+            if (count($failureCodesBesides127) == 1) {
+                switch ($failureCodesBesides127[0]) {
+                    case 126:
+                        return 'Permission denied. The user that the command was run with (' .
+                        shell_exec('whoami') . ') does not have permission to execute any of the cweb ' .
+                        'binaries found in common system locations. ';
+                        break;
+                    default:
+                        return 'Tried executing cwebp binaries in common system locations. ' .
+                        'All failed (exit code: ' . $failureCodesBesides127[0] . '). ';
+                }
+            } else {
+                return 'None of the cwebp binaries in the common system locations could be executed ' .
+                '(mixed results - got the following exit codes: ' . implode(',', $failureCodes) . '). ';
+            }
         }
     }
 
+    /**
+     * Try executing cwebp in common system paths
+     *
+     * @param  boolean  $useNice          Whether to use nice
+     * @param  string   $commandOptions   for the exec call
+     *
+     * @return  array  Unique failure codes in case of failure, empty array in case of success
+     */
+    private function tryCommonSystemPaths($useNice, $commandOptions)
+    {
+        $errorMsg = '';
+        //$failures = [];
+        $failureCodes = [];
+
+        // Loop through paths
+        foreach (self::$cwebpDefaultPaths as $index => $binary) {
+            $returnCode = $this->executeBinary($binary, $commandOptions, $useNice);
+            if ($returnCode == 0) {
+                $this->logLn('Successfully executed binary: ' . $binary);
+                return [];
+            } else {
+                //$failures[] = [$binary, $returnCode];
+                if ($returnCode == 127) {
+                    $this->logLn(
+                        'Trying to execute binary: ' . $binary . '. Failed (not found)'
+                    );
+                } else {
+                    $this->logLn(
+                        'Trying to execute binary: ' . $binary . '. Failed (return code: ' . $returnCode . ')'
+                    );
+                }
+                if (!in_array($returnCode, $failureCodes)) {
+                    $failureCodes[] = $returnCode;
+                }
+            }
+        }
+        return $failureCodes;
+    }
+
+    /**
+     * Try executing supplied cwebp for PHP_OS.
+     *
+     * @param  boolean  $useNice          Whether to use nice
+     * @param  string   $commandOptions   for the exec call
+     * @param  array    $failureCodesForCommonSystemPaths  Return codes from the other attempt
+     *                                                     (in order to produce short error message)
+     *
+     * @return  string  Error message if failure, empty string if successful
+     */
+    private function trySuppliedBinaryForOS($useNice, $commandOptions, $failureCodesForCommonSystemPaths)
+    {
+        $this->logLn('Trying to execute supplied binary for OS: ' . PHP_OS);
+
+        // Try supplied binary (if available for OS, and hash is correct)
+        $options = $this->options;
+        if (!isset(self::$suppliedBinariesInfo[PHP_OS])) {
+            return 'No supplied binaries found for OS:' . PHP_OS;
+        }
+
+        $info = self::$suppliedBinariesInfo[PHP_OS];
+
+        $file = $info[0];
+        $hash = $info[1];
+
+        $binaryFile = __DIR__ . '/' . $options['rel-path-to-precompiled-binaries'] . '/' . $file;
+
+
+        // The file should exist, but may have been removed manually.
+        if (!file_exists($binaryFile)) {
+            return 'Supplied binary not found! It ought to be here:' . $binaryFile;
+        }
+
+        // File exists, now generate its hash
+
+        // hash_file() is normally available, but it is not always
+        // - https://stackoverflow.com/questions/17382712/php-5-3-20-undefined-function-hash
+        // If available, validate that hash is correct.
+
+        if (function_exists('hash_file')) {
+            $binaryHash = hash_file('sha256', $binaryFile);
+
+            if ($binaryHash != $hash) {
+                return 'Binary checksum of supplied binary is invalid! ' .
+                    'Did you transfer with FTP, but not in binary mode? ' .
+                    'File:' . $binaryFile . '. ' .
+                    'Expected checksum: ' . $hash . '. ' .
+                    'Actual checksum:' . $binaryHash . '.';
+            }
+        }
+
+        $returnCode = $this->executeBinary($binaryFile, $commandOptions, $useNice);
+        if ($returnCode == 0) {
+            // yay!
+            $this->logLn('success!');
+            return '';
+        }
+
+        $errorMsg = 'Tried executing supplied binary for ' . PHP_OS . ', ' .
+            ($options['try-common-system-paths'] ? 'but that failed too' : 'but failed');
+
+
+        if (($options['try-common-system-paths']) && (count($failureCodesForCommonSystemPaths) > 0)) {
+            // check if it was the same error
+            // if it was, simply refer to that with "(same problem)"
+            $majorFailCode = 0;
+            if (count($failureCodesForCommonSystemPaths) == 1) {
+                $majorFailCode = $failureCodesForCommonSystemPaths[0];
+            } else {
+                $failureCodesBesides127 = array_values(array_diff($failureCodesForCommonSystemPaths, [127]));
+                if (count($failureCodesBesides127) == 1) {
+                    $majorFailCode = $failureCodesBesides127[0];
+                } else {
+                    // it cannot be summarized into a single code
+                }
+            }
+            if ($majorFailCode != 0) {
+                $errorMsg .= ' (same problem)';
+                return $errorMsg;
+            }
+        }
+
+        if ($returnCode > 128) {
+            $errorMsg .= '. The binary did not work (exit code: ' . $returnCode . '). ' .
+                'Check out https://github.com/rosell-dk/webp-convert/issues/92';
+        } else {
+            switch ($returnCode) {
+                case 0:
+                    // success!
+                    break;
+                case 126:
+                    $errorMsg .= ': Permission denied. The user that the command was run' .
+                        ' with (' . shell_exec('whoami') . ') does not have permission to ' .
+                        'execute that binary.';
+                    break;
+                case 127:
+                    $errorMsg .= '. The binary was not found! ' .
+                        'It ought to be here: ' . $binaryFile;
+                    break;
+                default:
+                    $errorMsg .= ' (exit code:' .  $returnCode . ').';
+            }
+        }
+        return $errorMsg;
+    }
 
     protected function doActualConvert()
     {
@@ -1369,156 +1554,21 @@ class Cwebp extends AbstractExecConverter
 
         $commandOptions = $this->createCommandLineOptions();
 
-
-        // Init with common system paths
-        $cwebpPathsToTest = self::$cwebpDefaultPaths;
-
-        // Remove paths that doesn't exist
-        /*
-        $cwebpPathsToTest = array_filter($cwebpPathsToTest, function ($binary) {
-            //return file_exists($binary);
-            return @is_readable($binary);
-        });
-        */
-
         // Try all common paths that exists
         $success = false;
-        $failures = [];
+
         $failureCodes = [];
 
-
-        $returnCode = 0;
-        $majorFailCode = 0;
         if ($options['try-common-system-paths']) {
-            foreach ($cwebpPathsToTest as $index => $binary) {
-                $returnCode = $this->executeBinary($binary, $commandOptions, $useNice);
-                if ($returnCode == 0) {
-                    $this->logLn('Successfully executed binary: ' . $binary);
-                    $success = true;
-                    break;
-                } else {
-                    $failures[] = [$binary, $returnCode];
-                    if (!in_array($returnCode, $failureCodes)) {
-                        $failureCodes[] = $returnCode;
-                    }
-                }
-            }
-
-            if (!$success) {
-                if (count($failureCodes) == 1) {
-                    $majorFailCode = $failureCodes[0];
-                    switch ($majorFailCode) {
-                        case 126:
-                            $errorMsg = 'Permission denied. The user that the command was run with (' .
-                                shell_exec('whoami') . ') does not have permission to execute any of the ' .
-                                'cweb binaries found in common system locations. ';
-                            break;
-                        case 127:
-                            $errorMsg .= 'Found no cwebp binaries in any common system locations. ';
-                            break;
-                        default:
-                            $errorMsg .= 'Tried executing cwebp binaries in common system locations. ' .
-                                'All failed (exit code: ' . $majorFailCode . '). ';
-                    }
-                } else {
-                    /**
-                     * $failureCodesBesides127 is used to check first position ($failureCodesBesides127[0])
-                     * however position can vary as index can be 1 or something else. array_values() would
-                     * always start from 0.
-                     */
-                    $failureCodesBesides127 = array_values(array_diff($failureCodes, [127]));
-
-                    if (count($failureCodesBesides127) == 1) {
-                        $majorFailCode = $failureCodesBesides127[0];
-                        switch ($returnCode) {
-                            case 126:
-                                $errorMsg = 'Permission denied. The user that the command was run with (' .
-                                shell_exec('whoami') . ') does not have permission to execute any of the cweb ' .
-                                'binaries found in common system locations. ';
-                                break;
-                            default:
-                                $errorMsg .= 'Tried executing cwebp binaries in common system locations. ' .
-                                'All failed (exit code: ' . $majorFailCode . '). ';
-                        }
-                    } else {
-                        $errorMsg .= 'None of the cwebp binaries in the common system locations could be executed ' .
-                        '(mixed results - got the following exit codes: ' . implode(',', $failureCodes) . '). ';
-                    }
-                }
-            }
+            $failureCodes = $this->tryCommonSystemPaths($useNice, $commandOptions);
+            $success = (count($failureCodes) == 0);
+            $errorMsg = $this->composeErrorMessageForCommonSystemPathsFailures($failureCodes);
         }
 
         if (!$success && $options['try-supplied-binary-for-os']) {
-          // Try supplied binary (if available for OS, and hash is correct)
-            if (isset(self::$suppliedBinariesInfo[PHP_OS])) {
-                $info = self::$suppliedBinariesInfo[PHP_OS];
-
-                $file = $info[0];
-                $hash = $info[1];
-
-                $binaryFile = __DIR__ . '/' . $options['rel-path-to-precompiled-binaries'] . '/' . $file;
-
-                // The file should exist, but may have been removed manually.
-                if (file_exists($binaryFile)) {
-                    // File exists, now generate its hash
-
-                    // hash_file() is normally available, but it is not always
-                    // - https://stackoverflow.com/questions/17382712/php-5-3-20-undefined-function-hash
-                    // If available, validate that hash is correct.
-                    $proceedAfterHashCheck = true;
-                    if (function_exists('hash_file')) {
-                        $binaryHash = hash_file('sha256', $binaryFile);
-
-                        if ($binaryHash != $hash) {
-                            $errorMsg .= 'Binary checksum of supplied binary is invalid! ' .
-                                'Did you transfer with FTP, but not in binary mode? ' .
-                                'File:' . $binaryFile . '. ' .
-                                'Expected checksum: ' . $hash . '. ' .
-                                'Actual checksum:' . $binaryHash . '.';
-                            $proceedAfterHashCheck = false;
-                        }
-                    }
-                    if ($proceedAfterHashCheck) {
-                        $returnCode = $this->executeBinary($binaryFile, $commandOptions, $useNice);
-                        if ($returnCode == 0) {
-                            $success = true;
-                        } else {
-                            $errorMsg .= 'Tried executing supplied binary for ' . PHP_OS . ', ' .
-                                ($options['try-common-system-paths'] ? 'but that failed too' : 'but failed');
-                            if ($options['try-common-system-paths'] && ($majorFailCode > 0)) {
-                                $errorMsg .= ' (same error)';
-                            } else {
-                                if ($returnCode > 128) {
-                                    $errorMsg .= '. The binary did not work (exit code: ' . $returnCode . '). ' .
-                                        'Check out https://github.com/rosell-dk/webp-convert/issues/92';
-                                } else {
-                                    switch ($returnCode) {
-                                        case 0:
-                                            $success = true;
-                                            ;
-                                            break;
-                                        case 126:
-                                            $errorMsg .= ': Permission denied. The user that the command was run' .
-                                                ' with (' . shell_exec('whoami') . ') does not have permission to ' .
-                                                'execute that binary.';
-                                            break;
-                                        case 127:
-                                            $errorMsg .= '. The binary was not found! ' .
-                                                'It ought to be here: ' . $binaryFile;
-                                            break;
-                                        default:
-                                            $errorMsg .= ' (exit code:' .  $returnCode . ').';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    $errorMsg .= 'Supplied binary not found! It ought to be here:' . $binaryFile;
-                }
-            } else {
-                $errorMsg .= 'No supplied binaries found for OS:' . PHP_OS;
-            }
+            $errorMsg2 = $this->trySuppliedBinaryForOS($useNice, $commandOptions, $failureCodes);
+            $errorMsg .= $errorMsg2;
+            $success = ($errorMsg2 == '');
         }
 
         // cwebp sets file permissions to 664 but instead ..
@@ -2499,16 +2549,25 @@ class GmagickBinary extends AbstractExecConverter
         ];
     }
 
+    private static function getGmagickPath()
+    {
+        if (empty(getenv('GMAGICK_PATH'))) {
+            return 'gm';
+        } else {
+            return getenv('GMAGICK_PATH') . '/gm';
+        }
+    }
+
     public static function gmagickInstalled()
     {
-        exec('gm -version', $output, $returnCode);
+        exec(self::getGmagickPath() . ' -version', $output, $returnCode);
         return ($returnCode == 0);
     }
 
     // Check if webp delegate is installed
     public static function webPDelegateInstalled()
     {
-        exec('gm -version', $output, $returnCode);
+        exec(self::getGmagickPath() . ' -version', $output, $returnCode);
         foreach ($output as $line) {
             if (preg_match('#WebP.*yes#i', $line)) {
                 return true;
@@ -2547,7 +2606,7 @@ class GmagickBinary extends AbstractExecConverter
         $commandArguments[] = escapeshellarg($this->source);
         $commandArguments[] = escapeshellarg('webp:' . $this->destination);
 
-        $command = 'gm convert ' . implode(' ', $commandArguments);
+        $command = self::getGmagickPath() . ' convert ' . implode(' ', $commandArguments);
 
         $useNice = (($this->options['use-nice']) && self::hasNiceSupport()) ? true : false;
         if ($useNice) {
