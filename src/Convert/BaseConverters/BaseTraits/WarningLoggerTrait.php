@@ -67,8 +67,11 @@ trait WarningLoggerTrait
 
         //echo 'previously defined handler:' . print_r($this->previousErrorHandler, true);
 
-        return call_user_func($this->previousErrorHandler, $errno, $errstr, $errfile, $errline);
-        //return $this->previousErrorHandler;
+        if (!is_null($this->previousErrorHandler)) {
+            return call_user_func($this->previousErrorHandler, $errno, $errstr, $errfile, $errline);
+        } else {
+            return false;
+        }
     }
 
     /*

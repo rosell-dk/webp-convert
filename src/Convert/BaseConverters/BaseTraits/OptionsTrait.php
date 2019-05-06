@@ -20,11 +20,11 @@ trait OptionsTrait
     abstract protected function getMimeTypeOfSource();
 
     public static $optionDefinitionsBasic = [
-        ['quality', 'number|string', 'auto'],
+        ['quality', 'number|string', 'auto'],    // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
         ['max-quality', 'number', 85],
-        ['default-quality', 'number', 75],
+        ['default-quality', 'number', 75],       // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
         ['metadata', 'string', 'none'],
-        ['lossless', 'boolean|string', false],
+        ['lossless', 'boolean|string', false],  // PS: Default is altered to "auto" for PNG in ::getDefaultOptions()
         ['skip', 'boolean', false],
     ];
 
@@ -69,6 +69,8 @@ trait OptionsTrait
         }
         if ($this->getMimeTypeOfSource() == 'image/png') {
             $defaults['lossless'] = 'auto';
+            $defaults['quality'] = 85;
+            $defaults['default-quality'] = 85;
         }
         return $defaults;
     }
