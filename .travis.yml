@@ -80,20 +80,20 @@ before_install:
   - yes '' | pecl install vips
 
   # Update PATH so that travis can find our imagemagick / gmagick
-  #- export PATH=$HOME/opt/bin:$PATH
+  - export PATH=$HOME/opt/bin:$PATH
 
   # install imagick with webp support (if not already there) and update library paths
-  #- bash install-imagick-with-webp.sh
-  #- export LD_FLAGS=-L$HOME/opt/lib
-  #- export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:$HOME/opt/lib
-  #- export CPATH=$CPATH:$HOME/opt/include
+  - bash install-imagick-with-webp.sh
+  - export LD_FLAGS=-L$HOME/opt/lib
+  - export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:$HOME/opt/lib
+  - export CPATH=$CPATH:$HOME/opt/include
 
   # install imagick extension (if not already there)
   #- echo '' | pecl install imagick
 
-  # gmagick
+  # GMagick
 
-  #- bash install-gmagick-with-webp.sh
+  - bash install-gmagick-with-webp.sh
 
   # Hm, extension is not working yet. When I get to install the extension I get the message:
   #    "Please provide a path to GraphicsMagick-config program."
