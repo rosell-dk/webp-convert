@@ -62,15 +62,14 @@ WebPConvert::serveConverted($source, $destination, [
     //'fail' => '404',        // If failure, respond with 404.
     //'show-report' => true,  // Generates a report instead of serving an image
 
-    // Besides the specific options for convertAndServe(), you can also use the options for convert()
+    // Besides the specific options for serving, you can also use the options for convert()
 ]);
 
 ```
-convertAndServe
 
-*NOTE:* In 2.0, the method is renamed to *serveConverted* ("convertAndServe" was implying that a conversion was always made, but the method simply serves destination if it exists and is smaller and newer than source)
+*NOTE:* In 2.0, the method is renamed from "convertAndServe" to "serveConverted" ("convertAndServe" was implying that a conversion was always made, but the method simply serves destination if it exists and is smaller and newer than source)
 
-To see all options, look at the API: [docs/api/convert-and-serve.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert-and-serve.md)
+To see all options, look at the intro here (not updated for 2.0 yet): [docs/api/convert-and-serve.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert-and-serve.md)
 
 
 ## WebP on demand

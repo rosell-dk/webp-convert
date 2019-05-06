@@ -76,9 +76,9 @@ Note: As an alternative to setting the third party credentials in the options, y
 
 What should we have done instead? We should have converted with a quality around 50. Of course, quality is still low - we cannot fix that - but it will not be less, *and the converted file will be much smaller*.
 
-As unnecessary large conversions are rarely desirable, this library per default converts jpeg files with the same quality level as the source. This functionality requires that either *imagick* or *gmagick* is installed. When they are, all converters will have the "auto" quality functionality. The `wpc` cloud converter supports auto quality without requiring *imagick* or *gmagick*.
+As unnecessary large conversions are rarely desirable, this library per default converts jpeg files with the same quality level as the source. This functionality requires that either *imagick* or *gmagick* is installed. When they are, all converters will have the "auto" quality functionality. The *wpc* cloud converter supports auto quality without requiring *imagick* or *gmagick*.
 
-**Q:** What do you get if you convert an excessively high quality jpeg into an excessively high quality webp?<br>
+**Q:** What do you get if you convert an excessively high quality jpeg into an excessively high quality webp?\
 **A:** An excessively big file
 
 The size of a webp file grows enormously with the quality setting. For the web however, a quality above 80 is rarely needed. For this reason the library per default limits the quality to 85. A jpeg with quality 72 is converted into quality 72, but a jpeg with quality=95 is converted into quality 85. The maximum quality can be set with the *max-quality* option.
@@ -90,7 +90,7 @@ WebP files can be encoded using either *lossless* or *lossy* encoding. The JPEG 
 
 As unnecessary large conversions are rarely desirable, this library per default tries to convert PNGs using both lossy (q=85) and lossless encoding and automatically selects the smallest. Unless you changed the `near-lossless` option described below, the choice is actually between lossy and *near-lossless*.
 
-Note that only the *cwebp* and the *vips* converters supports this feature &ndash; and the `wpc` converter, if the cloud converter is configured to use one of these.
+Note that only the *cwebp* and the *vips* converters supports this feature &ndash; and the *wpc* converter, if the cloud converter is configured to use one of these.
 
 *ewww* btw automatically uses *lossless* encoding for PNGs and lossy for JPEGs and therefore cannot be configured to auto select. While this is not good, I believe it is preferable to always using *lossy* encoding for PNGs, which is the case with *gd*, *imagick*, *gmagick*, *imagickbinary* and *gmagickbinary*.
 
