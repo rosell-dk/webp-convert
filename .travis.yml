@@ -45,11 +45,10 @@ sudo: false
 matrix:
   fast_finish: true
   include:
-    #- php: 5.6
-    #  env: UPLOADCOVERAGE=1
-    #- php: 7.3
     - name: "Testing imagick install script"
+    # php: 5.6
       php: 7.1
+    # php: 7.3
       #dist: trusty
       dist: xenial
       #dist: bionic
@@ -58,7 +57,7 @@ matrix:
       - PHPSTAN=1
       - TESTSRCBUILD=1
       - VIPS_VERSION="8.6.3"
-      #env: VIPS_VERSION="8.7.4"
+      #- VIPS_VERSION="8.7.4"
   #allow_failures:
 
 before_install:
@@ -90,12 +89,13 @@ before_install:
   - export CPATH=$CPATH:$HOME/opt/include
 
   # install imagick extension (if not already there)
-  - echo '' | pecl install imagick
+  # hm, not working
+  #- echo '' | pecl install imagick
 
   # GMagick
 
   - bash install-gmagick-with-webp.sh
-  - export GMAGICK_PATH=$HOME/opt/bin
+  #- export GMAGICK_PATH=$HOME/opt/bin
 
   # Hm, extension is not working yet. When I get to install the extension I get the message:
   #    "Please provide a path to GraphicsMagick-config program."
