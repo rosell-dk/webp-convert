@@ -41,9 +41,10 @@ class ServeConvertedWebPWithErrorHandling
      * @param  string  $source              path to source file
      * @param  string  $destination         path to destination
      * @param  array   $options (optional)  options for serving/converting
+     * @param  \Exception  $e               exception that was thrown when trying to serve
      * @return void
      */
-    public static function performFailAction($fail, $failIfFailFails, $source, $destination, $options)
+    public static function performFailAction($fail, $failIfFailFails, $source, $destination, $options, $e)
     {
         self::addHeadersPreventingCaching();
 
@@ -66,6 +67,10 @@ class ServeConvertedWebPWithErrorHandling
                 Report::convertAndReport($source, $destination, $options);
                 break;
 
+            case 'throw':
+                throw $e;
+                break;
+
             case 'report-as-image':
                 // TODO: Implement or discard ?
                 break;
@@ -85,8 +90,8 @@ class ServeConvertedWebPWithErrorHandling
      * @param   string  $destination         path to destination
      * @param   array   $options (optional)  options for serving/converting
      *       Supported options:
-     *       - 'fail' => (string)    Action to take on failure (404 | original | report).
-     *               '404' is recommended for development and 'original' is recommended for production.
+     *       - 'fail' => (string)    Action to take on failure (404 | original | report | throw).
+     *               "404" or "throw" is recommended for development and "original" is recommended for production.
      *               Default: 'original'.
      *       - 'fail-when-original-unavailable'  => (string) Action to take if fail action also fails. Default: '404'.
      *       - All options supported by WebPConvert::convert()
@@ -106,7 +111,8 @@ class ServeConvertedWebPWithErrorHandling
                 $options['fail-when-original-unavailable'],
                 $source,
                 $destination,
-                $options
+                $options,
+                $e
             );
         }
     }
