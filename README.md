@@ -9,12 +9,11 @@
 
 *Convert JPEG & PNG to WebP with PHP*
 
-This library enables you to do webp conversion with PHP using *cwebp*, *gd*, *imagick*, *ewww* cloud converter or the open source *wpc* cloud converter. It also allows you to try a whole stack &ndash; useful if you do not have control over the environment, and simply want the library to do *everything it can* to convert the image to webp.
+This library enables you to do webp conversion with PHP using *cwebp*, *vips*, *gd*, *imagick*, *ewww* cloud converter or the open source *wpc* cloud converter. It also allows you to try a whole stack &ndash; useful if you do not have control over the environment, and simply want the library to do *everything it can* to convert the image to webp.
 
 In addition to converting, the library also has a method for *serving* converted images, and we have instructions here on how to set up a solution for automatically serving webp images to browsers that supports webp.
 
-**NOTE: This master branch contains code for the upcoming 2.0 release. It is not stable at all.**
-
+**NOTE: This master branch contains code for the upcoming 2.0 release. It is not stable yet.**
 
 ## Installation
 Require the library with *Composer*, like this:
@@ -24,9 +23,9 @@ composer require rosell-dk/webp-convert
 ```
 
 ## Converting images
-To convert an image, using a stack of converters, use the *WebPConvert::convert* method. It is documented in [docs/api/convert.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert.md).
+To convert an image using a stack of converters, you can use the *WebPConvert::convert* method.
 
-Here is an example:
+Here is a minimal example:
 
 ```php
 <?php
@@ -37,39 +36,13 @@ require 'vendor/autoload.php';
 use WebPConvert\WebPConvert;
 
 $source = __DIR__ . '/logo.jpg';
-$destination = __DIR__ . '/logo.jpg.webp';
-
-$success = WebPConvert::convert($source, $destination, [
-    // It is not required that you set any options - all have sensible defaults.
-    // We set some, for the sake of the example.
-    'quality' => 'auto',
-    'max-quality' => 80,
-    'converters' => ['cwebp', 'gd', 'imagick', 'wpc', 'ewww'],  // Specify conversion methods to use, and their order
-
-    'converter-options' => [
-        'ewww' => [
-            'key' => 'your-api-key-here'
-        ],
-        'wpc' => [
-            'api-version' => 1,
-            'url' => 'https://example.com/wpc.php',
-            'api-key' => 'my dog is white',
-            'crypt-api-key-in-transfer' => true
-        ]
-    ]
-
-    // more options available! - see the api
-]);
+$destination = $source . '.webp';
+$options = [];
+WebPConvert::convert($source, $destination, $options);
 ```
 
-**NOTE: In 2.0.0, WebPConvert will not return any value. Failure is handled purely by exceptions (1.3, also throws exceptions, but not when the failure is that no converters were operational)**
-
-PS: In 2.0, you can alternatively set the third party credentials by setting environment variables ("EWWW_API_KEY", "WPC_API_KEY" and "WPC_API_URL").
-
-
-To convert using a specific conversion method, simply set the *converters* option so it only has that method.
-
-The conversion methods (aka "converters") are documented here:   [docs/converters.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/converters.md).
+The method comes with a bunch of options. The following introduction is a must-read:
+[docs/convert-introduction.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/convert-introduction.md).
 
 
 ## Serving converted images
@@ -78,7 +51,13 @@ The *convertAndServe* method tries to serve a converted image. If there already 
 Example:
 ```php
 <?php
-$success = WebPConvert::convertAndServe($source, $destination, [
+require 'vendor/autoload.php';
+use WebPConvert\WebPConvert;
+
+$source = __DIR__ . '/logo.jpg';
+$destination = $source . '.webp';
+
+WebPConvert::serveConverted($source, $destination, [
     'fail' => 'original',     // If failure, serve the original image (source).
     //'fail' => '404',        // If failure, respond with 404.
     //'show-report' => true,  // Generates a report instead of serving an image
@@ -87,6 +66,8 @@ $success = WebPConvert::convertAndServe($source, $destination, [
 ]);
 
 ```
+convertAndServe
+
 *NOTE:* In 2.0, the method is renamed to *serveConverted* ("convertAndServe" was implying that a conversion was always made, but the method simply serves destination if it exists and is smaller and newer than source)
 
 To see all options, look at the API: [docs/api/convert-and-serve.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert-and-serve.md)
