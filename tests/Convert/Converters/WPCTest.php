@@ -17,6 +17,10 @@ use WebPConvert\Loggers\BufferLogger;
 
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @coversDefaultClass WebPConvert\Convert\Converters\Wpc
+ * @covers WebPConvert\Convert\Converters\Wpc
+ */
 class WpcTest extends TestCase
 {
 
@@ -108,9 +112,11 @@ class WpcTest extends TestCase
         $source = $this->imageDir . '/test.png';
         $options = [
             'api-version' => 1,
-            'crypt-api-key-in-transfer' => true
+            'crypt-api-key-in-transfer' => true,
+            'api-key' => 'wrong!'
         ];
 
+        $this->expectException(InvalidApiKeyException::class);
         self::tryThis($this, $source, $options);
     }
 
@@ -122,6 +128,45 @@ class WpcTest extends TestCase
             'url' => 'badurl!',
             'secret' => 'bad dog!',
         ]);
+    }
+
+    public function test404()
+    {
+        //$this->expectException(ConversionFailedException::class);
+
+        try {
+            Wpc::convert($this->imageDir . '/test.png', $this->imageDir . '/test.webp', [
+                'url' => 'https://google.com/hello',
+                'secret' => 'bad dog!',
+            ]);
+            $this->fail('Expected an exception');
+
+        } catch (ConversionFailedException $e) {
+            // this is expected!
+            $this->addToAssertionCount(1);
+
+            $this->assertRegExp('#we got a 404 response#', $e->getMessage());
+        }
+
+    }
+
+    public function testUnexpectedResponse()
+    {
+        //$this->expectException(ConversionFailedException::class);
+
+        try {
+            Wpc::convert($this->imageDir . '/test.png', $this->imageDir . '/test.webp', [
+                'url' => 'https://www.google.com/',
+                'secret' => 'bad dog!',
+            ]);
+            $this->fail('Expected an exception');
+
+        } catch (ConversionFailedException $e) {
+            // this is expected!
+            $this->addToAssertionCount(1);
+
+            $this->assertRegExp('#We did not receive an image#', $e->getMessage());
+        }
     }
 
 
