@@ -194,10 +194,8 @@ class Cwebp extends AbstractExecConverter
                     return 'Permission denied. The user that the command was run with (' .
                         shell_exec('whoami') . ') does not have permission to execute any of the ' .
                         'cweb binaries found in common system locations. ';
-                    break;
                 case 127:
                     return 'Found no cwebp binaries in any common system locations. ';
-                    break;
                 default:
                     return 'Tried executing cwebp binaries in common system locations. ' .
                         'All failed (exit code: ' . $failureCodes[0] . '). ';
@@ -239,7 +237,6 @@ class Cwebp extends AbstractExecConverter
     private function tryCommonSystemPaths($useNice, $commandOptions)
     {
         $errorMsg = '';
-        $majorFailCode = 0;
         //$failures = [];
         $failureCodes = [];
 
@@ -356,7 +353,7 @@ class Cwebp extends AbstractExecConverter
         } else {
             switch ($returnCode) {
                 case 0:
-                    $success = true;
+                    // success!
                     break;
                 case 126:
                     $errorMsg .= ': Permission denied. The user that the command was run' .
