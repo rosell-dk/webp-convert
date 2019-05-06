@@ -31,12 +31,12 @@ class Cwebp extends AbstractExecConverter
             ['try-common-system-paths', 'boolean', true],
             ['try-supplied-binary-for-os', 'boolean', true],
             ['use-nice', 'boolean', false],
-
         ];
     }
 
     // System paths to look for cwebp binary
     private static $cwebpDefaultPaths = [
+        'cwebp',
         '/usr/bin/cwebp',
         '/usr/local/bin/cwebp',
         '/usr/gnu/bin/cwebp',
