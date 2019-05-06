@@ -23,16 +23,19 @@ class DecideWhatToServe
      * Decides what to serve.
      *
      * It both decides what to serve and supplies the reason behind.
+     *
      * The possible combinations are:
      *
      * - "destination"  (serve existing converted image at the destination path)
      *      - "no-reason-not-to"
      * - "source"
      *      - "explicitly-told-to"
-     *      - "source-lighter"
+     *      - "source-lighter"      (happens if a file exists on the destination
+     *                               but the source file is smaller)
      * - "fresh-conversion" (note: this may still fail)
      *      - "explicitly-told-to"
-     *      - "source-modified"
+     *      - "source-modified"     (happens if a file exists on the destination
+     *                               but its modification date is older than that of the source)
      *      - "no-existing"
      * - "fail"
      *       - "Missing destination argument"
@@ -40,6 +43,15 @@ class DecideWhatToServe
      *       - "missing-source-argument"
      *       - "source-not-found"
      * - "report"
+     *
+     * @param  string              $source        The path to the file to convert
+     * @param  string              $destination   The path to save the converted file to
+     * @param  array               $options       (optional)
+     *       Supported options:
+     *       'show-report'     => (boolean)   If true, the decision will always be 'report'
+     *       'serve-original'  => (boolean)   If true, the decision will be 'source' (unless above option is set)
+     *       'reconvert     '  => (boolean)   If true, the decision will be 'fresh-conversion' (unless one of the
+     *                                        above options is set)
      *
      * @return  array  Three items: what to serve (id), why to serve (id) and suggested message
      */

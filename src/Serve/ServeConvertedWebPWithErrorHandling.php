@@ -67,15 +67,33 @@ class ServeConvertedWebPWithErrorHandling
                 break;
 
             case 'report-as-image':
-                // TODO
+                // TODO: Implement or discard ?
                 break;
         }
     }
 
     /**
-     * Serve webp image and handle errors.
+     * Serve webp image and handle errors as specified in the 'fail' option.
      *
-     * @throws  ServeFailedException  If an argument is invalid or source file does not exists
+     * This method basically wraps ServeConvertedWebP:serve in order to provide exception handling.
+     * The error handling is set with the 'fail' option and can be either '404', 'original' or 'report'.
+     * If set to '404', errors results in 404 Not Found headers being issued. If set to 'original', an
+     * error results in the original being served.
+     * Look up the ServeConvertedWebP:serve method to learn more.
+     *
+     * @param   string  $source              path to source file
+     * @param   string  $destination         path to destination
+     * @param   array   $options (optional)  options for serving/converting
+     *       Supported options:
+     *       - 'fail'       * @throws \WebPConvert\Exceptions\WebPConvertException
+     * @return void
+=> (string)    Action to take on failure (404 | original | report).
+     *               '404' is recommended for development and 'original' is recommended for production.
+     *               Default: 'original'.
+     *       - 'fail-when-original-unavailable'  => (string)    Action to take if fail action also fails. Default: '404'.
+     *       - All options supported by WebPConvert::convert()
+     *       - All options supported by ServeFile::serve()
+     *       - All options supported by DecideWhatToServe::decide)
      * @return  void
      */
     public static function serve($source, $destination, $options = [])

@@ -7,6 +7,7 @@ use WebPConvert\Serve\Report;
 use WebPConvert\Serve\ServeFile;
 
 use WebPConvert\Serve\Exceptions\ServeFailedException;
+use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 
@@ -18,7 +19,8 @@ use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
  * - the destionation
  * - the original
  *
- * Exactly which is a decision based upon options, file sizes and file modification dates (see DecideWhatToServe class)
+ * Exactly which is a decision based upon options, file sizes and file modification dates
+ * (see the serve method of this class for details)
  *
  * @package    WebPConvert
  * @author     Bjørn Rosell <it@rosell.dk>
@@ -51,6 +53,8 @@ class ServeConvertedWebP
      *
      * @param   string  $source              path to source file
      * @param   array   $options (optional)  options for serving
+     *                  Supported options:
+     *                  - All options supported by ServeFile::serve()
      * @throws  ServeFailedException  if source is not an image or mime type cannot be determined
      * @return  void
      */
@@ -71,6 +75,8 @@ class ServeConvertedWebP
      *
      * @param   string  $destination         path to destination file
      * @param   array   $options (optional)  options for serving (such as which headers to add)
+     *       Supported options:
+     *       - All options supported by ServeFile::serve()
      * @return  void
      */
     public static function serveDestination($destination, $options = [])
@@ -81,11 +87,22 @@ class ServeConvertedWebP
     /**
      * Serve converted webp.
      *
+     * Serve a converted webp. If a file already exists at the destination, that is served (unless it is
+     * older than the source - in that case a fresh conversion will be made, or the file at the destination
+     * is larger than the source - in that case the source is served). Some options may alter this logic
+     * (see the options of DecideWhatToServe::decide). In case no file exists at the destination, a fresh
+     * conversion is made and served.
+     *
      * @param   string  $source              path to source file
      * @param   string  $destination         path to destination
      * @param   array   $options (optional)  options for serving/converting
+     *       Supported options:
+     *       - All options supported by WebPConvert::convert()
+     *       - All options supported by ServeFile::serve()
+     *       - All options supported by DecideWhatToServe::decide)
      *
-     * @throws  ServeFailedException  If an argument is invalid or source file does not exists
+     * @throws  \WebPConvert\Convert\Exceptions\ConversionFailedException  If conversion failed
+     * @throws  ServeFailedException       If an argument is invalid or source file does not exists
      * @return  void
      */
     public static function serve($source, $destination, $options = [])

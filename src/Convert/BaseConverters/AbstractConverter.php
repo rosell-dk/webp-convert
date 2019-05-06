@@ -267,6 +267,8 @@ abstract class AbstractConverter
      * @param   string  $destination         path to destination
      * @param   array   $options (optional)  options for conversion
      * @param   \WebPConvert\Loggers\BaseLogger $logger (optional)
+     *
+     * @throws  \WebPConvert\Convert\Exceptions\ConversionFailedException   in case conversion fails
      * @return  void
      */
     public static function convert($source, $destination, $options = [], $logger = null)

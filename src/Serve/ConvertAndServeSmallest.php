@@ -41,7 +41,7 @@ class ConvertAndServeSmallest
      *
      * @param  string              $source        The path to the file to convert
      * @param  string              $destination   The path to save the converted file to
-     * @param  array[string]mixed  $options       (optional)
+     * @param  array               $options       (optional)
      *       Supported options:
      *       - All options supported by WebPConvert::convert()
      *       - All options supported by ServeFile::serve()
@@ -51,7 +51,7 @@ class ConvertAndServeSmallest
      * @see        ServeFile::serve()       For the available serve options (headers)
      *
      * @throws ServeFailedException  if serving failed
-     * @throws ConversionFailedException  if conversion failed
+     * @throws  \WebPConvert\Convert\Exceptions\ConversionFailedException  If conversion failed
      * @return  void
      */
     public static function serve($source, $destination, $options = [])
