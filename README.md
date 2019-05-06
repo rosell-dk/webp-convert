@@ -85,7 +85,10 @@ $success = WebPConvert::convertAndServe($source, $destination, [
 
     // Besides the specific options for convertAndServe(), you can also use the options for convert()
 ]);
+
 ```
+*NOTE:* In 2.0, the method is renamed to *serveConverted* ("convertAndServe" was implying that a conversion was always made, but the method simply serves destination if it exists and is smaller and newer than source)
+
 To see all options, look at the API: [docs/api/convert-and-serve.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert-and-serve.md)
 
 

@@ -97,9 +97,13 @@ trait AutoQualityTrait
             }
         } else {
             $logger->logLn(
-                'Quality: ' . $q . '. ' .
-                'Consider setting quality to "auto" instead. It is generally a better idea'
+                'Quality: ' . $q . '. '
             );
+            if (($this->getMimeTypeOfSource() == 'image/jpeg')) {
+                $logger->logLn(
+                    'Consider setting quality to "auto" instead. It is generally a better idea'
+                );
+            }
         }
         $this->calculatedQuality = $q;
     }

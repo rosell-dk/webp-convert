@@ -8,6 +8,7 @@ use WebPConvert\Serve\Report;
 use WebPConvert\Serve\ServeFile;
 
 use WebPConvert\Serve\Exceptions\ServeFailedException;
+use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 
@@ -19,7 +20,8 @@ use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
  * - the destionation
  * - the original
  *
- * Exactly which is a decision based upon options, file sizes and file modification dates (see DecideWhatToServe class)
+ * Exactly which is a decision based upon options, file sizes and file modification dates
+ * (see the serve method of this class for details)
  *
  * @package    WebPConvert
  * @author     Bjørn Rosell <it@rosell.dk>
@@ -52,6 +54,8 @@ class ServeConvertedWebP
      *
      * @param   string  $source              path to source file
      * @param   array   $options (optional)  options for serving
+     *                  Supported options:
+     *                  - All options supported by ServeFile::serve()
      * @throws  ServeFailedException  if source is not an image or mime type cannot be determined
      * @return  void
      */
@@ -72,6 +76,8 @@ class ServeConvertedWebP
      *
      * @param   string  $destination         path to destination file
      * @param   array   $options (optional)  options for serving (such as which headers to add)
+     *       Supported options:
+     *       - All options supported by ServeFile::serve()
      * @return  void
      */
     public static function serveDestination($destination, $options = [])
@@ -82,11 +88,22 @@ class ServeConvertedWebP
     /**
      * Serve converted webp.
      *
+     * Serve a converted webp. If a file already exists at the destination, that is served (unless it is
+     * older than the source - in that case a fresh conversion will be made, or the file at the destination
+     * is larger than the source - in that case the source is served). Some options may alter this logic
+     * (see the options of DecideWhatToServe::decide). In case no file exists at the destination, a fresh
+     * conversion is made and served.
+     *
      * @param   string  $source              path to source file
      * @param   string  $destination         path to destination
      * @param   array   $options (optional)  options for serving/converting
+     *       Supported options:
+     *       - All options supported by WebPConvert::convert()
+     *       - All options supported by ServeFile::serve()
+     *       - All options supported by DecideWhatToServe::decide)
      *
-     * @throws  ServeFailedException  If an argument is invalid or source file does not exists
+     * @throws  \WebPConvert\Convert\Exceptions\ConversionFailedException  If conversion failed
+     * @throws  ServeFailedException       If an argument is invalid or source file does not exists
      * @return  void
      */
     public static function serve($source, $destination, $options = [])
@@ -194,15 +211,33 @@ class ServeConvertedWebPWithErrorHandling
                 break;
 
             case 'report-as-image':
-                // TODO
+                // TODO: Implement or discard ?
                 break;
         }
     }
 
     /**
-     * Serve webp image and handle errors.
+     * Serve webp image and handle errors as specified in the 'fail' option.
      *
-     * @throws  ServeFailedException  If an argument is invalid or source file does not exists
+     * This method basically wraps ServeConvertedWebP:serve in order to provide exception handling.
+     * The error handling is set with the 'fail' option and can be either '404', 'original' or 'report'.
+     * If set to '404', errors results in 404 Not Found headers being issued. If set to 'original', an
+     * error results in the original being served.
+     * Look up the ServeConvertedWebP:serve method to learn more.
+     *
+     * @param   string  $source              path to source file
+     * @param   string  $destination         path to destination
+     * @param   array   $options (optional)  options for serving/converting
+     *       Supported options:
+     *       - 'fail'       * @throws \WebPConvert\Exceptions\WebPConvertException
+     * @return void
+=> (string)    Action to take on failure (404 | original | report).
+     *               '404' is recommended for development and 'original' is recommended for production.
+     *               Default: 'original'.
+     *       - 'fail-when-original-unavailable'  => (string)    Action to take if fail action also fails. Default: '404'.
+     *       - All options supported by WebPConvert::convert()
+     *       - All options supported by ServeFile::serve()
+     *       - All options supported by DecideWhatToServe::decide)
      * @return  void
      */
     public static function serve($source, $destination, $options = [])
@@ -248,16 +283,19 @@ class DecideWhatToServe
      * Decides what to serve.
      *
      * It both decides what to serve and supplies the reason behind.
+     *
      * The possible combinations are:
      *
      * - "destination"  (serve existing converted image at the destination path)
      *      - "no-reason-not-to"
      * - "source"
      *      - "explicitly-told-to"
-     *      - "source-lighter"
+     *      - "source-lighter"      (happens if a file exists on the destination
+     *                               but the source file is smaller)
      * - "fresh-conversion" (note: this may still fail)
      *      - "explicitly-told-to"
-     *      - "source-modified"
+     *      - "source-modified"     (happens if a file exists on the destination
+     *                               but its modification date is older than that of the source)
      *      - "no-existing"
      * - "fail"
      *       - "Missing destination argument"
@@ -265,6 +303,15 @@ class DecideWhatToServe
      *       - "missing-source-argument"
      *       - "source-not-found"
      * - "report"
+     *
+     * @param  string              $source        The path to the file to convert
+     * @param  string              $destination   The path to save the converted file to
+     * @param  array               $options       (optional)
+     *       Supported options:
+     *       'show-report'     => (boolean)   If true, the decision will always be 'report'
+     *       'serve-original'  => (boolean)   If true, the decision will be 'source' (unless above option is set)
+     *       'reconvert     '  => (boolean)   If true, the decision will be 'fresh-conversion' (unless one of the
+     *                                        above options is set)
      *
      * @return  array  Three items: what to serve (id), why to serve (id) and suggested message
      */
@@ -350,11 +397,11 @@ class ServeFile
     /**
      * Serve existing file.
      *
-     * @param  string              $filename     File to serve (absolute path)
-     * @param  string              $contentType  Content-type (used to set header).
-     *                                           Only used when the "set-content-type-header" option is set.
-     *                                           Set to ie "image/jpeg" for serving jpeg file.
-     * @param  array[string]mixed  $options      (optional)
+     * @param  string  $filename     File to serve (absolute path)
+     * @param  string  $contentType  Content-type (used to set header).
+     *                                    Only used when the "set-content-type-header" option is set.
+     *                                    Set to ie "image/jpeg" for serving jpeg file.
+     * @param  array   $options      Array of named options (optional).
      *       Supported options:
      *       'add-vary-accept-header'  => (boolean)   Whether to add *Vary: Accept* header or not. Default: true.
      *       'set-content-type-header' => (boolean)   Whether to set *Content-type* header or not. Default: true.
@@ -467,11 +514,41 @@ class WebPConvert
      * @param  string  $source       The image to convert (absolute,no backslashes)
      *                               Image must be jpeg or png.
      * @param  string  $destination  Where to store the converted file (absolute path, no backslashes).
-     * @param  array   $options      (optional) Array of named options, such as 'quality' and 'metadata'.
-     * @param   \WebPConvert\Loggers\BaseLogger $logger (optional)
+     * @param  array   $options      (optional) Array of named options
+     *       The following options are generally supported (individual converters provides more options):
+     *       'quality'     => (integer|"auto")   Quality. If set to auto and source image is jpeg, the quality will
+     *                                           be set to same as source - if detectable. The detection requires
+     *                                           imagick or gmagick. Default: "auto".
+     *       'max-quality' => (integer)          Limit quality (relevant only if "quality" is set to "auto").
+     *                                           Default: 85.
+     *       'default-quality' => (integer)      Default quality (used when auto detection fails). Default: 75
+     *       'metadata'    => (string)           Valid values: 'all', 'none', 'exif', 'icc', 'xmp'.
+     *                                           Note: Only *cwebp* supports all values. *gd* will always remove all
+     *                                           metadata. The rest can either strip all or keep all (they will keep
+     *                                           all, unless metadata is set to *none*). Default: 'none'.
+     *        'lossless'   => (boolean|"auto")   Whether to convert into the lossless webp format or the lossy.
+     *                                           If "auto" is selected, the format that results in the smallest file
+     *                                           is selected (two actual conversions are made and the smallest file
+     *                                           wins). Note that only *cwebp* and *vips* converters supports
+     *                                           the lossless encoding. Converters that does not support lossless
+     *                                           simply always converts to lossy encoding (and "auto" will not trigger
+     *                                           two conversions for these). Default is "auto" when converting PNGs and
+     *                                           false when converting JPEGs. The reason for this default is that it is
+     *                                           probably rare that a JPEG is compressed better with lossless encoding
+     *                                           (as the jpeg format typically have been choosen only for photos and
+     *                                           photos almost always is best encoding with the lossy encoding. On the
+     *                                           other hand, graphics and icons are sometimes compressed best with
+     *                                           lossy encoding and sometimes best with lossless encoding). Note that
+     *                                           you can use the 'png' and 'jpeg' options to set this option different
+     *                                           for png and jpegs. Ie: ['png' => ['lossless' => 'auto'], 'jpeg' =>
+     *                                           'lossless' => false]].
+     *        'skip'       => (boolean)          If set to true, conversion is skipped entirely. Can for example be used
+     *                                           to skip pngs for certain converters. You might for example want to use
+     *                                           Gd for jpegs and ewww for pngs.
+     * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
      *
-     * @throws \WebPConvert\Exceptions\WebPConvertException
-     * @return void
+     * @throws  \WebPConvert\Convert\Exceptions\ConversionFailedException   in case conversion fails
+     * @return  void
     */
     public static function convert($source, $destination, $options = [], $logger = null)
     {
@@ -480,7 +557,21 @@ class WebPConvert
         Stack::convert($source, $destination, $options, $logger);
     }
 
-    public static function convertAndServe($source, $destination, $options = [])
+    /**
+     * Serve webp image, converting first if neccessary.
+     *
+     * If an image already exists, it will be served, unless it is older or larger than the source. (If it is larger,
+     * the original is served, if it is older, the existing webp will be deleted and a fresh conversion will be made
+     * and served). In case of error, the action indicated in the 'fail' option will be triggered (default is to serve
+     * the original). Look up the ServeConvertedWebP:serve() and the ServeConvertedWebPWithErrorHandling::serve()
+     * methods to learn more.
+     *
+     * @param   string  $source              path to source file
+     * @param   string  $destination         path to destination
+     * @param   array   $options (optional)  options for serving/converting. The options are documented in the
+     *                                       ServeConvertedWebPWithErrorHandling::serve() method
+     */
+    public static function serveConverted($source, $destination, $options = [])
     {
         //return ServeExistingOrHandOver::serveConverted($source, $destination, $options);
         //if (isset($options['handle-errors']) && $options['handle-errors'] === true) {

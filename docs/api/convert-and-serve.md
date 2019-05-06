@@ -1,5 +1,7 @@
 # API: The WebPConvert::convertAndServe() method
 
+*NOTE:* In 2.0, the method is renamed to *serveConverted* ("convertAndServe" was implying that a conversion was always made, but the method simply serves destination if it exists and is smaller and newer than source)
+
 The method tries to serve a converted image. If destination already exists, the already converted image will be served. Unless the original is newer or smaller. If the method fails, it will serve original image, a 404, or whatever the 'fail' option is set to.
 
 **WebPConvert::convertAndServe($source, $destination, $options)**

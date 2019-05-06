@@ -23,7 +23,7 @@ class WebPConvertBuildTest extends TestCase
         $this->assertTrue(file_exists($source));
 
         ob_start();
-        WebPConvert::convertAndServe(
+        WebPConvert::serveConverted(
             $source,
             $source . '.webp',
             [

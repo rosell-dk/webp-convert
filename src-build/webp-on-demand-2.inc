@@ -268,6 +268,8 @@ abstract class AbstractConverter
      * @param   string  $destination         path to destination
      * @param   array   $options (optional)  options for conversion
      * @param   \WebPConvert\Loggers\BaseLogger $logger (optional)
+     *
+     * @throws  \WebPConvert\Convert\Exceptions\ConversionFailedException   in case conversion fails
      * @return  void
      */
     public static function convert($source, $destination, $options = [], $logger = null)
@@ -737,9 +739,13 @@ trait AutoQualityTrait
             }
         } else {
             $logger->logLn(
-                'Quality: ' . $q . '. ' .
-                'Consider setting quality to "auto" instead. It is generally a better idea'
+                'Quality: ' . $q . '. '
             );
+            if (($this->getMimeTypeOfSource() == 'image/jpeg')) {
+                $logger->logLn(
+                    'Consider setting quality to "auto" instead. It is generally a better idea'
+                );
+            }
         }
         $this->calculatedQuality = $q;
     }
@@ -3999,6 +4005,9 @@ use WebPConvert\Serve\Exceptions\ServeFailedException;
  * - If the "serve-original" option is set, the original image even when it is larger than the converted
  * - If conversion fails, an exception is thrown.
  *
+ * The conversion will always be fresh. If an image already exists at the destination, it will be removed.
+ * If you would like to serve existing conversion when available, use the ServeConvertedWebP class.
+ *
  * @package    WebPConvert
  * @author     Bjørn Rosell <it@rosell.dk>
  * @since      Class available since Release 2.0.0
@@ -4017,9 +4026,12 @@ class ConvertAndServeSmallest
      * - If the "serve-original" option is set, the original image will be served rather than the converted.
      * - If conversion fails, an exception is thrown.
      *
+     * The conversion will always be fresh. If an image already exists at the destination, it will be removed.
+     * If you would like to serve existing conversion when available, use the ServeConvertedWebP class.
+     *
      * @param  string              $source        The path to the file to convert
      * @param  string              $destination   The path to save the converted file to
-     * @param  array[string]mixed  $options       (optional)
+     * @param  array               $options       (optional)
      *       Supported options:
      *       - All options supported by WebPConvert::convert()
      *       - All options supported by ServeFile::serve()
@@ -4029,7 +4041,7 @@ class ConvertAndServeSmallest
      * @see        ServeFile::serve()       For the available serve options (headers)
      *
      * @throws ServeFailedException  if serving failed
-     * @throws ConversionFailedException  if conversion failed
+     * @throws  \WebPConvert\Convert\Exceptions\ConversionFailedException  If conversion failed
      * @return  void
      */
     public static function serve($source, $destination, $options = [])

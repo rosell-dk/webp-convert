@@ -42,7 +42,7 @@ class WodBuildTest extends TestCase
         $this->assertTrue(file_exists($source));
 
         ob_start();
-        WebPConvert::convertAndServe(
+        WebPConvert::serveConverted(
             $source,
             $source,
             [
@@ -128,7 +128,7 @@ class WodBuildTest extends TestCase
         spl_autoload_register([self::class, 'autoloaderLoad'], true, true);
 
         ob_start();
-        WebPConvert::convertAndServe(
+        WebPConvert::serveConverted(
             $source,
             $source . '.webp',
             [
