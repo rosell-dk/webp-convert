@@ -14,6 +14,10 @@ use WebPConvert\Loggers\BufferLogger;
 
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @coversDefaultClass WebPConvert\Convert\Converters\GmagickBinary
+ * @covers WebPConvert\Convert\Converters\GmagickBinary
+ */
 class GmagickBinaryTest extends TestCase
 {
 

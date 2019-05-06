@@ -17,7 +17,6 @@ use WebPConvert\Tests\Convert\Exposers\CwebpExposer;
 
 use PHPUnit\Framework\TestCase;
 
-
 /**
  * @coversDefaultClass WebPConvert\Convert\Converters\Cwebp
  * @covers WebPConvert\Convert\Converters\Cwebp
