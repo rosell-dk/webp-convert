@@ -4731,7 +4731,7 @@ class ServeConvertedWebPWithErrorHandling
                 try {
                     ServeConvertedWebP::serveOriginal($source, $options);
                 } catch (\Exception $e) {
-                    self::performFailAction($failIfFailFails, '404', $source, $destination, $options);
+                    self::performFailAction($failIfFailFails, '404', $source, $destination, $options, $e);
                 }
                 break;
 
