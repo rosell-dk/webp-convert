@@ -27,16 +27,25 @@ class GmagickBinary extends AbstractExecConverter
         ];
     }
 
+    private static function getGmagickPath()
+    {
+        if (empty(getenv('GMAGICK_PATH'))) {
+            return 'gm';
+        } else {
+            return getenv('GMAGICK_PATH') . '/gm';
+        }
+    }
+
     public static function gmagickInstalled()
     {
-        exec('gm -version', $output, $returnCode);
+        exec(self::getGmagickPath() . ' -version', $output, $returnCode);
         return ($returnCode == 0);
     }
 
     // Check if webp delegate is installed
     public static function webPDelegateInstalled()
     {
-        exec('gm -version', $output, $returnCode);
+        exec(self::getGmagickPath() . ' -version', $output, $returnCode);
         foreach ($output as $line) {
             if (preg_match('#WebP.*yes#i', $line)) {
                 return true;
@@ -75,7 +84,7 @@ class GmagickBinary extends AbstractExecConverter
         $commandArguments[] = escapeshellarg($this->source);
         $commandArguments[] = escapeshellarg('webp:' . $this->destination);
 
-        $command = 'gm convert ' . implode(' ', $commandArguments);
+        $command = self::getGmagickPath() . ' convert ' . implode(' ', $commandArguments);
 
         $useNice = (($this->options['use-nice']) && self::hasNiceSupport()) ? true : false;
         if ($useNice) {
