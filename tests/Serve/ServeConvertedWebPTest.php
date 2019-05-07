@@ -106,7 +106,7 @@ class ServeConvertedWebPTest extends TestCase
     /**
      * @covers ::serve
      */
-    public function testServeFreshlyConverted()
+    public function testServeReconvert()
     {
         $source = self::$imageFolder . '/test.png';
         $this->assertTrue(file_exists($source));
@@ -164,6 +164,7 @@ class ServeConvertedWebPTest extends TestCase
     }
 
     /**
+     * Testing when the "cached" image can be served
      * @covers ::serve
      */
     public function testServeDestination()
@@ -175,7 +176,6 @@ class ServeConvertedWebPTest extends TestCase
         $destination = $source . '.webp';
         file_put_contents($destination, '1234');
         $this->assertTrue(file_exists($destination));
-
 
         ob_start();
         $options = [
@@ -294,6 +294,88 @@ class ServeConvertedWebPTest extends TestCase
         //$this->assertTrue(MockedHeader::hasHeaderContaining('X-WebP-Convert-Action:'));
 
         $this->assertTrue(MockedHeader::hasHeader('Content-type: image/webp'));
+    }
+
+    public function testSourceIsLighter()
+    {
+        $source = self::$imageFolder . '/plaintext-with-jpg-extension.jpg';
+
+        // create fake webp at destination, which is larger than the fake jpg
+        file_put_contents($source . '.webp', 'aotehu aotnehuatnoehutaoehu atonse uaoehu');
+
+        $this->assertTrue(file_exists($source));
+        $this->assertTrue(file_exists($source . '.webp'));
+
+        ob_start();
+        $options = [
+            'converters' => [
+                '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+            ]
+        ];
+        ServeConvertedWebP::serve($source, $source . '.webp', $options);
+        $result = ob_get_clean();
+
+        // the source file contains "text", so the next assert asserts that source was served
+        $this->assertRegExp('#text#', $result);
+    }
+
+    public function testExistingOutDated()
+    {
+        $source = self::$imageFolder . '/test.jpg';
+        $this->assertTrue(file_exists($source));
+
+        $destination = $source . '.webp';
+        @unlink($destination);
+        copy(self::$imageFolder . '/png-without-extension.webp', $destination);
+
+        // set modification date earlier than source
+        touch($destination, filemtime($source) - 1000);
+
+        // check that it worked
+        $this->assertLessThan(filemtime($source), filemtime($destination));
+
+        ob_start();
+        $options = [
+            'converters' => [
+                '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+            ]
+        ];
+        ServeConvertedWebP::serve($source, $source . '.webp', $options);
+        $result = ob_get_clean();
+
+        unlink($destination);
+
+        // Our success-converter always creates fake webps with the content:
+        // "we-pretend-this-is-a-valid-webp!".
+        // So testing that we got this back is the same as testing that a "conversion" was
+        // done and the converted file was served. It is btw smaller than the source.
+
+        $this->assertRegExp('#we-pretend-this-is-a-valid-webp!#', $result);
+    }
+
+    public function testNoFileAtDestination()
+    {
+        $source = self::$imageFolder . '/test.jpg';
+        $this->assertTrue(file_exists($source));
+
+        $destination = $source . '.webp';
+        @unlink($destination);
+
+        ob_start();
+        $options = [
+            'converters' => [
+                '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+            ]
+        ];
+        ServeConvertedWebP::serve($source, $source . '.webp', $options);
+        $result = ob_get_clean();
+
+        // Our success-converter always creates fake webps with the content:
+        // "we-pretend-this-is-a-valid-webp!".
+        // So testing that we got this back is the same as testing that a "conversion" was
+        // done and the converted file was served. It is btw smaller than the source.
+
+        $this->assertRegExp('#we-pretend-this-is-a-valid-webp!#', $result);
     }
 
 }
