@@ -9,6 +9,10 @@ use WebPConvert\Tests\Convert\Exposers\VipsExposer;
 
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @coversDefaultClass WebPConvert\Convert\Converters\Vips
+ * @covers WebPConvert\Convert\Converters\Vips
+ */
 class VipsTest extends TestCase
 {
 
@@ -149,6 +153,9 @@ class VipsTest extends TestCase
         $this->addToAssertionCount(1);
     }
 
+    /**
+     * @covers ::webpsave
+     */
     public function testWebpsave()
     {
         reset_pretending();
@@ -158,13 +165,41 @@ class VipsTest extends TestCase
 
         // Exit if vips is not operational
         if (!$this->isVipsOperational()) {
+            $this->markTestSkipped('vips is not operational');
             return;
         }
 
         $im = $vipsExposer->createImageResource();
         $options = $vipsExposer->createParamsForVipsWebPSave();
-        $options['non-existing-option'] = true;
+
+        // Create non-existing vips option.
+        // - The converter must be able to ignore this without failing
+        $options['non-existing-vips-option'] = true;
         $vipsExposer->webpsave($im, $options);
+    }
+
+    /**
+     * @covers ::createImageResource
+     */
+    public function testCreateImageResourceWhenFileNotFound()
+    {
+        //
+        reset_pretending();
+
+        $source = self::$imageDir . '/i-do-not-exist.jpg';
+        $this->assertFalse(file_exists($source));
+
+        $options = [];
+        $vips = new Vips($source, $source . '.webp', $options);
+        $vipsExposer = new VipsExposer($vips);
+
+        // this should fail!
+        try {
+            $im = $vipsExposer->createImageResource();
+            $this->fail('exception was expected');
+        } catch (ConversionFailedException $e) {
+            $this->assertRegExp('#not found#', $e->getMessage());
+        }
 
     }
 /*
