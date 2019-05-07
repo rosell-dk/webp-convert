@@ -85,15 +85,16 @@ class WebPConvert
      * @param   string  $destination         path to destination
      * @param   array   $options (optional)  options for serving/converting. The options are documented in the
      *                                       ServeConvertedWebPWithErrorHandling::serve() method
+     * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
      */
-    public static function serveConverted($source, $destination, $options = [])
+    public static function serveConverted($source, $destination, $options = [], $logger = null)
     {
         //return ServeExistingOrHandOver::serveConverted($source, $destination, $options);
         //if (isset($options['handle-errors']) && $options['handle-errors'] === true) {
         if (isset($options['fail']) && ($options['fail'] != 'throw')) {
-            ServeConvertedWebPWithErrorHandling::serve($source, $destination, $options);
+            ServeConvertedWebPWithErrorHandling::serve($source, $destination, $options, $logger);
         } else {
-            ServeConvertedWebP::serve($source, $destination, $options);
+            ServeConvertedWebP::serve($source, $destination, $options, $logger);
         }
     }
 }

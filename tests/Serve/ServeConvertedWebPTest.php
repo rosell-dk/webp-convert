@@ -125,7 +125,7 @@ class ServeConvertedWebPTest extends TestCase
         $result = ob_get_clean();
 
         // Test that headers were set as expected
-        $this->assertTrue(MockedHeader::hasHeaderContaining('X-WebP-Convert-Action:'));
+        //$this->assertTrue(MockedHeader::hasHeaderContaining('X-WebP-Convert-Action:'));
 
         $this->assertTrue(MockedHeader::hasHeader('Content-type: image/webp'));
         $this->assertTrue(MockedHeader::hasHeader('Vary: Accept'));
@@ -155,7 +155,7 @@ class ServeConvertedWebPTest extends TestCase
         $result = ob_get_clean();
 
         // Test that headers were set as expected
-        $this->assertTrue(MockedHeader::hasHeaderContaining('X-WebP-Convert-Action:'));
+        //$this->assertTrue(MockedHeader::hasHeaderContaining('X-WebP-Convert-Action:'));
 
         $this->assertTrue(MockedHeader::hasHeader('Content-type: image/png'));
         $this->assertTrue(MockedHeader::hasHeader('Vary: Accept'));
@@ -192,7 +192,7 @@ class ServeConvertedWebPTest extends TestCase
         $this->assertEquals('1234', $result);
 
         // Test that headers were set as expected
-        $this->assertTrue(MockedHeader::hasHeaderContaining('X-WebP-Convert-Action:'));
+        //$this->assertTrue(MockedHeader::hasHeaderContaining('X-WebP-Convert-Action:'));
 
         $this->assertTrue(MockedHeader::hasHeader('Content-type: image/webp'));
     }
@@ -291,7 +291,7 @@ class ServeConvertedWebPTest extends TestCase
         $this->assertTrue(strpos($result, 'source:') !== false, 'The following does not contain "source:":' . $result);
 
         // Test that headers were set as expected
-        $this->assertTrue(MockedHeader::hasHeaderContaining('X-WebP-Convert-Action:'));
+        //$this->assertTrue(MockedHeader::hasHeaderContaining('X-WebP-Convert-Action:'));
 
         $this->assertTrue(MockedHeader::hasHeader('Content-type: image/webp'));
     }

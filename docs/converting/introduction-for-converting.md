@@ -1,4 +1,4 @@
-# Introduction to the convert method
+# Introduction to converting with WebPConvert
 
 **NOTE: This document only applies to the upcoming 2.0 version**
 

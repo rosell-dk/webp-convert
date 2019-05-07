@@ -6,6 +6,7 @@ use WebPConvert\Serve\Header;
 use WebPConvert\Serve\Report;
 use WebPConvert\Serve\ServeFile;
 
+use WebPConvert\WebPConvert;
 use WebPConvert\Serve\Exceptions\ServeFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
@@ -29,24 +30,11 @@ use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 class ServeConvertedWebP
 {
 
-/*
     public static $defaultOptions = [
-        'add-content-type-header' => true,
-        'add-last-modified-header' => true,
-        'add-vary-header' => true,
-        'add-x-header-status' => true,
-        'add-x-header-options' => false,
-        'aboutToServeImageCallBack' => null,
-        'aboutToPerformFailAction' => null,
-        'cache-control-header' => 'public, max-age=86400',
-        'converters' =>  ['cwebp', 'gd', 'imagick'],
-        'error-reporting' => 'auto',
-        'fail' => 'original',
-        'fail-when-original-unavailable' => '404',
         'reconvert' => false,
         'serve-original' => false,
         'show-report' => false,
-    ];*/
+    ];
 
     /**
      * Serve original file (source).
@@ -85,6 +73,19 @@ class ServeConvertedWebP
     }
 
     /**
+     * @param  string  $msg  Message to add to "X-WebP-Convert-Log" header
+     * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
+     * @return void
+     */
+    private static function headerLog($msg, $logger)
+    {
+        Header::addHeader('X-WebP-Convert-Log: ' . $msg);
+        if (!is_null($logger)) {
+            $logger->logLn($msg);
+        }
+    }
+
+    /**
      * Serve converted webp.
      *
      * Serve a converted webp. If a file already exists at the destination, that is served (unless it is
@@ -97,15 +98,19 @@ class ServeConvertedWebP
      * @param   string  $destination         path to destination
      * @param   array   $options (optional)  options for serving/converting
      *       Supported options:
+     *       'show-report'     => (boolean)   If true, the decision will always be 'report'
+     *       'serve-original'  => (boolean)   If true, the decision will be 'source' (unless above option is set)
+     *       'reconvert     '  => (boolean)   If true, the decision will be 'fresh-conversion' (unless one of the
+     *                                        above options is set)
      *       - All options supported by WebPConvert::convert()
      *       - All options supported by ServeFile::serve()
-     *       - All options supported by DecideWhatToServe::decide)
+     * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
      *
      * @throws  \WebPConvert\Convert\Exceptions\ConversionFailedException  If conversion failed
      * @throws  ServeFailedException       If an argument is invalid or source file does not exists
      * @return  void
      */
-    public static function serve($source, $destination, $options = [])
+    public static function serve($source, $destination, $options = [], $logger = null)
     {
         if (empty($source)) {
             throw new ServeFailedException('Source argument missing');
@@ -117,26 +122,53 @@ class ServeConvertedWebP
             throw new ServeFailedException('Source file was not found');
         }
 
-        list($whatToServe, $whyToServe, $msg) = DecideWhatToServe::decide($source, $destination, $options);
+        $options = array_merge(self::$defaultOptions, $options);
 
-        Header::setHeader('X-WebP-Convert-Action: ' . $msg);
-
-        switch ($whatToServe) {
-            case 'destination':
-                self::serveDestination($destination, $options);
-                break;
-
-            case 'source':
-                self::serveOriginal($source, $options);
-                break;
-
-            case 'fresh-conversion':
-                ConvertAndServeSmallest::serve($source, $destination, $options);
-                break;
-
-            case 'report':
-                Report::convertAndReport($source, $destination, $options);
-                break;
+        // Step 1: Is there a file at the destination? If not, trigger conversion
+        // However, if show-report option is set, serve the report instead
+        if ($options['show-report']) {
+            self::headerLog('Showing report', $logger);
+            Report::convertAndReport($source, $destination, $options);
+            return;
         }
+
+        if (!@file_exists($destination)) {
+            self::headerLog('Converting (there were no file at destination)', $logger);
+            WebPConvert::convert($source, $destination, $options, $logger);
+        } elseif ($options['reconvert']) {
+            self::headerLog('Converting (told to reconvert)', $logger);
+            WebPConvert::convert($source, $destination, $options, $logger);
+        }
+
+        // Step 2: Is the destination older than the source?
+        //         If yes, trigger conversion (deleting destination is implicit)
+        $timestampSource = @filemtime($source);
+        $timestampDestination = @filemtime($destination);
+        if (($timestampSource !== false) &&
+            ($timestampDestination !== false) &&
+            ($timestampSource > $timestampDestination)) {
+                self::headerLog('Converting (destination was older than the source)', $logger);
+                WebPConvert::convert($source, $destination, $options, $logger);
+        }
+
+
+        // Step 3: Serve the smallest file (destination or source)
+        // However, first check if 'serve-original' is set
+        if ($options['serve-original']) {
+            self::headerLog('Serving original (told to)', $logger);
+            self::serveOriginal($source, $options);
+        }
+
+        $filesizeDestination = @filesize($destination);
+        $filesizeSource = @filesize($source);
+        if (($filesizeSource !== false) &&
+            ($filesizeDestination !== false) &&
+            ($filesizeDestination > $filesizeSource)) {
+                self::headerLog('Serving original (it is smaller)', $logger);
+                self::serveOriginal($source, $options);
+        }
+
+        self::headerLog('Serving converted file', $logger);
+        self::serveDestination($destination, $options);
     }
 }

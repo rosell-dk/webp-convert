@@ -9,7 +9,7 @@
 
 *Convert JPEG & PNG to WebP with PHP*
 
-This library enables you to do webp conversion with PHP using *cwebp*, *vips*, *gd*, *imagick*, *ewww* cloud converter or the open source *wpc* cloud converter. It also allows you to try a whole stack &ndash; useful if you do not have control over the environment, and simply want the library to do *everything it can* to convert the image to webp.
+This library enables you to do webp conversion with PHP using *cwebp*, *vips*, *gd*, *imagick*, *gmagick*, *ewww* cloud converter or the open source *wpc* cloud converter. It also allows you to try a whole stack &ndash; useful if you do not have control over the environment, and simply want the library to do *everything it can* to convert the image to webp.
 
 In addition to converting, the library also has a method for *serving* converted images, and we have instructions here on how to set up a solution for automatically serving webp images to browsers that supports webp.
 
@@ -25,7 +25,7 @@ composer require rosell-dk/webp-convert
 ## Converting images
 To convert an image using a stack of converters, you can use the *WebPConvert::convert* method.
 
-Here is a minimal example:
+Here is a minimal example of converting using the *WebPConvert::convert* method:
 
 ```php
 <?php
@@ -41,14 +41,13 @@ $options = [];
 WebPConvert::convert($source, $destination, $options);
 ```
 
-The method comes with a bunch of options. The following introduction is a must-read:
-[docs/convert-introduction.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/convert-introduction.md).
-
+The *WebPConvert::convert* method comes with a bunch of options. The following introduction is a *must-read*:
+[docs/convert-introduction.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md).
 
 ## Serving converted images
-The *convertAndServe* method tries to serve a converted image. If there already is an image at the destination, it will take that, unless the original is newer or smaller. If the method cannot serve a converted image, it will serve original image, a 404, or whatever the 'fail' option is set to - and return false. It also adds a *X-WebP-Convert-Status* header, which allows you to inspect what happened.
+The *WebPConvert::serveConverted* method tries to serve a converted image. If there already is an image at the destination, it will take that, unless the original is newer or smaller. If the method cannot serve a converted image, it will serve original image, a 404, or whatever the 'fail' option is set to - and return false. It also adds a *X-WebP-Convert-Status* header, which allows you to inspect what happened.
 
-Example:
+Example (API 2.0):
 ```php
 <?php
 require 'vendor/autoload.php';
@@ -59,17 +58,17 @@ $destination = $source . '.webp';
 
 WebPConvert::serveConverted($source, $destination, [
     'fail' => 'original',     // If failure, serve the original image (source).
-    //'fail' => '404',        // If failure, respond with 404.
+    //'fail' => '404',        // If failure, respond with 404. Other options include 'throw' and 'report'
     //'show-report' => true,  // Generates a report instead of serving an image
 
     // Besides the specific options for serving, you can also use the options for convert()
 ]);
-
 ```
 
-*NOTE:* In 2.0, the method is renamed from "convertAndServe" to "serveConverted" ("convertAndServe" was implying that a conversion was always made, but the method simply serves destination if it exists and is smaller and newer than source)
+The following introduction is a *must-read* (for 2.0):
+[docs/convert-introduction.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/serving/introduction-for-serving.md).
 
-To see all options, look at the intro here (not updated for 2.0 yet): [docs/api/convert-and-serve.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert-and-serve.md)
+The old introduction (for 1.3.9) is available here: [docs/api/convert-and-serve.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert-and-serve.md)
 
 
 ## WebP on demand
@@ -78,7 +77,6 @@ The library can be used to create a *WebP On Demand* solution, which automatical
 
 ## WebP Convert in the wild
 *WebP Convert* is used in the following projects:
-
 
 #### [webp-express](https://github.com/rosell-dk/webp-express)
 Wordpress integration

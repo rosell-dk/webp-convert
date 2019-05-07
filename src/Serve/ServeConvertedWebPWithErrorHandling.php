@@ -18,7 +18,7 @@ class ServeConvertedWebPWithErrorHandling
 
     public static $defaultOptions = [
         'fail' => 'original',
-        'fail-when-original-unavailable' => '404',
+        'fail-when-fail-fails' => '404',
     ];
 
     /**
@@ -93,22 +93,23 @@ class ServeConvertedWebPWithErrorHandling
      *       - 'fail' => (string)    Action to take on failure (404 | original | report | throw).
      *               "404" or "throw" is recommended for development and "original" is recommended for production.
      *               Default: 'original'.
-     *       - 'fail-when-original-unavailable'  => (string) Action to take if fail action also fails. Default: '404'.
+     *       - 'fail-when-fail-fails'  => (string) Action to take if fail action also fails. Default: '404'.
      *       - All options supported by WebPConvert::convert()
      *       - All options supported by ServeFile::serve()
      *       - All options supported by DecideWhatToServe::decide)
+     * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
      * @return  void
      */
-    public static function serve($source, $destination, $options = [])
+    public static function serve($source, $destination, $options = [], $logger = null)
     {
         $options = array_merge(self::$defaultOptions, $options);
 
         try {
-            ServeConvertedWebP::serve($source, $destination, $options);
+            ServeConvertedWebP::serve($source, $destination, $options, $logger);
         } catch (\Exception $e) {
             self::performFailAction(
                 $options['fail'],
-                $options['fail-when-original-unavailable'],
+                $options['fail-when-fail-fails'],
                 $source,
                 $destination,
                 $options,
