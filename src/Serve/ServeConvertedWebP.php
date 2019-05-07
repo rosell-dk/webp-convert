@@ -123,7 +123,8 @@ class ServeConvertedWebP
         $options = array_merge(self::$defaultOptions, $options);
 
         // Step 1: Is there a file at the destination? If not, trigger conversion
-        // However, if show-report option is set, serve the report instead
+        // However 1: if "show-report" option is set, serve the report instead
+        // However 2: "reconvert" option should also trigger conversion
         if ($options['show-report']) {
             self::headerLog('Showing report', $logger);
             Report::convertAndReport($source, $destination, $options);
@@ -136,19 +137,18 @@ class ServeConvertedWebP
         } elseif ($options['reconvert']) {
             self::headerLog('Converting (told to reconvert)', $logger);
             WebPConvert::convert($source, $destination, $options, $logger);
+        } else {
+            // Step 2: Is the destination older than the source?
+            //         If yes, trigger conversion (deleting destination is implicit)
+            $timestampSource = @filemtime($source);
+            $timestampDestination = @filemtime($destination);
+            if (($timestampSource !== false) &&
+                ($timestampDestination !== false) &&
+                ($timestampSource > $timestampDestination)) {
+                    self::headerLog('Converting (destination was older than the source)', $logger);
+                    WebPConvert::convert($source, $destination, $options, $logger);
+            }
         }
-
-        // Step 2: Is the destination older than the source?
-        //         If yes, trigger conversion (deleting destination is implicit)
-        $timestampSource = @filemtime($source);
-        $timestampDestination = @filemtime($destination);
-        if (($timestampSource !== false) &&
-            ($timestampDestination !== false) &&
-            ($timestampSource > $timestampDestination)) {
-                self::headerLog('Converting (destination was older than the source)', $logger);
-                WebPConvert::convert($source, $destination, $options, $logger);
-        }
-
 
         // Step 3: Serve the smallest file (destination or source)
         // However, first check if 'serve-original' is set
