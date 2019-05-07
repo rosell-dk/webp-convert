@@ -1,7 +1,6 @@
 <?php
 namespace WebPConvert\Serve;
 
-use WebPConvert\Serve\DecideWhatToServe;
 use WebPConvert\Serve\Header;
 use WebPConvert\Serve\Report;
 use WebPConvert\Serve\ServeFile;
@@ -77,7 +76,7 @@ class ServeConvertedWebP
      * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
      * @return void
      */
-    private static function headerLog($msg, $logger)
+    private static function headerLog($msg, $logger = null)
     {
         Header::addHeader('X-WebP-Convert-Log: ' . $msg);
         if (!is_null($logger)) {
@@ -90,9 +89,8 @@ class ServeConvertedWebP
      *
      * Serve a converted webp. If a file already exists at the destination, that is served (unless it is
      * older than the source - in that case a fresh conversion will be made, or the file at the destination
-     * is larger than the source - in that case the source is served). Some options may alter this logic
-     * (see the options of DecideWhatToServe::decide). In case no file exists at the destination, a fresh
-     * conversion is made and served.
+     * is larger than the source - in that case the source is served). Some options may alter this logic.
+     * In case no file exists at the destination, a fresh conversion is made and served.
      *
      * @param   string  $source              path to source file
      * @param   string  $destination         path to destination
