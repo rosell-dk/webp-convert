@@ -2,11 +2,11 @@
 ?><?php
 namespace WebPConvert\Serve;
 
-use WebPConvert\Serve\DecideWhatToServe;
 use WebPConvert\Serve\Header;
 use WebPConvert\Serve\Report;
 use WebPConvert\Serve\ServeFile;
 
+use WebPConvert\WebPConvert;
 use WebPConvert\Serve\Exceptions\ServeFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
@@ -30,24 +30,11 @@ use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 class ServeConvertedWebP
 {
 
-/*
     public static $defaultOptions = [
-        'add-content-type-header' => true,
-        'add-last-modified-header' => true,
-        'add-vary-header' => true,
-        'add-x-header-status' => true,
-        'add-x-header-options' => false,
-        'aboutToServeImageCallBack' => null,
-        'aboutToPerformFailAction' => null,
-        'cache-control-header' => 'public, max-age=86400',
-        'converters' =>  ['cwebp', 'gd', 'imagick'],
-        'error-reporting' => 'auto',
-        'fail' => 'original',
-        'fail-when-original-unavailable' => '404',
         'reconvert' => false,
         'serve-original' => false,
         'show-report' => false,
-    ];*/
+    ];
 
     /**
      * Serve original file (source).
@@ -86,27 +73,43 @@ class ServeConvertedWebP
     }
 
     /**
+     * @param  string  $msg  Message to add to "X-WebP-Convert-Log" header
+     * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
+     * @return void
+     */
+    private static function headerLog($msg, $logger = null)
+    {
+        Header::addHeader('X-WebP-Convert-Log: ' . $msg);
+        if (!is_null($logger)) {
+            $logger->logLn($msg);
+        }
+    }
+
+    /**
      * Serve converted webp.
      *
      * Serve a converted webp. If a file already exists at the destination, that is served (unless it is
      * older than the source - in that case a fresh conversion will be made, or the file at the destination
-     * is larger than the source - in that case the source is served). Some options may alter this logic
-     * (see the options of DecideWhatToServe::decide). In case no file exists at the destination, a fresh
-     * conversion is made and served.
+     * is larger than the source - in that case the source is served). Some options may alter this logic.
+     * In case no file exists at the destination, a fresh conversion is made and served.
      *
      * @param   string  $source              path to source file
      * @param   string  $destination         path to destination
      * @param   array   $options (optional)  options for serving/converting
      *       Supported options:
+     *       'show-report'     => (boolean)   If true, the decision will always be 'report'
+     *       'serve-original'  => (boolean)   If true, the decision will be 'source' (unless above option is set)
+     *       'reconvert     '  => (boolean)   If true, the decision will be 'fresh-conversion' (unless one of the
+     *                                        above options is set)
      *       - All options supported by WebPConvert::convert()
      *       - All options supported by ServeFile::serve()
-     *       - All options supported by DecideWhatToServe::decide)
+     * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
      *
      * @throws  \WebPConvert\Convert\Exceptions\ConversionFailedException  If conversion failed
      * @throws  ServeFailedException       If an argument is invalid or source file does not exists
      * @return  void
      */
-    public static function serve($source, $destination, $options = [])
+    public static function serve($source, $destination, $options = [], $logger = null)
     {
         if (empty($source)) {
             throw new ServeFailedException('Source argument missing');
@@ -118,27 +121,54 @@ class ServeConvertedWebP
             throw new ServeFailedException('Source file was not found');
         }
 
-        list($whatToServe, $whyToServe, $msg) = DecideWhatToServe::decide($source, $destination, $options);
+        $options = array_merge(self::$defaultOptions, $options);
 
-        Header::setHeader('X-WebP-Convert-Action: ' . $msg);
-
-        switch ($whatToServe) {
-            case 'destination':
-                self::serveDestination($destination, $options);
-                break;
-
-            case 'source':
-                self::serveOriginal($source, $options);
-                break;
-
-            case 'fresh-conversion':
-                ConvertAndServeSmallest::serve($source, $destination, $options);
-                break;
-
-            case 'report':
-                Report::convertAndReport($source, $destination, $options);
-                break;
+        // Step 1: Is there a file at the destination? If not, trigger conversion
+        // However, if show-report option is set, serve the report instead
+        if ($options['show-report']) {
+            self::headerLog('Showing report', $logger);
+            Report::convertAndReport($source, $destination, $options);
+            return;
         }
+
+        if (!@file_exists($destination)) {
+            self::headerLog('Converting (there were no file at destination)', $logger);
+            WebPConvert::convert($source, $destination, $options, $logger);
+        } elseif ($options['reconvert']) {
+            self::headerLog('Converting (told to reconvert)', $logger);
+            WebPConvert::convert($source, $destination, $options, $logger);
+        }
+
+        // Step 2: Is the destination older than the source?
+        //         If yes, trigger conversion (deleting destination is implicit)
+        $timestampSource = @filemtime($source);
+        $timestampDestination = @filemtime($destination);
+        if (($timestampSource !== false) &&
+            ($timestampDestination !== false) &&
+            ($timestampSource > $timestampDestination)) {
+                self::headerLog('Converting (destination was older than the source)', $logger);
+                WebPConvert::convert($source, $destination, $options, $logger);
+        }
+
+
+        // Step 3: Serve the smallest file (destination or source)
+        // However, first check if 'serve-original' is set
+        if ($options['serve-original']) {
+            self::headerLog('Serving original (told to)', $logger);
+            self::serveOriginal($source, $options);
+        }
+
+        $filesizeDestination = @filesize($destination);
+        $filesizeSource = @filesize($source);
+        if (($filesizeSource !== false) &&
+            ($filesizeDestination !== false) &&
+            ($filesizeDestination > $filesizeSource)) {
+                self::headerLog('Serving original (it is smaller)', $logger);
+                self::serveOriginal($source, $options);
+        }
+
+        self::headerLog('Serving converted file', $logger);
+        self::serveDestination($destination, $options);
     }
 }
 
@@ -162,7 +192,7 @@ class ServeConvertedWebPWithErrorHandling
 
     public static $defaultOptions = [
         'fail' => 'original',
-        'fail-when-original-unavailable' => '404',
+        'fail-when-fail-fails' => '404',
     ];
 
     /**
@@ -237,22 +267,23 @@ class ServeConvertedWebPWithErrorHandling
      *       - 'fail' => (string)    Action to take on failure (404 | original | report | throw).
      *               "404" or "throw" is recommended for development and "original" is recommended for production.
      *               Default: 'original'.
-     *       - 'fail-when-original-unavailable'  => (string) Action to take if fail action also fails. Default: '404'.
+     *       - 'fail-when-fail-fails'  => (string) Action to take if fail action also fails. Default: '404'.
      *       - All options supported by WebPConvert::convert()
      *       - All options supported by ServeFile::serve()
      *       - All options supported by DecideWhatToServe::decide)
+     * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
      * @return  void
      */
-    public static function serve($source, $destination, $options = [])
+    public static function serve($source, $destination, $options = [], $logger = null)
     {
         $options = array_merge(self::$defaultOptions, $options);
 
         try {
-            ServeConvertedWebP::serve($source, $destination, $options);
+            ServeConvertedWebP::serve($source, $destination, $options, $logger);
         } catch (\Exception $e) {
             self::performFailAction(
                 $options['fail'],
-                $options['fail-when-original-unavailable'],
+                $options['fail-when-fail-fails'],
                 $source,
                 $destination,
                 $options,
@@ -262,116 +293,6 @@ class ServeConvertedWebPWithErrorHandling
     }
 }
 
-?><?php
-namespace WebPConvert\Serve;
-
-//use WebPConvert\Serve\Report;
-
-/**
- * Decide what to serve based on options, file sizes and file modification dates.
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-class DecideWhatToServe
-{
-
-    public static $defaultOptions = [
-        'reconvert' => false,
-        'serve-original' => false,
-        'show-report' => false,
-    ];
-
-    /**
-     * Decides what to serve.
-     *
-     * It both decides what to serve and supplies the reason behind.
-     *
-     * The possible combinations are:
-     *
-     * - "destination"  (serve existing converted image at the destination path)
-     *      - "no-reason-not-to"
-     * - "source"
-     *      - "explicitly-told-to"
-     *      - "source-lighter"      (happens if a file exists on the destination
-     *                               but the source file is smaller)
-     * - "fresh-conversion" (note: this may still fail)
-     *      - "explicitly-told-to"
-     *      - "source-modified"     (happens if a file exists on the destination
-     *                               but its modification date is older than that of the source)
-     *      - "no-existing"
-     * - "fail"
-     *       - "Missing destination argument"
-     * - "critical-fail"   (a failure where the source file cannot be served)
-     *       - "missing-source-argument"
-     *       - "source-not-found"
-     * - "report"
-     *
-     * @param  string              $source        The path to the file to convert
-     * @param  string              $destination   The path to save the converted file to
-     * @param  array               $options       (optional)
-     *       Supported options:
-     *       'show-report'     => (boolean)   If true, the decision will always be 'report'
-     *       'serve-original'  => (boolean)   If true, the decision will be 'source' (unless above option is set)
-     *       'reconvert     '  => (boolean)   If true, the decision will be 'fresh-conversion' (unless one of the
-     *                                        above options is set)
-     *
-     * @return  array  Three items: what to serve (id), why to serve (id) and suggested message
-     */
-    public static function decide($source, $destination, $options)
-    {
-        $options = array_merge(self::$defaultOptions, $options);
-
-        if ($options['show-report']) {
-            return ['report', 'explicitly-told-to', 'Serving report (explicitly told to)'];
-        }
-        if ($options['serve-original']) {
-            return ['source', 'explicitly-told-to', 'Serving original image (was explicitly told to)'];
-        }
-        if ($options['reconvert']) {
-            return ['fresh-conversion', 'explicitly-told-to', 'Serving fresh conversion (was explicitly told to)'];
-        }
-
-        if (@file_exists($destination)) {
-            // Reconvert if existing conversion is older than the original
-            $timestampSource = @filemtime($source);
-            $timestampDestination = @filemtime($destination);
-            if (($timestampSource !== false) &&
-                ($timestampDestination !== false) &&
-                ($timestampSource > $timestampDestination)) {
-                return [
-                    'fresh-conversion',
-                    'source-modified',
-                    'Serving fresh conversion ' .
-                        '(the existing conversion is discarded because original has been modified since then)'
-                ];
-            }
-
-            // Serve source if it is smaller than destination
-            $filesizeDestination = @filesize($destination);
-            $filesizeSource = @filesize($source);
-            if (($filesizeSource !== false) &&
-                ($filesizeDestination !== false) &&
-                ($filesizeDestination > $filesizeSource)) {
-                return [
-                    'source',
-                    'source-lighter',
-                    'Serving original image (it is smaller than the already converted)'
-                ];
-            }
-
-            // Destination exists, and there is no reason left not to serve it
-            return ['destination', 'no-reason-not-to', 'Serving existing conversion'];
-        } else {
-            return [
-                'fresh-conversion',
-                'no-existing',
-                'Serving fresh conversion (there were no existing conversion to serve)'
-            ];
-        }
-    }
-}
 
 ?><?php
 namespace WebPConvert\Serve;
@@ -574,15 +495,16 @@ class WebPConvert
      * @param   string  $destination         path to destination
      * @param   array   $options (optional)  options for serving/converting. The options are documented in the
      *                                       ServeConvertedWebPWithErrorHandling::serve() method
+     * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
      */
-    public static function serveConverted($source, $destination, $options = [])
+    public static function serveConverted($source, $destination, $options = [], $logger = null)
     {
         //return ServeExistingOrHandOver::serveConverted($source, $destination, $options);
         //if (isset($options['handle-errors']) && $options['handle-errors'] === true) {
         if (isset($options['fail']) && ($options['fail'] != 'throw')) {
-            ServeConvertedWebPWithErrorHandling::serve($source, $destination, $options);
+            ServeConvertedWebPWithErrorHandling::serve($source, $destination, $options, $logger);
         } else {
-            ServeConvertedWebP::serve($source, $destination, $options);
+            ServeConvertedWebP::serve($source, $destination, $options, $logger);
         }
     }
 }

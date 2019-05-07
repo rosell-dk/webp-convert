@@ -1165,31 +1165,33 @@ class Cwebp extends AbstractExecConverter
     {
         $options = $this->options;
 
-        $commandOptionsArray = [];
+        $cmdOptions = [];
 
         // Metadata (all, exif, icc, xmp or none (default))
         // Comma-separated list of existing metadata to copy from input to output
-        $commandOptionsArray[] = '-metadata ' . $options['metadata'];
+        $cmdOptions[] = '-metadata ' . $options['metadata'];
 
         // Size
+        $addedSizeOption = false;
         if (!is_null($options['size-in-percentage'])) {
-            $sizeSource =  filesize($this->source);
+            $sizeSource = filesize($this->source);
             if ($sizeSource !== false) {
                 $targetSize = floor($sizeSource * $options['size-in-percentage'] / 100);
+                $cmdOptions[] = '-size ' . $targetSize;
+                $addedSizeOption = true;
             }
         }
-        if (isset($targetSize)) {
-            $commandOptionsArray[] = '-size ' . $targetSize;
-        } else {
-            // Image quality
-            $commandOptionsArray[] = '-q ' . $this->getCalculatedQuality();
+
+        // quality
+        if (!$addedSizeOption) {
+            $cmdOptions[] = '-q ' . $this->getCalculatedQuality();
         }
 
         // Losless PNG conversion
         if ($options['lossless'] === true) {
             // No need to add -lossless when near-lossless is used
             if ($options['near-lossless'] === 100) {
-                $commandOptionsArray[] = '-lossless';
+                $cmdOptions[] = '-lossless';
             }
         }
 
@@ -1198,20 +1200,20 @@ class Cwebp extends AbstractExecConverter
             // We only let near_lossless have effect when lossless is set.
             // otherwise lossless auto would not work as expected
             if ($options['lossless'] === true) {
-                $commandOptionsArray[] ='-near_lossless ' . $options['near-lossless'];
+                $cmdOptions[] ='-near_lossless ' . $options['near-lossless'];
             }
         }
 
         if ($options['autofilter'] === true) {
-            $commandOptionsArray[] = '-af';
+            $cmdOptions[] = '-af';
         }
 
         // Built-in method option
-        $commandOptionsArray[] = '-m ' . strval($options['method']);
+        $cmdOptions[] = '-m ' . strval($options['method']);
 
         // Built-in low memory option
         if ($options['low-memory']) {
-            $commandOptionsArray[] = '-low_memory';
+            $cmdOptions[] = '-low_memory';
         }
 
         // command-line-options
@@ -1226,7 +1228,7 @@ class Cwebp extends AbstractExecConverter
                     if ($cName == '') {
                         continue;
                     }
-                    $commandOptionsArray[] = '-' . $cName;
+                    $cmdOptions[] = '-' . $cName;
                 } else {
                     $cName = substr($cmdOption, 0, $pos);
                     $cValues = substr($cmdOption, $pos + 1);
@@ -1235,22 +1237,22 @@ class Cwebp extends AbstractExecConverter
                         $cArg = escapeshellarg($cArg);
                     }
                     $cValues = implode(' ', $cValuesArr);
-                    $commandOptionsArray[] = '-' . $cName . ' ' . $cValues;
+                    $cmdOptions[] = '-' . $cName . ' ' . $cValues;
                 }
             }
         }
 
         // Source file
-        $commandOptionsArray[] = escapeshellarg($this->source);
+        $cmdOptions[] = escapeshellarg($this->source);
 
         // Output
-        $commandOptionsArray[] = '-o ' . escapeshellarg($this->destination);
+        $cmdOptions[] = '-o ' . escapeshellarg($this->destination);
 
         // Redirect stderr to same place as stdout
         // https://www.brianstorti.com/understanding-shell-script-idiom-redirect/
-        $commandOptionsArray[] = '2>&1';
+        $cmdOptions[] = '2>&1';
 
-        $commandOptions = implode(' ', $commandOptionsArray);
+        $commandOptions = implode(' ', $cmdOptions);
         $this->logLn('command line options:' . $commandOptions);
 
         return $commandOptions;
@@ -4049,107 +4051,6 @@ class VoidLogger extends BaseLogger
 
     public function ln()
     {
-    }
-}
-
-?><?php
-namespace WebPConvert\Serve;
-
-use WebPConvert\WebPConvert;
-
-use WebPConvert\Serve\DecideWhatToServe;
-use WebPConvert\Serve\Header;
-use WebPConvert\Serve\Exceptions\ServeFailedException;
-
-/**
- * Convert image to webp and serve it or the original (whichever is smallest).
- *
- * Converts and serves the conversion, unless:
- * - If the converted file turns out to be larger than the original, the original will be served.
- * - If the "serve-original" option is set, the original image even when it is larger than the converted
- * - If conversion fails, an exception is thrown.
- *
- * The conversion will always be fresh. If an image already exists at the destination, it will be removed.
- * If you would like to serve existing conversion when available, use the ServeConvertedWebP class.
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- *
- * @see        WebPConvert::convert()   For the available conversion options
- * @see        ServeFile::serve()       For the available serve options (headers)
- */
-class ConvertAndServeSmallest
-{
-
-    /**
-     * Convert image to webp and serve it or the original (whichever is smallest).
-     *
-     * Converts and serves the conversion, unless:
-     * - If the converted file turns out to be larger than the original, the original will be served.
-     * - If the "serve-original" option is set, the original image will be served rather than the converted.
-     * - If conversion fails, an exception is thrown.
-     *
-     * The conversion will always be fresh. If an image already exists at the destination, it will be removed.
-     * If you would like to serve existing conversion when available, use the ServeConvertedWebP class.
-     *
-     * @param  string              $source        The path to the file to convert
-     * @param  string              $destination   The path to save the converted file to
-     * @param  array               $options       (optional)
-     *       Supported options:
-     *       - All options supported by WebPConvert::convert()
-     *       - All options supported by ServeFile::serve()
-     *       - The "serve-original" option, effected by DecideWhatToServe::decide
-     *
-     * @see        WebPConvert::convert()   For the available conversion options
-     * @see        ServeFile::serve()       For the available serve options (headers)
-     *
-     * @throws ServeFailedException  if serving failed
-     * @throws  \WebPConvert\Convert\Exceptions\ConversionFailedException  If conversion failed
-     * @return  void
-     */
-    public static function serve($source, $destination, $options = [])
-    {
-
-        try {
-            WebPConvert::convert($source, $destination, $options);
-
-            // We are here, so it was successful :)
-            // If destination is smaller than source, we should serve destination. Otherwise we should serve source.
-            // We can use DecideWhatToServe for that purpose.
-            // However, we must make sure it does not answer "fresh-conversion" or "report"
-
-            // Unset "reconvert", so we do not get "fresh-conversion"
-            unset($options['reconvert']);
-
-            // Unset "show-report", so we do not get "report"
-            unset($options['show-report']);
-
-            list($whatToServe, $whyToServe, $msg) = DecideWhatToServe::decide($source, $destination, $options);
-
-            switch ($whatToServe) {
-                case 'source':
-                    Header::addHeader('X-WebP-Convert-Action: ' . $msg);
-                    ServeConvertedWebP::serveOriginal($source, $options);
-                    break;
-                case 'destination':
-                    ServeConvertedWebP::serveDestination($destination, $options);
-                    break;
-
-                case 'fresh-conversion':
-                    // intentional fall through
-                case 'report':
-                    // intentional fall through
-                default:
-                    throw new ServeFailedException(
-                        'DecideWhatToServe was supposed to return either "source" or "destination". ' .
-                        'However, it returned: "' . $whatToServe . '"'
-                    );
-                    break;
-            }
-        } catch (\Exception $e) {
-            throw $e;
-        }
     }
 }
 
