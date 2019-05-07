@@ -186,6 +186,12 @@ class VipsTest extends TestCase
         //
         reset_pretending();
 
+        // Exit if vips is not operational
+        if (!$this->isVipsOperational()) {
+            $this->markTestSkipped('vips is not operational');
+            return;
+        }
+
         $source = self::$imageDir . '/i-do-not-exist.jpg';
         $this->assertFalse(file_exists($source));
 
