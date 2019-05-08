@@ -16,11 +16,12 @@ class ServeFile
 {
 
     public static $defaultOptions = [
-        'add-vary-accept-header' => true,
+        'set-cache-control-header' => false,
+        'set-expires-header' => false,
+        'cache-control-header' => 'public, max-age=31536000',
+        'add-vary-accept-header' => false,
         'set-content-type-header' => true,
         'set-last-modified-header' => true,
-        'set-cache-control-header' => true,
-        'cache-control-header' => 'public, max-age=86400',
     ];
 
     /**
@@ -45,22 +46,23 @@ class ServeFile
     {
         $options = array_merge(self::$defaultOptions, $options);
 
-        if ($options['set-last-modified-header'] === true) {
+        if ($options['set-last-modified-header']) {
             Header::setHeader("Last-Modified: " . gmdate("D, d M Y H:i:s", @filemtime($filename)) ." GMT");
         }
 
-        if ($options['set-content-type-header'] === true) {
+        if ($options['set-content-type-header']) {
             Header::setHeader('Content-type: ' . $contentType);
         }
 
-        if ($options['add-vary-accept-header'] === true) {
+        if ($options['add-vary-accept-header']) {
             Header::addHeader('Vary: Accept');
         }
 
-        if ($options['set-cache-control-header'] === true) {
-            if (!empty($options['cache-control-header'])) {
+        if (!empty($options['cache-control-header'])) {
+            if ($options['set-cache-control-header']) {
                 Header::setHeader('Cache-Control: ' . $options['cache-control-header']);
-
+            }
+            if ($options['set-expires-header']) {
                 // Add exprires header too (#126)
                 // Check string for something like this: max-age:86400
                 if (preg_match('#max-age\\s*=\\s*(\\d*)#', $options['cache-control-header'], $matches)) {
