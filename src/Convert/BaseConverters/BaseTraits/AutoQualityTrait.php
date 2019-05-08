@@ -4,11 +4,26 @@ namespace WebPConvert\Convert\BaseConverters\BaseTraits;
 
 use WebPConvert\Convert\Helpers\JpegQualityDetector;
 
+/**
+ * Trait for handling the "quality:auto" option.
+ *
+ * This trait is only used in the AbstractConverter class. It has been extracted into a
+ * trait in order to bundle the methods concerning auto quality.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 trait AutoQualityTrait
 {
 
+    /** @var boolean  Whether the quality option has been processed or not */
     private $processed = false;
+
+    /** @var boolean  Whether the quality of the source could be detected or not (set upon processing) */
     private $qualityCouldNotBeDetected = false;
+
+    /** @var boolean  The calculated quality (set upon processing - on successful detection) */
     private $calculatedQuality;
 
     abstract public function getMimeTypeOfSource();
@@ -20,6 +35,8 @@ trait AutoQualityTrait
      *  - Mime type is "image/jpeg"
      *  - Quality is set to "auto"
      *
+     *  If quality option hasn't been proccessed yet, it is triggered.
+     *
      *  @return  boolean
      */
     public function isQualityDetectionRequiredButFailing()
@@ -29,14 +46,13 @@ trait AutoQualityTrait
     }
 
     /**
-     *  Get calculated quality.
+     * Get calculated quality.
      *
-     *  If mime type is something else than "image/jpeg", the "default-quality" option is returned
-     *  Same thing for jpeg, when the "quality" option is set to a number (rather than "auto").
-     *
-     *  Otherwise:
-     *  If quality cannot be detetected, the "default-quality" option is returned.
-     *  If quality can be detetected, the lowest value of this and the "max-quality" option is returned
+     * If the "quality" option is a number, that number is returned.
+     * If mime type of source is something else than "image/jpeg", the "default-quality" option is returned
+     * If quality is "auto" and source is a jpeg image, it will be attempted to detect jpeg quality.
+     * In case of failure, the value of the "default-quality" option is returned.
+     * In case of success, the detected quality is returned, or the value of the "max-quality" if that is lower.
      *
      *  @return  int
      */
@@ -47,6 +63,8 @@ trait AutoQualityTrait
     }
 
     /**
+     * Process the quality option if it is not already processed.
+     *
      * @return void
      */
     private function processQualityOptionIfNotAlready()
@@ -58,6 +76,13 @@ trait AutoQualityTrait
     }
 
     /**
+     * Process the quality option.
+     *
+     * Sets the private property "calculatedQuality" according to the description for the getCalculatedQuality
+     * function.
+     * In case quality detection was attempted and failed, the private property "qualityCouldNotBeDetected" is set
+     * to true. This is used by the "isQualityDetectionRequiredButFailing" (and documented there too).
+     *
      * @return void
      */
     private function processQualityOption()

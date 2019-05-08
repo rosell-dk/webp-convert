@@ -2,9 +2,20 @@
 
 namespace WebPConvert\Convert\BaseConverters\BaseTraits;
 
+/**
+ * Trait for providing logging capabilities.
+ *
+ * This trait is currently only used in the AbstractConverter class. It has been extracted into a
+ * trait in order to bundle the methods concerning logging.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 trait LoggerTrait
 {
 
+    /** @var \WebPConvert\Loggers\BaseLogger  The logger (or null if not set) */
     public $logger;
 
     /**
@@ -15,9 +26,6 @@ trait LoggerTrait
      */
     public function setLogger($logger = null)
     {
-        if (!isset($logger)) {
-            $logger = new \WebPConvert\Loggers\VoidLogger();
-        }
         $this->logger = $logger;
     }
 
@@ -30,21 +38,34 @@ trait LoggerTrait
      */
     protected function logLn($msg, $style = '')
     {
-        $this->logger->logLn($msg, $style);
+        if (isset($this->logger)) {
+            $this->logger->logLn($msg, $style);
+        }
     }
 
-    public function logLnLn($msg)
-    {
-        $this->logger->logLnLn($msg);
-    }
-
+    /**
+     * New line
+     *
+     * @return  void
+     */
     public function ln()
     {
-        $this->logger->ln();
+        if (isset($this->logger)) {
+            $this->logger->ln();
+        }
     }
 
-    public function log($msg)
+    /**
+     * Write to the logger, without newline
+     *
+     * @param  string  $msg    What to write.
+     * @param  string  $style  (optional) Ie "italic" or "bold"
+     * @return void
+     */
+    public function log($msg, $style = '')
     {
-        $this->logger->log($msg);
+        if (isset($this->logger)) {
+            $this->logger->log($msg, $style);
+        }
     }
 }

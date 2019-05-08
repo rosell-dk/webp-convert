@@ -5,6 +5,16 @@ namespace WebPConvert\Convert\BaseConverters\BaseTraits;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidOptionTypeException;
 
+/**
+ * Trait for handling options
+ *
+ * This trait is currently only used in the AbstractConverter class. It has been extracted into a
+ * trait in order to bundle the methods concerning options.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 trait OptionsTrait
 {
 
@@ -19,7 +29,8 @@ trait OptionsTrait
 
     abstract protected function getMimeTypeOfSource();
 
-    public static $optionDefinitionsBasic = [
+    /** @var array  General options (available on all converters) */
+    protected static $optionDefinitionsBasic = [
         ['quality', 'number|string', 'auto'],    // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
         ['max-quality', 'number', 85],
         ['default-quality', 'number', 75],       // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
