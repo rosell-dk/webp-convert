@@ -28,6 +28,7 @@ WebPConvert::serveConverted($source, $destination, [
     'add-vary-accept-header' => false,
     'set-content-type-header' => true,
     'set-last-modified-header' => true,
+    'set-content-length-header' => true,
 
     // Besides the specific options for serving, you can also use the options for the conversion,
     // such as 'quality' etc
@@ -83,6 +84,9 @@ The Last-Modified header is also used for caching purposes. You should leave tha
 The *Content-Type* header tells browsers what they are receiving. This is important information and you should leave the *set-content-type-header* option at its default (true), unless you set it by other means.
 
 When the outcome is to serve a webp, the header will be set to: "Content-Type: image/webp". When the original is to be served, the library will try to detect the mime type of the file and set the content type accordingly. The [image-mime-type-guesser](https://github.com/rosell-dk/image-mime-type-guesser) library is used for that.
+
+#### *Content-Length* header
+The *Content-Length* header tells browsers the length of the content. According to [the specs](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.13), it should be set unless it is prohibited by rules in [section 4.4](https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.4). In that section we learn that it should not be set when the *Transfer-Encoding* header is set (which it often is, to "chunked"). However, no harm done, because it also says that clients should ignore the header in case *Transfer-Encoding* is set. From this I concluded that it makes sense to default the *set-content-length-header* to true. I might however change this in case I should learn that the header could be problematic in some way. So if you decided you want it, do not rely on the default, but set it to *true*. See discussion on this subject [here](https://stackoverflow.com/questions/3854842/content-length-header-with-head-requests/3854983#3854983).
 
 #### *X-WebP-Convert-Log* headers
 The serve method adds *X-WebP-Convert-Log* headers in order to let you know what went on.

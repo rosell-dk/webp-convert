@@ -22,6 +22,7 @@ class ServeFile
         'add-vary-accept-header' => false,
         'set-content-type-header' => true,
         'set-last-modified-header' => true,
+        'set-content-length-header' => true,
     ];
 
     /**
@@ -34,7 +35,7 @@ class ServeFile
      * @param  array   $options      Array of named options (optional).
      *       Supported options:
      *       'add-vary-accept-header'  => (boolean)   Whether to add *Vary: Accept* header or not. Default: true.
-     *       'set-content-type-header' => (boolean)   Whether to set *Content-type* header or not. Default: true.
+     *       'set-content-type-header' => (boolean)   Whether to set *Content-Type* header or not. Default: true.
      *       'set-last-modified-header' => (boolean)  Whether to set *Last-Modified* header or not. Default: true.
      *       'set-cache-control-header' => (boolean)  Whether to set *Cache-Control* header or not. Default: true.
      *       'cache-control-header' => string         Cache control header. Default: "public, max-age=86400"
@@ -44,6 +45,11 @@ class ServeFile
      */
     public static function serve($filename, $contentType, $options = [])
     {
+        if (!file_exists($filename)) {
+            Header::addHeader('X-WebP-Convert-Error: Could not read file');
+            throw new ServeFailedException('Could not read file');
+        }
+
         $options = array_merge(self::$defaultOptions, $options);
 
         if ($options['set-last-modified-header']) {
@@ -51,7 +57,7 @@ class ServeFile
         }
 
         if ($options['set-content-type-header']) {
-            Header::setHeader('Content-type: ' . $contentType);
+            Header::setHeader('Content-Type: ' . $contentType);
         }
 
         if ($options['add-vary-accept-header']) {
@@ -70,6 +76,10 @@ class ServeFile
                     Header::setHeader('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + intval($seconds)));
                 }
             }
+        }
+
+        if ($options['set-content-length-header']) {
+            Header::setHeader('Content-Length: ' . filesize($filename));
         }
 
         if (@readfile($filename) === false) {

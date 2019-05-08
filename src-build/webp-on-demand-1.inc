@@ -72,18 +72,6 @@ class ServeConvertedWebP
         ServeFile::serve($destination, 'image/webp', $options);
     }
 
-    /**
-     * @param  string  $msg  Message to add to "X-WebP-Convert-Log" header
-     * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
-     * @return void
-     */
-    private static function headerLog($msg, $logger = null)
-    {
-        Header::addHeader('X-WebP-Convert-Log: ' . $msg);
-        if (!is_null($logger)) {
-            $logger->logLn($msg);
-        }
-    }
 
     /**
      * Serve converted webp.
@@ -127,16 +115,16 @@ class ServeConvertedWebP
         // However 1: if "show-report" option is set, serve the report instead
         // However 2: "reconvert" option should also trigger conversion
         if ($options['show-report']) {
-            self::headerLog('Showing report', $logger);
+            Header::addLogHeader('Showing report', $logger);
             Report::convertAndReport($source, $destination, $options);
             return;
         }
 
         if (!@file_exists($destination)) {
-            self::headerLog('Converting (there were no file at destination)', $logger);
+            Header::addLogHeader('Converting (there were no file at destination)', $logger);
             WebPConvert::convert($source, $destination, $options, $logger);
         } elseif ($options['reconvert']) {
-            self::headerLog('Converting (told to reconvert)', $logger);
+            Header::addLogHeader('Converting (told to reconvert)', $logger);
             WebPConvert::convert($source, $destination, $options, $logger);
         } else {
             // Step 2: Is the destination older than the source?
@@ -146,7 +134,7 @@ class ServeConvertedWebP
             if (($timestampSource !== false) &&
                 ($timestampDestination !== false) &&
                 ($timestampSource > $timestampDestination)) {
-                    self::headerLog('Converting (destination was older than the source)', $logger);
+                    Header::addLogHeader('Converting (destination was older than the source)', $logger);
                     WebPConvert::convert($source, $destination, $options, $logger);
             }
         }
@@ -154,7 +142,7 @@ class ServeConvertedWebP
         // Step 3: Serve the smallest file (destination or source)
         // However, first check if 'serve-original' is set
         if ($options['serve-original']) {
-            self::headerLog('Serving original (told to)', $logger);
+            Header::addLogHeader('Serving original (told to)', $logger);
             self::serveOriginal($source, $options);
         }
 
@@ -163,11 +151,11 @@ class ServeConvertedWebP
         if (($filesizeSource !== false) &&
             ($filesizeDestination !== false) &&
             ($filesizeDestination > $filesizeSource)) {
-                self::headerLog('Serving original (it is smaller)', $logger);
+                Header::addLogHeader('Serving original (it is smaller)', $logger);
                 self::serveOriginal($source, $options);
         }
 
-        self::headerLog('Serving converted file', $logger);
+        Header::addLogHeader('Serving converted file', $logger);
         self::serveDestination($destination, $options);
     }
 }
@@ -179,6 +167,7 @@ use WebPConvert\Serve\Header;
 use WebPConvert\Serve\Report;
 use WebPConvert\Serve\ServeConvertedWeb;
 use WebPConvert\Serve\Exceptions\ServeFailedException;
+use WebPConvert\Exceptions\WebPConvertException;
 
 /**
  * Serve a converted webp image and handle errors.
@@ -192,7 +181,7 @@ class ServeConvertedWebPWithErrorHandling
 
     public static $defaultOptions = [
         'fail' => 'original',
-        'fail-when-fail-fails' => '404',
+        'fail-when-fail-fails' => 'throw',
     ];
 
     /**
@@ -221,6 +210,9 @@ class ServeConvertedWebPWithErrorHandling
     public static function performFailAction($fail, $failIfFailFails, $source, $destination, $options, $e)
     {
         self::addHeadersPreventingCaching();
+
+        //Header::addLogHeader('Failure');
+        Header::addLogHeader('Performing fail action: ' . $fail);
 
         switch ($fail) {
             case 'original':
@@ -281,6 +273,10 @@ class ServeConvertedWebPWithErrorHandling
         try {
             ServeConvertedWebP::serve($source, $destination, $options, $logger);
         } catch (\Exception $e) {
+            if ($e instanceof \WebPConvert\Exceptions\WebPConvertException) {
+                Header::addLogHeader($e->getShortMessage(), $logger);
+            }
+
             self::performFailAction(
                 $options['fail'],
                 $options['fail-when-fail-fails'],
@@ -312,11 +308,13 @@ class ServeFile
 {
 
     public static $defaultOptions = [
-        'add-vary-accept-header' => true,
+        'set-cache-control-header' => false,
+        'set-expires-header' => false,
+        'cache-control-header' => 'public, max-age=31536000',
+        'add-vary-accept-header' => false,
         'set-content-type-header' => true,
         'set-last-modified-header' => true,
-        'set-cache-control-header' => true,
-        'cache-control-header' => 'public, max-age=86400',
+        'set-content-length-header' => true,
     ];
 
     /**
@@ -329,7 +327,7 @@ class ServeFile
      * @param  array   $options      Array of named options (optional).
      *       Supported options:
      *       'add-vary-accept-header'  => (boolean)   Whether to add *Vary: Accept* header or not. Default: true.
-     *       'set-content-type-header' => (boolean)   Whether to set *Content-type* header or not. Default: true.
+     *       'set-content-type-header' => (boolean)   Whether to set *Content-Type* header or not. Default: true.
      *       'set-last-modified-header' => (boolean)  Whether to set *Last-Modified* header or not. Default: true.
      *       'set-cache-control-header' => (boolean)  Whether to set *Cache-Control* header or not. Default: true.
      *       'cache-control-header' => string         Cache control header. Default: "public, max-age=86400"
@@ -339,24 +337,30 @@ class ServeFile
      */
     public static function serve($filename, $contentType, $options = [])
     {
+        if (!file_exists($filename)) {
+            Header::addHeader('X-WebP-Convert-Error: Could not read file');
+            throw new ServeFailedException('Could not read file');
+        }
+
         $options = array_merge(self::$defaultOptions, $options);
 
-        if ($options['set-last-modified-header'] === true) {
+        if ($options['set-last-modified-header']) {
             Header::setHeader("Last-Modified: " . gmdate("D, d M Y H:i:s", @filemtime($filename)) ." GMT");
         }
 
-        if ($options['set-content-type-header'] === true) {
-            Header::setHeader('Content-type: ' . $contentType);
+        if ($options['set-content-type-header']) {
+            Header::setHeader('Content-Type: ' . $contentType);
         }
 
-        if ($options['add-vary-accept-header'] === true) {
+        if ($options['add-vary-accept-header']) {
             Header::addHeader('Vary: Accept');
         }
 
-        if ($options['set-cache-control-header'] === true) {
-            if (!empty($options['cache-control-header'])) {
+        if (!empty($options['cache-control-header'])) {
+            if ($options['set-cache-control-header']) {
                 Header::setHeader('Cache-Control: ' . $options['cache-control-header']);
-
+            }
+            if ($options['set-expires-header']) {
                 // Add exprires header too (#126)
                 // Check string for something like this: max-age:86400
                 if (preg_match('#max-age\\s*=\\s*(\\d*)#', $options['cache-control-header'], $matches)) {
@@ -364,6 +368,10 @@ class ServeFile
                     Header::setHeader('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + intval($seconds)));
                 }
             }
+        }
+
+        if ($options['set-content-length-header']) {
+            Header::setHeader('Content-Length: ' . filesize($filename));
         }
 
         if (@readfile($filename) === false) {
@@ -405,6 +413,19 @@ class Header
     public static function setHeader($header)
     {
         header($header, true);
+    }
+
+    /**
+     * @param  string  $msg  Message to add to "X-WebP-Convert-Log" header
+     * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
+     * @return void
+     */
+    public static function addLogHeader($msg, $logger = null)
+    {
+        self::addHeader('X-WebP-Convert-Log: ' . $msg);
+        if (!is_null($logger)) {
+            $logger->logLn($msg);
+        }
     }
 }
 

@@ -29,8 +29,11 @@ class ServeFileTest extends TestCase
         $this->assertGreaterThanOrEqual(1, MockedHeader::getNumHeaders());
 
         // Test that headers were set as expected
-        $this->assertTrue(MockedHeader::hasHeader('Content-type: image/webp'));
+        $this->assertTrue(MockedHeader::hasHeader('Content-Type: image/webp'));
         $this->assertFalse(MockedHeader::hasHeader('Vary: Accept'));
+
+        $this->assertTrue(MockedHeader::hasHeaderContaining('Content-Length:'));
+
         //$this->assertTrue(MockedHeader::hasHeader('Last-Modified: Mon, 29 Apr 2019 12:54:37 GMT'));
 
         // TODO:The following fails on travis. WHY???
@@ -76,6 +79,7 @@ class ServeFileTest extends TestCase
             'set-content-type-header' => false,
             'set-last-modified-header' => false,
             'set-cache-control-header' => false,
+            'set-content-length-header' => false,
             'cache-control-header' => 'private, max-age=100',
         ];
 
@@ -94,7 +98,7 @@ class ServeFileTest extends TestCase
 
 
         // TODO:The following fails on travis. WHY???
-        //$this->assertFalse(MockedHeader::hasHeader('Content-type: image/webp'));
+        //$this->assertFalse(MockedHeader::hasHeader('Content-Type: image/webp'));
 
         //$this->assertTrue(MockedHeader::hasHeader('Vary: Accept'));
         //$this->assertFalse(MockedHeader::hasHeader('Last-Modified: Mon, 29 Apr 2019 12:54:37 GMT'));
