@@ -370,7 +370,10 @@ abstract class AbstractConverter
 
             // Trying to create the given folder (recursively)
             if (!mkdir($folder, 0777, true)) {
-                throw new CreateDestinationFolderException('Failed creating folder: ' . $folder);
+                throw new CreateDestinationFolderException(
+                    'Failed creating folder. Check the permissions!',
+                    'Failed creating folder: ' . $folder . '. Check permissions!'
+                );
             }
         }
     }
