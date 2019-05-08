@@ -5,6 +5,7 @@ use WebPConvert\Serve\Header;
 use WebPConvert\Serve\Report;
 use WebPConvert\Serve\ServeConvertedWeb;
 use WebPConvert\Serve\Exceptions\ServeFailedException;
+use WebPConvert\Exceptions\WebPConvertException;
 
 /**
  * Serve a converted webp image and handle errors.
@@ -18,7 +19,7 @@ class ServeConvertedWebPWithErrorHandling
 
     public static $defaultOptions = [
         'fail' => 'original',
-        'fail-when-fail-fails' => '404',
+        'fail-when-fail-fails' => 'throw',
     ];
 
     /**
@@ -47,6 +48,9 @@ class ServeConvertedWebPWithErrorHandling
     public static function performFailAction($fail, $failIfFailFails, $source, $destination, $options, $e)
     {
         self::addHeadersPreventingCaching();
+
+        //Header::addLogHeader('Failure');
+        Header::addLogHeader('Performing fail action: ' . $fail);
 
         switch ($fail) {
             case 'original':
@@ -107,6 +111,10 @@ class ServeConvertedWebPWithErrorHandling
         try {
             ServeConvertedWebP::serve($source, $destination, $options, $logger);
         } catch (\Exception $e) {
+            if ($e instanceof \WebPConvert\Exceptions\WebPConvertException) {
+                Header::addLogHeader($e->getShortMessage(), $logger);
+            }
+
             self::performFailAction(
                 $options['fail'],
                 $options['fail-when-fail-fails'],
