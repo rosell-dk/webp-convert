@@ -86,7 +86,7 @@ class Cwebp extends AbstractExecConverter
      *    "-crop '10' '10' '40' '40'"
      *    "-low_memory"
      *  ]
-     * @param  $commandLineOptions  string which can contain multiple commandline options
+     * @param  string $commandLineOptions  string which can contain multiple commandline options
      * @return array  Array of command options
      */
     private static function escapeShellArgOnCommandLineOptions($commandLineOptions)
