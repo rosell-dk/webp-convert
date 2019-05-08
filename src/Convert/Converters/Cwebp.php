@@ -78,6 +78,45 @@ class Cwebp extends AbstractExecConverter
     }
 
     /**
+     *  Use "escapeshellarg()" on all arguments in a commandline string of options
+     *
+     *  For example, passing '-sharpness 5 -crop 10 10 40 40 -low_memory' will result in:
+     *  [
+     *    "-sharpness '5'"
+     *    "-crop '10' '10' '40' '40'"
+     *    "-low_memory"
+     *  ]
+     * @param  $commandLineOptions  string which can contain multiple commandline options
+     * @return array  Array of command options
+     */
+    private static function escapeShellArgOnCommandLineOptions($commandLineOptions)
+    {
+        $cmdOptions = [];
+        $arr = explode(' -', ' ' . $commandLineOptions);
+        foreach ($arr as $cmdOption) {
+            $pos = strpos($cmdOption, ' ');
+            $cName = '';
+            if (!$pos) {
+                $cName = $cmdOption;
+                if ($cName == '') {
+                    continue;
+                }
+                $cmdOptions[] = '-' . $cName;
+            } else {
+                $cName = substr($cmdOption, 0, $pos);
+                $cValues = substr($cmdOption, $pos + 1);
+                $cValuesArr = explode(' ', $cValues);
+                foreach ($cValuesArr as &$cArg) {
+                    $cArg = escapeshellarg($cArg);
+                }
+                $cValues = implode(' ', $cValuesArr);
+                $cmdOptions[] = '-' . $cName . ' ' . $cValues;
+            }
+        }
+        return $cmdOptions;
+    }
+
+    /**
      * Build command line options
      *
      * @return string
@@ -139,28 +178,10 @@ class Cwebp extends AbstractExecConverter
 
         // command-line-options
         if ($options['command-line-options']) {
-            $arr = explode(' -', ' ' . $options['command-line-options']);
-            foreach ($arr as $cmdOption) {
-                $pos = strpos($cmdOption, ' ');
-                $cName = '';
-                $cValue = '';
-                if (!$pos) {
-                    $cName = $cmdOption;
-                    if ($cName == '') {
-                        continue;
-                    }
-                    $cmdOptions[] = '-' . $cName;
-                } else {
-                    $cName = substr($cmdOption, 0, $pos);
-                    $cValues = substr($cmdOption, $pos + 1);
-                    $cValuesArr = explode(' ', $cValues);
-                    foreach ($cValuesArr as &$cArg) {
-                        $cArg = escapeshellarg($cArg);
-                    }
-                    $cValues = implode(' ', $cValuesArr);
-                    $cmdOptions[] = '-' . $cName . ' ' . $cValues;
-                }
-            }
+            array_push(
+                $cmdOptions,
+                ...self::escapeShellArgOnCommandLineOptions($options['command-line-options'])
+            );
         }
 
         // Source file
