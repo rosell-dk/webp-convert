@@ -45,9 +45,9 @@ class ServeConvertedWebPTest extends TestCase
         //$this->assertTrue(MockedHeader::hasHeaderContaining('X-WebP-Convert-Action:'));
 
         $this->assertTrue(MockedHeader::hasHeader('Content-type: image/png'));
-        $this->assertTrue(MockedHeader::hasHeader('Vary: Accept'));
+        $this->assertFalse(MockedHeader::hasHeader('Vary: Accept'));
         $this->assertTrue(MockedHeader::hasHeaderContaining('Last-Modified:'));
-        $this->assertTrue(MockedHeader::hasHeaderContaining('Cache-Control:'));
+        $this->assertFalse(MockedHeader::hasHeaderContaining('Cache-Control:'));
     }
 
 
@@ -128,9 +128,9 @@ class ServeConvertedWebPTest extends TestCase
         //$this->assertTrue(MockedHeader::hasHeaderContaining('X-WebP-Convert-Action:'));
 
         $this->assertTrue(MockedHeader::hasHeader('Content-type: image/webp'));
-        $this->assertTrue(MockedHeader::hasHeader('Vary: Accept'));
+        $this->assertFalse(MockedHeader::hasHeader('Vary: Accept'));
         $this->assertTrue(MockedHeader::hasHeaderContaining('Last-Modified:'));
-        $this->assertTrue(MockedHeader::hasHeaderContaining('Cache-Control:'));
+        $this->assertFalse(MockedHeader::hasHeaderContaining('Cache-Control:'));
     }
 
     /**
@@ -158,9 +158,9 @@ class ServeConvertedWebPTest extends TestCase
         //$this->assertTrue(MockedHeader::hasHeaderContaining('X-WebP-Convert-Action:'));
 
         $this->assertTrue(MockedHeader::hasHeader('Content-type: image/png'));
-        $this->assertTrue(MockedHeader::hasHeader('Vary: Accept'));
+        $this->assertFalse(MockedHeader::hasHeader('Vary: Accept'));
         $this->assertTrue(MockedHeader::hasHeaderContaining('Last-Modified:'));
-        $this->assertTrue(MockedHeader::hasHeaderContaining('Cache-Control:'));
+        $this->assertFalse(MockedHeader::hasHeaderContaining('Cache-Control:'));
     }
 
     /**
