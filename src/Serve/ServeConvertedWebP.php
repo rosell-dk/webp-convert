@@ -71,18 +71,6 @@ class ServeConvertedWebP
         ServeFile::serve($destination, 'image/webp', $options);
     }
 
-    /**
-     * @param  string  $msg  Message to add to "X-WebP-Convert-Log" header
-     * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
-     * @return void
-     */
-    private static function headerLog($msg, $logger = null)
-    {
-        Header::addHeader('X-WebP-Convert-Log: ' . $msg);
-        if (!is_null($logger)) {
-            $logger->logLn($msg);
-        }
-    }
 
     /**
      * Serve converted webp.
@@ -126,16 +114,16 @@ class ServeConvertedWebP
         // However 1: if "show-report" option is set, serve the report instead
         // However 2: "reconvert" option should also trigger conversion
         if ($options['show-report']) {
-            self::headerLog('Showing report', $logger);
+            Header::addLogHeader('Showing report', $logger);
             Report::convertAndReport($source, $destination, $options);
             return;
         }
 
         if (!@file_exists($destination)) {
-            self::headerLog('Converting (there were no file at destination)', $logger);
+            Header::addLogHeader('Converting (there were no file at destination)', $logger);
             WebPConvert::convert($source, $destination, $options, $logger);
         } elseif ($options['reconvert']) {
-            self::headerLog('Converting (told to reconvert)', $logger);
+            Header::addLogHeader('Converting (told to reconvert)', $logger);
             WebPConvert::convert($source, $destination, $options, $logger);
         } else {
             // Step 2: Is the destination older than the source?
@@ -145,7 +133,7 @@ class ServeConvertedWebP
             if (($timestampSource !== false) &&
                 ($timestampDestination !== false) &&
                 ($timestampSource > $timestampDestination)) {
-                    self::headerLog('Converting (destination was older than the source)', $logger);
+                    Header::addLogHeader('Converting (destination was older than the source)', $logger);
                     WebPConvert::convert($source, $destination, $options, $logger);
             }
         }
@@ -153,7 +141,7 @@ class ServeConvertedWebP
         // Step 3: Serve the smallest file (destination or source)
         // However, first check if 'serve-original' is set
         if ($options['serve-original']) {
-            self::headerLog('Serving original (told to)', $logger);
+            Header::addLogHeader('Serving original (told to)', $logger);
             self::serveOriginal($source, $options);
         }
 
@@ -162,11 +150,11 @@ class ServeConvertedWebP
         if (($filesizeSource !== false) &&
             ($filesizeDestination !== false) &&
             ($filesizeDestination > $filesizeSource)) {
-                self::headerLog('Serving original (it is smaller)', $logger);
+                Header::addLogHeader('Serving original (it is smaller)', $logger);
                 self::serveOriginal($source, $options);
         }
 
-        self::headerLog('Serving converted file', $logger);
+        Header::addLogHeader('Serving converted file', $logger);
         self::serveDestination($destination, $options);
     }
 }

@@ -31,4 +31,17 @@ class Header
     {
         header($header, true);
     }
+
+    /**
+     * @param  string  $msg  Message to add to "X-WebP-Convert-Log" header
+     * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
+     * @return void
+     */
+    public static function addLogHeader($msg, $logger = null)
+    {
+        self::addHeader('X-WebP-Convert-Log: ' . $msg);
+        if (!is_null($logger)) {
+            $logger->logLn($msg);
+        }
+    }
 }
