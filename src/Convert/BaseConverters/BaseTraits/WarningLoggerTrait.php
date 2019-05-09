@@ -2,6 +2,16 @@
 
 namespace WebPConvert\Convert\BaseConverters\BaseTraits;
 
+/**
+ * Trait for handling warnings (by logging them)
+ *
+ * This trait is currently only used in the AbstractConverter class. It has been extracted into a
+ * trait in order to bundle the methods concerning options.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 trait WarningLoggerTrait
 {
     abstract protected function logLn($msg, $style = '');

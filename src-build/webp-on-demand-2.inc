@@ -672,6 +672,7 @@ trait AutoQualityTrait
     private $calculatedQuality;
 
     abstract public function getMimeTypeOfSource();
+    abstract public function logLn($msg, $style = '');
 
     /**
      *  Determine if quality detection is required but failing.
@@ -733,7 +734,6 @@ trait AutoQualityTrait
     private function processQualityOption()
     {
         $options = $this->options;
-        $logger = $this;
         $source = $this->source;
 
         $q = $options['quality'];
@@ -742,7 +742,7 @@ trait AutoQualityTrait
                 $q = JpegQualityDetector::detectQualityOfJpg($source);
                 if (is_null($q)) {
                     $q = $options['default-quality'];
-                    $logger->logLn(
+                    $this->logLn(
                         'Quality of source could not be established (Imagick or GraphicsMagick is required)' .
                         ' - Using default instead (' . $options['default-quality'] . ').'
                     );
@@ -750,27 +750,27 @@ trait AutoQualityTrait
                     $this->qualityCouldNotBeDetected = true;
                 } else {
                     if ($q > $options['max-quality']) {
-                        $logger->logLn(
+                        $this->logLn(
                             'Quality of source is ' . $q . '. ' .
                             'This is higher than max-quality, so using max-quality instead (' .
                                 $options['max-quality'] . ')'
                         );
                     } else {
-                        $logger->logLn('Quality set to same as source: ' . $q);
+                        $this->logLn('Quality set to same as source: ' . $q);
                     }
                 }
                 $q = min($q, $options['max-quality']);
             } else {
                 //$q = $options['default-quality'];
                 $q = min($options['default-quality'], $options['max-quality']);
-                $logger->logLn('Quality: ' . $q . '. ');
+                $this->logLn('Quality: ' . $q . '. ');
             }
         } else {
-            $logger->logLn(
+            $this->logLn(
                 'Quality: ' . $q . '. '
             );
             if (($this->getMimeTypeOfSource() == 'image/jpeg')) {
-                $logger->logLn(
+                $this->logLn(
                     'Consider setting quality to "auto" instead. It is generally a better idea'
                 );
             }
@@ -1092,6 +1092,16 @@ trait OptionsTrait
 
 namespace WebPConvert\Convert\BaseConverters\BaseTraits;
 
+/**
+ * Trait for handling warnings (by logging them)
+ *
+ * This trait is currently only used in the AbstractConverter class. It has been extracted into a
+ * trait in order to bundle the methods concerning options.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 trait WarningLoggerTrait
 {
     abstract protected function logLn($msg, $style = '');
