@@ -49,7 +49,7 @@ abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
      * @throws  SystemRequirementsNotMetException  if curl could not be initialized
      * @return  resource  curl handle
      */
-    public static function initCurl()
+    protected static function initCurl()
     {
         // Get curl handle
         $ch = curl_init();
