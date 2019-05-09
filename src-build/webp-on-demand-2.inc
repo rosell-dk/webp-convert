@@ -649,11 +649,26 @@ namespace WebPConvert\Convert\BaseConverters\BaseTraits;
 
 use WebPConvert\Convert\Helpers\JpegQualityDetector;
 
+/**
+ * Trait for handling the "quality:auto" option.
+ *
+ * This trait is only used in the AbstractConverter class. It has been extracted into a
+ * trait in order to bundle the methods concerning auto quality.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 trait AutoQualityTrait
 {
 
+    /** @var boolean  Whether the quality option has been processed or not */
     private $processed = false;
+
+    /** @var boolean  Whether the quality of the source could be detected or not (set upon processing) */
     private $qualityCouldNotBeDetected = false;
+
+    /** @var integer  The calculated quality (set upon processing - on successful detection) */
     private $calculatedQuality;
 
     abstract public function getMimeTypeOfSource();
@@ -665,6 +680,8 @@ trait AutoQualityTrait
      *  - Mime type is "image/jpeg"
      *  - Quality is set to "auto"
      *
+     *  If quality option hasn't been proccessed yet, it is triggered.
+     *
      *  @return  boolean
      */
     public function isQualityDetectionRequiredButFailing()
@@ -674,14 +691,13 @@ trait AutoQualityTrait
     }
 
     /**
-     *  Get calculated quality.
+     * Get calculated quality.
      *
-     *  If mime type is something else than "image/jpeg", the "default-quality" option is returned
-     *  Same thing for jpeg, when the "quality" option is set to a number (rather than "auto").
-     *
-     *  Otherwise:
-     *  If quality cannot be detetected, the "default-quality" option is returned.
-     *  If quality can be detetected, the lowest value of this and the "max-quality" option is returned
+     * If the "quality" option is a number, that number is returned.
+     * If mime type of source is something else than "image/jpeg", the "default-quality" option is returned
+     * If quality is "auto" and source is a jpeg image, it will be attempted to detect jpeg quality.
+     * In case of failure, the value of the "default-quality" option is returned.
+     * In case of success, the detected quality is returned, or the value of the "max-quality" if that is lower.
      *
      *  @return  int
      */
@@ -692,6 +708,8 @@ trait AutoQualityTrait
     }
 
     /**
+     * Process the quality option if it is not already processed.
+     *
      * @return void
      */
     private function processQualityOptionIfNotAlready()
@@ -703,12 +721,19 @@ trait AutoQualityTrait
     }
 
     /**
+     * Process the quality option.
+     *
+     * Sets the private property "calculatedQuality" according to the description for the getCalculatedQuality
+     * function.
+     * In case quality detection was attempted and failed, the private property "qualityCouldNotBeDetected" is set
+     * to true. This is used by the "isQualityDetectionRequiredButFailing" (and documented there too).
+     *
      * @return void
      */
     private function processQualityOption()
     {
         $options = $this->options;
-        $logger = $this->logger;
+        $logger = $this;
         $source = $this->source;
 
         $q = $options['quality'];
@@ -758,10 +783,21 @@ trait AutoQualityTrait
 
 namespace WebPConvert\Convert\BaseConverters\BaseTraits;
 
+/**
+ * Trait for providing logging capabilities.
+ *
+ * This trait is currently only used in the AbstractConverter class. It has been extracted into a
+ * trait in order to bundle the methods concerning logging.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 trait LoggerTrait
 {
 
-    public $logger;
+    /** @var \WebPConvert\Loggers\BaseLogger  The logger (or null if not set) */
+    protected $logger;
 
     /**
      * Set logger
@@ -771,9 +807,6 @@ trait LoggerTrait
      */
     public function setLogger($logger = null)
     {
-        if (!isset($logger)) {
-            $logger = new \WebPConvert\Loggers\VoidLogger();
-        }
         $this->logger = $logger;
     }
 
@@ -786,22 +819,35 @@ trait LoggerTrait
      */
     protected function logLn($msg, $style = '')
     {
-        $this->logger->logLn($msg, $style);
+        if (isset($this->logger)) {
+            $this->logger->logLn($msg, $style);
+        }
     }
 
-    public function logLnLn($msg)
+    /**
+     * New line
+     *
+     * @return  void
+     */
+    protected function ln()
     {
-        $this->logger->logLnLn($msg);
+        if (isset($this->logger)) {
+            $this->logger->ln();
+        }
     }
 
-    public function ln()
+    /**
+     * Write to the logger, without newline
+     *
+     * @param  string  $msg    What to write.
+     * @param  string  $style  (optional) Ie "italic" or "bold"
+     * @return void
+     */
+    protected function log($msg, $style = '')
     {
-        $this->logger->ln();
-    }
-
-    public function log($msg)
-    {
-        $this->logger->log($msg);
+        if (isset($this->logger)) {
+            $this->logger->log($msg, $style);
+        }
     }
 }
 
@@ -812,6 +858,16 @@ namespace WebPConvert\Convert\BaseConverters\BaseTraits;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidOptionTypeException;
 
+/**
+ * Trait for handling options
+ *
+ * This trait is currently only used in the AbstractConverter class. It has been extracted into a
+ * trait in order to bundle the methods concerning options.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 trait OptionsTrait
 {
 
@@ -819,14 +875,12 @@ trait OptionsTrait
     public $providedOptions;
 
     /** @var array  Calculated conversion options (merge of default options and provided options)*/
-    public $options;
-
-    // The concrete converters must supply this method...
-    abstract protected function getOptionDefinitionsExtra();
+    protected $options;
 
     abstract protected function getMimeTypeOfSource();
 
-    public static $optionDefinitionsBasic = [
+    /** @var array  Definitions of general options (the options that are available on all converters) */
+    protected static $optionDefinitionsBasic = [
         ['quality', 'number|string', 'auto'],    // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
         ['max-quality', 'number', 85],
         ['default-quality', 'number', 75],       // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
@@ -836,8 +890,10 @@ trait OptionsTrait
     ];
 
     /**
-     * Set "provided options"
-     * This also sets the internal options array, by merging in the default options
+     * Set "provided options" (options provided by the user when calling convert().
+     *
+     * This also calculates the protected options array, by merging in the default options.
+     * Converters shall access the $this->options array to get options.
      *
      * @param   array $providedOptions (optional)
      * @return  void
@@ -862,16 +918,55 @@ trait OptionsTrait
         $this->options = array_merge($this->getDefaultOptions(), $this->providedOptions);
     }
 
+    /**
+     * Get definitions of general options (those available for all converters)
+     *
+     * To get only the extra definitions for a specific converter, call
+     * ::getOptionDefinitionsExtra(). To get both general and extra, merged together, call ::getOptionDefinitions().
+     *
+     * @return array  A numeric array of definitions of general options for the converter.
+     *                Each definition is a numeric array with three items: [option id, type, default value]
+     */
+    public function getGeneralOptionDefinitions()
+    {
+        return self::$optionDefinitionsBasic;
+    }
 
-    public function getAllOptionDefinitions()
+    /**
+     * Get definitions of extra options unique for the actual converter.
+     *
+     * @return array  A numeric array of definitions of all options for the converter.
+     *                Each definition is a numeric array with three items: [option id, type, default value]
+     */
+    abstract protected function getOptionDefinitionsExtra();
+
+    /**
+     * Get option definitions for the converter (includes both general options and the extra options for the converter)
+     *
+     * To get only the general options definitions (those available for all converters), call
+     * ::getGeneralOptionDefinitions(). To get only the extra definitions for a specific converter, call
+     * ::getOptionDefinitionsExtra().
+     *
+     * @return array  A numeric array of definitions of all options for the converter.
+     *                Each definition is a numeric array with three items: [option id, type, default value]
+     */
+    public function getOptionDefinitions()
     {
         return array_merge(self::$optionDefinitionsBasic, $this->getOptionDefinitionsExtra());
     }
 
+    /**
+     * Get default options for the converter.
+     *
+     * Note that the defaults depends on the mime type of the source. For example, the default value for quality
+     * is "auto" for jpegs, and 85 for pngs.
+     *
+     * @return array  An associative array of option defaults: ['metadata' => 'none', ...]
+     */
     public function getDefaultOptions()
     {
         $defaults = [];
-        foreach ($this->getAllOptionDefinitions() as list($name, $type, $default)) {
+        foreach ($this->getOptionDefinitions() as list($name, $type, $default)) {
             $defaults[$name] = $default;
         }
         if ($this->getMimeTypeOfSource() == 'image/png') {
@@ -882,14 +977,17 @@ trait OptionsTrait
         return $defaults;
     }
 
-    protected function checkOptions()
+    /**
+     *  Check option types generally (against their definitions).
+     *
+     *  @throws InvalidOptionTypeException  if type is invalid
+     *  @return void
+     */
+    private function checkOptionTypesGenerally()
     {
-        foreach ($this->getAllOptionDefinitions() as $def) {
+        foreach ($this->getOptionDefinitions() as $def) {
             list($optionName, $optionType) = $def;
-
             if (isset($this->providedOptions[$optionName])) {
-                //$this->logLn($optionName);
-
                 $actualType = gettype($this->providedOptions[$optionName]);
                 if ($actualType != $optionType) {
                     $optionType = str_replace('number', 'integer|double', $optionType);
@@ -900,34 +998,81 @@ trait OptionsTrait
                         );
                     }
                 }
-
-                $optionValue = $this->providedOptions[$optionName];
-
-                if ($optionName == 'quality') {
-                    if ($actualType == 'string') {
-                        if ($optionValue != 'auto') {
-                            throw new InvalidOptionTypeException(
-                                'Quality option must be either "auto" or a number between 0-100. ' .
-                                'A string, "' . $optionValue . '" was given'
-                            );
-                        }
-                    } else {
-                        if (($optionValue < 0) || ($optionValue > 100)) {
-                            throw new InvalidOptionTypeException(
-                                'Quality option must be either "auto" or a number between 0-100. ' .
-                                    'The number you provided (' . strval($optionValue) . ') is out of range.'
-                            );
-                        }
-                    }
-                }
-
-                if (($optionName == 'lossless') && ($actualType == 'string')  && ($optionValue != 'auto')) {
-                    throw new InvalidOptionTypeException(
-                        'Lossless option must be true, false or "auto". It was set to: "' . $optionValue . '"'
-                    );
-                }
             }
         }
+    }
+
+    /**
+     *  Check quality option
+     *
+     *  @throws InvalidOptionTypeException  if value is out of range
+     *  @return void
+     */
+    private function checkQualityOption()
+    {
+        if (!isset($this->providedOptions['quality'])) {
+            return;
+        }
+        $optionValue = $this->providedOptions['quality'];
+        if (gettype($optionValue) == 'string') {
+            if ($optionValue != 'auto') {
+                throw new InvalidOptionTypeException(
+                    'Quality option must be either "auto" or a number between 0-100. ' .
+                    'A string, "' . $optionValue . '" was given'
+                );
+            }
+        } else {
+            if (($optionValue < 0) || ($optionValue > 100)) {
+                throw new InvalidOptionTypeException(
+                    'Quality option must be either "auto" or a number between 0-100. ' .
+                        'The number you provided (' . strval($optionValue) . ') is out of range.'
+                );
+            }
+        }
+    }
+
+    /**
+     *  Check lossless option
+     *
+     *  @throws InvalidOptionTypeException  if value is out of range
+     *  @return void
+     */
+    private function checkLosslessOption()
+    {
+        if (!isset($this->providedOptions['lossless'])) {
+            return;
+        }
+        $optionValue = $this->providedOptions['lossless'];
+        if ((gettype($optionValue) == 'string') && ($optionValue != 'auto')) {
+            throw new InvalidOptionTypeException(
+                'Lossless option must be true, false or "auto". It was set to: "' . $optionValue . '"'
+            );
+        }
+    }
+
+    /**
+     *  Check option types.
+     *
+     *  @throws InvalidOptionTypeException  if an option value have wrong type or is out of range
+     *  @return void
+     */
+    private function checkOptionTypes()
+    {
+        $this->checkOptionTypesGenerally();
+        $this->checkQualityOption();
+        $this->checkLosslessOption();
+    }
+
+    /**
+     *  Check options.
+     *
+     *  @throws InvalidOptionTypeException  if an option value have wrong type or is out of range
+     *  @throws ConversionSkippedException  if 'skip' option is set to true
+     *  @return void
+     */
+    protected function checkOptions()
+    {
+        $this->checkOptionTypes();
 
         if ($this->options['skip']) {
             if (($this->getMimeTypeOfSource() == 'image/png') && isset($this->options['png']['skip'])) {
@@ -941,45 +1086,6 @@ trait OptionsTrait
             }
         }
     }
-
-    /**
-     * Prepare options.
-     */
-     /*
-    private function prepareOptions()
-    {
-        //$defaultOptions = self::$defaultOptions;
-
-        // -  Merge defaults of the converters extra options into the standard default options.
-        //$defaultOptions = array_merge($defaultOptions, array_column(static::$extraOptions, 'default', 'name'));
-        //print_r($this->getOptionDefinitionsExtra());
-        //$extra = [];
-        //$this->getDefaultOptionsExtra();
-        //echo '<br>';
-        //print_r(static::$extraOptions);
-        //print_r(array_column(static::$extraOptions, 'default', 'name'));
-        //$defaultOptions = array_merge($defaultOptions, $this->getDefaultOptionsExtra());
-
-
-        //throw new \Exception('extra!' . print_r($this->getConverterDisplayName(), true));
-
-        // -  Merge $defaultOptions into provided options
-        //$this->options = array_merge($defaultOptions, $this->options);
-        //$this->options = array_merge($this->getDefaultOptions(), $providedOptions);
-
-        if ($this->getMimeTypeOfSource() == 'png') {
-            // skip png's ?
-            if ($this->options['skip-pngs']) {
-                throw new ConversionSkippedException(
-                    'PNG file skipped (configured to do so)'
-                );
-            }
-        }
-
-
-        // TODO: Here we could test if quality is 0-100 or auto.
-        //       and if not, throw something extending InvalidArgumentException (which is a LogicException)
-    }*/
 }
 
 ?><?php
@@ -990,12 +1096,23 @@ trait WarningLoggerTrait
 {
     abstract protected function logLn($msg, $style = '');
 
-    public $previousErrorHandler;
+    /** @var string|array|null  Previous error handler (stored in order to be able pass warnings on) */
+    private $previousErrorHandler;
+
     /**
-     *  Handle errors during conversion.
-     *  The function is a callback used with "set_error_handler". It logs
+     *  Handle warnings and notices during conversion by logging them and passing them on.
+     *
+     *  The function is a callback used with "set_error_handler".
+     *  It is declared public because it needs to be accessible from the point where the warning happened.
+     *
+     *  @param  integer  $errno
+     *  @param  string   $errstr
+     *  @param  string   $errfile
+     *  @param  integer  $errline
+     *
+     *  @return false|null
      */
-    protected function warningHandler($errno, $errstr, $errfile, $errline)
+    public function warningHandler($errno, $errstr, $errfile, $errline)
     {
         /*
         We do NOT do the following (even though it is generally recommended):
@@ -1013,9 +1130,6 @@ trait WarningLoggerTrait
         $errorTypes = [
             E_WARNING =>             "Warning",
             E_NOTICE =>              "Notice",
-            E_USER_ERROR =>          "User Error",
-            E_USER_WARNING =>        "User Warning",
-            E_USER_NOTICE =>         "User Notice",
             E_STRICT =>              "Strict Notice",
             E_DEPRECATED =>          "Deprecated",
             E_USER_DEPRECATED =>     "User Deprecated",
@@ -1029,25 +1143,19 @@ trait WarningLoggerTrait
 
             But we may want to do that at some point, like this:
             trigger_error('Your version of Gd is very old', E_USER_WARNING);
+            in that case, remember to add them to this array
             */
         ];
 
         if (isset($errorTypes[$errno])) {
             $errType = $errorTypes[$errno];
         } else {
-            $errType = "Unknown error ($errno)";
+            $errType = "Unknown error/warning/notice ($errno)";
         }
 
         $msg = $errType . ': ' . $errstr . ' in ' . $errfile . ', line ' . $errline . ', PHP ' . PHP_VERSION .
             ' (' . PHP_OS . ')';
         $this->logLn($msg);
-
-        /*
-        if ($errno == E_USER_ERROR) {
-            // trigger error.
-            // unfortunately, we can only catch user errors
-            throw new ConversionFailedException('Uncaught error in converter', $msg);
-        }*/
 
         //echo 'previously defined handler:' . print_r($this->previousErrorHandler, true);
 
@@ -1058,14 +1166,13 @@ trait WarningLoggerTrait
         }
     }
 
-    /*
-    public function get_error_handler(){
-        $handler = set_error_handler(function(){});
-        restore_error_handler();
-        echo 'handler:' . $handler;
-        return $handler;
-    }*/
-
+    /**
+     *  Activate warning logger.
+     *
+     *  Sets the error handler and stores the previous to our error handler can bubble up warnings
+     *
+     *  @return  void
+     */
     protected function activateWarningLogger()
     {
         $this->previousErrorHandler = set_error_handler(
@@ -1074,6 +1181,13 @@ trait WarningLoggerTrait
         );
     }
 
+    /**
+     *  Deactivate warning logger.
+     *
+     *  Restores the previous error handler.
+     *
+     *  @return  void
+     */
     protected function deactivateWarningLogger()
     {
         restore_error_handler();
