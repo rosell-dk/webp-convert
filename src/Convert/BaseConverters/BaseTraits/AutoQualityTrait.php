@@ -23,7 +23,7 @@ trait AutoQualityTrait
     /** @var boolean  Whether the quality of the source could be detected or not (set upon processing) */
     private $qualityCouldNotBeDetected = false;
 
-    /** @var boolean  The calculated quality (set upon processing - on successful detection) */
+    /** @var integer  The calculated quality (set upon processing - on successful detection) */
     private $calculatedQuality;
 
     abstract public function getMimeTypeOfSource();
@@ -88,7 +88,7 @@ trait AutoQualityTrait
     private function processQualityOption()
     {
         $options = $this->options;
-        $logger = $this->logger;
+        $logger = $this;
         $source = $this->source;
 
         $q = $options['quality'];

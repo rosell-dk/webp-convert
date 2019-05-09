@@ -6,12 +6,23 @@ trait WarningLoggerTrait
 {
     abstract protected function logLn($msg, $style = '');
 
-    public $previousErrorHandler;
+    /** @var string|array|null  Previous error handler (stored in order to be able pass warnings on) */
+    private $previousErrorHandler;
+
     /**
-     *  Handle errors during conversion.
-     *  The function is a callback used with "set_error_handler". It logs
+     *  Handle warnings and notices during conversion by logging them and passing them on.
+     *
+     *  The function is a callback used with "set_error_handler".
+     *  It is declared public because it needs to be accessible from the point where the warning happened.
+     *
+     *  @param  integer  $errno
+     *  @param  string   $errstr
+     *  @param  string   $errfile
+     *  @param  integer  $errline
+     *
+     *  @return false|null
      */
-    protected function warningHandler($errno, $errstr, $errfile, $errline)
+    public function warningHandler($errno, $errstr, $errfile, $errline)
     {
         /*
         We do NOT do the following (even though it is generally recommended):
@@ -29,9 +40,6 @@ trait WarningLoggerTrait
         $errorTypes = [
             E_WARNING =>             "Warning",
             E_NOTICE =>              "Notice",
-            E_USER_ERROR =>          "User Error",
-            E_USER_WARNING =>        "User Warning",
-            E_USER_NOTICE =>         "User Notice",
             E_STRICT =>              "Strict Notice",
             E_DEPRECATED =>          "Deprecated",
             E_USER_DEPRECATED =>     "User Deprecated",
@@ -45,25 +53,19 @@ trait WarningLoggerTrait
 
             But we may want to do that at some point, like this:
             trigger_error('Your version of Gd is very old', E_USER_WARNING);
+            in that case, remember to add them to this array
             */
         ];
 
         if (isset($errorTypes[$errno])) {
             $errType = $errorTypes[$errno];
         } else {
-            $errType = "Unknown error ($errno)";
+            $errType = "Unknown error/warning/notice ($errno)";
         }
 
         $msg = $errType . ': ' . $errstr . ' in ' . $errfile . ', line ' . $errline . ', PHP ' . PHP_VERSION .
             ' (' . PHP_OS . ')';
         $this->logLn($msg);
-
-        /*
-        if ($errno == E_USER_ERROR) {
-            // trigger error.
-            // unfortunately, we can only catch user errors
-            throw new ConversionFailedException('Uncaught error in converter', $msg);
-        }*/
 
         //echo 'previously defined handler:' . print_r($this->previousErrorHandler, true);
 
@@ -74,14 +76,13 @@ trait WarningLoggerTrait
         }
     }
 
-    /*
-    public function get_error_handler(){
-        $handler = set_error_handler(function(){});
-        restore_error_handler();
-        echo 'handler:' . $handler;
-        return $handler;
-    }*/
-
+    /**
+     *  Activate warning logger.
+     *
+     *  Sets the error handler and stores the previous to our error handler can bubble up warnings
+     *
+     *  @return  void
+     */
     protected function activateWarningLogger()
     {
         $this->previousErrorHandler = set_error_handler(
@@ -90,6 +91,13 @@ trait WarningLoggerTrait
         );
     }
 
+    /**
+     *  Deactivate warning logger.
+     *
+     *  Restores the previous error handler.
+     *
+     *  @return  void
+     */
     protected function deactivateWarningLogger()
     {
         restore_error_handler();

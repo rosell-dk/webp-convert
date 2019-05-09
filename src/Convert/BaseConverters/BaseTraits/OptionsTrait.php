@@ -22,14 +22,11 @@ trait OptionsTrait
     public $providedOptions;
 
     /** @var array  Calculated conversion options (merge of default options and provided options)*/
-    public $options;
-
-    // The concrete converters must supply this method...
-    abstract protected function getOptionDefinitionsExtra();
+    protected $options;
 
     abstract protected function getMimeTypeOfSource();
 
-    /** @var array  General options (available on all converters) */
+    /** @var array  Definitions of general options (the options that are available on all converters) */
     protected static $optionDefinitionsBasic = [
         ['quality', 'number|string', 'auto'],    // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
         ['max-quality', 'number', 85],
@@ -40,8 +37,10 @@ trait OptionsTrait
     ];
 
     /**
-     * Set "provided options"
-     * This also sets the internal options array, by merging in the default options
+     * Set "provided options" (options provided by the user when calling convert().
+     *
+     * This also calculates the protected options array, by merging in the default options.
+     * Converters shall access the $this->options array to get options.
      *
      * @param   array $providedOptions (optional)
      * @return  void
@@ -66,16 +65,55 @@ trait OptionsTrait
         $this->options = array_merge($this->getDefaultOptions(), $this->providedOptions);
     }
 
+    /**
+     * Get definitions of general options (those available for all converters)
+     *
+     * To get only the extra definitions for a specific converter, call
+     * ::getOptionDefinitionsExtra(). To get both general and extra, merged together, call ::getOptionDefinitions().
+     *
+     * @return array  A numeric array of definitions of general options for the converter.
+     *                Each definition is a numeric array with three items: [option id, type, default value]
+     */
+    public function getGeneralOptionDefinitions()
+    {
+        return self::$optionDefinitionsBasic;
+    }
 
-    public function getAllOptionDefinitions()
+    /**
+     * Get definitions of extra options unique for the actual converter.
+     *
+     * @return array  A numeric array of definitions of all options for the converter.
+     *                Each definition is a numeric array with three items: [option id, type, default value]
+     */
+    abstract protected function getOptionDefinitionsExtra();
+
+    /**
+     * Get option definitions for the converter (includes both general options and the extra options for the converter)
+     *
+     * To get only the general options definitions (those available for all converters), call
+     * ::getGeneralOptionDefinitions(). To get only the extra definitions for a specific converter, call
+     * ::getOptionDefinitionsExtra().
+     *
+     * @return array  A numeric array of definitions of all options for the converter.
+     *                Each definition is a numeric array with three items: [option id, type, default value]
+     */
+    public function getOptionDefinitions()
     {
         return array_merge(self::$optionDefinitionsBasic, $this->getOptionDefinitionsExtra());
     }
 
+    /**
+     * Get default options for the converter.
+     *
+     * Note that the defaults depends on the mime type of the source. For example, the default value for quality
+     * is "auto" for jpegs, and 85 for pngs.
+     *
+     * @return array  An associative array of option defaults: ['metadata' => 'none', ...]
+     */
     public function getDefaultOptions()
     {
         $defaults = [];
-        foreach ($this->getAllOptionDefinitions() as list($name, $type, $default)) {
+        foreach ($this->getOptionDefinitions() as list($name, $type, $default)) {
             $defaults[$name] = $default;
         }
         if ($this->getMimeTypeOfSource() == 'image/png') {
@@ -86,14 +124,17 @@ trait OptionsTrait
         return $defaults;
     }
 
-    protected function checkOptions()
+    /**
+     *  Check option types generally (against their definitions).
+     *
+     *  @throws InvalidOptionTypeException  if type is invalid
+     *  @return void
+     */
+    private function checkOptionTypesGenerally()
     {
-        foreach ($this->getAllOptionDefinitions() as $def) {
+        foreach ($this->getOptionDefinitions() as $def) {
             list($optionName, $optionType) = $def;
-
             if (isset($this->providedOptions[$optionName])) {
-                //$this->logLn($optionName);
-
                 $actualType = gettype($this->providedOptions[$optionName]);
                 if ($actualType != $optionType) {
                     $optionType = str_replace('number', 'integer|double', $optionType);
@@ -104,34 +145,81 @@ trait OptionsTrait
                         );
                     }
                 }
-
-                $optionValue = $this->providedOptions[$optionName];
-
-                if ($optionName == 'quality') {
-                    if ($actualType == 'string') {
-                        if ($optionValue != 'auto') {
-                            throw new InvalidOptionTypeException(
-                                'Quality option must be either "auto" or a number between 0-100. ' .
-                                'A string, "' . $optionValue . '" was given'
-                            );
-                        }
-                    } else {
-                        if (($optionValue < 0) || ($optionValue > 100)) {
-                            throw new InvalidOptionTypeException(
-                                'Quality option must be either "auto" or a number between 0-100. ' .
-                                    'The number you provided (' . strval($optionValue) . ') is out of range.'
-                            );
-                        }
-                    }
-                }
-
-                if (($optionName == 'lossless') && ($actualType == 'string')  && ($optionValue != 'auto')) {
-                    throw new InvalidOptionTypeException(
-                        'Lossless option must be true, false or "auto". It was set to: "' . $optionValue . '"'
-                    );
-                }
             }
         }
+    }
+
+    /**
+     *  Check quality option
+     *
+     *  @throws InvalidOptionTypeException  if value is out of range
+     *  @return void
+     */
+    private function checkQualityOption()
+    {
+        if (!isset($this->providedOptions['quality'])) {
+            return;
+        }
+        $optionValue = $this->providedOptions['quality'];
+        if (gettype($optionValue) == 'string') {
+            if ($optionValue != 'auto') {
+                throw new InvalidOptionTypeException(
+                    'Quality option must be either "auto" or a number between 0-100. ' .
+                    'A string, "' . $optionValue . '" was given'
+                );
+            }
+        } else {
+            if (($optionValue < 0) || ($optionValue > 100)) {
+                throw new InvalidOptionTypeException(
+                    'Quality option must be either "auto" or a number between 0-100. ' .
+                        'The number you provided (' . strval($optionValue) . ') is out of range.'
+                );
+            }
+        }
+    }
+
+    /**
+     *  Check lossless option
+     *
+     *  @throws InvalidOptionTypeException  if value is out of range
+     *  @return void
+     */
+    private function checkLosslessOption()
+    {
+        if (!isset($this->providedOptions['lossless'])) {
+            return;
+        }
+        $optionValue = $this->providedOptions['lossless'];
+        if ((gettype($optionValue) == 'string') && ($optionValue != 'auto')) {
+            throw new InvalidOptionTypeException(
+                'Lossless option must be true, false or "auto". It was set to: "' . $optionValue . '"'
+            );
+        }
+    }
+
+    /**
+     *  Check option types.
+     *
+     *  @throws InvalidOptionTypeException  if an option value have wrong type or is out of range
+     *  @return void
+     */
+    private function checkOptionTypes()
+    {
+        $this->checkOptionTypesGenerally();
+        $this->checkQualityOption();
+        $this->checkLosslessOption();
+    }
+
+    /**
+     *  Check options.
+     *
+     *  @throws InvalidOptionTypeException  if an option value have wrong type or is out of range
+     *  @throws ConversionSkippedException  if 'skip' option is set to true
+     *  @return void
+     */
+    protected function checkOptions()
+    {
+        $this->checkOptionTypes();
 
         if ($this->options['skip']) {
             if (($this->getMimeTypeOfSource() == 'image/png') && isset($this->options['png']['skip'])) {
@@ -145,43 +233,4 @@ trait OptionsTrait
             }
         }
     }
-
-    /**
-     * Prepare options.
-     */
-     /*
-    private function prepareOptions()
-    {
-        //$defaultOptions = self::$defaultOptions;
-
-        // -  Merge defaults of the converters extra options into the standard default options.
-        //$defaultOptions = array_merge($defaultOptions, array_column(static::$extraOptions, 'default', 'name'));
-        //print_r($this->getOptionDefinitionsExtra());
-        //$extra = [];
-        //$this->getDefaultOptionsExtra();
-        //echo '<br>';
-        //print_r(static::$extraOptions);
-        //print_r(array_column(static::$extraOptions, 'default', 'name'));
-        //$defaultOptions = array_merge($defaultOptions, $this->getDefaultOptionsExtra());
-
-
-        //throw new \Exception('extra!' . print_r($this->getConverterDisplayName(), true));
-
-        // -  Merge $defaultOptions into provided options
-        //$this->options = array_merge($defaultOptions, $this->options);
-        //$this->options = array_merge($this->getDefaultOptions(), $providedOptions);
-
-        if ($this->getMimeTypeOfSource() == 'png') {
-            // skip png's ?
-            if ($this->options['skip-pngs']) {
-                throw new ConversionSkippedException(
-                    'PNG file skipped (configured to do so)'
-                );
-            }
-        }
-
-
-        // TODO: Here we could test if quality is 0-100 or auto.
-        //       and if not, throw something extending InvalidArgumentException (which is a LogicException)
-    }*/
 }

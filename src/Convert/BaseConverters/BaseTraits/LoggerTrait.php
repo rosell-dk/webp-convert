@@ -16,7 +16,7 @@ trait LoggerTrait
 {
 
     /** @var \WebPConvert\Loggers\BaseLogger  The logger (or null if not set) */
-    public $logger;
+    protected $logger;
 
     /**
      * Set logger
@@ -48,7 +48,7 @@ trait LoggerTrait
      *
      * @return  void
      */
-    public function ln()
+    protected function ln()
     {
         if (isset($this->logger)) {
             $this->logger->ln();
@@ -62,7 +62,7 @@ trait LoggerTrait
      * @param  string  $style  (optional) Ie "italic" or "bold"
      * @return void
      */
-    public function log($msg, $style = '')
+    protected function log($msg, $style = '')
     {
         if (isset($this->logger)) {
             $this->logger->log($msg, $style);
