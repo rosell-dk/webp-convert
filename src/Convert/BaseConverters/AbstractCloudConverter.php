@@ -17,52 +17,53 @@ use WebPConvert\Convert\Helpers\PhpIniSizes;
  */
 abstract class AbstractCloudConverter extends AbstractConverter
 {
-
     /**
-     *  Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini
+     * Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini.
      *
-     * @throws  ConversionFailedException  if filesize is larger than "upload_max_filesize" or "post_max_size"
+     * @param  string  $iniSettingId  Id of ini setting (ie "upload_max_filesize")
+     *
+     * @throws  ConversionFailedException  if filesize is larger than the ini setting
      * @return  void
      */
-    protected function testFilesizeRequirements()
+    private function checkFileSizeVsIniSetting($iniSettingId)
     {
         $fileSize = @filesize($this->source);
-        if ($fileSize !== false) {
-            $uploadMaxSize = PhpIniSizes::getIniBytes('upload_max_filesize');
-            if ($uploadMaxSize === false) {
-                // Not sure if we should throw an exception here, or not...
-            } elseif ($uploadMaxSize < $fileSize) {
-                throw new ConversionFailedException(
-                    'File is larger than your max upload (set in your php.ini). File size:' .
-                        round($fileSize/1024) . ' kb. ' .
-                        'upload_max_filesize in php.ini: ' . ini_get('upload_max_filesize') .
-                        ' (parsed as ' . round($uploadMaxSize/1024) . ' kb)'
-                );
-            }
-
-            $postMaxSize = PhpIniSizes::getIniBytes(ini_get('post_max_size'));
-            if ($postMaxSize === false) {
-                // Not sure if we should throw an exception here, or not...
-            } elseif ($postMaxSize < $fileSize) {
-                throw new ConversionFailedException(
-                    'File is larger than your post_max_size limit (set in your php.ini). File size:' .
-                        round($fileSize/1024) . ' kb. ' .
-                        'post_max_size in php.ini: ' . ini_get('post_max_size') .
-                        ' (parsed as ' . round($postMaxSize/1024) . ' kb)'
-                );
-            }
-
-            // Hm, should we worry about memory limit as well?
-            // ini_get('memory_limit')
+        if ($fileSize === false) {
+            return;
+        }
+        $sizeInIni = PhpIniSizes::getIniBytes($iniSettingId);
+        if ($sizeInIni === false) {
+            // Not sure if we should throw an exception here, or not...
+            return;
+        }
+        if ($sizeInIni < $fileSize) {
+            throw new ConversionFailedException(
+                'File is larger than your ' . $iniSettingId . ' (set in your php.ini). File size:' .
+                    round($fileSize/1024) . ' kb. ' .
+                    $iniSettingId . ' in php.ini: ' . ini_get($iniSettingId) .
+                    ' (parsed as ' . round($sizeInIni/1024) . ' kb)'
+            );
         }
     }
 
     /**
-     * Check if specific file is convertable with current converter / converter settings.
+     * Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini.
      *
+     * @throws  ConversionFailedException  if filesize is larger than "upload_max_filesize" or "post_max_size"
+     * @return  void
+     */
+    protected function checkFilesizeRequirements()
+    {
+        $this->checkFileSizeVsIniSetting('upload_max_filesize');
+        $this->checkFileSizeVsIniSetting('post_max_size');
+    }
+
+    /**
+     * Check if specific file is convertable with current converter / converter settings.
+     * @return void
      */
     public function checkConvertability()
     {
-        $this->testFilesizeRequirements();
+        $this->checkFilesizeRequirements();
     }
 }
