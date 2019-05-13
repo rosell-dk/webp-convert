@@ -15,7 +15,6 @@ require_once('PHPMerger.php');
 $filesInWod1 = [
     '/Serve/ServeConvertedWebP.php',
     '/Serve/ServeConvertedWebPWithErrorHandling.php',
-    '/Serve/DecideWhatToServe.php',
     '/Serve/ServeFile.php',
     '/Serve/Header.php',
     '/WebPConvert.php'
@@ -23,7 +22,7 @@ $filesInWod1 = [
 
 // Build "webp-on-demand-1.php" (for non-composer projects)
 
-PhpMerger::generate([
+$success = PhpMerger::generate([
     'destination' => '../src-build/webp-on-demand-1.inc',
 
     'jobs' => [
@@ -37,6 +36,9 @@ PhpMerger::generate([
         ]
     ]
 ]);
+if (!$success) {
+    exit(255);
+}
 
 $jobsEverything = [
     [
@@ -44,7 +46,7 @@ $jobsEverything = [
 
         'files' => [
             // put base classes here
-            'Convert/BaseConverters/AbstractConverter.php',
+            'Convert/Converters/AbstractConverter.php',
             'Exceptions/WebPConvertException.php',
             'Convert/Exceptions/ConversionFailedException.php',
             //'Convert/BaseConverters',
@@ -96,17 +98,23 @@ $jobsEverything = [
 ];
 
 // Build "webp-convert.inc", containing the entire library (for the lazy ones)
-PhpMerger::generate([
+$success = PhpMerger::generate([
     'destination' => '../src-build/webp-convert.inc',
     'jobs' => $jobsEverything
 ]);
+if (!$success) {
+    exit(255);
+}
 
 $jobsWod2 = $jobsEverything;
 $jobsWod2[0]['exclude'] = $filesInWod1;
 
 // Build "webp-on-demand-2.inc"
 // It must contain everything EXCEPT those classes that were included in 'webp-on-demand-1.inc'
-PhpMerger::generate([
+$success = PhpMerger::generate([
     'destination' => '../src-build/webp-on-demand-2.inc',
     'jobs' => $jobsWod2
 ]);
+if (!$success) {
+    exit(255);
+}
