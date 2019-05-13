@@ -289,7 +289,6 @@ class ServeConvertedWebPWithErrorHandling
     }
 }
 
-
 ?><?php
 namespace WebPConvert\Serve;
 
