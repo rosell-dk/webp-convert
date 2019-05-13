@@ -2,6 +2,8 @@
 
 namespace WebPConvert\Convert\Converters\ConverterTraits;
 
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+
 /**
  * Trait for converters that uses exec()
  *
@@ -43,7 +45,7 @@ trait ExecTrait
      */
     public function checkOperationalityExecTrait()
     {
-        if (!function_exists('exec')) {
+        if (!function_exists('exec2')) {
             throw new SystemRequirementsNotMetException('exec() is not enabled.');
         }
     }
