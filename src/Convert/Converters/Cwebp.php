@@ -2,8 +2,9 @@
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractExecConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
+use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
@@ -15,10 +16,11 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalExcep
  * @author     Bjørn Rosell <it@rosell.dk>
  * @since      Class available since Release 2.0.0
  */
-class Cwebp extends AbstractExecConverter
+class Cwebp extends AbstractConverter
 {
 
     use LosslessAutoTrait;
+    use ExecTrait;
 
     protected function getOptionDefinitionsExtra()
     {
@@ -58,6 +60,8 @@ class Cwebp extends AbstractExecConverter
 
     public function checkOperationality()
     {
+        $this->checkOperationalityExecTrait();
+
         $options = $this->options;
         if (!$options['try-supplied-binary-for-os'] && !$options['try-common-system-paths']) {
             throw new ConverterNotOperationalException(

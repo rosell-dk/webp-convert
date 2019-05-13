@@ -514,61 +514,6 @@ abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
     }
 }
 
-?><?php
-
-namespace WebPConvert\Convert\BaseConverters;
-
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
-
-use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-
-/**
- * Base for converters that uses the "exec" function.
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-abstract class AbstractExecConverter extends AbstractConverter
-{
-
-    /**
-     * Helper function for examining if "nice" command is available
-     *
-     * @return  boolean  true if nice is available
-     */
-    protected static function hasNiceSupport()
-    {
-        exec("nice 2>&1", $niceOutput);
-
-        if (is_array($niceOutput) && isset($niceOutput[0])) {
-            if (preg_match('/usage/', $niceOutput[0]) || (preg_match('/^\d+$/', $niceOutput[0]))) {
-                /*
-                 * Nice is available - default niceness (+10)
-                 * https://www.lifewire.com/uses-of-commands-nice-renice-2201087
-                 * https://www.computerhope.com/unix/unice.htm
-                 */
-
-                return true;
-            }
-            return false;
-        }
-    }
-
-    /**
-     * Check basic operationality of exec converters (that the "exec" function is available)
-     *
-     * @throws  SystemRequirementsNotMetException
-     * @return  void
-     */
-    public function checkOperationality()
-    {
-        if (!function_exists('exec')) {
-            throw new SystemRequirementsNotMetException('exec() is not enabled.');
-        }
-    }
-}
 
 ?><?php
 
@@ -1340,8 +1285,9 @@ trait WarningLoggerTrait
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractExecConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
+use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
@@ -1353,10 +1299,11 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalExcep
  * @author     Bjørn Rosell <it@rosell.dk>
  * @since      Class available since Release 2.0.0
  */
-class Cwebp extends AbstractExecConverter
+class Cwebp extends AbstractConverter
 {
 
     use LosslessAutoTrait;
+    use ExecTrait;
 
     protected function getOptionDefinitionsExtra()
     {
@@ -1396,6 +1343,8 @@ class Cwebp extends AbstractExecConverter
 
     public function checkOperationality()
     {
+        $this->checkOperationalityExecTrait();
+
         $options = $this->options;
         if (!$options['try-supplied-binary-for-os'] && !$options['try-common-system-paths']) {
             throw new ConverterNotOperationalException(
@@ -2717,7 +2666,8 @@ class Gmagick extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractExecConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
@@ -2731,12 +2681,9 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
  * @author     Bjørn Rosell <it@rosell.dk>
  * @since      Class available since Release 2.0.0
  */
-class GmagickBinary extends AbstractExecConverter
+class GmagickBinary extends AbstractConverter
 {
-    public function supportsLossless()
-    {
-        return false;
-    }
+    use ExecTrait;
 
     protected function getOptionDefinitionsExtra()
     {
@@ -2779,6 +2726,8 @@ class GmagickBinary extends AbstractExecConverter
      */
     public function checkOperationality()
     {
+        $this->checkOperationalityExecTrait();
+
         if (!self::gmagickInstalled()) {
             throw new SystemRequirementsNotMetException('gmagick is not installed');
         }
@@ -3000,7 +2949,8 @@ class Imagick extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractExecConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
@@ -3014,15 +2964,13 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
  * @author     Bjørn Rosell <it@rosell.dk>
  * @since      Class available since Release 2.0.0
  */
-class ImagickBinary extends AbstractExecConverter
+class ImagickBinary extends AbstractConverter
 {
+    use ExecTrait;
+
     // To futher improve this converter, I could check out:
     // https://github.com/Orbitale/ImageMagickPHP
 
-    public function supportsLossless()
-    {
-        return false;
-    }
 
     protected function getOptionDefinitionsExtra()
     {
@@ -3068,6 +3016,8 @@ class ImagickBinary extends AbstractExecConverter
      */
     public function checkOperationality()
     {
+        $this->checkOperationalityExecTrait();
+
         if (!self::imagickInstalled()) {
             throw new SystemRequirementsNotMetException('imagick is not installed');
         }
@@ -3084,7 +3034,6 @@ class ImagickBinary extends AbstractExecConverter
         // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
         // Should we perhaps try both?
         // For now, we just go with "convert"
-
 
         $commandArguments = [];
         if ($this->isQualityDetectionRequiredButFailing()) {

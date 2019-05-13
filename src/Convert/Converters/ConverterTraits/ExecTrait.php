@@ -1,20 +1,15 @@
 <?php
 
-namespace WebPConvert\Convert\BaseConverters;
-
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
-
-use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+namespace WebPConvert\Convert\Converters\ConverterTraits;
 
 /**
- * Base for converters that uses the "exec" function.
+ * Trait for converters that uses exec()
  *
  * @package    WebPConvert
  * @author     Bjørn Rosell <it@rosell.dk>
  * @since      Class available since Release 2.0.0
  */
-abstract class AbstractExecConverter extends AbstractConverter
+trait ExecTrait
 {
 
     /**
@@ -46,7 +41,7 @@ abstract class AbstractExecConverter extends AbstractConverter
      * @throws  SystemRequirementsNotMetException
      * @return  void
      */
-    public function checkOperationality()
+    public function checkOperationalityExecTrait()
     {
         if (!function_exists('exec')) {
             throw new SystemRequirementsNotMetException('exec() is not enabled.');

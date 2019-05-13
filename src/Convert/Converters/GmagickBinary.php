@@ -2,7 +2,8 @@
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractExecConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
@@ -16,12 +17,9 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
  * @author     Bjørn Rosell <it@rosell.dk>
  * @since      Class available since Release 2.0.0
  */
-class GmagickBinary extends AbstractExecConverter
+class GmagickBinary extends AbstractConverter
 {
-    public function supportsLossless()
-    {
-        return false;
-    }
+    use ExecTrait;
 
     protected function getOptionDefinitionsExtra()
     {
@@ -64,6 +62,8 @@ class GmagickBinary extends AbstractExecConverter
      */
     public function checkOperationality()
     {
+        $this->checkOperationalityExecTrait();
+
         if (!self::gmagickInstalled()) {
             throw new SystemRequirementsNotMetException('gmagick is not installed');
         }

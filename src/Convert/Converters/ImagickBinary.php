@@ -2,7 +2,8 @@
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractExecConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
@@ -16,15 +17,13 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
  * @author     Bjørn Rosell <it@rosell.dk>
  * @since      Class available since Release 2.0.0
  */
-class ImagickBinary extends AbstractExecConverter
+class ImagickBinary extends AbstractConverter
 {
+    use ExecTrait;
+
     // To futher improve this converter, I could check out:
     // https://github.com/Orbitale/ImageMagickPHP
 
-    public function supportsLossless()
-    {
-        return false;
-    }
 
     protected function getOptionDefinitionsExtra()
     {
@@ -70,6 +69,8 @@ class ImagickBinary extends AbstractExecConverter
      */
     public function checkOperationality()
     {
+        $this->checkOperationalityExecTrait();
+
         if (!self::imagickInstalled()) {
             throw new SystemRequirementsNotMetException('imagick is not installed');
         }
@@ -86,7 +87,6 @@ class ImagickBinary extends AbstractExecConverter
         // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
         // Should we perhaps try both?
         // For now, we just go with "convert"
-
 
         $commandArguments = [];
         if ($this->isQualityDetectionRequiredButFailing()) {
