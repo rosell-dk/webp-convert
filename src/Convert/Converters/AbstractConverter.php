@@ -186,42 +186,24 @@ abstract class AbstractConverter
         $beginTime = microtime(true);
 
         $this->activateWarningLogger();
-        //set_error_handler(array($this, "errorHandler"));
 
-        try {
-            // Prepare options
-            //$this->prepareOptions();
+        $this->checkOptions();
 
-            $this->checkOptions();
+        // Prepare destination folder
+        $this->createWritableDestinationFolder();
+        $this->removeExistingDestinationIfExists();
 
-            // Prepare destination folder
-            $this->createWritableDestinationFolder();
-            $this->removeExistingDestinationIfExists();
+        if (!isset($this->options['_skip_input_check'])) {
+            // Run basic input validations (if source exists and if file extension is valid)
+            $this->checkInput();
 
-            if (!isset($this->options['_skip_input_check'])) {
-                // Run basic input validations (if source exists and if file extension is valid)
-                $this->checkInput();
-
-                // Check that a file can be written to destination
-                $this->checkFileSystem();
-            }
-
-            $this->checkOperationality();
-            $this->checkConvertability();
-            $this->runActualConvert();
-        } catch (ConversionFailedException $e) {
-            $this->deactivateWarningLogger();
-            throw $e;
-        } catch (\Exception $e) {
-            $this->deactivateWarningLogger();
-            throw new UnhandledException('Conversion failed due to uncaught exception', 0, $e);
-        } catch (\Error $e) {
-            $this->deactivateWarningLogger();
-            // https://stackoverflow.com/questions/7116995/is-it-possible-in-php-to-prevent-fatal-error-call-to-undefined-function
-            //throw new UnhandledException('Conversion failed due to uncaught error', 0, $e);
-            throw $e;
+            // Check that a file can be written to destination
+            $this->checkFileSystem();
         }
-        $this->deactivateWarningLogger();
+
+        $this->checkOperationality();
+        $this->checkConvertability();
+        $this->runActualConvert();
 
         $source = $this->source;
         $destination = $this->destination;
@@ -253,6 +235,9 @@ abstract class AbstractConverter
                 $this->logLn($msg);
             }
         }
+
+        $this->deactivateWarningLogger();
+
     }
 
     /**

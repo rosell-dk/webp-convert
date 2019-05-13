@@ -13,6 +13,7 @@ use WebPConvert\Exceptions\WebPConvertException;
  *      ConversionFailedException
  *          ConversionSkippedException
  *          ConverterNotOperationalException
+ *              InvalidApiKeyException
  *              SystemRequirementsNotMetException
  *          FileSystemProblemsException
  *              CreateDestinationFileException
@@ -22,7 +23,6 @@ use WebPConvert\Exceptions\WebPConvertException;
  *              InvalidImageTypeException
  *              InvalidOptionTypeException
  *              TargetNotFoundException
- *          UnhandledException
  */
 class ConversionFailedException extends WebPConvertException
 {
