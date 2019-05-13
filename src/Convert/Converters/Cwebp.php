@@ -267,8 +267,6 @@ class Cwebp extends AbstractConverter
      */
     private function tryCommonSystemPaths($useNice, $commandOptions)
     {
-        $errorMsg = '';
-        //$failures = [];
         $failureCodes = [];
 
         // Loop through paths
@@ -278,7 +276,6 @@ class Cwebp extends AbstractConverter
                 $this->logLn('Successfully executed binary: ' . $binary);
                 return [];
             } else {
-                //$failures[] = [$binary, $returnCode];
                 if ($returnCode == 127) {
                     $this->logLn(
                         'Trying to execute binary: ' . $binary . '. Failed (not found)'
