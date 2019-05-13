@@ -17,7 +17,10 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
  */
 class Gmagick extends AbstractConverter
 {
-    protected $supportsLossless = false;
+    public function supportsLossless()
+    {
+        return false;
+    }
 
     protected function getOptionDefinitionsExtra()
     {

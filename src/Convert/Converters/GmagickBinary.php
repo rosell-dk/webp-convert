@@ -18,7 +18,10 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
  */
 class GmagickBinary extends AbstractExecConverter
 {
-    protected $supportsLossless = false;
+    public function supportsLossless()
+    {
+        return false;
+    }
 
     protected function getOptionDefinitionsExtra()
     {

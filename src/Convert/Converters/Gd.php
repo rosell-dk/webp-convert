@@ -16,7 +16,10 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
  */
 class Gd extends AbstractConverter
 {
-    protected $supportsLossless = false;
+    public function supportsLossless()
+    {
+        return false;
+    }
 
     private $errorMessageWhileCreating = '';
     private $errorNumberWhileCreating;

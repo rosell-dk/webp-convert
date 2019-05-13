@@ -22,8 +22,6 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
  */
 class Stack extends AbstractConverter
 {
-    protected $processLosslessAuto = false;
-    protected $supportsLossless = true;
 
     protected function getOptionDefinitionsExtra()
     {

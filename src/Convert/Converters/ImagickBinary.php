@@ -21,7 +21,10 @@ class ImagickBinary extends AbstractExecConverter
     // To futher improve this converter, I could check out:
     // https://github.com/Orbitale/ImageMagickPHP
 
-    protected $supportsLossless = false;
+    public function supportsLossless()
+    {
+        return false;
+    }
 
     protected function getOptionDefinitionsExtra()
     {

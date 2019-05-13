@@ -3,6 +3,7 @@
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\BaseConverters\AbstractExecConverter;
+use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
@@ -16,7 +17,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalExcep
  */
 class Cwebp extends AbstractExecConverter
 {
-    protected $supportsLossless = true;
+
+    use LosslessAutoTrait;
 
     protected function getOptionDefinitionsExtra()
     {

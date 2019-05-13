@@ -3,6 +3,7 @@
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\BaseConverters\AbstractCloudCurlConverter;
+use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -17,8 +18,13 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Inva
  */
 class Wpc extends AbstractCloudCurlConverter
 {
-    protected $processLosslessAuto = true;
-    protected $supportsLossless = true;
+    use LosslessAutoTrait;
+
+    public function passOnLosslessAuto()
+    {
+        // TODO: Either make this configurable or perhaps depend on api version
+        return false;
+    }
 
     protected function getOptionDefinitionsExtra()
     {

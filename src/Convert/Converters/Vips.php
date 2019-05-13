@@ -3,6 +3,7 @@
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
@@ -17,7 +18,14 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
  */
 class Vips extends AbstractConverter
 {
-    protected $supportsLossless = true;
+    use LosslessAutoTrait;
+
+/*
+    public function supportsLossless()
+    {
+        return true;
+    }
+    */
 
     protected function getOptionDefinitionsExtra()
     {
