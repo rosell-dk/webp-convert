@@ -79,15 +79,13 @@ class ImagickBinary extends AbstractConverter
         }
     }
 
-    protected function doActualConvert()
+    /**
+     * Build command line options
+     *
+     * @return string
+     */
+    private function createCommandLineOptions()
     {
-        //$this->logLn('Using quality:' . $this->getCalculatedQuality());
-
-        // Should we use "magick" or "convert" command?
-        // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
-        // Should we perhaps try both?
-        // For now, we just go with "convert"
-
         $commandArguments = [];
         if ($this->isQualityDetectionRequiredButFailing()) {
             // quality:auto was specified, but could not be determined.
@@ -99,7 +97,19 @@ class ImagickBinary extends AbstractConverter
         $commandArguments[] = escapeshellarg($this->source);
         $commandArguments[] = escapeshellarg('webp:' . $this->destination);
 
-        $command = 'convert ' . implode(' ', $commandArguments);
+        return implode(' ', $commandArguments);
+    }
+
+    protected function doActualConvert()
+    {
+        //$this->logLn('Using quality:' . $this->getCalculatedQuality());
+
+        // Should we use "magick" or "convert" command?
+        // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
+        // Should we perhaps try both?
+        // For now, we just go with "convert"
+
+        $command = 'convert ' . $this->createCommandLineOptions();
 
         // also try common system paths?, or perhaps allow path to be set in environment?
         //$command = '/home/rosell/opt/bin/magick ' . implode(' ', $commandArguments);
