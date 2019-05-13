@@ -28,11 +28,11 @@ Of course, as we here have to call a binary directly, *cwebp* requires the *exec
 
 |                                            | cwebp     | vips   | imagick / gmagick | imagickbinary | gd        | ewww   |
 | ------------------------------------------ | --------- | ------ | ----------------- | ------------- | --------- | ------ |
-| supports lossless encoding ?               | yes       | yes    | no                | no            | no        | yes    |
-| supports lossless auto ?                   | yes       | yes    | no                | no            | no        | no     |
+| supports lossless encoding ?               | yes       | yes    | no                | yes           | no        | yes    |
+| supports lossless auto ?                   | yes       | yes    | no                | yes           | no        | no     |
 | supports near-lossless ?                   | yes       | yes    | no                | no            | no        | ?      |
-| supports metadata stripping / preserving   | yes       | yes    | yes               | no            | no        | ?      |
-| supports setting alpha quality             | no        | yes    | no                | no            | no        | no     |
+| supports metadata stripping / preserving   | yes       | yes    | yes               | yes           | no        | ?      |
+| supports setting alpha quality             | yes       | yes    | no                | yes           | no        | no     |
 | supports fixed quality (for lossy)         | yes       | yes    | yes               | yes           | yes       | yes    |
 | supports auto quality without help         | no        | no     | yes               | yes           | no        | no     |
 
@@ -48,7 +48,7 @@ Of course, as we here have to call a binary directly, *cwebp* requires the *exec
 | [`gmagick`](#gmagick)                | Gmagick extension (`ImageMagick` wrapper)        | Gmagick PHP extension compiled with WebP support   |
 | [`gd`](#gd)                          | GD Graphics (Draw) extension (`LibGD` wrapper)   | GD PHP extension compiled with WebP support        |
 | [`imagickbinary`](#imagickbinary)    | Calls imagick binary directly                    | exec() and imagick installed and compiled with WebP support   |
-| [`wpc`](#wpc)                        | Connects to an open source cloud service                 | Access to a running service. The service can be installed  [directly](https://github.com/rosell-dk/webp-convert-cloud-service) or by using [this Wordpress plugin](https://wordpress.org/plugins/webp-express/).
+| [`wpc`](#wpc)                        | Connects to an open source cloud service         | Access to a running service. The service can be installed  [directly](https://github.com/rosell-dk/webp-convert-cloud-service) or by using [this Wordpress plugin](https://wordpress.org/plugins/webp-express/).
 | [`ewww`](#ewww)                      | Connects to *EWWW Image Optimizer* cloud service | Purchasing a key                                   |
 
 ## Installation

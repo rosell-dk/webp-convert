@@ -90,7 +90,7 @@ WebP files can be encoded using either *lossless* or *lossy* encoding. The JPEG 
 
 As unnecessary large conversions are rarely desirable, this library per default tries to convert PNGs using both lossy (q=85) and lossless encoding and automatically selects the smallest. Unless you changed the `near-lossless` option described below, the choice is actually between lossy and *near-lossless*.
 
-Note that only the *cwebp* and the *vips* converters supports this feature &ndash; and the *wpc* converter, if the cloud converter is configured to use one of these.
+Note that only *cwebp*, *vips* and *imagickbinary* supports this feature &ndash; and also *wpc* converter, if the cloud converter is configured to use one of these.
 
 *ewww* btw automatically uses *lossless* encoding for PNGs and lossy for JPEGs and therefore cannot be configured to auto select. While this is not good, I believe it is preferable to always using *lossy* encoding for PNGs, which is the case with *gd*, *imagick*, *gmagick*, *imagickbinary* and *gmagickbinary*.
 
@@ -98,9 +98,16 @@ Note that only the *cwebp* and the *vips* converters supports this feature &ndas
 ### Near-lossless
 *cwebp* and *vips* supports "near-lossless" mode. Near lossless produces a webp with lossless encoding but adjusts pixel values to help compressibility. The result is a smaller file. The price is described as a minimal impact on the visual quality.
 
-As unnecessary large conversions are rarely desirable, this library per default sets near-lossless to 60. To disable near-lossless, set it to 100.
+As unnecessary large conversions are rarely desirable, this library per default sets *near-lossless* to 60. To disable near-lossless, set it to 100.
 
 You can read more about the near-lossless mode [here](https://groups.google.com/a/webmproject.org/forum/#!topic/webp-discuss/0GmxDmlexek)
+
+### Alpha-lossless
+*cwebp*, *vips* and *imagickbinary* supports "alpha-quality" option. This allows lossy compressing of the alpha channel.
+
+As unnecessary large conversions are rarely desirable, this library per default sets *alpha-quality* to 80. Set it to 100 to achieve lossless compression of alhpa.
+
+You can read more about the alpha-quality option [here](https://developers.google.com/speed/webp/docs/cwebp)
 
 
 ### PNG og JPEG-specific options.

@@ -4,7 +4,7 @@ namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\BaseConverters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
-
+use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
@@ -20,6 +20,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 class ImagickBinary extends AbstractConverter
 {
     use ExecTrait;
+    use LosslessAutoTrait;
 
     // To futher improve this converter, I could check out:
     // https://github.com/Orbitale/ImageMagickPHP
@@ -28,6 +29,10 @@ class ImagickBinary extends AbstractConverter
     protected function getOptionDefinitionsExtra()
     {
         return [
+            ['alpha-quality', 'integer', 80],
+            ['autofilter', 'boolean', false],
+            ['low-memory', 'boolean', true],
+            ['method', 'number', 6],
             ['use-nice', 'boolean', false],
         ];
     }
@@ -94,6 +99,24 @@ class ImagickBinary extends AbstractConverter
         } else {
             $commandArguments[] = '-quality ' . escapeshellarg($this->getCalculatedQuality());
         }
+        if ($this->options['lossless']) {
+            $commandArguments[] = '-define webp:lossless=true';
+        }
+        if ($this->options['low-memory']) {
+            $commandArguments[] = '-define webp:low-memory=true';
+        }
+        if ($this->options['autofilter']) {
+            $commandArguments[] = '-define webp:auto-filter=true';
+        }
+        if ($this->options['metadata'] == 'none') {
+            $commandArguments[] = '-strip';
+        }
+        if ($this->options['alpha-quality'] !== 100) {
+            $commandArguments[] = '-define webp:alpha-quality=' . strval($this->options['alpha-quality']);
+        }
+
+        $commandArguments[] = '-define webp:method=' . $this->options['method'];
+
         $commandArguments[] = escapeshellarg($this->source);
         $commandArguments[] = escapeshellarg('webp:' . $this->destination);
 
@@ -125,7 +148,7 @@ class ImagickBinary extends AbstractConverter
             throw new SystemRequirementsNotMetException('imagick is not installed');
         }
         if ($returnCode != 0) {
-            $this->logLn('command:' . $command);
+            //$this->logLn('command:' . $command);
             $this->logLn('return code:' . $returnCode);
             $this->logLn('output:' . print_r(implode("\n", $output), true));
             throw new SystemRequirementsNotMetException('The exec call failed');
