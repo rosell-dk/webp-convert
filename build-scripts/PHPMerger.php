@@ -15,6 +15,7 @@ class PhpMerger
     }
     public static function generate($conf)
     {
+        $success = true;
         self::$required = [];
         foreach ($conf['jobs'] as $def) {
             // untrail slash
@@ -53,19 +54,23 @@ class PhpMerger
         self::$required = array_unique(self::$required);
 
 
-        echo "included: \n" . implode("\n", self::$required) . "\n";
+        //echo "included: \n" . implode("\n", self::$required) . "\n";
 
         // generate file content
         $data = '';
         $data .= "<?php \n";
         foreach (self::$required as $path) {
-            $file = file_get_contents(__DIR__ . '/' . $path);
-            //$file = str_replace('<' . '?php', '', $file);
-            //$file = str_replace('<' . '?php', '?' . '><?' . 'php', $file);
-            // prepend closing php tag before php tag (only if php tag is in beginning of file)
-            $file = preg_replace('/^\<\?php/', '?><?' . 'php', $file);
-            $data .= $file . "\n";
-
+            try {
+                $file = file_get_contents(__DIR__ . '/' . $path);
+                //$file = str_replace('<' . '?php', '', $file);
+                //$file = str_replace('<' . '?php', '?' . '><?' . 'php', $file);
+                // prepend closing php tag before php tag (only if php tag is in beginning of file)
+                $file = preg_replace('/^\<\?php/', '?><?' . 'php', $file);
+                $data .= $file . "\n";
+            } catch (\Exception $e) {
+                $success = false;
+                //throw $e;
+            }
         }
 
         // generate file
@@ -76,6 +81,9 @@ class PhpMerger
             echo "saved to '" . $conf['destination'] . "'\n";
         } else {
             echo 'OH NO! - failed saving!!!';
+            $success = false;
         }
+        return $success;
+
     }
 }
