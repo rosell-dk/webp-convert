@@ -25,6 +25,7 @@ class Cwebp extends AbstractConverter
     protected function getOptionDefinitionsExtra()
     {
         return [
+            ['alpha-quality', 'integer', 80],
             ['autofilter', 'boolean', false],
             ['command-line-options', 'string', ''],
             ['low-memory', 'boolean', false],
@@ -151,6 +152,11 @@ class Cwebp extends AbstractConverter
         // quality
         if (!$addedSizeOption) {
             $cmdOptions[] = '-q ' . $this->getCalculatedQuality();
+        }
+
+        // alpha-quality
+        if ($this->options['alpha-quality'] !== 100) {
+            $cmdOptions[] = '-alpha_q ' . escapeshellarg($this->options['alpha-quality']);
         }
 
         // Losless PNG conversion
