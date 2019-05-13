@@ -38,7 +38,7 @@ trait ExecTrait
     /**
      * Check basic operationality of exec converters (that the "exec" function is available)
      *
-     * @throws  SystemRequirementsNotMetException
+     * @throws  WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException
      * @return  void
      */
     public function checkOperationalityExecTrait()

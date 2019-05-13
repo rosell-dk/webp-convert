@@ -1207,6 +1207,7 @@ class Cwebp extends AbstractConverter
     protected function getOptionDefinitionsExtra()
     {
         return [
+            ['alpha-quality', 'integer', 80],
             ['autofilter', 'boolean', false],
             ['command-line-options', 'string', ''],
             ['low-memory', 'boolean', false],
@@ -1333,6 +1334,11 @@ class Cwebp extends AbstractConverter
         // quality
         if (!$addedSizeOption) {
             $cmdOptions[] = '-q ' . $this->getCalculatedQuality();
+        }
+
+        // alpha-quality
+        if ($this->options['alpha-quality'] !== 100) {
+            $cmdOptions[] = '-alpha_q ' . escapeshellarg($this->options['alpha-quality']);
         }
 
         // Losless PNG conversion
@@ -2850,9 +2856,10 @@ namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\BaseConverters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
-
+use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
+
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -2866,6 +2873,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 class ImagickBinary extends AbstractConverter
 {
     use ExecTrait;
+    use LosslessAutoTrait;
 
     // To futher improve this converter, I could check out:
     // https://github.com/Orbitale/ImageMagickPHP
@@ -2874,6 +2882,10 @@ class ImagickBinary extends AbstractConverter
     protected function getOptionDefinitionsExtra()
     {
         return [
+            ['alpha-quality', 'integer', 80],
+            ['autofilter', 'boolean', false],
+            ['low-memory', 'boolean', true],
+            ['method', 'number', 6],
             ['use-nice', 'boolean', false],
         ];
     }
@@ -2925,6 +2937,45 @@ class ImagickBinary extends AbstractConverter
         }
     }
 
+    /**
+     * Build command line options
+     *
+     * @return string
+     */
+    private function createCommandLineOptions()
+    {
+        $commandArguments = [];
+        if ($this->isQualityDetectionRequiredButFailing()) {
+            // quality:auto was specified, but could not be determined.
+            // we cannot apply the max-quality logic, but we can provide auto quality
+            // simply by not specifying the quality option.
+        } else {
+            $commandArguments[] = '-quality ' . escapeshellarg($this->getCalculatedQuality());
+        }
+        if ($this->options['lossless']) {
+            $commandArguments[] = '-define webp:lossless=true';
+        }
+        if ($this->options['low-memory']) {
+            $commandArguments[] = '-define webp:low-memory=true';
+        }
+        if ($this->options['autofilter']) {
+            $commandArguments[] = '-define webp:auto-filter=true';
+        }
+        if ($this->options['metadata'] == 'none') {
+            $commandArguments[] = '-strip';
+        }
+        if ($this->options['alpha-quality'] !== 100) {
+            $commandArguments[] = '-define webp:alpha-quality=' . strval($this->options['alpha-quality']);
+        }
+
+        $commandArguments[] = '-define webp:method=' . $this->options['method'];
+
+        $commandArguments[] = escapeshellarg($this->source);
+        $commandArguments[] = escapeshellarg('webp:' . $this->destination);
+
+        return implode(' ', $commandArguments);
+    }
+
     protected function doActualConvert()
     {
         //$this->logLn('Using quality:' . $this->getCalculatedQuality());
@@ -2934,18 +2985,7 @@ class ImagickBinary extends AbstractConverter
         // Should we perhaps try both?
         // For now, we just go with "convert"
 
-        $commandArguments = [];
-        if ($this->isQualityDetectionRequiredButFailing()) {
-            // quality:auto was specified, but could not be determined.
-            // we cannot apply the max-quality logic, but we can provide auto quality
-            // simply by not specifying the quality option.
-        } else {
-            $commandArguments[] = '-quality ' . escapeshellarg($this->getCalculatedQuality());
-        }
-        $commandArguments[] = escapeshellarg($this->source);
-        $commandArguments[] = escapeshellarg('webp:' . $this->destination);
-
-        $command = 'convert ' . implode(' ', $commandArguments);
+        $command = 'convert ' . $this->createCommandLineOptions();
 
         // also try common system paths?, or perhaps allow path to be set in environment?
         //$command = '/home/rosell/opt/bin/magick ' . implode(' ', $commandArguments);
@@ -2961,7 +3001,7 @@ class ImagickBinary extends AbstractConverter
             throw new SystemRequirementsNotMetException('imagick is not installed');
         }
         if ($returnCode != 0) {
-            $this->logLn('command:' . $command);
+            //$this->logLn('command:' . $command);
             $this->logLn('return code:' . $returnCode);
             $this->logLn('output:' . print_r(implode("\n", $output), true));
             throw new SystemRequirementsNotMetException('The exec call failed');
@@ -3204,7 +3244,7 @@ class Vips extends AbstractConverter
     {
         return [
             ['smart-subsample', 'boolean', false],
-            ['alpha-quality', 'integer', 80],  // alpha quality in lossless mode
+            ['alpha-quality', 'integer', 80],
             ['near-lossless', 'integer', 60],
             ['preset', 'integer', 0],  // preset. 0:default, 1:picture, 2:photo, 3:drawing, 4:icon, 5:text, 6:last
         ];
