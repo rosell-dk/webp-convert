@@ -50,15 +50,6 @@ abstract class AbstractConverter
     abstract protected function doActualConvert();
 
     /**
-     * Get to know whether the converter supports lossless webp encoding, even for jpegs.
-     *
-     * The following converters supports lossless encoding, even for jpegs: cwebp, vips, stack and wpc
-     * The following converters does not: ewww, gd, gmagick, gmagickbinary, imagick, imagickbinary
-     *
-     * @return  boolean  whether lossless encoding is supported for the concrete converter.
-     */
-
-    /**
      * Whether or not the converter supports lossless encoding (even for jpegs)
      *
      * PS: Converters that supports lossless encoding all use the LosslessAutoTrait, which
@@ -80,6 +71,7 @@ abstract class AbstractConverter
     /** @var string|false|null  Where to save the webp (complete path) */
     private $sourceMimeType;
 
+    /** @var array  Array of allowed mime types for source.  */
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
 
     /**
@@ -180,9 +172,15 @@ abstract class AbstractConverter
         return new static($source, $destination, $options, $logger);
     }
 
-    //$instance->logLn($instance->getConverterDisplayName() . ' converter ignited');
-    //$instance->logLn(self::getConverterDisplayName() . ' converter ignited');
 
+    /**
+     * Start conversion.
+     *
+     * Usually you would rather call the static convert method, but alternatively you can call
+     * call ::createInstance to get an instance and then ::doConvert().
+     *
+     * @return void
+     */
     public function doConvert()
     {
         $beginTime = microtime(true);
@@ -257,6 +255,14 @@ abstract class AbstractConverter
         }
     }
 
+    /**
+     * Runs the actual conversion (after setup and checks)
+     * Simply calls the doActualConvert() of the actual converter.
+     * However, in the LosslessAutoTrait, this method is overridden to make two conversions
+     * and select the smallest.
+     *
+     * @return void
+     */
     protected function runActualConvert()
     {
         $this->doActualConvert();
@@ -270,7 +276,8 @@ abstract class AbstractConverter
      * @param   array   $options (optional)  options for conversion
      * @param   BaseLogger $logger (optional)
      *
-     * @throws  ConversionFailedException   in case conversion fails
+     * @throws  ConversionFailedException   in case conversion fails in an antipiciated way
+     * @throws  \Exception   in case conversion fails in an unantipiciated way
      * @return  void
      */
     public static function convert($source, $destination, $options = [], $logger = null)
@@ -323,28 +330,43 @@ abstract class AbstractConverter
         }
     }
 
+    /**
+     * Check that we can write file at destination.
+     *
+     * It is assumed that the folder already exists (that ::createWritableDestinationFolder() was called first)
+     *
+     * @throws CreateDestinationFileException  if file cannot be created at destination
+     * @return void
+     */
     private function checkFileSystem()
     {
-        // TODO:
-        // Instead of creating dummy file,
-        // perhaps something like this ?
-        // if (@is_writable($dirName) && @is_executable($dirName) || self::isWindows() )
-        // Or actually, probably best with a mix.
-        // First we test is_writable and is_executable. If that fails and we are on windows, we can do the dummy
-        // function isWindows(){
-        // return (boolean) preg_match('/^win/i', PHP_OS);
-        //}
+        $dirName = dirname($this->destination);
 
-        // Try to create a dummy file here, with that name, just to see if it is possible (we delete it again)
-        file_put_contents($this->destination, '');
-        if (file_put_contents($this->destination, '') === false) {
-            throw new CreateDestinationFileException(
-                'Cannot create file: ' . basename($this->destination) . ' in dir:' . dirname($this->destination)
-            );
+        if (@is_writable($dirName) && @is_executable($dirName)) {
+            // all is well
+            return;
         }
-        unlink($this->destination);
+
+        // The above might fail on Windows, even though dir is writable
+        // So, to be absolute sure that we cannot write, we make an actual write test (writing a dummy file)
+        // No harm in doing that for non-Windows systems either.
+        if (file_put_contents($this->destination, 'dummy') !== false) {
+            // all is well, after all
+            unlink($this->destination);
+            return;
+        }
+
+        throw new CreateDestinationFileException(
+            'Cannot create file: ' . basename($this->destination) . ' in dir:' . dirname($this->destination)
+        );
     }
 
+    /**
+     * Remove existing destination.
+     *
+     * @throws CreateDestinationFileException  if file cannot be removed
+     * @return void
+     */
     private function removeExistingDestinationIfExists()
     {
         if (file_exists($this->destination)) {
@@ -358,8 +380,12 @@ abstract class AbstractConverter
         }
     }
 
-    // Creates folder in provided path & sets correct permissions
-    // also deletes the file at filePath (if it already exists)
+    /**
+     * Create writable folder in provided path (if it does not exist already)
+     *
+     * @throws CreateDestinationFolderException  if folder cannot be removed
+     * @return void
+     */
     private function createWritableDestinationFolder()
     {
         $filePath = $this->destination;
