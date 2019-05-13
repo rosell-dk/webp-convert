@@ -45,7 +45,7 @@ trait ExecTrait
      */
     public function checkOperationalityExecTrait()
     {
-        if (!function_exists('exec2')) {
+        if (!function_exists('exec')) {
             throw new SystemRequirementsNotMetException('exec() is not enabled.');
         }
     }
