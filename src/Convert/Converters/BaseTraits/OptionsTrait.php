@@ -1,6 +1,6 @@
 <?php
 
-namespace WebPConvert\Convert\BaseConverters\BaseTraits;
+namespace WebPConvert\Convert\Converters\BaseTraits;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidOptionTypeException;

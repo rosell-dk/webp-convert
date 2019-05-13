@@ -3,7 +3,7 @@
 namespace WebPConvert\Convert\Converters\ConverterTraits;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\AbstractConverter;
 
 /**
  * Trait for converters that works by uploading to a cloud service.

@@ -2,7 +2,7 @@
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;

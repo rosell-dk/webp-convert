@@ -3,7 +3,7 @@
 // TODO:
 // Read this: https://sourcemaking.com/design_patterns/strategy
 
-namespace WebPConvert\Convert\BaseConverters;
+namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\UnhandledException;
@@ -11,10 +11,10 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDes
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFolderException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
-use WebPConvert\Convert\BaseConverters\BaseTraits\AutoQualityTrait;
-use WebPConvert\Convert\BaseConverters\BaseTraits\LoggerTrait;
-use WebPConvert\Convert\BaseConverters\BaseTraits\OptionsTrait;
-use WebPConvert\Convert\BaseConverters\BaseTraits\WarningLoggerTrait;
+use WebPConvert\Convert\Converters\BaseTraits\AutoQualityTrait;
+use WebPConvert\Convert\Converters\BaseTraits\LoggerTrait;
+use WebPConvert\Convert\Converters\BaseTraits\OptionsTrait;
+use WebPConvert\Convert\Converters\BaseTraits\WarningLoggerTrait;
 use WebPConvert\Loggers\BaseLogger;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;

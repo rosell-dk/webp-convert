@@ -3,7 +3,7 @@
 namespace WebPConvert\Convert\Converters\ConverterTraits;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Helpers\PhpIniSizes;
 
 /**

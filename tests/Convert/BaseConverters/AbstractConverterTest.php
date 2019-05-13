@@ -2,7 +2,7 @@
 
 namespace WebPConvert\Tests\Convert\BaseConverters;
 
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Tests\Convert\Exposers\AbstractConverterExposer;
 use WebPConvert\Tests\Convert\TestConverters\ExposedConverter;
 use WebPConvert\Tests\Convert\TestConverters\SuccessGuaranteedConverter;

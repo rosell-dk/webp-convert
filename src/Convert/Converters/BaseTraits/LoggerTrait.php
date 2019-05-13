@@ -1,6 +1,6 @@
 <?php
 
-namespace WebPConvert\Convert\BaseConverters\BaseTraits;
+namespace WebPConvert\Convert\Converters\BaseTraits;
 
 /**
  * Trait for providing logging capabilities.

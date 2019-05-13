@@ -2,7 +2,7 @@
 
 namespace WebPConvert\Tests\Convert\Exposers;
 
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Tests\BaseExposer;
 
 /**

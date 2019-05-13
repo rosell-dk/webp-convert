@@ -1,6 +1,6 @@
 <?php
 
-namespace WebPConvert\Tests\Convert\BaseConverters\BaseTraits;
+namespace WebPConvert\Tests\Convert\Converters\BaseTraits;
 
 //use WebPConvert\Convert\BaseConverters\AbstractCloudConverter;
 use WebPConvert\Tests\Convert\TestConverters\SuccessGuaranteedConverter;

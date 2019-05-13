@@ -2,7 +2,7 @@
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\CloudConverterTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\CurlTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
