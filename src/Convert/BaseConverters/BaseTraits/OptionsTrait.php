@@ -40,7 +40,8 @@ trait OptionsTrait
      * Set "provided options" (options provided by the user when calling convert().
      *
      * This also calculates the protected options array, by merging in the default options.
-     * Converters shall access the $this->options array to get options.
+     * The resulting options array are set in the protected property $this->options and can be
+     * retrieved using the public ::getOptions() function.
      *
      * @param   array $providedOptions (optional)
      * @return  void
@@ -64,6 +65,55 @@ trait OptionsTrait
         // -  Merge $defaultOptions into provided options
         $this->options = array_merge($this->getDefaultOptions(), $this->providedOptions);
     }
+
+    /**
+     * Get the resulting options after merging provided options with default options.
+     *
+     * @return array  An associative array of options: ['metadata' => 'none', ...]
+     */
+    public function getOptions()
+    {
+        return $this->options;
+    }
+
+    /**
+     * Change an option specifically.
+     *
+     * This method is probably rarely neeeded. We are using it to change the "lossless" option temporarily
+     * in the LosslessAutoTrait.
+     *
+     * @param  string  $optionName   Name id of option (ie "metadata")
+     * @param  mixed   $optionValue  The new value.
+     * @return void
+     */
+    protected function setOption($optionName, $optionValue)
+    {
+        $this->options[$optionName] = $optionValue;
+    }
+
+
+    /**
+     * Get default options for the converter.
+     *
+     * Note that the defaults depends on the mime type of the source. For example, the default value for quality
+     * is "auto" for jpegs, and 85 for pngs.
+     *
+     * @return array  An associative array of option defaults: ['metadata' => 'none', ...]
+     */
+    public function getDefaultOptions()
+    {
+        $defaults = [];
+        foreach ($this->getOptionDefinitions() as list($name, $type, $default)) {
+            $defaults[$name] = $default;
+        }
+        if ($this->getMimeTypeOfSource() == 'image/png') {
+            $defaults['lossless'] = 'auto';
+            $defaults['quality'] = 85;
+            $defaults['default-quality'] = 85;
+        }
+        return $defaults;
+    }
+
 
     /**
      * Get definitions of general options (those available for all converters)
@@ -100,28 +150,6 @@ trait OptionsTrait
     public function getOptionDefinitions()
     {
         return array_merge(self::$optionDefinitionsBasic, $this->getOptionDefinitionsExtra());
-    }
-
-    /**
-     * Get default options for the converter.
-     *
-     * Note that the defaults depends on the mime type of the source. For example, the default value for quality
-     * is "auto" for jpegs, and 85 for pngs.
-     *
-     * @return array  An associative array of option defaults: ['metadata' => 'none', ...]
-     */
-    public function getDefaultOptions()
-    {
-        $defaults = [];
-        foreach ($this->getOptionDefinitions() as list($name, $type, $default)) {
-            $defaults[$name] = $default;
-        }
-        if ($this->getMimeTypeOfSource() == 'image/png') {
-            $defaults['lossless'] = 'auto';
-            $defaults['quality'] = 85;
-            $defaults['default-quality'] = 85;
-        }
-        return $defaults;
     }
 
     /**

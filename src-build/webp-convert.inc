@@ -10,10 +10,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\UnhandledException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFileException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFolderException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFoundException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\BaseConverters\BaseTraits\AutoQualityTrait;
 use WebPConvert\Convert\BaseConverters\BaseTraits\LoggerTrait;
 use WebPConvert\Convert\BaseConverters\BaseTraits\OptionsTrait;
@@ -37,28 +35,42 @@ abstract class AbstractConverter
     use WarningLoggerTrait;
 
     /**
-     * The actual conversion must be done by a concrete class.
+     * The actual conversion is be done by a concrete converter extending this class.
      *
      * At the stage this method is called, the abstract converter has taken preparational steps.
      * - It has created the destination folder (if neccesary)
      * - It has checked the input (valid mime type)
      * - It has set up an error handler, mostly in order to catch and log warnings during the doConvert fase
      *
-     * Note: This method is not meant to be called from the outside. Use the *convert* method for that.
+     * Note: This method is not meant to be called from the outside. Use the static *convert* method for converting
+     *       or, if you wish, create an instance with ::createInstance() and then call ::doConvert()
      *
+     * @throws ConversionFailedException in case conversion failed in an antipiciated way (or subclass)
+     * @throws \Exception in case conversion failed in an unantipiciated way
      */
     abstract protected function doActualConvert();
 
     /**
-     *  Set to false for converters that should hand the lossless option over (stack and wpc)
+     * Get to know whether the converter supports lossless webp encoding, even for jpegs.
+     *
+     * The following converters supports lossless encoding, even for jpegs: cwebp, vips, stack and wpc
+     * The following converters does not: ewww, gd, gmagick, gmagickbinary, imagick, imagickbinary
+     *
+     * @return  boolean  whether lossless encoding is supported for the concrete converter.
      */
-    protected $processLosslessAuto = true;
 
     /**
-     *  Set this on all converters (unfortunately, properties cannot be declared abstract)
+     * Whether or not the converter supports lossless encoding (even for jpegs)
+     *
+     * PS: Converters that supports lossless encoding all use the LosslessAutoTrait, which
+     * overrides this function.
+     *
+     * @return  boolean  Whether the converter supports lossless encoding (even for jpegs).
      */
-    protected $supportsLossless = false;
-
+    public function supportsLossless()
+    {
+        return false;
+    }
 
     /** @var string  The filename of the image to convert (complete path) */
     protected $source;
@@ -216,49 +228,9 @@ abstract class AbstractConverter
         }
     }
 
-
-    private function runActualConvert()
+    protected function runActualConvert()
     {
-        if ($this->processLosslessAuto && ($this->options['lossless'] === 'auto') && $this->supportsLossless) {
-            $destination = $this->destination;
-            $destinationLossless =  $this->destination . '.lossless.webp';
-            $destinationLossy =  $this->destination . '.lossy.webp';
-
-            $this->logLn(
-                'Lossless is set to auto. Converting to both lossless and lossy and selecting the smallest file'
-            );
-
-
-            $this->ln();
-            $this->logLn('Converting to lossy');
-            $this->destination = $destinationLossy;
-            $this->options['lossless'] = false;
-            $this->doActualConvert();
-            $this->logLn('Reduction: ' .
-                round((filesize($this->source) - filesize($this->destination))/filesize($this->source) * 100) . '% ');
-
-            $this->ln();
-            $this->logLn('Converting to lossless');
-            $this->destination = $destinationLossless;
-            $this->options['lossless'] = true;
-            $this->doActualConvert();
-            $this->logLn('Reduction: ' .
-                round((filesize($this->source) - filesize($this->destination))/filesize($this->source) * 100) . '% ');
-
-            $this->ln();
-            if (filesize($destinationLossless) > filesize($destinationLossy)) {
-                $this->logLn('Picking lossy');
-                unlink($destinationLossless);
-                rename($destinationLossy, $destination);
-            } else {
-                $this->logLn('Picking lossless');
-                unlink($destinationLossy);
-                rename($destinationLossless, $destination);
-            }
-            $this->destination = $destination;
-        } else {
-            $this->doActualConvert();
-        }
+        $this->doActualConvert();
     }
 
     /**
@@ -267,9 +239,9 @@ abstract class AbstractConverter
      * @param   string  $source              path to source file
      * @param   string  $destination         path to destination
      * @param   array   $options (optional)  options for conversion
-     * @param   \WebPConvert\Loggers\BaseLogger $logger (optional)
+     * @param   BaseLogger $logger (optional)
      *
-     * @throws  \WebPConvert\Convert\Exceptions\ConversionFailedException   in case conversion fails
+     * @throws  ConversionFailedException   in case conversion fails
      * @return  void
      */
     public static function convert($source, $destination, $options = [], $logger = null)
@@ -399,53 +371,54 @@ use WebPConvert\Convert\Helpers\PhpIniSizes;
  */
 abstract class AbstractCloudConverter extends AbstractConverter
 {
-
     /**
-     *  Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini
+     * Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini.
      *
-     * @throws  ConversionFailedException  if filesize is larger than "upload_max_filesize" or "post_max_size"
+     * @param  string  $iniSettingId  Id of ini setting (ie "upload_max_filesize")
+     *
+     * @throws  ConversionFailedException  if filesize is larger than the ini setting
      * @return  void
      */
-    protected function testFilesizeRequirements()
+    private function checkFileSizeVsIniSetting($iniSettingId)
     {
         $fileSize = @filesize($this->source);
-        if ($fileSize !== false) {
-            $uploadMaxSize = PhpIniSizes::getIniBytes('upload_max_filesize');
-            if ($uploadMaxSize === false) {
-                // Not sure if we should throw an exception here, or not...
-            } elseif ($uploadMaxSize < $fileSize) {
-                throw new ConversionFailedException(
-                    'File is larger than your max upload (set in your php.ini). File size:' .
-                        round($fileSize/1024) . ' kb. ' .
-                        'upload_max_filesize in php.ini: ' . ini_get('upload_max_filesize') .
-                        ' (parsed as ' . round($uploadMaxSize/1024) . ' kb)'
-                );
-            }
-
-            $postMaxSize = PhpIniSizes::getIniBytes(ini_get('post_max_size'));
-            if ($postMaxSize === false) {
-                // Not sure if we should throw an exception here, or not...
-            } elseif ($postMaxSize < $fileSize) {
-                throw new ConversionFailedException(
-                    'File is larger than your post_max_size limit (set in your php.ini). File size:' .
-                        round($fileSize/1024) . ' kb. ' .
-                        'post_max_size in php.ini: ' . ini_get('post_max_size') .
-                        ' (parsed as ' . round($postMaxSize/1024) . ' kb)'
-                );
-            }
-
-            // Hm, should we worry about memory limit as well?
-            // ini_get('memory_limit')
+        if ($fileSize === false) {
+            return;
+        }
+        $sizeInIni = PhpIniSizes::getIniBytes($iniSettingId);
+        if ($sizeInIni === false) {
+            // Not sure if we should throw an exception here, or not...
+            return;
+        }
+        if ($sizeInIni < $fileSize) {
+            throw new ConversionFailedException(
+                'File is larger than your ' . $iniSettingId . ' (set in your php.ini). File size:' .
+                    round($fileSize/1024) . ' kb. ' .
+                    $iniSettingId . ' in php.ini: ' . ini_get($iniSettingId) .
+                    ' (parsed as ' . round($sizeInIni/1024) . ' kb)'
+            );
         }
     }
 
     /**
-     * Check if specific file is convertable with current converter / converter settings.
+     * Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini.
      *
+     * @throws  ConversionFailedException  if filesize is larger than "upload_max_filesize" or "post_max_size"
+     * @return  void
+     */
+    protected function checkFilesizeRequirements()
+    {
+        $this->checkFileSizeVsIniSetting('upload_max_filesize');
+        $this->checkFileSizeVsIniSetting('post_max_size');
+    }
+
+    /**
+     * Check if specific file is convertable with current converter / converter settings.
+     * @return void
      */
     public function checkConvertability()
     {
-        $this->testFilesizeRequirements();
+        $this->checkFilesizeRequirements();
     }
 }
 
@@ -500,7 +473,7 @@ abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
      * @throws  SystemRequirementsNotMetException  if curl could not be initialized
      * @return  resource  curl handle
      */
-    public static function initCurl()
+    protected static function initCurl()
     {
         // Get curl handle
         $ch = curl_init();
@@ -1310,6 +1283,7 @@ trait WarningLoggerTrait
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\BaseConverters\AbstractExecConverter;
+use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
@@ -1323,7 +1297,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalExcep
  */
 class Cwebp extends AbstractExecConverter
 {
-    protected $supportsLossless = true;
+
+    use LosslessAutoTrait;
 
     protected function getOptionDefinitionsExtra()
     {
@@ -1761,7 +1736,10 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
  */
 class Ewww extends AbstractCloudCurlConverter
 {
-    protected $supportsLossless = false;
+    public function supportsLossless()
+    {
+        return false;
+    }
 
     protected function getOptionDefinitionsExtra()
     {
@@ -2084,7 +2062,10 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
  */
 class Gd extends AbstractConverter
 {
-    protected $supportsLossless = false;
+    public function supportsLossless()
+    {
+        return false;
+    }
 
     private $errorMessageWhileCreating = '';
     private $errorNumberWhileCreating;
@@ -2533,7 +2514,10 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
  */
 class Gmagick extends AbstractConverter
 {
-    protected $supportsLossless = false;
+    public function supportsLossless()
+    {
+        return false;
+    }
 
     protected function getOptionDefinitionsExtra()
     {
@@ -2691,7 +2675,10 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
  */
 class GmagickBinary extends AbstractExecConverter
 {
-    protected $supportsLossless = false;
+    public function supportsLossless()
+    {
+        return false;
+    }
 
     protected function getOptionDefinitionsExtra()
     {
@@ -2798,7 +2785,10 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
  */
 class Imagick extends AbstractConverter
 {
-    protected $supportsLossless = false;
+    public function supportsLossless()
+    {
+        return false;
+    }
 
     protected function getOptionDefinitionsExtra()
     {
@@ -2971,7 +2961,10 @@ class ImagickBinary extends AbstractExecConverter
     // To futher improve this converter, I could check out:
     // https://github.com/Orbitale/ImageMagickPHP
 
-    protected $supportsLossless = false;
+    public function supportsLossless()
+    {
+        return false;
+    }
 
     protected function getOptionDefinitionsExtra()
     {
@@ -3094,8 +3087,6 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
  */
 class Stack extends AbstractConverter
 {
-    protected $processLosslessAuto = false;
-    protected $supportsLossless = true;
 
     protected function getOptionDefinitionsExtra()
     {
@@ -3279,6 +3270,7 @@ class Stack extends AbstractConverter
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
@@ -3293,7 +3285,14 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
  */
 class Vips extends AbstractConverter
 {
-    protected $supportsLossless = true;
+    use LosslessAutoTrait;
+
+/*
+    public function supportsLossless()
+    {
+        return true;
+    }
+    */
 
     protected function getOptionDefinitionsExtra()
     {
@@ -3485,6 +3484,7 @@ class Vips extends AbstractConverter
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\BaseConverters\AbstractCloudCurlConverter;
+use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -3499,8 +3499,13 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Inva
  */
 class Wpc extends AbstractCloudCurlConverter
 {
-    protected $processLosslessAuto = true;
-    protected $supportsLossless = true;
+    use LosslessAutoTrait;
+
+    public function passOnLosslessAuto()
+    {
+        // TODO: Either make this configurable or perhaps depend on api version
+        return false;
+    }
 
     protected function getOptionDefinitionsExtra()
     {

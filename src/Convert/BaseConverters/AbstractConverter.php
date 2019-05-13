@@ -114,6 +114,14 @@ abstract class AbstractConverter
     {
     }
 
+    /**
+     * Constructor.
+     *
+     * @param   string  $source              path to source file
+     * @param   string  $destination         path to destination
+     * @param   array   $options (optional)  options for conversion
+     * @param   BaseLogger $logger (optional)
+     */
     public function __construct($source, $destination, $options = [], $logger = null)
     {
         $this->source = $source;
@@ -122,6 +130,28 @@ abstract class AbstractConverter
         $this->setLogger($logger);
         $this->setProvidedOptions($options);
     }
+
+    /**
+     * Get destination.
+     *
+     * @return string  The destination.
+     */
+    public function getDestination()
+    {
+        return $this->destination;
+    }
+
+    /**
+     * Set destination.
+     *
+     * @param   string  $destination         path to destination
+     * @return string  The destination.
+     */
+    public function setDestination($destination)
+    {
+        $this->destination = $destination;
+    }
+
 
     /**
      *  Default display name is simply the class name (short).
