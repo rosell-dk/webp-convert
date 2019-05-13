@@ -26,15 +26,15 @@ Of course, as we here have to call a binary directly, *cwebp* requires the *exec
 
 **Summary:**
 
-|                                            | cwebp     | vips   | imagick / gmagick | imagickbinary | gd        | ewww   |
-| ------------------------------------------ | --------- | ------ | ----------------- | ------------- | --------- | ------ |
-| supports lossless encoding ?               | yes       | yes    | no                | yes           | no        | yes    |
-| supports lossless auto ?                   | yes       | yes    | no                | yes           | no        | no     |
-| supports near-lossless ?                   | yes       | yes    | no                | no            | no        | ?      |
-| supports metadata stripping / preserving   | yes       | yes    | yes               | yes           | no        | ?      |
-| supports setting alpha quality             | yes       | yes    | no                | yes           | no        | no     |
-| supports fixed quality (for lossy)         | yes       | yes    | yes               | yes           | yes       | yes    |
-| supports auto quality without help         | no        | no     | yes               | yes           | no        | no     |
+|                                            | cwebp     | vips   | imagickbinary  | imagick / gmagick | gd        | ewww   |
+| ------------------------------------------ | --------- | ------ | -------------- | ----------------- | --------- | ------ |
+| supports lossless encoding ?               | yes       | yes    | yes            | no                | no        | yes    |
+| supports lossless auto ?                   | yes       | yes    | yes            | no                | no        | no     |
+| supports near-lossless ?                   | yes       | yes    | no             | no                | no        | ?      |
+| supports metadata stripping / preserving   | yes       | yes    | yes            | yes               | no        | ?      |
+| supports setting alpha quality             | yes       | yes    | yes            | no                | no        | no     |
+| supports fixed quality (for lossy)         | yes       | yes    | yes            | yes               | yes       | yes    |
+| supports auto quality without help         | no        | no     | yes            | yes               | no        | no     |
 
 
 
