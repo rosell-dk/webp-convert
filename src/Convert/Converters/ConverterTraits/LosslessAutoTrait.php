@@ -37,7 +37,8 @@ trait LosslessAutoTrait
         return false;
     }
 
-    private function convertTwoAndSelectSmallest() {
+    private function convertTwoAndSelectSmallest()
+    {
         $destination = $this->getDestination();
         $destinationLossless =  $this->destination . '.lossless.webp';
         $destinationLossy =  $this->destination . '.lossy.webp';
