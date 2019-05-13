@@ -1,10 +1,375 @@
 <?php 
+
+?><?php
+
+namespace WebPConvert\Exceptions;
+
+/**
+ *  WebPConvertException is the base exception for all exceptions in this library.
+ *
+ *  Note that the parameters for the constructor differs from that of the Exception class.
+ *  We do not use exception code here, but are instead allowing two version of the error message:
+ *  a short version and a long version.
+ *  The short version may not contain special characters or dynamic content.
+ *  The detailed version may.
+ *  If the detailed version isn't provided, getDetailedMessage will return the short version.
+ *
+ */
+class WebPConvertException extends \Exception
+{
+    public $description = 'The converter failed converting, although requirements seemed to be met';
+    protected $detailedMessage;
+    protected $shortMessage;
+
+    public function getDetailedMessage()
+    {
+        return $this->detailedMessage;
+    }
+
+    public function getShortMessage()
+    {
+        return $this->shortMessage;
+    }
+
+    public function __construct($shortMessage = "", $detailedMessage = "", $previous = null)
+    {
+        $detailedMessage = ($detailedMessage != '') ? $detailedMessage : $shortMessage;
+        $this->detailedMessage = $detailedMessage;
+        $this->shortMessage = $shortMessage;
+
+        parent::__construct(
+            $detailedMessage,
+            0,
+            $previous
+        );
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Exceptions;
+
+use WebPConvert\Exceptions\WebPConvertException;
+
+/**
+ *  ConversionFailedException is the base exception in the hierarchy for conversion errors.
+ *
+ *  Exception hierarchy from here:
+ *
+ *  WebpConvertException
+ *      ConversionFailedException
+ *          ConversionSkippedException
+ *          ConverterNotOperationalException
+ *              SystemRequirementsNotMetException
+ *          FileSystemProblemsException
+ *              CreateDestinationFileException
+ *              CreateDestinationFolderException
+ *          InvalidInputException
+ *              ConverterNotFoundException
+ *              InvalidImageTypeException
+ *              InvalidOptionTypeException
+ *              TargetNotFoundException
+ *          UnhandledException
+ */
+class ConversionFailedException extends WebPConvertException
+{
+    public $description = 'The converter failed converting, although requirements seemed to be met';
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Converters\ConverterTraits;
+
+use WebPConvert\Convert\Exceptions\ConversionFailedException;
+use WebPConvert\Convert\Converters\AbstractConverter;
+use WebPConvert\Convert\Helpers\PhpIniSizes;
+
+/**
+ * Trait for converters that works by uploading to a cloud service.
+ *
+ * The trait adds a method for checking against upload limits.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+trait CloudConverterTrait
+{
+
+    /**
+     * Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini.
+     *
+     * @param  string  $iniSettingId  Id of ini setting (ie "upload_max_filesize")
+     *
+     * @throws  ConversionFailedException  if filesize is larger than the ini setting
+     * @return  void
+     */
+    private function checkFileSizeVsIniSetting($iniSettingId)
+    {
+        $fileSize = @filesize($this->source);
+        if ($fileSize === false) {
+            return;
+        }
+        $sizeInIni = PhpIniSizes::getIniBytes($iniSettingId);
+        if ($sizeInIni === false) {
+            // Not sure if we should throw an exception here, or not...
+            return;
+        }
+        if ($sizeInIni < $fileSize) {
+            throw new ConversionFailedException(
+                'File is larger than your ' . $iniSettingId . ' (set in your php.ini). File size:' .
+                    round($fileSize/1024) . ' kb. ' .
+                    $iniSettingId . ' in php.ini: ' . ini_get($iniSettingId) .
+                    ' (parsed as ' . round($sizeInIni/1024) . ' kb)'
+            );
+        }
+    }
+
+    /**
+     * Check convertability of cloud converters (that file is not bigger than limits set in php.ini).
+     *
+     * Performs the same as ::Convertability(). It is here so converters that overrides the
+     * ::Convertability() still has a chance to do the checks.
+     *
+     * @throws  ConversionFailedException  if filesize is larger than "upload_max_filesize" or "post_max_size"
+     * @return  void
+     */
+    public function checkConvertabilityCloudConverterTrait()
+    {
+        $this->checkFileSizeVsIniSetting('upload_max_filesize');
+        $this->checkFileSizeVsIniSetting('post_max_size');
+    }
+
+    /**
+     * Check convertability of cloud converters (file upload limits).
+     */
+    public function checkConvertability()
+    {
+        $this->checkConvertabilityCloudConverterTrait();
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Converters\ConverterTraits;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Convert\Converters\AbstractConverter;
+
+/**
+ * Trait for converters that works by uploading to a cloud service.
+ *
+ * The trait adds a method for checking against upload limits.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+trait CurlTrait
+{
+
+    /**
+     * Check basis operationality for converters relying on curl.
+     *
+     * Performs the same as ::checkOperationality(). It is here so converters that overrides the
+     * ::checkOperationality() still has a chance to do the checks.
+     *
+     * @throws  SystemRequirementsNotMetException
+     * @return  void
+     */
+    public function checkOperationalityForCurlTrait()
+    {
+        if (!extension_loaded('curl')) {
+            throw new SystemRequirementsNotMetException('Required cURL extension is not available.');
+        }
+
+        if (!function_exists('curl_init')) {
+            throw new SystemRequirementsNotMetException('Required url_init() function is not available.');
+        }
+
+        if (!function_exists('curl_file_create')) {
+            throw new SystemRequirementsNotMetException(
+                'Required curl_file_create() function is not available (requires PHP > 5.5).'
+            );
+        }
+    }
+
+    /**
+     * Check basis operationality for converters relying on curl
+     *
+     * @throws  SystemRequirementsNotMetException
+     * @return  void
+     */
+    public function checkOperationality()
+    {
+        $this->checkOperationalityForCurlTrait();
+    }
+
+    /**
+     * Init curl.
+     *
+     * @throws  SystemRequirementsNotMetException  if curl could not be initialized
+     * @return  resource  curl handle
+     */
+    protected static function initCurl()
+    {
+        // Get curl handle
+        $ch = curl_init();
+        if ($ch === false) {
+            throw new SystemRequirementsNotMetException('Could not initialise cURL.');
+        }
+        return $ch;
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Converters\ConverterTraits;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+
+/**
+ * Trait for converters that uses exec()
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+trait ExecTrait
+{
+
+    /**
+     * Helper function for examining if "nice" command is available
+     *
+     * @return  boolean  true if nice is available
+     */
+    protected static function hasNiceSupport()
+    {
+        exec("nice 2>&1", $niceOutput);
+
+        if (is_array($niceOutput) && isset($niceOutput[0])) {
+            if (preg_match('/usage/', $niceOutput[0]) || (preg_match('/^\d+$/', $niceOutput[0]))) {
+                /*
+                 * Nice is available - default niceness (+10)
+                 * https://www.lifewire.com/uses-of-commands-nice-renice-2201087
+                 * https://www.computerhope.com/unix/unice.htm
+                 */
+
+                return true;
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Check basic operationality of exec converters (that the "exec" function is available)
+     *
+     * @throws  WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException
+     * @return  void
+     */
+    public function checkOperationalityExecTrait()
+    {
+        if (!function_exists('exec2')) {
+            throw new SystemRequirementsNotMetException('exec() is not enabled.');
+        }
+    }
+}
+
+?><?php
+
+//namespace WebPConvert\Convert\Converters\BaseTraits;
+namespace WebPConvert\Convert\Converters\ConverterTraits;
+
+/**
+ * Trait for converters that supports lossless encoding and thus the "lossless:auto" option.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+trait LosslessAutoTrait
+{
+
+    abstract protected function logLn($msg, $style = '');
+    abstract protected function ln();
+    abstract protected function doActualConvert();
+    abstract public function getDestination();
+    abstract public function setDestination($destination);
+    abstract public function getOptions();
+    abstract protected function setOption($optionName, $optionValue);
+
+    public function supportsLossless()
+    {
+        return true;
+    }
+
+    /** Default is to not pass "lossless:auto" on, but implement it.
+     *
+     *  The Stack converter passes it on (it does not even use this trait)
+     *  WPC currently implements it, but this might be configurable in the future.
+     *
+     */
+    public function passOnLosslessAuto()
+    {
+        return false;
+    }
+
+    private function convertTwoAndSelectSmallest()
+    {
+        $destination = $this->getDestination();
+        $destinationLossless =  $this->destination . '.lossless.webp';
+        $destinationLossy =  $this->destination . '.lossy.webp';
+
+        $this->logLn(
+            'Lossless is set to auto. Converting to both lossless and lossy and selecting the smallest file'
+        );
+
+        $this->ln();
+        $this->logLn('Converting to lossy');
+        $this->setDestination($destinationLossy);
+        $this->setOption('lossless', false);
+        $this->doActualConvert();
+        $this->logLn('Reduction: ' .
+            round((filesize($this->source) - filesize($this->destination))/filesize($this->source) * 100) . '% ');
+
+        $this->ln();
+        $this->logLn('Converting to lossless');
+        $this->setDestination($destinationLossless);
+        $this->setOption('lossless', true);
+        $this->doActualConvert();
+        $this->logLn('Reduction: ' .
+            round((filesize($this->source) - filesize($this->destination))/filesize($this->source) * 100) . '% ');
+
+        $this->ln();
+        if (filesize($destinationLossless) > filesize($destinationLossy)) {
+            $this->logLn('Picking lossy');
+            unlink($destinationLossless);
+            rename($destinationLossy, $destination);
+        } else {
+            $this->logLn('Picking lossless');
+            unlink($destinationLossy);
+            rename($destinationLossless, $destination);
+        }
+        $this->setDestination($destination);
+        $this->setOption('lossless', 'auto');
+    }
+
+    protected function runActualConvert()
+    {
+        if (!$this->passOnLosslessAuto() && ($this->options['lossless'] === 'auto') && $this->supportsLossless()) {
+            $this->convertTwoAndSelectSmallest();
+        } else {
+            $this->doActualConvert();
+        }
+    }
+}
+
 ?><?php
 
 // TODO:
 // Read this: https://sourcemaking.com/design_patterns/strategy
 
-namespace WebPConvert\Convert\BaseConverters;
+namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\UnhandledException;
@@ -12,10 +377,10 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDes
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFolderException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
-use WebPConvert\Convert\BaseConverters\BaseTraits\AutoQualityTrait;
-use WebPConvert\Convert\BaseConverters\BaseTraits\LoggerTrait;
-use WebPConvert\Convert\BaseConverters\BaseTraits\OptionsTrait;
-use WebPConvert\Convert\BaseConverters\BaseTraits\WarningLoggerTrait;
+use WebPConvert\Convert\Converters\BaseTraits\AutoQualityTrait;
+use WebPConvert\Convert\Converters\BaseTraits\LoggerTrait;
+use WebPConvert\Convert\Converters\BaseTraits\OptionsTrait;
+use WebPConvert\Convert\Converters\BaseTraits\WarningLoggerTrait;
 use WebPConvert\Loggers\BaseLogger;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
@@ -384,1094 +749,9 @@ abstract class AbstractConverter
 
 ?><?php
 
-namespace WebPConvert\Exceptions;
-
-/**
- *  WebPConvertException is the base exception for all exceptions in this library.
- *
- *  Note that the parameters for the constructor differs from that of the Exception class.
- *  We do not use exception code here, but are instead allowing two version of the error message:
- *  a short version and a long version.
- *  The short version may not contain special characters or dynamic content.
- *  The detailed version may.
- *  If the detailed version isn't provided, getDetailedMessage will return the short version.
- *
- */
-class WebPConvertException extends \Exception
-{
-    public $description = 'The converter failed converting, although requirements seemed to be met';
-    protected $detailedMessage;
-    protected $shortMessage;
-
-    public function getDetailedMessage()
-    {
-        return $this->detailedMessage;
-    }
-
-    public function getShortMessage()
-    {
-        return $this->shortMessage;
-    }
-
-    public function __construct($shortMessage = "", $detailedMessage = "", $previous = null)
-    {
-        $detailedMessage = ($detailedMessage != '') ? $detailedMessage : $shortMessage;
-        $this->detailedMessage = $detailedMessage;
-        $this->shortMessage = $shortMessage;
-
-        parent::__construct(
-            $detailedMessage,
-            0,
-            $previous
-        );
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Convert\Exceptions;
-
-use WebPConvert\Exceptions\WebPConvertException;
-
-/**
- *  ConversionFailedException is the base exception in the hierarchy for conversion errors.
- *
- *  Exception hierarchy from here:
- *
- *  WebpConvertException
- *      ConversionFailedException
- *          ConversionSkippedException
- *          ConverterNotOperationalException
- *              SystemRequirementsNotMetException
- *          FileSystemProblemsException
- *              CreateDestinationFileException
- *              CreateDestinationFolderException
- *          InvalidInputException
- *              ConverterNotFoundException
- *              InvalidImageTypeException
- *              InvalidOptionTypeException
- *              TargetNotFoundException
- *          UnhandledException
- */
-class ConversionFailedException extends WebPConvertException
-{
-    public $description = 'The converter failed converting, although requirements seemed to be met';
-}
-
-?><?php
-
-namespace WebPConvert\Convert\BaseConverters\BaseTraits;
-
-use WebPConvert\Convert\Helpers\JpegQualityDetector;
-
-/**
- * Trait for handling the "quality:auto" option.
- *
- * This trait is only used in the AbstractConverter class. It has been extracted into a
- * trait in order to bundle the methods concerning auto quality.
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-trait AutoQualityTrait
-{
-
-    /** @var boolean  Whether the quality option has been processed or not */
-    private $processed = false;
-
-    /** @var boolean  Whether the quality of the source could be detected or not (set upon processing) */
-    private $qualityCouldNotBeDetected = false;
-
-    /** @var integer  The calculated quality (set upon processing - on successful detection) */
-    private $calculatedQuality;
-
-    abstract public function getMimeTypeOfSource();
-    abstract public function logLn($msg, $style = '');
-
-    /**
-     *  Determine if quality detection is required but failing.
-     *
-     *  It is considered "required" when:
-     *  - Mime type is "image/jpeg"
-     *  - Quality is set to "auto"
-     *
-     *  If quality option hasn't been proccessed yet, it is triggered.
-     *
-     *  @return  boolean
-     */
-    public function isQualityDetectionRequiredButFailing()
-    {
-        $this->processQualityOptionIfNotAlready();
-        return $this->qualityCouldNotBeDetected;
-    }
-
-    /**
-     * Get calculated quality.
-     *
-     * If the "quality" option is a number, that number is returned.
-     * If mime type of source is something else than "image/jpeg", the "default-quality" option is returned
-     * If quality is "auto" and source is a jpeg image, it will be attempted to detect jpeg quality.
-     * In case of failure, the value of the "default-quality" option is returned.
-     * In case of success, the detected quality is returned, or the value of the "max-quality" if that is lower.
-     *
-     *  @return  int
-     */
-    public function getCalculatedQuality()
-    {
-        $this->processQualityOptionIfNotAlready();
-        return $this->calculatedQuality;
-    }
-
-    /**
-     * Process the quality option if it is not already processed.
-     *
-     * @return void
-     */
-    private function processQualityOptionIfNotAlready()
-    {
-        if (!$this->processed) {
-            $this->processed = true;
-            $this->processQualityOption();
-        }
-    }
-
-    /**
-     * Process the quality option.
-     *
-     * Sets the private property "calculatedQuality" according to the description for the getCalculatedQuality
-     * function.
-     * In case quality detection was attempted and failed, the private property "qualityCouldNotBeDetected" is set
-     * to true. This is used by the "isQualityDetectionRequiredButFailing" (and documented there too).
-     *
-     * @return void
-     */
-    private function processQualityOption()
-    {
-        $options = $this->options;
-        $source = $this->source;
-
-        $q = $options['quality'];
-        if ($q == 'auto') {
-            if (($this->getMimeTypeOfSource() == 'image/jpeg')) {
-                $q = JpegQualityDetector::detectQualityOfJpg($source);
-                if (is_null($q)) {
-                    $q = $options['default-quality'];
-                    $this->logLn(
-                        'Quality of source could not be established (Imagick or GraphicsMagick is required)' .
-                        ' - Using default instead (' . $options['default-quality'] . ').'
-                    );
-
-                    $this->qualityCouldNotBeDetected = true;
-                } else {
-                    if ($q > $options['max-quality']) {
-                        $this->logLn(
-                            'Quality of source is ' . $q . '. ' .
-                            'This is higher than max-quality, so using max-quality instead (' .
-                                $options['max-quality'] . ')'
-                        );
-                    } else {
-                        $this->logLn('Quality set to same as source: ' . $q);
-                    }
-                }
-                $q = min($q, $options['max-quality']);
-            } else {
-                //$q = $options['default-quality'];
-                $q = min($options['default-quality'], $options['max-quality']);
-                $this->logLn('Quality: ' . $q . '. ');
-            }
-        } else {
-            $this->logLn(
-                'Quality: ' . $q . '. '
-            );
-            if (($this->getMimeTypeOfSource() == 'image/jpeg')) {
-                $this->logLn(
-                    'Consider setting quality to "auto" instead. It is generally a better idea'
-                );
-            }
-        }
-        $this->calculatedQuality = $q;
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Convert\BaseConverters\BaseTraits;
-
-/**
- * Trait for providing logging capabilities.
- *
- * This trait is currently only used in the AbstractConverter class. It has been extracted into a
- * trait in order to bundle the methods concerning logging.
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-trait LoggerTrait
-{
-
-    /** @var \WebPConvert\Loggers\BaseLogger  The logger (or null if not set) */
-    protected $logger;
-
-    /**
-     * Set logger
-     *
-     * @param   \WebPConvert\Loggers\BaseLogger $logger (optional)  $logger
-     * @return  void
-     */
-    public function setLogger($logger = null)
-    {
-        $this->logger = $logger;
-    }
-
-    /**
-     * Write a line to the logger.
-     *
-     * @param  string  $msg    The line to write.
-     * @param  string  $style  (optional) Ie "italic" or "bold"
-     * @return void
-     */
-    protected function logLn($msg, $style = '')
-    {
-        if (isset($this->logger)) {
-            $this->logger->logLn($msg, $style);
-        }
-    }
-
-    /**
-     * New line
-     *
-     * @return  void
-     */
-    protected function ln()
-    {
-        if (isset($this->logger)) {
-            $this->logger->ln();
-        }
-    }
-
-    /**
-     * Write to the logger, without newline
-     *
-     * @param  string  $msg    What to write.
-     * @param  string  $style  (optional) Ie "italic" or "bold"
-     * @return void
-     */
-    protected function log($msg, $style = '')
-    {
-        if (isset($this->logger)) {
-            $this->logger->log($msg, $style);
-        }
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Convert\BaseConverters\BaseTraits;
-
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidOptionTypeException;
-
-/**
- * Trait for handling options
- *
- * This trait is currently only used in the AbstractConverter class. It has been extracted into a
- * trait in order to bundle the methods concerning options.
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-trait OptionsTrait
-{
-
-    /** @var array  Provided conversion options */
-    public $providedOptions;
-
-    /** @var array  Calculated conversion options (merge of default options and provided options)*/
-    protected $options;
-
-    abstract protected function getMimeTypeOfSource();
-
-    /** @var array  Definitions of general options (the options that are available on all converters) */
-    protected static $optionDefinitionsBasic = [
-        ['quality', 'number|string', 'auto'],    // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
-        ['max-quality', 'number', 85],
-        ['default-quality', 'number', 75],       // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
-        ['metadata', 'string', 'none'],
-        ['lossless', 'boolean|string', false],  // PS: Default is altered to "auto" for PNG in ::getDefaultOptions()
-        ['skip', 'boolean', false],
-    ];
-
-    /**
-     * Set "provided options" (options provided by the user when calling convert().
-     *
-     * This also calculates the protected options array, by merging in the default options.
-     * The resulting options array are set in the protected property $this->options and can be
-     * retrieved using the public ::getOptions() function.
-     *
-     * @param   array $providedOptions (optional)
-     * @return  void
-     */
-    public function setProvidedOptions($providedOptions = [])
-    {
-        $this->providedOptions = $providedOptions;
-
-        if (isset($this->providedOptions['png'])) {
-            if ($this->getMimeTypeOfSource() == 'image/png') {
-                $this->providedOptions = array_merge($this->providedOptions, $this->providedOptions['png']);
-//                $this->logLn(print_r($this->providedOptions, true));
-            }
-        }
-
-        if (isset($this->providedOptions['jpeg'])) {
-            if ($this->getMimeTypeOfSource() == 'image/jpeg') {
-                $this->providedOptions = array_merge($this->providedOptions, $this->providedOptions['jpeg']);
-            }
-        }
-        // -  Merge $defaultOptions into provided options
-        $this->options = array_merge($this->getDefaultOptions(), $this->providedOptions);
-    }
-
-    /**
-     * Get the resulting options after merging provided options with default options.
-     *
-     * @return array  An associative array of options: ['metadata' => 'none', ...]
-     */
-    public function getOptions()
-    {
-        return $this->options;
-    }
-
-    /**
-     * Change an option specifically.
-     *
-     * This method is probably rarely neeeded. We are using it to change the "lossless" option temporarily
-     * in the LosslessAutoTrait.
-     *
-     * @param  string  $optionName   Name id of option (ie "metadata")
-     * @param  mixed   $optionValue  The new value.
-     * @return void
-     */
-    protected function setOption($optionName, $optionValue)
-    {
-        $this->options[$optionName] = $optionValue;
-    }
-
-
-    /**
-     * Get default options for the converter.
-     *
-     * Note that the defaults depends on the mime type of the source. For example, the default value for quality
-     * is "auto" for jpegs, and 85 for pngs.
-     *
-     * @return array  An associative array of option defaults: ['metadata' => 'none', ...]
-     */
-    public function getDefaultOptions()
-    {
-        $defaults = [];
-        foreach ($this->getOptionDefinitions() as list($name, $type, $default)) {
-            $defaults[$name] = $default;
-        }
-        if ($this->getMimeTypeOfSource() == 'image/png') {
-            $defaults['lossless'] = 'auto';
-            $defaults['quality'] = 85;
-            $defaults['default-quality'] = 85;
-        }
-        return $defaults;
-    }
-
-
-    /**
-     * Get definitions of general options (those available for all converters)
-     *
-     * To get only the extra definitions for a specific converter, call
-     * ::getOptionDefinitionsExtra(). To get both general and extra, merged together, call ::getOptionDefinitions().
-     *
-     * @return array  A numeric array of definitions of general options for the converter.
-     *                Each definition is a numeric array with three items: [option id, type, default value]
-     */
-    public function getGeneralOptionDefinitions()
-    {
-        return self::$optionDefinitionsBasic;
-    }
-
-    /**
-     * Get definitions of extra options unique for the actual converter.
-     *
-     * @return array  A numeric array of definitions of all options for the converter.
-     *                Each definition is a numeric array with three items: [option id, type, default value]
-     */
-    abstract protected function getOptionDefinitionsExtra();
-
-    /**
-     * Get option definitions for the converter (includes both general options and the extra options for the converter)
-     *
-     * To get only the general options definitions (those available for all converters), call
-     * ::getGeneralOptionDefinitions(). To get only the extra definitions for a specific converter, call
-     * ::getOptionDefinitionsExtra().
-     *
-     * @return array  A numeric array of definitions of all options for the converter.
-     *                Each definition is a numeric array with three items: [option id, type, default value]
-     */
-    public function getOptionDefinitions()
-    {
-        return array_merge(self::$optionDefinitionsBasic, $this->getOptionDefinitionsExtra());
-    }
-
-    /**
-     *  Check option types generally (against their definitions).
-     *
-     *  @throws InvalidOptionTypeException  if type is invalid
-     *  @return void
-     */
-    private function checkOptionTypesGenerally()
-    {
-        foreach ($this->getOptionDefinitions() as $def) {
-            list($optionName, $optionType) = $def;
-            if (isset($this->providedOptions[$optionName])) {
-                $actualType = gettype($this->providedOptions[$optionName]);
-                if ($actualType != $optionType) {
-                    $optionType = str_replace('number', 'integer|double', $optionType);
-                    if (!in_array($actualType, explode('|', $optionType))) {
-                        throw new InvalidOptionTypeException(
-                            'The provided ' . $optionName . ' option is not a ' . $optionType .
-                                ' (it is a ' . $actualType . ')'
-                        );
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     *  Check quality option
-     *
-     *  @throws InvalidOptionTypeException  if value is out of range
-     *  @return void
-     */
-    private function checkQualityOption()
-    {
-        if (!isset($this->providedOptions['quality'])) {
-            return;
-        }
-        $optionValue = $this->providedOptions['quality'];
-        if (gettype($optionValue) == 'string') {
-            if ($optionValue != 'auto') {
-                throw new InvalidOptionTypeException(
-                    'Quality option must be either "auto" or a number between 0-100. ' .
-                    'A string, "' . $optionValue . '" was given'
-                );
-            }
-        } else {
-            if (($optionValue < 0) || ($optionValue > 100)) {
-                throw new InvalidOptionTypeException(
-                    'Quality option must be either "auto" or a number between 0-100. ' .
-                        'The number you provided (' . strval($optionValue) . ') is out of range.'
-                );
-            }
-        }
-    }
-
-    /**
-     *  Check lossless option
-     *
-     *  @throws InvalidOptionTypeException  if value is out of range
-     *  @return void
-     */
-    private function checkLosslessOption()
-    {
-        if (!isset($this->providedOptions['lossless'])) {
-            return;
-        }
-        $optionValue = $this->providedOptions['lossless'];
-        if ((gettype($optionValue) == 'string') && ($optionValue != 'auto')) {
-            throw new InvalidOptionTypeException(
-                'Lossless option must be true, false or "auto". It was set to: "' . $optionValue . '"'
-            );
-        }
-    }
-
-    /**
-     *  Check option types.
-     *
-     *  @throws InvalidOptionTypeException  if an option value have wrong type or is out of range
-     *  @return void
-     */
-    private function checkOptionTypes()
-    {
-        $this->checkOptionTypesGenerally();
-        $this->checkQualityOption();
-        $this->checkLosslessOption();
-    }
-
-    /**
-     *  Check options.
-     *
-     *  @throws InvalidOptionTypeException  if an option value have wrong type or is out of range
-     *  @throws ConversionSkippedException  if 'skip' option is set to true
-     *  @return void
-     */
-    protected function checkOptions()
-    {
-        $this->checkOptionTypes();
-
-        if ($this->options['skip']) {
-            if (($this->getMimeTypeOfSource() == 'image/png') && isset($this->options['png']['skip'])) {
-                throw new ConversionSkippedException(
-                    'skipped conversion (configured to do so for PNG)'
-                );
-            } else {
-                throw new ConversionSkippedException(
-                    'skipped conversion (configured to do so)'
-                );
-            }
-        }
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Convert\BaseConverters\BaseTraits;
-
-/**
- * Trait for handling warnings (by logging them)
- *
- * This trait is currently only used in the AbstractConverter class. It has been extracted into a
- * trait in order to bundle the methods concerning options.
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-trait WarningLoggerTrait
-{
-    abstract protected function logLn($msg, $style = '');
-
-    /** @var string|array|null  Previous error handler (stored in order to be able pass warnings on) */
-    private $previousErrorHandler;
-
-    /**
-     *  Handle warnings and notices during conversion by logging them and passing them on.
-     *
-     *  The function is a callback used with "set_error_handler".
-     *  It is declared public because it needs to be accessible from the point where the warning happened.
-     *
-     *  @param  integer  $errno
-     *  @param  string   $errstr
-     *  @param  string   $errfile
-     *  @param  integer  $errline
-     *
-     *  @return false|null
-     */
-    public function warningHandler($errno, $errstr, $errfile, $errline)
-    {
-        /*
-        We do NOT do the following (even though it is generally recommended):
-
-        if (!(error_reporting() & $errno)) {
-            // This error code is not included in error_reporting, so let it fall
-            // through to the standard PHP error handler
-            return false;
-        }
-
-        - Because we want to log all warnings and errors (also the ones that was suppressed with @)
-        https://secure.php.net/manual/en/language.operators.errorcontrol.php
-        */
-
-        $errorTypes = [
-            E_WARNING =>             "Warning",
-            E_NOTICE =>              "Notice",
-            E_STRICT =>              "Strict Notice",
-            E_DEPRECATED =>          "Deprecated",
-            E_USER_DEPRECATED =>     "User Deprecated",
-
-            /*
-            The following can never be catched by a custom error handler:
-            E_PARSE, E_ERROR, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING
-
-            We do do not currently trigger the following:
-            E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE
-
-            But we may want to do that at some point, like this:
-            trigger_error('Your version of Gd is very old', E_USER_WARNING);
-            in that case, remember to add them to this array
-            */
-        ];
-
-        if (isset($errorTypes[$errno])) {
-            $errType = $errorTypes[$errno];
-        } else {
-            $errType = "Unknown error/warning/notice ($errno)";
-        }
-
-        $msg = $errType . ': ' . $errstr . ' in ' . $errfile . ', line ' . $errline . ', PHP ' . PHP_VERSION .
-            ' (' . PHP_OS . ')';
-        $this->logLn($msg);
-
-        //echo 'previously defined handler:' . print_r($this->previousErrorHandler, true);
-
-        if (!is_null($this->previousErrorHandler)) {
-            return call_user_func($this->previousErrorHandler, $errno, $errstr, $errfile, $errline);
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     *  Activate warning logger.
-     *
-     *  Sets the error handler and stores the previous to our error handler can bubble up warnings
-     *
-     *  @return  void
-     */
-    protected function activateWarningLogger()
-    {
-        $this->previousErrorHandler = set_error_handler(
-            array($this, "warningHandler"),
-            E_WARNING | E_USER_WARNING | E_NOTICE | E_USER_NOTICE | E_USER_ERROR
-        );
-    }
-
-    /**
-     *  Deactivate warning logger.
-     *
-     *  Restores the previous error handler.
-     *
-     *  @return  void
-     */
-    protected function deactivateWarningLogger()
-    {
-        restore_error_handler();
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Convert\Converters\ConverterTraits;
-
-use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
-use WebPConvert\Convert\Helpers\PhpIniSizes;
-
-/**
- * Trait for converters that works by uploading to a cloud service.
- *
- * The trait adds a method for checking against upload limits.
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-trait CloudConverterTrait
-{
-
-    /**
-     * Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini.
-     *
-     * @param  string  $iniSettingId  Id of ini setting (ie "upload_max_filesize")
-     *
-     * @throws  ConversionFailedException  if filesize is larger than the ini setting
-     * @return  void
-     */
-    private function checkFileSizeVsIniSetting($iniSettingId)
-    {
-        $fileSize = @filesize($this->source);
-        if ($fileSize === false) {
-            return;
-        }
-        $sizeInIni = PhpIniSizes::getIniBytes($iniSettingId);
-        if ($sizeInIni === false) {
-            // Not sure if we should throw an exception here, or not...
-            return;
-        }
-        if ($sizeInIni < $fileSize) {
-            throw new ConversionFailedException(
-                'File is larger than your ' . $iniSettingId . ' (set in your php.ini). File size:' .
-                    round($fileSize/1024) . ' kb. ' .
-                    $iniSettingId . ' in php.ini: ' . ini_get($iniSettingId) .
-                    ' (parsed as ' . round($sizeInIni/1024) . ' kb)'
-            );
-        }
-    }
-
-    /**
-     * Check convertability of cloud converters (that file is not bigger than limits set in php.ini).
-     *
-     * Performs the same as ::Convertability(). It is here so converters that overrides the
-     * ::Convertability() still has a chance to do the checks.
-     *
-     * @throws  ConversionFailedException  if filesize is larger than "upload_max_filesize" or "post_max_size"
-     * @return  void
-     */
-    public function checkConvertabilityCloudConverterTrait()
-    {
-        $this->checkFileSizeVsIniSetting('upload_max_filesize');
-        $this->checkFileSizeVsIniSetting('post_max_size');
-    }
-
-    /**
-     * Check convertability of cloud converters (file upload limits).
-     */
-    public function checkConvertability()
-    {
-        $this->checkConvertabilityCloudConverterTrait();
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Convert\Converters\ConverterTraits;
-
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
-
-/**
- * Trait for converters that works by uploading to a cloud service.
- *
- * The trait adds a method for checking against upload limits.
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-trait CurlTrait
-{
-
-    /**
-     * Check basis operationality for converters relying on curl.
-     *
-     * Performs the same as ::checkOperationality(). It is here so converters that overrides the
-     * ::checkOperationality() still has a chance to do the checks.
-     *
-     * @throws  SystemRequirementsNotMetException
-     * @return  void
-     */
-    public function checkOperationalityForCurlTrait()
-    {
-        if (!extension_loaded('curl')) {
-            throw new SystemRequirementsNotMetException('Required cURL extension is not available.');
-        }
-
-        if (!function_exists('curl_init')) {
-            throw new SystemRequirementsNotMetException('Required url_init() function is not available.');
-        }
-
-        if (!function_exists('curl_file_create')) {
-            throw new SystemRequirementsNotMetException(
-                'Required curl_file_create() function is not available (requires PHP > 5.5).'
-            );
-        }
-    }
-
-    /**
-     * Check basis operationality for converters relying on curl
-     *
-     * @throws  SystemRequirementsNotMetException
-     * @return  void
-     */
-    public function checkOperationality()
-    {
-        $this->checkOperationalityForCurlTrait();
-    }
-
-    /**
-     * Init curl.
-     *
-     * @throws  SystemRequirementsNotMetException  if curl could not be initialized
-     * @return  resource  curl handle
-     */
-    protected static function initCurl()
-    {
-        // Get curl handle
-        $ch = curl_init();
-        if ($ch === false) {
-            throw new SystemRequirementsNotMetException('Could not initialise cURL.');
-        }
-        return $ch;
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Convert\Converters\ConverterTraits;
-
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-
-/**
- * Trait for converters that uses exec()
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-trait ExecTrait
-{
-
-    /**
-     * Helper function for examining if "nice" command is available
-     *
-     * @return  boolean  true if nice is available
-     */
-    protected static function hasNiceSupport()
-    {
-        exec("nice 2>&1", $niceOutput);
-
-        if (is_array($niceOutput) && isset($niceOutput[0])) {
-            if (preg_match('/usage/', $niceOutput[0]) || (preg_match('/^\d+$/', $niceOutput[0]))) {
-                /*
-                 * Nice is available - default niceness (+10)
-                 * https://www.lifewire.com/uses-of-commands-nice-renice-2201087
-                 * https://www.computerhope.com/unix/unice.htm
-                 */
-
-                return true;
-            }
-            return false;
-        }
-    }
-
-    /**
-     * Check basic operationality of exec converters (that the "exec" function is available)
-     *
-     * @throws  WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException
-     * @return  void
-     */
-    public function checkOperationalityExecTrait()
-    {
-        if (!function_exists('exec2')) {
-            throw new SystemRequirementsNotMetException('exec() is not enabled.');
-        }
-    }
-}
-
-?><?php
-
-//namespace WebPConvert\Convert\BaseConverters\BaseTraits;
-namespace WebPConvert\Convert\Converters\ConverterTraits;
-
-/**
- * Trait for converters that supports lossless encoding and thus the "lossless:auto" option.
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-trait LosslessAutoTrait
-{
-
-    abstract protected function logLn($msg, $style = '');
-    abstract protected function ln();
-    abstract protected function doActualConvert();
-    abstract public function getDestination();
-    abstract public function setDestination($destination);
-    abstract public function getOptions();
-    abstract protected function setOption($optionName, $optionValue);
-
-    public function supportsLossless()
-    {
-        return true;
-    }
-
-    /** Default is to not pass "lossless:auto" on, but implement it.
-     *
-     *  The Stack converter passes it on (it does not even use this trait)
-     *  WPC currently implements it, but this might be configurable in the future.
-     *
-     */
-    public function passOnLosslessAuto()
-    {
-        return false;
-    }
-
-    private function convertTwoAndSelectSmallest()
-    {
-        $destination = $this->getDestination();
-        $destinationLossless =  $this->destination . '.lossless.webp';
-        $destinationLossy =  $this->destination . '.lossy.webp';
-
-        $this->logLn(
-            'Lossless is set to auto. Converting to both lossless and lossy and selecting the smallest file'
-        );
-
-        $this->ln();
-        $this->logLn('Converting to lossy');
-        $this->setDestination($destinationLossy);
-        $this->setOption('lossless', false);
-        $this->doActualConvert();
-        $this->logLn('Reduction: ' .
-            round((filesize($this->source) - filesize($this->destination))/filesize($this->source) * 100) . '% ');
-
-        $this->ln();
-        $this->logLn('Converting to lossless');
-        $this->setDestination($destinationLossless);
-        $this->setOption('lossless', true);
-        $this->doActualConvert();
-        $this->logLn('Reduction: ' .
-            round((filesize($this->source) - filesize($this->destination))/filesize($this->source) * 100) . '% ');
-
-        $this->ln();
-        if (filesize($destinationLossless) > filesize($destinationLossy)) {
-            $this->logLn('Picking lossy');
-            unlink($destinationLossless);
-            rename($destinationLossy, $destination);
-        } else {
-            $this->logLn('Picking lossless');
-            unlink($destinationLossy);
-            rename($destinationLossless, $destination);
-        }
-        $this->setDestination($destination);
-        $this->setOption('lossless', 'auto');
-    }
-
-    protected function runActualConvert()
-    {
-        if (!$this->passOnLosslessAuto() && ($this->options['lossless'] === 'auto') && $this->supportsLossless()) {
-            $this->convertTwoAndSelectSmallest();
-        } else {
-            $this->doActualConvert();
-        }
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Convert\BaseConverters;
-
-use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
-use WebPConvert\Convert\Helpers\PhpIniSizes;
-
-/**
- * Base for converters that uses a cloud service.
- *
- * Handles checking that the file size of the source is smaller than the limits imposed in php.ini.
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-abstract class AbstractCloudConverter extends AbstractConverter
-{
-    /**
-     * Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini.
-     *
-     * @param  string  $iniSettingId  Id of ini setting (ie "upload_max_filesize")
-     *
-     * @throws  ConversionFailedException  if filesize is larger than the ini setting
-     * @return  void
-     */
-    private function checkFileSizeVsIniSetting($iniSettingId)
-    {
-        $fileSize = @filesize($this->source);
-        if ($fileSize === false) {
-            return;
-        }
-        $sizeInIni = PhpIniSizes::getIniBytes($iniSettingId);
-        if ($sizeInIni === false) {
-            // Not sure if we should throw an exception here, or not...
-            return;
-        }
-        if ($sizeInIni < $fileSize) {
-            throw new ConversionFailedException(
-                'File is larger than your ' . $iniSettingId . ' (set in your php.ini). File size:' .
-                    round($fileSize/1024) . ' kb. ' .
-                    $iniSettingId . ' in php.ini: ' . ini_get($iniSettingId) .
-                    ' (parsed as ' . round($sizeInIni/1024) . ' kb)'
-            );
-        }
-    }
-
-    /**
-     * Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini.
-     *
-     * @throws  ConversionFailedException  if filesize is larger than "upload_max_filesize" or "post_max_size"
-     * @return  void
-     */
-    protected function checkFilesizeRequirements()
-    {
-        $this->checkFileSizeVsIniSetting('upload_max_filesize');
-        $this->checkFileSizeVsIniSetting('post_max_size');
-    }
-
-    /**
-     * Check if specific file is convertable with current converter / converter settings.
-     * @return void
-     */
-    public function checkConvertability()
-    {
-        $this->checkFilesizeRequirements();
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Convert\BaseConverters;
-
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
-
-/**
- * Base for converters that uses a cloud service and curl
- *
- * Handles checking that curl extension is loaded and functional.
- * Also provides a little helper for initializing curl (which throws in case of error)
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
-{
-
-    /**
-     * Check basis operationality for converters relying on curl
-     *
-     * @throws  SystemRequirementsNotMetException
-     * @return  void
-     */
-    public function checkOperationality()
-    {
-        parent::checkOperationality();
-
-        if (!extension_loaded('curl')) {
-            throw new SystemRequirementsNotMetException('Required cURL extension is not available.');
-        }
-
-        if (!function_exists('curl_init')) {
-            throw new SystemRequirementsNotMetException('Required url_init() function is not available.');
-        }
-
-        if (!function_exists('curl_file_create')) {
-            throw new SystemRequirementsNotMetException(
-                'Required curl_file_create() function is not available (requires PHP > 5.5).'
-            );
-        }
-    }
-
-    /**
-     * Init curl.
-     *
-     * @throws  SystemRequirementsNotMetException  if curl could not be initialized
-     * @return  resource  curl handle
-     */
-    protected static function initCurl()
-    {
-        // Get curl handle
-        $ch = curl_init();
-        if ($ch === false) {
-            throw new SystemRequirementsNotMetException('Could not initialise cURL.');
-        }
-        return $ch;
-    }
-}
-
-?><?php
-
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -1920,7 +1200,7 @@ class Cwebp extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\CloudConverterTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\CurlTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
@@ -2255,7 +1535,7 @@ class Ewww extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInputException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
@@ -2706,7 +1986,7 @@ class Gd extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
@@ -2866,7 +2146,7 @@ class Gmagick extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -2976,7 +2256,7 @@ class GmagickBinary extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFileException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -3149,7 +2429,7 @@ class Imagick extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -3309,7 +2589,7 @@ class ImagickBinary extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFoundException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
@@ -3509,7 +2789,7 @@ class Stack extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -3723,7 +3003,7 @@ class Vips extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractCloudCurlConverter;
+use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\CloudConverterTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\CurlTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
@@ -3739,7 +3019,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Inva
  * @author     Bjørn Rosell <it@rosell.dk>
  * @since      Class available since Release 2.0.0
  */
-class Wpc extends AbstractCloudCurlConverter
+class Wpc extends AbstractConverter
 {
     use CloudConverterTrait;
     use CurlTrait;
