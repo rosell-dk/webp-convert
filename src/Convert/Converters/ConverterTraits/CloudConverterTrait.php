@@ -1,22 +1,23 @@
 <?php
 
-namespace WebPConvert\Convert\BaseConverters;
+namespace WebPConvert\Convert\Converters\ConverterTraits;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\BaseConverters\AbstractConverter;
 use WebPConvert\Convert\Helpers\PhpIniSizes;
 
 /**
- * Base for converters that uses a cloud service.
+ * Trait for converters that works by uploading to a cloud service.
  *
- * Handles checking that the file size of the source is smaller than the limits imposed in php.ini.
+ * The trait adds a method for checking against upload limits.
  *
  * @package    WebPConvert
  * @author     Bjørn Rosell <it@rosell.dk>
  * @since      Class available since Release 2.0.0
  */
-abstract class AbstractCloudConverter extends AbstractConverter
+trait CloudConverterTrait
 {
+
     /**
      * Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini.
      *
@@ -47,23 +48,25 @@ abstract class AbstractCloudConverter extends AbstractConverter
     }
 
     /**
-     * Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini.
+     * Check convertability of cloud converters (that file is not bigger than limits set in php.ini).
+     *
+     * Performs the same as ::Convertability(). It is here so converters that overrides the
+     * ::Convertability() still has a chance to do the checks.
      *
      * @throws  ConversionFailedException  if filesize is larger than "upload_max_filesize" or "post_max_size"
      * @return  void
      */
-    protected function checkFilesizeRequirements()
+    public function checkConvertabilityCloudConverterTrait()
     {
         $this->checkFileSizeVsIniSetting('upload_max_filesize');
         $this->checkFileSizeVsIniSetting('post_max_size');
     }
 
     /**
-     * Check if specific file is convertable with current converter / converter settings.
-     * @return void
+     * Check convertability of cloud converters (file upload limits).
      */
     public function checkConvertability()
     {
-        $this->checkFilesizeRequirements();
+        $this->checkConvertabilityCloudConverterTrait();
     }
 }

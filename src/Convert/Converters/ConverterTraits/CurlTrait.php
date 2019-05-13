@@ -1,33 +1,33 @@
 <?php
 
-namespace WebPConvert\Convert\BaseConverters;
+namespace WebPConvert\Convert\Converters\ConverterTraits;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\BaseConverters\AbstractConverter;
 
 /**
- * Base for converters that uses a cloud service and curl
+ * Trait for converters that works by uploading to a cloud service.
  *
- * Handles checking that curl extension is loaded and functional.
- * Also provides a little helper for initializing curl (which throws in case of error)
+ * The trait adds a method for checking against upload limits.
  *
  * @package    WebPConvert
  * @author     Bjørn Rosell <it@rosell.dk>
  * @since      Class available since Release 2.0.0
  */
-abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
+trait CurlTrait
 {
 
     /**
-     * Check basis operationality for converters relying on curl
+     * Check basis operationality for converters relying on curl.
+     *
+     * Performs the same as ::checkOperationality(). It is here so converters that overrides the
+     * ::checkOperationality() still has a chance to do the checks.
      *
      * @throws  SystemRequirementsNotMetException
      * @return  void
      */
-    public function checkOperationality()
+    public function checkOperationalityForCurlTrait()
     {
-        parent::checkOperationality();
-
         if (!extension_loaded('curl')) {
             throw new SystemRequirementsNotMetException('Required cURL extension is not available.');
         }
@@ -41,6 +41,17 @@ abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
                 'Required curl_file_create() function is not available (requires PHP > 5.5).'
             );
         }
+    }
+
+    /**
+     * Check basis operationality for converters relying on curl
+     *
+     * @throws  SystemRequirementsNotMetException
+     * @return  void
+     */
+    public function checkOperationality()
+    {
+        $this->checkOperationalityForCurlTrait();
     }
 
     /**

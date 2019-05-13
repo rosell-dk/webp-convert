@@ -45,8 +45,6 @@ $jobsEverything = [
         'files' => [
             // put base classes here
             'Convert/BaseConverters/AbstractConverter.php',
-            'Convert/BaseConverters/AbstractCloudConverter.php',
-            'Convert/BaseConverters/AbstractCloudCurlConverter.php',
             'Exceptions/WebPConvertException.php',
             'Convert/Exceptions/ConversionFailedException.php',
             //'Convert/BaseConverters',

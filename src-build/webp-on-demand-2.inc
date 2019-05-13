@@ -384,138 +384,6 @@ abstract class AbstractConverter
 
 ?><?php
 
-namespace WebPConvert\Convert\BaseConverters;
-
-use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
-use WebPConvert\Convert\Helpers\PhpIniSizes;
-
-/**
- * Base for converters that uses a cloud service.
- *
- * Handles checking that the file size of the source is smaller than the limits imposed in php.ini.
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-abstract class AbstractCloudConverter extends AbstractConverter
-{
-    /**
-     * Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini.
-     *
-     * @param  string  $iniSettingId  Id of ini setting (ie "upload_max_filesize")
-     *
-     * @throws  ConversionFailedException  if filesize is larger than the ini setting
-     * @return  void
-     */
-    private function checkFileSizeVsIniSetting($iniSettingId)
-    {
-        $fileSize = @filesize($this->source);
-        if ($fileSize === false) {
-            return;
-        }
-        $sizeInIni = PhpIniSizes::getIniBytes($iniSettingId);
-        if ($sizeInIni === false) {
-            // Not sure if we should throw an exception here, or not...
-            return;
-        }
-        if ($sizeInIni < $fileSize) {
-            throw new ConversionFailedException(
-                'File is larger than your ' . $iniSettingId . ' (set in your php.ini). File size:' .
-                    round($fileSize/1024) . ' kb. ' .
-                    $iniSettingId . ' in php.ini: ' . ini_get($iniSettingId) .
-                    ' (parsed as ' . round($sizeInIni/1024) . ' kb)'
-            );
-        }
-    }
-
-    /**
-     * Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini.
-     *
-     * @throws  ConversionFailedException  if filesize is larger than "upload_max_filesize" or "post_max_size"
-     * @return  void
-     */
-    protected function checkFilesizeRequirements()
-    {
-        $this->checkFileSizeVsIniSetting('upload_max_filesize');
-        $this->checkFileSizeVsIniSetting('post_max_size');
-    }
-
-    /**
-     * Check if specific file is convertable with current converter / converter settings.
-     * @return void
-     */
-    public function checkConvertability()
-    {
-        $this->checkFilesizeRequirements();
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Convert\BaseConverters;
-
-use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
-use WebPConvert\Convert\BaseConverters\AbstractConverter;
-
-/**
- * Base for converters that uses a cloud service and curl
- *
- * Handles checking that curl extension is loaded and functional.
- * Also provides a little helper for initializing curl (which throws in case of error)
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
-{
-
-    /**
-     * Check basis operationality for converters relying on curl
-     *
-     * @throws  SystemRequirementsNotMetException
-     * @return  void
-     */
-    public function checkOperationality()
-    {
-        parent::checkOperationality();
-
-        if (!extension_loaded('curl')) {
-            throw new SystemRequirementsNotMetException('Required cURL extension is not available.');
-        }
-
-        if (!function_exists('curl_init')) {
-            throw new SystemRequirementsNotMetException('Required url_init() function is not available.');
-        }
-
-        if (!function_exists('curl_file_create')) {
-            throw new SystemRequirementsNotMetException(
-                'Required curl_file_create() function is not available (requires PHP > 5.5).'
-            );
-        }
-    }
-
-    /**
-     * Init curl.
-     *
-     * @throws  SystemRequirementsNotMetException  if curl could not be initialized
-     * @return  resource  curl handle
-     */
-    protected static function initCurl()
-    {
-        // Get curl handle
-        $ch = curl_init();
-        if ($ch === false) {
-            throw new SystemRequirementsNotMetException('Could not initialise cURL.');
-        }
-        return $ch;
-    }
-}
-
-?><?php
-
 namespace WebPConvert\Exceptions;
 
 /**
@@ -1183,6 +1051,152 @@ trait WarningLoggerTrait
 
 namespace WebPConvert\Convert\Converters\ConverterTraits;
 
+use WebPConvert\Convert\Exceptions\ConversionFailedException;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Helpers\PhpIniSizes;
+
+/**
+ * Trait for converters that works by uploading to a cloud service.
+ *
+ * The trait adds a method for checking against upload limits.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+trait CloudConverterTrait
+{
+
+    /**
+     * Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini.
+     *
+     * @param  string  $iniSettingId  Id of ini setting (ie "upload_max_filesize")
+     *
+     * @throws  ConversionFailedException  if filesize is larger than the ini setting
+     * @return  void
+     */
+    private function checkFileSizeVsIniSetting($iniSettingId)
+    {
+        $fileSize = @filesize($this->source);
+        if ($fileSize === false) {
+            return;
+        }
+        $sizeInIni = PhpIniSizes::getIniBytes($iniSettingId);
+        if ($sizeInIni === false) {
+            // Not sure if we should throw an exception here, or not...
+            return;
+        }
+        if ($sizeInIni < $fileSize) {
+            throw new ConversionFailedException(
+                'File is larger than your ' . $iniSettingId . ' (set in your php.ini). File size:' .
+                    round($fileSize/1024) . ' kb. ' .
+                    $iniSettingId . ' in php.ini: ' . ini_get($iniSettingId) .
+                    ' (parsed as ' . round($sizeInIni/1024) . ' kb)'
+            );
+        }
+    }
+
+    /**
+     * Check convertability of cloud converters (that file is not bigger than limits set in php.ini).
+     *
+     * Performs the same as ::Convertability(). It is here so converters that overrides the
+     * ::Convertability() still has a chance to do the checks.
+     *
+     * @throws  ConversionFailedException  if filesize is larger than "upload_max_filesize" or "post_max_size"
+     * @return  void
+     */
+    public function checkConvertabilityCloudConverterTrait()
+    {
+        $this->checkFileSizeVsIniSetting('upload_max_filesize');
+        $this->checkFileSizeVsIniSetting('post_max_size');
+    }
+
+    /**
+     * Check convertability of cloud converters (file upload limits).
+     */
+    public function checkConvertability()
+    {
+        $this->checkConvertabilityCloudConverterTrait();
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Converters\ConverterTraits;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
+
+/**
+ * Trait for converters that works by uploading to a cloud service.
+ *
+ * The trait adds a method for checking against upload limits.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+trait CurlTrait
+{
+
+    /**
+     * Check basis operationality for converters relying on curl.
+     *
+     * Performs the same as ::checkOperationality(). It is here so converters that overrides the
+     * ::checkOperationality() still has a chance to do the checks.
+     *
+     * @throws  SystemRequirementsNotMetException
+     * @return  void
+     */
+    public function checkOperationalityForCurlTrait()
+    {
+        if (!extension_loaded('curl')) {
+            throw new SystemRequirementsNotMetException('Required cURL extension is not available.');
+        }
+
+        if (!function_exists('curl_init')) {
+            throw new SystemRequirementsNotMetException('Required url_init() function is not available.');
+        }
+
+        if (!function_exists('curl_file_create')) {
+            throw new SystemRequirementsNotMetException(
+                'Required curl_file_create() function is not available (requires PHP > 5.5).'
+            );
+        }
+    }
+
+    /**
+     * Check basis operationality for converters relying on curl
+     *
+     * @throws  SystemRequirementsNotMetException
+     * @return  void
+     */
+    public function checkOperationality()
+    {
+        $this->checkOperationalityForCurlTrait();
+    }
+
+    /**
+     * Init curl.
+     *
+     * @throws  SystemRequirementsNotMetException  if curl could not be initialized
+     * @return  resource  curl handle
+     */
+    protected static function initCurl()
+    {
+        // Get curl handle
+        $ch = curl_init();
+        if ($ch === false) {
+            throw new SystemRequirementsNotMetException('Could not initialise cURL.');
+        }
+        return $ch;
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Converters\ConverterTraits;
+
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
 /**
@@ -1318,6 +1332,138 @@ trait LosslessAutoTrait
         } else {
             $this->doActualConvert();
         }
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\BaseConverters;
+
+use WebPConvert\Convert\Exceptions\ConversionFailedException;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Helpers\PhpIniSizes;
+
+/**
+ * Base for converters that uses a cloud service.
+ *
+ * Handles checking that the file size of the source is smaller than the limits imposed in php.ini.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+abstract class AbstractCloudConverter extends AbstractConverter
+{
+    /**
+     * Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini.
+     *
+     * @param  string  $iniSettingId  Id of ini setting (ie "upload_max_filesize")
+     *
+     * @throws  ConversionFailedException  if filesize is larger than the ini setting
+     * @return  void
+     */
+    private function checkFileSizeVsIniSetting($iniSettingId)
+    {
+        $fileSize = @filesize($this->source);
+        if ($fileSize === false) {
+            return;
+        }
+        $sizeInIni = PhpIniSizes::getIniBytes($iniSettingId);
+        if ($sizeInIni === false) {
+            // Not sure if we should throw an exception here, or not...
+            return;
+        }
+        if ($sizeInIni < $fileSize) {
+            throw new ConversionFailedException(
+                'File is larger than your ' . $iniSettingId . ' (set in your php.ini). File size:' .
+                    round($fileSize/1024) . ' kb. ' .
+                    $iniSettingId . ' in php.ini: ' . ini_get($iniSettingId) .
+                    ' (parsed as ' . round($sizeInIni/1024) . ' kb)'
+            );
+        }
+    }
+
+    /**
+     * Test that filesize is below "upload_max_filesize" and "post_max_size" values in php.ini.
+     *
+     * @throws  ConversionFailedException  if filesize is larger than "upload_max_filesize" or "post_max_size"
+     * @return  void
+     */
+    protected function checkFilesizeRequirements()
+    {
+        $this->checkFileSizeVsIniSetting('upload_max_filesize');
+        $this->checkFileSizeVsIniSetting('post_max_size');
+    }
+
+    /**
+     * Check if specific file is convertable with current converter / converter settings.
+     * @return void
+     */
+    public function checkConvertability()
+    {
+        $this->checkFilesizeRequirements();
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\BaseConverters;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
+
+/**
+ * Base for converters that uses a cloud service and curl
+ *
+ * Handles checking that curl extension is loaded and functional.
+ * Also provides a little helper for initializing curl (which throws in case of error)
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+abstract class AbstractCloudCurlConverter extends AbstractCloudConverter
+{
+
+    /**
+     * Check basis operationality for converters relying on curl
+     *
+     * @throws  SystemRequirementsNotMetException
+     * @return  void
+     */
+    public function checkOperationality()
+    {
+        parent::checkOperationality();
+
+        if (!extension_loaded('curl')) {
+            throw new SystemRequirementsNotMetException('Required cURL extension is not available.');
+        }
+
+        if (!function_exists('curl_init')) {
+            throw new SystemRequirementsNotMetException('Required url_init() function is not available.');
+        }
+
+        if (!function_exists('curl_file_create')) {
+            throw new SystemRequirementsNotMetException(
+                'Required curl_file_create() function is not available (requires PHP > 5.5).'
+            );
+        }
+    }
+
+    /**
+     * Init curl.
+     *
+     * @throws  SystemRequirementsNotMetException  if curl could not be initialized
+     * @return  resource  curl handle
+     */
+    protected static function initCurl()
+    {
+        // Get curl handle
+        $ch = curl_init();
+        if ($ch === false) {
+            throw new SystemRequirementsNotMetException('Could not initialise cURL.');
+        }
+        return $ch;
     }
 }
 
@@ -1774,7 +1920,9 @@ class Cwebp extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractCloudCurlConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\ConverterTraits\CloudConverterTrait;
+use WebPConvert\Convert\Converters\ConverterTraits\CurlTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\InvalidApiKeyException;
@@ -1787,12 +1935,10 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
  * @author     Bjørn Rosell <it@rosell.dk>
  * @since      Class available since Release 2.0.0
  */
-class Ewww extends AbstractCloudCurlConverter
+class Ewww extends AbstractConverter
 {
-    public function supportsLossless()
-    {
-        return false;
-    }
+    use CloudConverterTrait;
+    use CurlTrait;
 
     protected function getOptionDefinitionsExtra()
     {
@@ -1826,8 +1972,8 @@ class Ewww extends AbstractCloudCurlConverter
      */
     public function checkOperationality()
     {
-        // First check for curl requirements
-        parent::checkOperationality();
+        // Check for curl requirements
+        $this->checkOperationalityForCurlTrait();
 
         $apiKey = $this->getKey();
 
@@ -1853,6 +1999,14 @@ class Ewww extends AbstractCloudCurlConverter
                 break;
         }
     }
+
+    /*
+    public function checkConvertability()
+    {
+        // check upload limits
+        $this->checkConvertabilityCloudConverterTrait();
+    }
+    */
 
     // Although this method is public, do not call directly.
     // You should rather call the static convert() function, defined in AbstractConverter, which
@@ -3001,7 +3155,6 @@ use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
-
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
 /**
@@ -3571,6 +3724,8 @@ class Vips extends AbstractConverter
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\BaseConverters\AbstractCloudCurlConverter;
+use WebPConvert\Convert\Converters\ConverterTraits\CloudConverterTrait;
+use WebPConvert\Convert\Converters\ConverterTraits\CurlTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
@@ -3586,12 +3741,14 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Inva
  */
 class Wpc extends AbstractCloudCurlConverter
 {
+    use CloudConverterTrait;
+    use CurlTrait;
     use LosslessAutoTrait;
 
     public function passOnLosslessAuto()
     {
         // TODO: Either make this configurable or perhaps depend on api version
-        return false;
+        return true;
     }
 
     protected function getOptionDefinitionsExtra()
@@ -3668,8 +3825,8 @@ class Wpc extends AbstractCloudCurlConverter
      */
     public function checkOperationality()
     {
-        // First check for curl requirements
-        parent::checkOperationality();
+        // Check for curl requirements
+        $this->checkOperationalityForCurlTrait();
 
         $options = $this->options;
 
@@ -3717,17 +3874,15 @@ class Wpc extends AbstractCloudCurlConverter
         }
     }
 
-    /**
-     * Check if specific file is convertable with current converter / converter settings.
-     *
-     */
+    /*
     public function checkConvertability()
     {
-        // First check for upload limits (abstract cloud converter)
-        parent::checkConvertability();
+        // check upload limits
+        $this->checkConvertabilityCloudConverterTrait();
 
         // TODO: some from below can be moved up here
     }
+    */
 
     private function createOptionsToSend()
     {

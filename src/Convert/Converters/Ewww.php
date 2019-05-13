@@ -2,7 +2,9 @@
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractCloudCurlConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\ConverterTraits\CloudConverterTrait;
+use WebPConvert\Convert\Converters\ConverterTraits\CurlTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\InvalidApiKeyException;
@@ -15,12 +17,10 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
  * @author     Bjørn Rosell <it@rosell.dk>
  * @since      Class available since Release 2.0.0
  */
-class Ewww extends AbstractCloudCurlConverter
+class Ewww extends AbstractConverter
 {
-    public function supportsLossless()
-    {
-        return false;
-    }
+    use CloudConverterTrait;
+    use CurlTrait;
 
     protected function getOptionDefinitionsExtra()
     {
@@ -54,8 +54,8 @@ class Ewww extends AbstractCloudCurlConverter
      */
     public function checkOperationality()
     {
-        // First check for curl requirements
-        parent::checkOperationality();
+        // Check for curl requirements
+        $this->checkOperationalityForCurlTrait();
 
         $apiKey = $this->getKey();
 
@@ -81,6 +81,14 @@ class Ewww extends AbstractCloudCurlConverter
                 break;
         }
     }
+
+    /*
+    public function checkConvertability()
+    {
+        // check upload limits
+        $this->checkConvertabilityCloudConverterTrait();
+    }
+    */
 
     // Although this method is public, do not call directly.
     // You should rather call the static convert() function, defined in AbstractConverter, which

@@ -2,7 +2,9 @@
 
 namespace WebPConvert\Convert\Converters;
 
-use WebPConvert\Convert\BaseConverters\AbstractCloudCurlConverter;
+use WebPConvert\Convert\BaseConverters\AbstractConverter;
+use WebPConvert\Convert\Converters\ConverterTraits\CloudConverterTrait;
+use WebPConvert\Convert\Converters\ConverterTraits\CurlTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
@@ -16,14 +18,16 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Inva
  * @author     Bjørn Rosell <it@rosell.dk>
  * @since      Class available since Release 2.0.0
  */
-class Wpc extends AbstractCloudCurlConverter
+class Wpc extends AbstractConverter
 {
+    use CloudConverterTrait;
+    use CurlTrait;
     use LosslessAutoTrait;
 
     public function passOnLosslessAuto()
     {
         // TODO: Either make this configurable or perhaps depend on api version
-        return false;
+        return true;
     }
 
     protected function getOptionDefinitionsExtra()
@@ -100,8 +104,8 @@ class Wpc extends AbstractCloudCurlConverter
      */
     public function checkOperationality()
     {
-        // First check for curl requirements
-        parent::checkOperationality();
+        // Check for curl requirements
+        $this->checkOperationalityForCurlTrait();
 
         $options = $this->options;
 
@@ -149,17 +153,15 @@ class Wpc extends AbstractCloudCurlConverter
         }
     }
 
-    /**
-     * Check if specific file is convertable with current converter / converter settings.
-     *
-     */
+    /*
     public function checkConvertability()
     {
-        // First check for upload limits (abstract cloud converter)
-        parent::checkConvertability();
+        // check upload limits
+        $this->checkConvertabilityCloudConverterTrait();
 
         // TODO: some from below can be moved up here
     }
+    */
 
     private function createOptionsToSend()
     {

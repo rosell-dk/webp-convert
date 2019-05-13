@@ -14,7 +14,12 @@ parameters:
             path: %currentWorkingDirectory%/src/Convert/Converters/Ewww.php
         -
             message: '#Strict comparison using === between resource and false will always evaluate to false.#'
+            path: %currentWorkingDirectory%/src/Convert/Converters/ConverterTraits/CurlTrait.php
+        -
+            message: '#Strict comparison using === between resource and false will always evaluate to false.#'
             path: %currentWorkingDirectory%/src/Convert/BaseConverters/AbstractCloudCurlConverter.php
         - '#Function vips_call invoked with 4 parameters, 2 required.#'
         - '#Function vips_.* not found.#'
-        - '#SystemRequirementsNotMet#'
+        -
+            message: '#SystemRequirementsNotMet#'
+            path: %currentWorkingDirectory%/src/Convert/Converters/ConverterTraits/ExecTrait.php
