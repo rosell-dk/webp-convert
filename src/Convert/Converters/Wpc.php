@@ -33,10 +33,10 @@ class Wpc extends AbstractConverter
     protected function getOptionDefinitionsExtra()
     {
         return [
+            ['api-key', 'string', '', true],   /* new in api v.1 (renamed 'secret' to 'api-key') */
+            ['api-url', 'string', '', true, true],
             ['api-version', 'number', 0],                     /* Can currently be 0 or 1 */
             ['secret', 'string', '', true],    /* only in api v.0 */
-            ['api-key', 'string', '', true],   /* new in api v.1 (renamed 'secret' to 'api-key') */
-            ['url', 'string', '', true, true],
             ['crypt-api-key-in-transfer', 'boolean', false],  /* new in api v.1 */
         ];
     }
