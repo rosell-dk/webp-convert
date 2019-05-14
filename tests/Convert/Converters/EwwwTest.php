@@ -22,7 +22,7 @@ class EwwwTest extends TestCase
     public function testConvert()
     {
         ConverterTestHelper::runAllConvertTests($this, 'Ewww', [
-            //'key' => ''
+            //'api-key' => ''
         ]);
     }
 
@@ -32,7 +32,7 @@ class EwwwTest extends TestCase
 
         $source = $this->imageDir . '/test.png';
         Ewww::convert($source, $source . '.webp', [
-            'key' => 'wrong-key!'
+            'api-key' => 'wrong-key!'
         ]);
     }
 
@@ -44,7 +44,7 @@ class EwwwTest extends TestCase
 
         $source = $this->imageDir . '/test.png';
         Ewww::convert($source, $source . '.webp', [
-            'key' => $wrongKeyRightLength
+            'api-key' => $wrongKeyRightLength
         ]);
     }
 
@@ -57,10 +57,10 @@ class EwwwTest extends TestCase
         $source = $this->imageDir . '/test.png';
 
         $ee = EwwwExtended::createInstance($source, $source . '.webp', [
-            'key' => $wrongKeyRightLength
+            'api-key' => $wrongKeyRightLength
         ]);
 
-        $ee->callDoActualConvert();        
+        $ee->callDoActualConvert();
     }
 
 
