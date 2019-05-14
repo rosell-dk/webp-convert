@@ -18,6 +18,9 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDes
 trait DestinationPreparationTrait
 {
 
+    abstract public function getDestination();
+    abstract public function logLn($msg, $style = '');
+
     /**
      * Create writable folder in provided path (if it does not exist already)
      *
@@ -26,9 +29,9 @@ trait DestinationPreparationTrait
      */
     private function createWritableDestinationFolder()
     {
-        $filePath = $this->destination;
+        $destination = $this->getDestination();
 
-        $folder = dirname($filePath);
+        $folder = dirname($destination);
         if (!file_exists($folder)) {
             $this->logLn('Destination folder does not exist. Creating folder: ' . $folder);
             // TODO: what if this is outside open basedir?
@@ -54,7 +57,8 @@ trait DestinationPreparationTrait
      */
     private function checkDestinationWritable()
     {
-        $dirName = dirname($this->destination);
+        $destination = $this->getDestination();
+        $dirName = dirname($destination);
 
         if (@is_writable($dirName) && @is_executable($dirName)) {
             // all is well
@@ -64,14 +68,14 @@ trait DestinationPreparationTrait
         // The above might fail on Windows, even though dir is writable
         // So, to be absolute sure that we cannot write, we make an actual write test (writing a dummy file)
         // No harm in doing that for non-Windows systems either.
-        if (file_put_contents($this->destination, 'dummy') !== false) {
+        if (file_put_contents($destination, 'dummy') !== false) {
             // all is well, after all
-            unlink($this->destination);
+            unlink($destination);
             return;
         }
 
         throw new CreateDestinationFileException(
-            'Cannot create file: ' . basename($this->destination) . ' in dir:' . dirname($this->destination)
+            'Cannot create file: ' . basename($destination) . ' in dir:' . dirname($destination)
         );
     }
 
@@ -83,12 +87,13 @@ trait DestinationPreparationTrait
      */
     private function removeExistingDestinationIfExists()
     {
-        if (file_exists($this->destination)) {
+        $destination = $this->getDestination();
+        if (file_exists($destination)) {
             // A file already exists in this folder...
             // We delete it, to make way for a new webp
-            if (!unlink($this->destination)) {
+            if (!unlink($destination)) {
                 throw new CreateDestinationFileException(
-                    'Existing file cannot be removed: ' . basename($this->destination)
+                    'Existing file cannot be removed: ' . basename($destination)
                 );
             }
         }
