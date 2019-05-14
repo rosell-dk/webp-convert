@@ -16,6 +16,7 @@ trait LosslessAutoTrait
     abstract protected function logLn($msg, $style = '');
     abstract protected function ln();
     abstract protected function doActualConvert();
+    abstract public function getSource();
     abstract public function getDestination();
     abstract public function setDestination($destination);
     abstract public function getOptions();
@@ -40,8 +41,8 @@ trait LosslessAutoTrait
     private function convertTwoAndSelectSmallest()
     {
         $destination = $this->getDestination();
-        $destinationLossless =  $this->destination . '.lossless.webp';
-        $destinationLossy =  $this->destination . '.lossy.webp';
+        $destinationLossless =  $destination . '.lossless.webp';
+        $destinationLossy =  $destination . '.lossy.webp';
 
         $this->logLn(
             'Lossless is set to auto. Converting to both lossless and lossy and selecting the smallest file'
@@ -53,16 +54,18 @@ trait LosslessAutoTrait
         $this->setOption('lossless', false);
         $this->doActualConvert();
         $this->logLn('Reduction: ' .
-            round((filesize($this->source) - filesize($this->destination))/filesize($this->source) * 100) . '% ');
-
+            round(
+                (filesize($this->getSource()) - filesize($destinationLossy))/filesize($this->getSource()) * 100
+            ) . '% ');
         $this->ln();
         $this->logLn('Converting to lossless');
         $this->setDestination($destinationLossless);
         $this->setOption('lossless', true);
         $this->doActualConvert();
         $this->logLn('Reduction: ' .
-            round((filesize($this->source) - filesize($this->destination))/filesize($this->source) * 100) . '% ');
-
+            round(
+                (filesize($this->getSource()) - filesize($destinationLossless))/filesize($this->getSource()) * 100
+            ) . '% ');
         $this->ln();
         if (filesize($destinationLossless) > filesize($destinationLossy)) {
             $this->logLn('Picking lossy');
@@ -79,7 +82,7 @@ trait LosslessAutoTrait
 
     protected function runActualConvert()
     {
-        if (!$this->passOnLosslessAuto() && ($this->options['lossless'] === 'auto') && $this->supportsLossless()) {
+        if (!$this->passOnLosslessAuto() && ($this->getOptions()['lossless'] === 'auto') && $this->supportsLossless()) {
             $this->convertTwoAndSelectSmallest();
         } else {
             $this->doActualConvert();

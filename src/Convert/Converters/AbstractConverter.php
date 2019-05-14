@@ -6,14 +6,11 @@
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\UnhandledException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFileException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFolderException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 use WebPConvert\Convert\Converters\BaseTraits\AutoQualityTrait;
+use WebPConvert\Convert\Converters\BaseTraits\DestinationPreparationTrait;
 use WebPConvert\Convert\Converters\BaseTraits\LoggerTrait;
 use WebPConvert\Convert\Converters\BaseTraits\OptionsTrait;
+use WebPConvert\Convert\Converters\BaseTraits\SourceValidationTrait;
 use WebPConvert\Convert\Converters\BaseTraits\WarningLoggerTrait;
 use WebPConvert\Loggers\BaseLogger;
 
@@ -32,6 +29,8 @@ abstract class AbstractConverter
     use LoggerTrait;
     use OptionsTrait;
     use WarningLoggerTrait;
+    use DestinationPreparationTrait;
+    use SourceValidationTrait;
 
     /**
      * The actual conversion is be done by a concrete converter extending this class.
@@ -70,9 +69,6 @@ abstract class AbstractConverter
 
     /** @var string|false|null  Where to save the webp (complete path) */
     private $sourceMimeType;
-
-    /** @var array  Array of allowed mime types for source.  */
-    public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
 
     /**
      * Check basis operationality
@@ -121,6 +117,19 @@ abstract class AbstractConverter
 
         $this->setLogger($logger);
         $this->setProvidedOptions($options);
+
+        $this->checkSourceExists();
+        $this->checkSourceMimeType();
+    }
+
+    /**
+     * Get source.
+     *
+     * @return string  The source.
+     */
+    public function getSource()
+    {
+        return $this->source;
     }
 
     /**
@@ -195,10 +204,11 @@ abstract class AbstractConverter
 
         if (!isset($this->options['_skip_input_check'])) {
             // Run basic input validations (if source exists and if file extension is valid)
-            $this->checkInput();
+            $this->checkSourceExists();
+            $this->checkSourceMimeType();
 
             // Check that a file can be written to destination
-            $this->checkFileSystem();
+            $this->checkDestinationWritable();
         }
 
         $this->checkOperationality();
@@ -237,7 +247,6 @@ abstract class AbstractConverter
         }
 
         $this->deactivateWarningLogger();
-
     }
 
     /**
@@ -291,103 +300,5 @@ abstract class AbstractConverter
             $this->sourceMimeType = ImageMimeTypeGuesser::lenientGuess($this->source);
         }
         return $this->sourceMimeType;
-    }
-
-    /**
-     *  Note: As the input validations are only run one time in a stack,
-     *  this method is not overridable
-     */
-    private function checkInput()
-    {
-        // Check if source exists
-        if (!@file_exists($this->source)) {
-            throw new TargetNotFoundException('File or directory not found: ' . $this->source);
-        }
-
-        // Check if the provided file's mime type is valid
-        $fileMimeType = $this->getMimeTypeOfSource();
-        if (is_null($fileMimeType)) {
-            throw new InvalidImageTypeException('Image type could not be detected');
-        } elseif ($fileMimeType === false) {
-            throw new InvalidImageTypeException('File seems not to be an image.');
-        } elseif (!in_array($fileMimeType, self::$allowedMimeTypes)) {
-            throw new InvalidImageTypeException('Unsupported mime type: ' . $fileMimeType);
-        }
-    }
-
-    /**
-     * Check that we can write file at destination.
-     *
-     * It is assumed that the folder already exists (that ::createWritableDestinationFolder() was called first)
-     *
-     * @throws CreateDestinationFileException  if file cannot be created at destination
-     * @return void
-     */
-    private function checkFileSystem()
-    {
-        $dirName = dirname($this->destination);
-
-        if (@is_writable($dirName) && @is_executable($dirName)) {
-            // all is well
-            return;
-        }
-
-        // The above might fail on Windows, even though dir is writable
-        // So, to be absolute sure that we cannot write, we make an actual write test (writing a dummy file)
-        // No harm in doing that for non-Windows systems either.
-        if (file_put_contents($this->destination, 'dummy') !== false) {
-            // all is well, after all
-            unlink($this->destination);
-            return;
-        }
-
-        throw new CreateDestinationFileException(
-            'Cannot create file: ' . basename($this->destination) . ' in dir:' . dirname($this->destination)
-        );
-    }
-
-    /**
-     * Remove existing destination.
-     *
-     * @throws CreateDestinationFileException  if file cannot be removed
-     * @return void
-     */
-    private function removeExistingDestinationIfExists()
-    {
-        if (file_exists($this->destination)) {
-            // A file already exists in this folder...
-            // We delete it, to make way for a new webp
-            if (!unlink($this->destination)) {
-                throw new CreateDestinationFileException(
-                    'Existing file cannot be removed: ' . basename($this->destination)
-                );
-            }
-        }
-    }
-
-    /**
-     * Create writable folder in provided path (if it does not exist already)
-     *
-     * @throws CreateDestinationFolderException  if folder cannot be removed
-     * @return void
-     */
-    private function createWritableDestinationFolder()
-    {
-        $filePath = $this->destination;
-
-        $folder = dirname($filePath);
-        if (!file_exists($folder)) {
-            $this->logLn('Destination folder does not exist. Creating folder: ' . $folder);
-            // TODO: what if this is outside open basedir?
-            // see http://php.net/manual/en/ini.core.php#ini.open-basedir
-
-            // Trying to create the given folder (recursively)
-            if (!mkdir($folder, 0777, true)) {
-                throw new CreateDestinationFolderException(
-                    'Failed creating folder. Check the permissions!',
-                    'Failed creating folder: ' . $folder . '. Check permissions!'
-                );
-            }
-        }
     }
 }

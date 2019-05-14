@@ -7,14 +7,11 @@
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\UnhandledException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFileException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFolderException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 use WebPConvert\Convert\Converters\BaseTraits\AutoQualityTrait;
+use WebPConvert\Convert\Converters\BaseTraits\DestinationPreparationTrait;
 use WebPConvert\Convert\Converters\BaseTraits\LoggerTrait;
 use WebPConvert\Convert\Converters\BaseTraits\OptionsTrait;
+use WebPConvert\Convert\Converters\BaseTraits\SourceValidationTrait;
 use WebPConvert\Convert\Converters\BaseTraits\WarningLoggerTrait;
 use WebPConvert\Loggers\BaseLogger;
 
@@ -33,6 +30,8 @@ abstract class AbstractConverter
     use LoggerTrait;
     use OptionsTrait;
     use WarningLoggerTrait;
+    use DestinationPreparationTrait;
+    use SourceValidationTrait;
 
     /**
      * The actual conversion is be done by a concrete converter extending this class.
@@ -71,9 +70,6 @@ abstract class AbstractConverter
 
     /** @var string|false|null  Where to save the webp (complete path) */
     private $sourceMimeType;
-
-    /** @var array  Array of allowed mime types for source.  */
-    public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
 
     /**
      * Check basis operationality
@@ -122,6 +118,19 @@ abstract class AbstractConverter
 
         $this->setLogger($logger);
         $this->setProvidedOptions($options);
+
+        $this->checkSourceExists();
+        $this->checkSourceMimeType();
+    }
+
+    /**
+     * Get source.
+     *
+     * @return string  The source.
+     */
+    public function getSource()
+    {
+        return $this->source;
     }
 
     /**
@@ -187,42 +196,25 @@ abstract class AbstractConverter
         $beginTime = microtime(true);
 
         $this->activateWarningLogger();
-        //set_error_handler(array($this, "errorHandler"));
 
-        try {
-            // Prepare options
-            //$this->prepareOptions();
+        $this->checkOptions();
 
-            $this->checkOptions();
+        // Prepare destination folder
+        $this->createWritableDestinationFolder();
+        $this->removeExistingDestinationIfExists();
 
-            // Prepare destination folder
-            $this->createWritableDestinationFolder();
-            $this->removeExistingDestinationIfExists();
+        if (!isset($this->options['_skip_input_check'])) {
+            // Run basic input validations (if source exists and if file extension is valid)
+            $this->checkSourceExists();
+            $this->checkSourceMimeType();
 
-            if (!isset($this->options['_skip_input_check'])) {
-                // Run basic input validations (if source exists and if file extension is valid)
-                $this->checkInput();
-
-                // Check that a file can be written to destination
-                $this->checkFileSystem();
-            }
-
-            $this->checkOperationality();
-            $this->checkConvertability();
-            $this->runActualConvert();
-        } catch (ConversionFailedException $e) {
-            $this->deactivateWarningLogger();
-            throw $e;
-        } catch (\Exception $e) {
-            $this->deactivateWarningLogger();
-            throw new UnhandledException('Conversion failed due to uncaught exception', 0, $e);
-        } catch (\Error $e) {
-            $this->deactivateWarningLogger();
-            // https://stackoverflow.com/questions/7116995/is-it-possible-in-php-to-prevent-fatal-error-call-to-undefined-function
-            //throw new UnhandledException('Conversion failed due to uncaught error', 0, $e);
-            throw $e;
+            // Check that a file can be written to destination
+            $this->checkDestinationWritable();
         }
-        $this->deactivateWarningLogger();
+
+        $this->checkOperationality();
+        $this->checkConvertability();
+        $this->runActualConvert();
 
         $source = $this->source;
         $destination = $this->destination;
@@ -254,6 +246,8 @@ abstract class AbstractConverter
                 $this->logLn($msg);
             }
         }
+
+        $this->deactivateWarningLogger();
     }
 
     /**
@@ -307,104 +301,6 @@ abstract class AbstractConverter
             $this->sourceMimeType = ImageMimeTypeGuesser::lenientGuess($this->source);
         }
         return $this->sourceMimeType;
-    }
-
-    /**
-     *  Note: As the input validations are only run one time in a stack,
-     *  this method is not overridable
-     */
-    private function checkInput()
-    {
-        // Check if source exists
-        if (!@file_exists($this->source)) {
-            throw new TargetNotFoundException('File or directory not found: ' . $this->source);
-        }
-
-        // Check if the provided file's mime type is valid
-        $fileMimeType = $this->getMimeTypeOfSource();
-        if (is_null($fileMimeType)) {
-            throw new InvalidImageTypeException('Image type could not be detected');
-        } elseif ($fileMimeType === false) {
-            throw new InvalidImageTypeException('File seems not to be an image.');
-        } elseif (!in_array($fileMimeType, self::$allowedMimeTypes)) {
-            throw new InvalidImageTypeException('Unsupported mime type: ' . $fileMimeType);
-        }
-    }
-
-    /**
-     * Check that we can write file at destination.
-     *
-     * It is assumed that the folder already exists (that ::createWritableDestinationFolder() was called first)
-     *
-     * @throws CreateDestinationFileException  if file cannot be created at destination
-     * @return void
-     */
-    private function checkFileSystem()
-    {
-        $dirName = dirname($this->destination);
-
-        if (@is_writable($dirName) && @is_executable($dirName)) {
-            // all is well
-            return;
-        }
-
-        // The above might fail on Windows, even though dir is writable
-        // So, to be absolute sure that we cannot write, we make an actual write test (writing a dummy file)
-        // No harm in doing that for non-Windows systems either.
-        if (file_put_contents($this->destination, 'dummy') !== false) {
-            // all is well, after all
-            unlink($this->destination);
-            return;
-        }
-
-        throw new CreateDestinationFileException(
-            'Cannot create file: ' . basename($this->destination) . ' in dir:' . dirname($this->destination)
-        );
-    }
-
-    /**
-     * Remove existing destination.
-     *
-     * @throws CreateDestinationFileException  if file cannot be removed
-     * @return void
-     */
-    private function removeExistingDestinationIfExists()
-    {
-        if (file_exists($this->destination)) {
-            // A file already exists in this folder...
-            // We delete it, to make way for a new webp
-            if (!unlink($this->destination)) {
-                throw new CreateDestinationFileException(
-                    'Existing file cannot be removed: ' . basename($this->destination)
-                );
-            }
-        }
-    }
-
-    /**
-     * Create writable folder in provided path (if it does not exist already)
-     *
-     * @throws CreateDestinationFolderException  if folder cannot be removed
-     * @return void
-     */
-    private function createWritableDestinationFolder()
-    {
-        $filePath = $this->destination;
-
-        $folder = dirname($filePath);
-        if (!file_exists($folder)) {
-            $this->logLn('Destination folder does not exist. Creating folder: ' . $folder);
-            // TODO: what if this is outside open basedir?
-            // see http://php.net/manual/en/ini.core.php#ini.open-basedir
-
-            // Trying to create the given folder (recursively)
-            if (!mkdir($folder, 0777, true)) {
-                throw new CreateDestinationFolderException(
-                    'Failed creating folder. Check the permissions!',
-                    'Failed creating folder: ' . $folder . '. Check permissions!'
-                );
-            }
-        }
     }
 }
 
@@ -468,6 +364,7 @@ use WebPConvert\Exceptions\WebPConvertException;
  *      ConversionFailedException
  *          ConversionSkippedException
  *          ConverterNotOperationalException
+ *              InvalidApiKeyException
  *              SystemRequirementsNotMetException
  *          FileSystemProblemsException
  *              CreateDestinationFileException
@@ -477,7 +374,6 @@ use WebPConvert\Exceptions\WebPConvertException;
  *              InvalidImageTypeException
  *              InvalidOptionTypeException
  *              TargetNotFoundException
- *          UnhandledException
  */
 class ConversionFailedException extends WebPConvertException
 {
@@ -677,7 +573,7 @@ trait ExecTrait
      */
     public function checkOperationalityExecTrait()
     {
-        if (!function_exists('exec2')) {
+        if (!function_exists('exec')) {
             throw new SystemRequirementsNotMetException('exec() is not enabled.');
         }
     }
@@ -701,6 +597,7 @@ trait LosslessAutoTrait
     abstract protected function logLn($msg, $style = '');
     abstract protected function ln();
     abstract protected function doActualConvert();
+    abstract public function getSource();
     abstract public function getDestination();
     abstract public function setDestination($destination);
     abstract public function getOptions();
@@ -725,8 +622,8 @@ trait LosslessAutoTrait
     private function convertTwoAndSelectSmallest()
     {
         $destination = $this->getDestination();
-        $destinationLossless =  $this->destination . '.lossless.webp';
-        $destinationLossy =  $this->destination . '.lossy.webp';
+        $destinationLossless =  $destination . '.lossless.webp';
+        $destinationLossy =  $destination . '.lossy.webp';
 
         $this->logLn(
             'Lossless is set to auto. Converting to both lossless and lossy and selecting the smallest file'
@@ -738,16 +635,18 @@ trait LosslessAutoTrait
         $this->setOption('lossless', false);
         $this->doActualConvert();
         $this->logLn('Reduction: ' .
-            round((filesize($this->source) - filesize($this->destination))/filesize($this->source) * 100) . '% ');
-
+            round(
+                (filesize($this->getSource()) - filesize($destinationLossy))/filesize($this->getSource()) * 100
+            ) . '% ');
         $this->ln();
         $this->logLn('Converting to lossless');
         $this->setDestination($destinationLossless);
         $this->setOption('lossless', true);
         $this->doActualConvert();
         $this->logLn('Reduction: ' .
-            round((filesize($this->source) - filesize($this->destination))/filesize($this->source) * 100) . '% ');
-
+            round(
+                (filesize($this->getSource()) - filesize($destinationLossless))/filesize($this->getSource()) * 100
+            ) . '% ');
         $this->ln();
         if (filesize($destinationLossless) > filesize($destinationLossy)) {
             $this->logLn('Picking lossy');
@@ -764,7 +663,7 @@ trait LosslessAutoTrait
 
     protected function runActualConvert()
     {
-        if (!$this->passOnLosslessAuto() && ($this->options['lossless'] === 'auto') && $this->supportsLossless()) {
+        if (!$this->passOnLosslessAuto() && ($this->getOptions()['lossless'] === 'auto') && $this->supportsLossless()) {
             $this->convertTwoAndSelectSmallest();
         } else {
             $this->doActualConvert();
@@ -3372,33 +3271,6 @@ class InvalidInputException extends ConversionFailedException
 
 ?><?php
 
-namespace WebPConvert\Convert\Exceptions\ConversionFailed;
-
-use WebPConvert\Convert\Exceptions\ConversionFailedException;
-
-class UnhandledException extends ConversionFailedException
-{
-    public $description = 'The converter failed due to uncaught exception';
-
-    /*
-    Nah, do not add message of the uncaught exception to this.
-    - because it might be long and contain characters which consumers for example cannot put inside a
-    x-webpconvert-error header
-    The messages we throw are guaranteed to be short
-
-    public function __construct($message="", $code=0, $previous)
-    {
-        parent::__construct(
-            'The converter failed due to uncaught exception: ' . $previous->getMessage(),
-            $code,
-            $previous
-        );
-        //$this->$message = 'hello.' . $message . ' ' . $previous->getMessage();
-    }*/
-}
-
-?><?php
-
 namespace WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
@@ -4051,26 +3923,6 @@ namespace WebPConvert\Serve\Exceptions;
 
 use WebPConvert\Exceptions\WebPConvertException;
 
-/**
- *  ConversionFailedException is the base exception in the hierarchy for conversion errors.
- *
- *  Exception hierarchy from here:
- *
- *  WebpConvertException
- *      ConversionFailedException
- *          ConversionSkippedException
- *          ConverterNotOperationalException
- *              SystemRequirementsNotMetException
- *          FileSystemProblemsException
- *              CreateDestinationFileException
- *              CreateDestinationFolderException
- *          InvalidInputException
- *              ConverterNotFoundException
- *              InvalidImageTypeException
- *              InvalidOptionTypeException
- *              TargetNotFoundException
- *          UnhandledException
- */
 class ServeFailedException extends WebPConvertException
 {
     public $description = 'Failed serving';
