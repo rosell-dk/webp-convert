@@ -155,7 +155,8 @@ abstract class AbstractConverter
 
 
     /**
-     *  Default display name is simply the class name (short).
+     *  Get converter name for display (defaults to the class name (short)).
+     *
      *  Converters can override this.
      *
      * @return string  A display name, ie "Gd"
@@ -165,6 +166,20 @@ abstract class AbstractConverter
         // https://stackoverflow.com/questions/19901850/how-do-i-get-an-objects-unqualified-short-class-name/25308464
         return substr(strrchr('\\' . static::class, '\\'), 1);
     }
+
+
+    /**
+     *  Get converter id (defaults to the class name lowercased)
+     *
+     *  Converters can override this.
+     *
+     * @return string  A display name, ie "Gd"
+     */
+    protected static function getConverterId()
+    {
+        return strtolower(self::getConverterDisplayName());
+    }
+
 
     /**
      * Create an instance of this class

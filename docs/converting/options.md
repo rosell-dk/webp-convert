@@ -104,7 +104,10 @@ Type:         string
 Default:      ''
 Supported by: ewww
 ```
-Api key for the ewww converter. PS: This option can alternatively be set through the *EWWW_API_KEY* environment variable.
+Api key for the ewww converter. The option is actually called *api-key*, however, any option can be prefixed with a converter id to only apply to that converter. As this option is only for the ewww converter, it is natural to use the "ewww-" prefix.
+
+Note: This option can alternatively be set through the *EWWW_API_KEY* environment variable. \
+
 
 
 ### `jpeg`
@@ -206,15 +209,10 @@ Type:          string
 Default:       ''
 Supported by:  wpc
 ```
+Api key for the wpc converter. The option is actually called *api-key*, however, any option can be prefixed with a converter id to only apply to that converter. As this option is only for the wpc converter, it is natural to use the "wpc-" prefix. Same goes for the other "wpc-" options.
+
 Note: You can alternatively set the api key through the *WPC_API_KEY* environment variable.
 
-
-### `wpc-api-version`
-```
-Type:          integer (0 - 1)
-Default:       0
-Supported by:  wpc
-```
 
 ### `wpc-api-url`
 ```
@@ -223,6 +221,14 @@ Default:       ''
 Supported by:  wpc
 ```
 Note: You can alternatively set the api url through the *WPC_API_URL* environment variable.
+
+
+### `wpc-api-version`
+```
+Type:          integer (0 - 1)
+Default:       0
+Supported by:  wpc
+```
 
 
 ### `wpc-crypt-api-key-in-transfer`

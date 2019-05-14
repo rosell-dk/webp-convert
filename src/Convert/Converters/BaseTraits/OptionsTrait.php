@@ -25,6 +25,7 @@ trait OptionsTrait
     protected $options;
 
     abstract protected function getMimeTypeOfSource();
+    abstract protected static function getConverterId();
 
     /** @var array  Definitions of general options (the options that are available on all converters) */
     protected static $optionDefinitionsBasic = [
@@ -39,7 +40,8 @@ trait OptionsTrait
     /**
      * Set "provided options" (options provided by the user when calling convert().
      *
-     * This also calculates the protected options array, by merging in the default options.
+     * This also calculates the protected options array, by merging in the default options, merging
+     * jpeg and png options and merging prefixed options (such as 'vips-quality').
      * The resulting options array are set in the protected property $this->options and can be
      * retrieved using the public ::getOptions() function.
      *
@@ -62,6 +64,21 @@ trait OptionsTrait
                 $this->providedOptions = array_merge($this->providedOptions, $this->providedOptions['jpeg']);
             }
         }
+
+        // merge down converter-prefixed options
+        $converterId = self::getConverterId();
+        $strLen = strlen($converterId);
+        //$this->logLn('id:' . $converterId);
+        foreach ($this->providedOptions as $optionKey => $optionValue) {
+            //$this->logLn($optionKey . ':' . $optionValue);
+            //$this->logLn(substr($optionKey, 0, strlen($converterId)));
+            if (substr($optionKey, 0, $strLen + 1) == ($converterId . '-')) {
+                //$this->logLn($optionKey . ':' . $optionValue);
+                //$this->logLn(substr($optionKey, $strLen + 1));
+                $this->providedOptions[substr($optionKey, $strLen + 1)] = $optionValue;
+            }
+        }
+
         // -  Merge $defaultOptions into provided options
         $this->options = array_merge($this->getDefaultOptions(), $this->providedOptions);
     }

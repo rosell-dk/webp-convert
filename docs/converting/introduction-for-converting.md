@@ -42,31 +42,45 @@ The stack converter has two special options:
 | converters (array)        | Converters to try (ids or class names, in case you have your own custom converter) |
 | converter-options (array) | Extra options for specific converters. |
 
+Alternatively to the converter-options array, you can simply prefix options with the converter id.
+
+I recommend leave the converters array at the default unless you have strong reasons not to. Otherwise you might miss out when new converters are added.
+
 ### Example:
 
 ```php
 <?php
 use WebPConvert\Convert\Converters\Stack;
 
-Stack::convert($source, $destination, $options = [
+Stack::convert($source, $destination, $options = [    
+
+    // PS: only set converters if you have strong reasons to do so
     'converters' => [
         'cwebp', 'vips', 'wpc', 'imagickbinary', 'ewww', 'imagick', 'gmagick', 'gmagickbinary', 'gd'
     ],
-    'converter-options' => [
-        'ewww' => [
-            'key' => 'your-api-key-here'
-        ],
+
+    // Any available options can be set here, they dribble down to all converters.
+    'metadata' => 'all',
+
+    // To override for specific converter, you can prefix with converter id:
+    'cwebp-metadata' => 'exif',
+
+    // This can for example be used for setting ewww api key:
+    'ewww-api-key' => 'your-ewww-api-key-here',
+
+    // As an alternative to prefixing, you can use "converter-options" to set a whole bunch of overrides in one go:
+    'converter-options' => [        
         'wpc' => [
-            'api-version' => 1,
-            'url' => 'https://example.com/wpc.php',
-            'api-key' => 'my dog is white',
             'crypt-api-key-in-transfer' => true
-        ]
-    ]
+            'api-key' => 'my dog is white',
+            'api-url' => 'https://example.com/wpc.php',
+            'api-version' => 1,
+        ],
+    ],
 ], $logger=null);
 ```
 
-Note: As an alternative to setting the third party credentials in the options, you can set it through environment variables ("EWWW_API_KEY", "WPC_API_KEY" and "WPC_API_URL").
+Note: As an alternative to setting the third party credentials in the options, you can set them through environment variables ("EWWW_API_KEY", "WPC_API_KEY" and "WPC_API_URL").
 
 ## Configuring the options
 
@@ -76,7 +90,7 @@ Note: As an alternative to setting the third party credentials in the options, y
 
 What should we have done instead? We should have converted with a quality around 50. Of course, quality is still low - we cannot fix that - but it will not be less, *and the converted file will be much smaller*.
 
-As unnecessary large conversions are rarely desirable, this library per default converts jpeg files with the same quality level as the source. This functionality requires that either *imagick* or *gmagick* is installed. When they are, all converters will have the "auto" quality functionality. The *wpc* cloud converter supports auto quality without requiring *imagick* or *gmagick*.
+As unnecessary large conversions are rarely desirable, this library per default converts jpeg files with the same quality level as the source. This functionality requires that either *imagick* or *gmagick* is installed (not necessarily with webp support). When they are, all converters will have the "auto" quality functionality. The *wpc* cloud converter supports auto quality without requiring *imagick* or *gmagick*.
 
 **Q:** What do you get if you convert an excessively high quality jpeg into an excessively high quality webp?\
 **A:** An excessively big file
