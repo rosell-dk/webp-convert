@@ -25,7 +25,7 @@ class Ewww extends AbstractConverter
     protected function getOptionDefinitionsExtra()
     {
         return [
-            ['key', 'string', '', true, true]
+            ['api-key', 'string', '', true, true]
         ];
     }
 
@@ -36,8 +36,8 @@ class Ewww extends AbstractConverter
      */
     private function getKey()
     {
-        if (!empty($this->options['key'])) {
-            return $this->options['key'];
+        if (!empty($this->options['api-key'])) {
+            return $this->options['api-key'];
         }
         if (!empty(getenv('EWWW_API_KEY'))) {
             return getenv('EWWW_API_KEY');
