@@ -25,18 +25,6 @@ class ImagickBinary extends AbstractConverter
     // To futher improve this converter, I could check out:
     // https://github.com/Orbitale/ImageMagickPHP
 
-
-    protected function getOptionDefinitionsExtra()
-    {
-        return [
-            ['alpha-quality', 'integer', 80],
-            ['autofilter', 'boolean', false],
-            ['low-memory', 'boolean', true],
-            ['method', 'number', 6],
-            ['use-nice', 'boolean', false],
-        ];
-    }
-
     public static function imagickInstalled()
     {
         exec('convert -version', $output, $returnCode);

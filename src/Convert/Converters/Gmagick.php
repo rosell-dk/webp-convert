@@ -22,11 +22,6 @@ class Gmagick extends AbstractConverter
         return false;
     }
 
-    protected function getOptionDefinitionsExtra()
-    {
-        return [];
-    }
-
     /**
      * Check (general) operationality of Gmagick converter.
      *

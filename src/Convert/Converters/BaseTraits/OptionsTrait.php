@@ -29,12 +29,20 @@ trait OptionsTrait
 
     /** @var array  Definitions of general options (the options that are available on all converters) */
     protected static $optionDefinitionsBasic = [
-        ['quality', 'number|string', 'auto'],    // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
-        ['max-quality', 'number', 85],
+        ['alpha-quality', 'integer', 80],
+        ['autofilter', 'boolean', false],
         ['default-quality', 'number', 75],       // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
-        ['metadata', 'string', 'none'],
         ['lossless', 'boolean|string', false],  // PS: Default is altered to "auto" for PNG in ::getDefaultOptions()
+        ['low-memory', 'boolean', false],
+        ['max-quality', 'number', 85],
+        ['metadata', 'string', 'none'],
+        ['method', 'number', 6],
+        ['near-lossless', 'integer', 60],
+        ['preset', 'string', null],              // ('default' | 'photo' | 'picture' | 'drawing' | 'icon' | 'text')
+        ['quality', 'number|string', 'auto'],    // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
+        ['size-in-percentage', 'number', null],
         ['skip', 'boolean', false],
+        ['use-nice', 'boolean', false],
     ];
 
     /**
@@ -149,10 +157,13 @@ trait OptionsTrait
     /**
      * Get definitions of extra options unique for the actual converter.
      *
-     * @return array  A numeric array of definitions of all options for the converter.
+     * @return array  A numeric array of definitions of extra options for the converter.
      *                Each definition is a numeric array with three items: [option id, type, default value]
      */
-    abstract protected function getOptionDefinitionsExtra();
+    protected function getOptionDefinitionsExtra()
+    {
+        return [];
+    }
 
     /**
      * Get option definitions for the converter (includes both general options and the extra options for the converter)

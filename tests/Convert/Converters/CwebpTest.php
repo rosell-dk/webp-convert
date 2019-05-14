@@ -60,6 +60,9 @@ class CwebpTest extends TestCase
         $commandLineOptions = $cwebpExposer->createCommandLineOptions();
         //$this->assertEquals('e', $commandLineOption); // use this to quickly see it...
 
+        // Per default we have no preset set
+        $this->assertNotRegExp('#-preset#', $commandLineOptions);
+
         // Metadata is per default none
         $this->assertRegExp('#-metadata none#', $commandLineOptions);
 
@@ -95,6 +98,7 @@ class CwebpTest extends TestCase
             'quality' => 70,
             'method' => 3,
             'size-in-percentage' => 55,
+            'preset' => 'picture'
         ];
         $cwebp = new Cwebp($source, $source . '.webp', $options);
         $cwebpExposer = new CwebpExposer($cwebp);
@@ -102,6 +106,9 @@ class CwebpTest extends TestCase
         //$cwebpExposer->prepareOptions();
 
         $commandLineOptions = $cwebpExposer->createCommandLineOptions();
+
+        // Preset
+        $this->assertRegExp('#-preset picture#', $commandLineOptions);
 
         // Size
         $fileSizeInBytes = floor($options['size-in-percentage']/100 * filesize($source));

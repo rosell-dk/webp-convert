@@ -713,17 +713,10 @@ class Cwebp extends AbstractConverter
     protected function getOptionDefinitionsExtra()
     {
         return [
-            ['alpha-quality', 'integer', 80],
-            ['autofilter', 'boolean', false],
             ['command-line-options', 'string', ''],
-            ['low-memory', 'boolean', false],
-            ['method', 'number', 6],
-            ['near-lossless', 'integer', 60],
             ['rel-path-to-precompiled-binaries', 'string', './Binaries'],
-            ['size-in-percentage', 'number', null],
             ['try-common-system-paths', 'boolean', true],
             ['try-supplied-binary-for-os', 'boolean', true],
-            ['use-nice', 'boolean', false],
         ];
     }
 
@@ -825,6 +818,11 @@ class Cwebp extends AbstractConverter
         // Metadata (all, exif, icc, xmp or none (default))
         // Comma-separated list of existing metadata to copy from input to output
         $cmdOptions[] = '-metadata ' . $options['metadata'];
+
+        // preset. Appears first in the list as recommended in the docs
+        if (!is_null($options['preset'])) {
+            $cmdOptions[] = '-preset ' . $options['preset'];
+        }
 
         // Size
         $addedSizeOption = false;
@@ -1493,11 +1491,6 @@ class Gd extends AbstractConverter
     private $errorMessageWhileCreating = '';
     private $errorNumberWhileCreating;
 
-    protected function getOptionDefinitionsExtra()
-    {
-        return [];
-    }
-
     /**
      * Check (general) operationality of Gd converter.
      *
@@ -1942,11 +1935,6 @@ class Gmagick extends AbstractConverter
         return false;
     }
 
-    protected function getOptionDefinitionsExtra()
-    {
-        return [];
-    }
-
     /**
      * Check (general) operationality of Gmagick converter.
      *
@@ -2101,13 +2089,6 @@ class GmagickBinary extends AbstractConverter
 {
     use ExecTrait;
 
-    protected function getOptionDefinitionsExtra()
-    {
-        return [
-            ['use-nice', 'boolean', false],
-        ];
-    }
-
     private static function getGmagickPath()
     {
         if (empty(getenv('GMAGICK_PATH'))) {
@@ -2211,11 +2192,6 @@ class Imagick extends AbstractConverter
     public function supportsLossless()
     {
         return false;
-    }
-
-    protected function getOptionDefinitionsExtra()
-    {
-        return [];
     }
 
     /**
@@ -2387,18 +2363,6 @@ class ImagickBinary extends AbstractConverter
 
     // To futher improve this converter, I could check out:
     // https://github.com/Orbitale/ImageMagickPHP
-
-
-    protected function getOptionDefinitionsExtra()
-    {
-        return [
-            ['alpha-quality', 'integer', 80],
-            ['autofilter', 'boolean', false],
-            ['low-memory', 'boolean', true],
-            ['method', 'number', 6],
-            ['use-nice', 'boolean', false],
-        ];
-    }
 
     public static function imagickInstalled()
     {
@@ -2754,9 +2718,6 @@ class Vips extends AbstractConverter
     {
         return [
             ['smart-subsample', 'boolean', false],
-            ['alpha-quality', 'integer', 80],
-            ['near-lossless', 'integer', 60],
-            ['preset', 'integer', 0],  // preset. 0:default, 1:picture, 2:photo, 3:drawing, 4:icon, 5:text, 6:last
         ];
     }
 
@@ -2858,8 +2819,13 @@ class Vips extends AbstractConverter
         if ($this->options['alpha-quality'] !== 100) {
             $options['alpha_q'] = $this->options['alpha-quality'];
         }
-        if ($this->options['preset'] !== 0) {
-            $options['preset'] = $this->options['preset'];
+        if (!is_null($this->options['preset'])) {
+            // preset. 0:default, 1:picture, 2:photo, 3:drawing, 4:icon, 5:text, 6:last
+
+            $options['preset'] = array_search(
+                $this->options['preset'],
+                ['default', 'picture', 'photo', 'drawing', 'icon', 'text']
+            );
         }
         if ($this->options['near-lossless'] !== 100) {
             if ($options['lossless'] === true) {
@@ -3023,8 +2989,8 @@ class Wpc extends AbstractConverter
      */
     private function getApiUrl()
     {
-        if (!empty($this->options['url'])) {
-            return $this->options['url'];
+        if (!empty($this->options['api-url'])) {
+            return $this->options['api-url'];
         }
         if (!empty(getenv('WPC_API_URL'))) {
             return getenv('WPC_API_URL');
@@ -3115,7 +3081,7 @@ class Wpc extends AbstractConverter
         unset($optionsToSend['converters']);
         unset($optionsToSend['secret']);
         unset($optionsToSend['api-key']);
-        unset($optionsToSend['url']);
+        unset($optionsToSend['api-url']);
 
         return $optionsToSend;
     }

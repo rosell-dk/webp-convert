@@ -31,9 +31,6 @@ class Vips extends AbstractConverter
     {
         return [
             ['smart-subsample', 'boolean', false],
-            ['alpha-quality', 'integer', 80],
-            ['near-lossless', 'integer', 60],
-            ['preset', 'integer', 0],  // preset. 0:default, 1:picture, 2:photo, 3:drawing, 4:icon, 5:text, 6:last
         ];
     }
 
@@ -135,8 +132,13 @@ class Vips extends AbstractConverter
         if ($this->options['alpha-quality'] !== 100) {
             $options['alpha_q'] = $this->options['alpha-quality'];
         }
-        if ($this->options['preset'] !== 0) {
-            $options['preset'] = $this->options['preset'];
+        if (!is_null($this->options['preset'])) {
+            // preset. 0:default, 1:picture, 2:photo, 3:drawing, 4:icon, 5:text, 6:last
+
+            $options['preset'] = array_search(
+                $this->options['preset'],
+                ['default', 'picture', 'photo', 'drawing', 'icon', 'text']
+            );
         }
         if ($this->options['near-lossless'] !== 100) {
             if ($options['lossless'] === true) {

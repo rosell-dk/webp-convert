@@ -23,11 +23,6 @@ class Imagick extends AbstractConverter
         return false;
     }
 
-    protected function getOptionDefinitionsExtra()
-    {
-        return [];
-    }
-
     /**
      * Check operationality of Imagick converter.
      *

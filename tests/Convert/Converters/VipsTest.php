@@ -28,7 +28,7 @@ class VipsTest extends TestCase
 
         $options = [
             'smart-subsample' => true,
-            'preset' => 1,
+            'preset' => 'text',
         ];
         ConverterTestHelper::runAllConvertTests($this, 'Vips', $options);
     }
@@ -66,7 +66,7 @@ class VipsTest extends TestCase
             'smart-subsample' => true,
             'near-lossless' => 90,
             'lossless' => true,
-            'preset' => 1,
+            'preset' => 'picture',      // In vips, this has the constant: 1
         ];
         $vipsExposer = $this->createVipsExposer('test.png', $options);
 
@@ -75,7 +75,7 @@ class VipsTest extends TestCase
         // Check some options that are straightforwardly copied
         $this->assertSame($options['lossless'], $vipsParams['lossless']);
         $this->assertSame($options['smart-subsample'], $vipsParams['smart_subsample']);
-        $this->assertSame($options['preset'], $vipsParams['preset']);
+        $this->assertSame(1, $vipsParams['preset']);
 
         // When near-lossless is set, the value should be copied to Q
         $this->assertSame($options['near-lossless'], $vipsParams['Q']);

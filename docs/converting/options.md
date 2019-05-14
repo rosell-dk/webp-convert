@@ -2,6 +2,15 @@
 
 Note: The *stack* and *wpc* converters supports the options of its containing converters. Writing this on every option would be tedious, so I have not.
 
+### `alpha-quality`
+```
+Type:         integer (0-100)
+Default:      80
+Supported by: cwebp, vips and imagickbinary
+```
+Triggers lossy encoding of alpha channel with given quality.
+
+
 ### `autofilter`
 ```
 Type:         boolean
@@ -185,6 +194,15 @@ Override selected options when the source is a png. The options provided here ar
 Read about this option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md#png-og-jpeg-specific-options).
 
 
+### `preset`
+```
+Type:          string  ('default' | 'photo' | 'picture' | 'drawing' | 'icon' | 'text')
+Default:       []
+Supported by:  cwebp, vips
+```
+Specify a set of pre-defined parameters to suit a particular type of source material. Overrides many of the other options (but not *quality*).
+
+
 ### `quality`
 ```
 Type:          integer (0-100) | "auto"
@@ -201,6 +219,31 @@ Default:       null
 Supported by:  cwebp
 ```
 This option sets the file size, *cwebp* should aim for, in percentage of the original. If you for example set it to *45*, and the source file is 100 kb, *cwebp* will try to create a file with size 45 kb (we use the `-size` option). This is an excellent alternative to the "quality:auto" option. If the quality detection isn't working on your system (and you do not have the rights to install imagick or gmagick), you should consider using this options instead. *Cwebp* is generally able to create webp files with the same quality at about 45% the size. So *45* would be a good choice. The option overrides the quality option. And note that it slows down the conversion - it takes about 2.5 times longer to do a conversion this way, than when quality is specified. Default is *off* (null)
+
+
+### `skip`
+```
+Type:          boolean
+Default:       false
+Supported by:  all
+```
+Simply skips conversion. For example this can be used to skip png conversion for a specific converter like this:
+```php
+$options = [
+    'png' => [
+        'gd-skip' => true,
+    ]
+];
+```
+
+
+### `use-nice`
+```
+Type:          boolean
+Default:       false
+Supported by:  cwebp, gmagickbinary, imagickbinary
+```
+This option only applies to converters which are using exec() to execute a binary directly on the host. If *use-nice* is set, it will be examined if the [`nice`]( https://en.wikipedia.org/wiki/Nice_(Unix)) command is available on the host. If it is, the binary is executed using *nice*. This assigns low priority to the process and will save system resources - but result in slower conversion.
 
 
 ### `wpc-api-key`

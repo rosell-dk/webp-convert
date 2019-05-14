@@ -25,17 +25,10 @@ class Cwebp extends AbstractConverter
     protected function getOptionDefinitionsExtra()
     {
         return [
-            ['alpha-quality', 'integer', 80],
-            ['autofilter', 'boolean', false],
             ['command-line-options', 'string', ''],
-            ['low-memory', 'boolean', false],
-            ['method', 'number', 6],
-            ['near-lossless', 'integer', 60],
             ['rel-path-to-precompiled-binaries', 'string', './Binaries'],
-            ['size-in-percentage', 'number', null],
             ['try-common-system-paths', 'boolean', true],
             ['try-supplied-binary-for-os', 'boolean', true],
-            ['use-nice', 'boolean', false],
         ];
     }
 
@@ -137,6 +130,11 @@ class Cwebp extends AbstractConverter
         // Metadata (all, exif, icc, xmp or none (default))
         // Comma-separated list of existing metadata to copy from input to output
         $cmdOptions[] = '-metadata ' . $options['metadata'];
+
+        // preset. Appears first in the list as recommended in the docs
+        if (!is_null($options['preset'])) {
+            $cmdOptions[] = '-preset ' . $options['preset'];
+        }
 
         // Size
         $addedSizeOption = false;

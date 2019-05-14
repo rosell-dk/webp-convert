@@ -21,13 +21,6 @@ class GmagickBinary extends AbstractConverter
 {
     use ExecTrait;
 
-    protected function getOptionDefinitionsExtra()
-    {
-        return [
-            ['use-nice', 'boolean', false],
-        ];
-    }
-
     private static function getGmagickPath()
     {
         if (empty(getenv('GMAGICK_PATH'))) {
