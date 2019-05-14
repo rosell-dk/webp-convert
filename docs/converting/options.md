@@ -2,7 +2,7 @@
 
 This is a list of all options available for converting.
 
-Note that the *stack* and *wpc* converters supports the options of its containing converters. Writing this on every option would be tedious, so I have not.<br><br>
+Note that as the *stack* and *wpc* converters delegates the options to their containing converters, the options that they supports depend upon the converters they have been configured to use (and which of them that are operational)<br><br>
 
 ### `alpha-quality`
 ```
