@@ -85,7 +85,7 @@ $options = [
     'vips-quality' => 72,
 ]
 ```
-<br><br>
+<br>
 
 ### `cwebp-command-line-options`
 ```
