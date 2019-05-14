@@ -219,7 +219,7 @@ Default:       null
 Supported by:  cwebp
 ```
 This option sets the file size, *cwebp* should aim for, in percentage of the original. If you for example set it to *45*, and the source file is 100 kb, *cwebp* will try to create a file with size 45 kb (we use the `-size` option). This is an excellent alternative to the "quality:auto" option. If the quality detection isn't working on your system (and you do not have the rights to install imagick or gmagick), you should consider using this options instead. *Cwebp* is generally able to create webp files with the same quality at about 45% the size. So *45* would be a good choice. The option overrides the quality option. And note that it slows down the conversion - it takes about 2.5 times longer to do a conversion this way, than when quality is specified. Default is *off* (null)
-<br>
+
 <br>
 ### `skip`
 ```
@@ -235,7 +235,7 @@ $options = [
     ]
 ];
 ```
-<br>
+
 <br>
 ### `use-nice`
 ```
