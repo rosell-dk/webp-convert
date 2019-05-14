@@ -246,6 +246,15 @@ Supported by:  cwebp, gmagickbinary, imagickbinary
 This option only applies to converters which are using exec() to execute a binary directly on the host. If *use-nice* is set, it will be examined if the [`nice`]( https://en.wikipedia.org/wiki/Nice_(Unix)) command is available on the host. If it is, the binary is executed using *nice*. This assigns low priority to the process and will save system resources - but result in slower conversion.
 
 
+### `vips-smart-subsample`
+```
+Type:          boolean
+Default:       false
+Supported by:  vips
+```
+This feature seems not to be part of *libwebp* but intrinsic to vips. According to the [vips docs](https://jcupitt.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave), it enables high quality chroma subsampling.
+
+
 ### `wpc-api-key`
 ```
 Type:          string
