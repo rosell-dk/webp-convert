@@ -1,26 +1,27 @@
 # Options
 
 Note: The *stack* and *wpc* converters supports the options of its containing converters. Writing this on every option would be tedious, so I have not.
-
-## `alpha-quality`
+\
+\
+### `alpha-quality`
 ```
 Type:         integer (0-100)
 Default:      80
 Supported by: cwebp, vips and imagickbinary
 ```
 Triggers lossy encoding of alpha channel with given quality.
-
-
-## `autofilter`
+\
+\
+### `autofilter`
 ```
 Type:         boolean
 Default:      false
 Supported by: cwebp, vips and imagickbinary
 ```
 Turns auto-filter on. This algorithm will spend additional time optimizing the filtering strength to reach a well-balanced quality. Unfortunately, it is extremely expensive in terms of computation. It takes about 5-10 times longer to do a conversion. A 1MB picture which perhaps typically takes about 2 seconds to convert, will takes about 15 seconds to convert with auto-filter. So in most cases, you will want to leave this at its default, which is off.
-
-
-## `converters`
+\
+\
+### `converters`
 ```
 Type:         array
 Default:      ['cwebp', 'vips', 'wpc', 'imagickbinary', 'ewww', 'imagick', 'gmagick', 'gmagickbinary', 'gd']
@@ -61,7 +62,7 @@ Alternatively, converter options can be set using the *converter-options* option
 Read more about the stack converter in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md#the-stack-converter).
 
 
-## `converter-options`
+### `converter-options`
 ```
 Type:         array
 Default:      []
@@ -89,7 +90,7 @@ $options = [
 ]
 ```
 
-## `cwebp-command-line-options`
+### `cwebp-command-line-options`
 ```
 Type:         string
 Default:      ''
@@ -98,7 +99,7 @@ Supported by: cwebp
 This allows you to set any parameter available for cwebp in the same way as you would do when executing *cwebp*. You could ie set it to "-sharpness 5 -mt -crop 10 10 40 40". Read more about all the available parameters in [the docs](https://developers.google.com/speed/webp/docs/cwebp)
 
 
-## `default-quality`
+### `default-quality`
 ```
 Type:          integer (0-100)
 Default:       75 for jpegs and 85 for pngs
@@ -107,7 +108,7 @@ Supported by:  all (cwebp, ewww, gd, gmagick, gmagickbinary, imagick, imagickbin
 Read about this option in the ["auto quality" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md#auto-quality).
 
 
-## `ewww-api-key`
+### `ewww-api-key`
 ```
 Type:         string
 Default:      ''
@@ -119,7 +120,7 @@ Note: This option can alternatively be set through the *EWWW_API_KEY* environmen
 
 
 
-## `jpeg`
+### `jpeg`
 ```
 Type:          array
 Default:       []
@@ -129,7 +130,7 @@ Override selected options when the source is a jpeg. The options provided here a
 Read about this option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md#png-og-jpeg-specific-options).
 
 
-## `lossless`
+### `lossless`
 ```
 Type:          boolean | "auto"
 Default:       "auto" for jpegs and false for pngs
@@ -138,7 +139,7 @@ Supported by:  cwebp, imagickbinary, vips  (the other converters always uses los
 Read about this option in the ["lossy/lossless" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md#auto-selecting-between-losslesslossy-encoding).
 
 
-## `low-memory`
+### `low-memory`
 ```
 Type:          false
 Default:       ''
@@ -147,7 +148,7 @@ Supported by:  cwebp, imagickbinary
 Reduce memory usage of lossy encoding at the cost of ~30% longer encoding time and marginally larger output size. Read more in [the docs](https://developers.google.com/speed/webp/docs/cwebp).
 
 
-## `max-quality`
+### `max-quality`
 ```
 Type:          integer (0-100)
 Default:       85
@@ -156,7 +157,7 @@ Supported by:  all (cwebp, ewww, gd, gmagick, gmagickbinary, imagick, imagickbin
 Read about this option in the ["auto quality" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md#auto-quality).
 
 
-## `metadata`
+### `metadata`
 ```
 Type:          string ("all" | "none" | "exif" | "icc" | "xmp")
 Default:       'none'
@@ -166,7 +167,7 @@ Supported by:  'none' is supported by all. 'all' is supported by all, except *gd
 Only *cwebp* supports all values. *gd* will always remove all metadata. *ewww*, *imagick* and *gmagick* can either strip all or keep all (they will keep all, unless the option is set to *none*)
 
 
-## `method`
+### `method`
 ```
 Type:          integer (0-6)
 Default:       6
@@ -175,7 +176,7 @@ Supported by:  cwebp, imagickbinary
 This parameter controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. 0 is fastest. 6 results in best quality.
 
 
-## `near-lossless`
+### `near-lossless`
 ```
 Type:          integer (0-100)
 Default:       60
@@ -184,7 +185,7 @@ Supported by:  cwebp, imagickbinary
 Specify the level of near-lossless image preprocessing. This option adjusts pixel values to help compressibility, but has minimal impact on the visual quality. It triggers lossless compression mode automatically. The range is 0 (maximum preprocessing) to 100 (no preprocessing). The typical value is around 60. Read more [here](https://groups.google.com/a/webmproject.org/forum/#!topic/webp-discuss/0GmxDmlexek)
 
 
-## `png`
+### `png`
 ```
 Type:          array
 Default:       []
@@ -194,7 +195,7 @@ Override selected options when the source is a png. The options provided here ar
 Read about this option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md#png-og-jpeg-specific-options).
 
 
-## `preset`
+### `preset`
 ```
 Type:          string  ('default' | 'photo' | 'picture' | 'drawing' | 'icon' | 'text')
 Default:       []
@@ -203,7 +204,7 @@ Supported by:  cwebp, vips
 Specify a set of pre-defined parameters to suit a particular type of source material. Overrides many of the other options (but not *quality*).
 
 
-## `quality`
+### `quality`
 ```
 Type:          integer (0-100) | "auto"
 Default:       "auto" for jpegs and 85 for pngs
@@ -212,7 +213,7 @@ Supported by:  all (cwebp, ewww, gd, gmagick, gmagickbinary, imagick, imagickbin
 Quality for lossy encoding. Read about the "auto" option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md#auto-quality).
 
 
-## `size-in-percentage`
+### `size-in-percentage`
 ```
 Type:          integer (0-100) | null
 Default:       null
@@ -221,7 +222,7 @@ Supported by:  cwebp
 This option sets the file size, *cwebp* should aim for, in percentage of the original. If you for example set it to *45*, and the source file is 100 kb, *cwebp* will try to create a file with size 45 kb (we use the `-size` option). This is an excellent alternative to the "quality:auto" option. If the quality detection isn't working on your system (and you do not have the rights to install imagick or gmagick), you should consider using this options instead. *Cwebp* is generally able to create webp files with the same quality at about 45% the size. So *45* would be a good choice. The option overrides the quality option. And note that it slows down the conversion - it takes about 2.5 times longer to do a conversion this way, than when quality is specified. Default is *off* (null)
 
 
-## `skip`
+### `skip`
 ```
 Type:          boolean
 Default:       false
@@ -237,7 +238,7 @@ $options = [
 ```
 
 
-## `use-nice`
+### `use-nice`
 ```
 Type:          boolean
 Default:       false
@@ -246,7 +247,7 @@ Supported by:  cwebp, gmagickbinary, imagickbinary
 This option only applies to converters which are using exec() to execute a binary directly on the host. If *use-nice* is set, it will be examined if the [`nice`]( https://en.wikipedia.org/wiki/Nice_(Unix)) command is available on the host. If it is, the binary is executed using *nice*. This assigns low priority to the process and will save system resources - but result in slower conversion.
 
 
-## `vips-smart-subsample`
+### `vips-smart-subsample`
 ```
 Type:          boolean
 Default:       false
@@ -255,7 +256,7 @@ Supported by:  vips
 This feature seems not to be part of *libwebp* but intrinsic to vips. According to the [vips docs](https://jcupitt.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave), it enables high quality chroma subsampling.
 
 
-## `wpc-api-key`
+### `wpc-api-key`
 ```
 Type:          string
 Default:       ''
@@ -266,7 +267,7 @@ Api key for the wpc converter. The option is actually called *api-key*, however,
 Note: You can alternatively set the api key through the *WPC_API_KEY* environment variable.
 
 
-## `wpc-api-url`
+### `wpc-api-url`
 ```
 Type:          string
 Default:       ''
@@ -275,7 +276,7 @@ Supported by:  wpc
 Note: You can alternatively set the api url through the *WPC_API_URL* environment variable.
 
 
-## `wpc-api-version`
+### `wpc-api-version`
 ```
 Type:          integer (0 - 1)
 Default:       0
@@ -283,14 +284,14 @@ Supported by:  wpc
 ```
 
 
-## `wpc-crypt-api-key-in-transfer`
+### `wpc-crypt-api-key-in-transfer`
 ```
 Type:          boolean
 Default:       false
 Supported by:  wpc
 ```
 
-## `wpc-secret`
+### `wpc-secret`
 ```
 Type:          string
 Default:       ''
