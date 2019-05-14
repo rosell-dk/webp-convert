@@ -20,75 +20,6 @@ Supported by: cwebp, vips and imagickbinary
 ```
 Turns auto-filter on. This algorithm will spend additional time optimizing the filtering strength to reach a well-balanced quality. Unfortunately, it is extremely expensive in terms of computation. It takes about 5-10 times longer to do a conversion. A 1MB picture which perhaps typically takes about 2 seconds to convert, will takes about 15 seconds to convert with auto-filter. So in most cases, you will want to leave this at its default, which is off.<br><br>
 
-### `converters`
-```
-Type:         array
-Default:      ['cwebp', 'vips', 'wpc', 'imagickbinary', 'ewww', 'imagick', 'gmagick', 'gmagickbinary', 'gd']
-Supported by: stack
-```
-Converters to try. Each item can be:
-
-- An id (ie "cwebp")
-- A fully qualified class name (in case you have programmed your own custom converter)
-- An array with two keys: "converter" and "options".
-
-Example:
-```php
-$options = [
-    'quality' => 71,
-    'converters' => [
-        'cwebp',        
-        [
-            'converter' => 'vips',
-            'options' => [
-                'quality' => 72                
-            ]
-        ],
-        [
-            'converter' => 'ewww',
-            'options' => [
-                'quality' => 73               
-            ]
-        ],
-        'wpc',
-        'imagickbinary',
-        '\\MyNameSpace\\WonderConverter'
-    ],
-];
-```
-Alternatively, converter options can be set using the *converter-options* option.
-
-Read more about the stack converter in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md#the-stack-converter).<br><br>
-
-### `converter-options`
-```
-Type:         array
-Default:      []
-Supported by: stack
-```
-Extra options for specific converters. Example for setting quality to 72 for vips:
-
-```php
-$options = [
-    'quality' => 71,    // will apply to all converters, except vips.
-    'converter-options' => [
-        'vips' => [
-            'quality' => 72
-        ],
-    ]    
-]
-```
-
-As an alternative to this option, you can simply prefix options with a converter id in order to override it for that particular converter. With prefix, you can achieve the same as above this way:
-
-```php
-$options = [
-    'quality' => 71,
-    'vips-quality' => 72,
-]
-```
-<br>
-
 ### `cwebp-command-line-options`
 ```
 Type:         string
@@ -217,6 +148,118 @@ $options = [
     'png' => [
         'gd-skip' => true,
     ]
+];
+```
+<br>
+
+### `stack-converters`
+```
+Type:         array
+Default:      ['cwebp', 'vips', 'wpc', 'imagickbinary', 'ewww', 'imagick', 'gmagick', 'gmagickbinary', 'gd']
+Supported by: stack
+```
+Converters to try. Each item can be:
+
+- An id (ie "cwebp")
+- A fully qualified class name (in case you have programmed your own custom converter)
+- An array with two keys: "converter" and "options".
+
+Example:
+```php
+$options = [
+    'quality' => 71,
+    'converters' => [
+        'cwebp',        
+        [
+            'converter' => 'vips',
+            'options' => [
+                'quality' => 72                
+            ]
+        ],
+        [
+            'converter' => 'ewww',
+            'options' => [
+                'quality' => 73               
+            ]
+        ],
+        'wpc',
+        'imagickbinary',
+        '\\MyNameSpace\\WonderConverter'
+    ],
+];
+```
+Alternatively, converter options can be set using the *converter-options* option.
+
+Read more about the stack converter in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md#the-stack-converter).<br><br>
+
+### `stack-converter-options`
+```
+Type:         array
+Default:      []
+Supported by: stack
+```
+Extra options for specific converters. Example for setting quality to 72 for vips:
+
+```php
+$options = [
+    'quality' => 71,    // will apply to all converters, except vips.
+    'converter-options' => [
+        'vips' => [
+            'quality' => 72
+        ],
+    ]    
+]
+```
+
+As an alternative to this option, you can simply prefix options with a converter id in order to override it for that particular converter. With prefix, you can achieve the same as above this way:
+
+```php
+$options = [
+    'quality' => 71,
+    'vips-quality' => 72,
+]
+```
+<br>
+
+### `stack-shuffle`
+```
+Type:          boolean
+Default:       false
+Supported by:  stack
+```
+Shuffle the converters in the stack. This can for example be used to balance load between several wpc instances in a substack, like this:
+
+```php
+$options = [
+    'converters' => [
+        'cwebp', 'vips',
+        [
+            'converter' => 'stack',
+            'options' => [
+                'stack-shuffle' => true,
+
+                'crypt-api-key-in-transfer' => true,
+                'api-version' => 1,
+
+                'converters' => [
+                    [
+                        'converter' => 'wpc',
+                        'options' => [
+                            'api-key' => 'my dog is white',
+                            'api-url' => 'https://example.com/wpc.php',
+                        ]
+                    ],
+                    [
+                        'converter' => 'wpc',
+                        'options' => [
+                            'api-key' => 'my dog is also white',
+                            'api-url' => 'https://example.com/wpc.php',
+                        ]
+                    ],
+                ]
+            ]
+        ]
+    ],
 ];
 ```
 <br>
