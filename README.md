@@ -68,7 +68,7 @@ WebPConvert::serveConverted($source, $destination, [
 The following introduction is a *must-read* (for 2.0):
 [docs/convert-introduction.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/serving/introduction-for-serving.md).
 
-The old introduction (for 1.3.9) is available here: [docs/api/convert-and-serve.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert-and-serve.md)
+The old introduction (for 1.3.9) is available here: [docs/serving/v1.3/convert-and-serve.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert-and-serve.md)
 
 
 ## WebP on demand

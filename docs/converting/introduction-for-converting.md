@@ -50,7 +50,7 @@ use WebPConvert\Convert\Converters\Stack;
 
 Stack::convert($source, $destination, $options = [
     'converters' => [
-        'cwebp', 'vips', 'imagick', 'gmagick', 'gmagickbinary', 'gd', 'wpc', 'ewww'
+        'cwebp', 'vips', 'wpc', 'imagickbinary', 'ewww', 'imagick', 'gmagick', 'gmagickbinary', 'gd'
     ],
     'converter-options' => [
         'ewww' => [
@@ -125,7 +125,7 @@ $options = [
     ],
     'jpeg' => [
         'lossless' => false,      /* We could also choose 'auto' but that would almost always result in lossy anyway) */
-        'quality' => 'auto',      /* Set to same as jpeg (requires imagick or gmagick) */
+        'quality' => 'auto',      /* Set to same as jpeg (requires imagick or gmagick extension, not necessarily compiled with webp) */
         'max-quality' => 80,      /* Only relevant if quality is set to "auto" */
         'default-quality' => 75,  /* Fallback quality if quality detection isnt working */
     ]
@@ -146,13 +146,18 @@ $options = [
 ];
 ```
 
+## Available options
+
+All available options are documented [here](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/options.md).
+
+
 ## General options overview
 
 | Option            | Default (jpeg)     | Default (png)       | Description                                                                        |
 | ----------------- | ------------------ | ------------------- | ---------------------------------------------------------------------------------- |
 | quality           | "auto"             | 85                  | See the "Auto quality" section above. |
 | max-quality       | 85                 | 85                  | Only relevant for jpegs and when quality is set to "auto".                         |
-| default-quality   | 75                 | 75                  |                                                                                    |
+| default-quality   | 75                 | 85                  |                                                                                    |
 | metadata          | "none"             | "none"              | Valid values: "all", "none", "exif", "icc", "xmp".<br><br>Note: Currently only *cwebp* supports all values. *gd* will always remove all metadata. *ewww*, *imagick* and *gmagick* can either strip all, or keep all (they will keep all, unless metadata is set to *none*)       |
 | lossless          | false              | "auto"              | See the "Auto selecting between lossless/lossy encoding" section above   |
 | jpeg              | -                  | -                   | Array of options which will be merged into the other options when source is a JPEG |
@@ -163,6 +168,6 @@ $options = [
 ## More info
 
 - As part of the 2.0 release, all classes and methods are doc commented. I have not uploaded the automated documentation yet (I shall do!), but you can easily create it with you favorite tool.
-- The converters are described in more detail here: [docs/converters.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/converters.md).
+- The converters are described in more detail here (for 1.3.9): [docs/converting/v1.3/converters.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/converters.md).
 - On the github wiki you can find installation instructions for imagick with webp, gd with webp, etc.
-- This document is a newly written introduction to the convert api, which has been created as part of the 2.0 release. The old introduction, which was made for 1.4 is available here: [docs/api/convert.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert.md).
+- This document is a newly written introduction to the convert api, which has been created as part of the 2.0 release. The old introduction, which was made for 1.3 is available here: [docs/converting/v1.3/convert.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert.md).

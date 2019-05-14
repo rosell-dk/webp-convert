@@ -29,7 +29,7 @@ class Stack extends AbstractConverter
             [
                 'converters',
                 'array', [
-                    'cwebp', 'vips', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'gmagickbinary'
+                    'cwebp', 'vips', 'wpc', 'imagickbinary', 'ewww', 'imagick', 'gmagick', 'gmagickbinary', 'gd'
                 ],
                 true
             ],
