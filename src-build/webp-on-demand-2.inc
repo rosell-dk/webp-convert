@@ -2518,6 +2518,7 @@ class Stack extends AbstractConverter
                 ],
                 true
             ],
+            ['shuffle', 'boolean', false],
         ];
     }
 
@@ -2604,6 +2605,9 @@ class Stack extends AbstractConverter
 
         $anyRuntimeErrors = false;
 
+        if ($options['shuffle']) {
+            shuffle($options['converters']);
+        }
         foreach ($options['converters'] as $converter) {
             if (is_array($converter)) {
                 $converterId = $converter['converter'];
