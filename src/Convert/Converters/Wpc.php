@@ -86,8 +86,8 @@ class Wpc extends AbstractConverter
      */
     private function getApiUrl()
     {
-        if (!empty($this->options['url'])) {
-            return $this->options['url'];
+        if (!empty($this->options['api-url'])) {
+            return $this->options['api-url'];
         }
         if (!empty(getenv('WPC_API_URL'))) {
             return getenv('WPC_API_URL');
@@ -178,7 +178,7 @@ class Wpc extends AbstractConverter
         unset($optionsToSend['converters']);
         unset($optionsToSend['secret']);
         unset($optionsToSend['api-key']);
-        unset($optionsToSend['url']);
+        unset($optionsToSend['api-url']);
 
         return $optionsToSend;
     }

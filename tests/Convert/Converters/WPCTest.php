@@ -33,7 +33,7 @@ class WpcTest extends TestCase
             $source = $this->imageDir . '/test.png';
             Wpc::convert($source, $source . '.webp', [
                 'api-version' => 0,
-                'url' => getenv('WPC_API_URL_API0')
+                'api-url' => getenv('WPC_API_URL_API0')
             ]);
         }
     }
@@ -78,7 +78,7 @@ class WpcTest extends TestCase
         $source = $this->imageDir . '/test.png';
         $options = [
             'api-version' => 0,
-            'url' => getenv('WPC_API_URL_API0'),
+            'api-url' => getenv('WPC_API_URL_API0'),
             'lossless' => true,
         ];
 
@@ -125,7 +125,7 @@ class WpcTest extends TestCase
         $this->expectException(ConverterNotOperationalException::class);
 
         Wpc::convert($this->imageDir . '/test.png', $this->imageDir . '/test.webp', [
-            'url' => 'badurl!',
+            'api-url' => 'badurl!',
             'secret' => 'bad dog!',
         ]);
     }
@@ -136,7 +136,7 @@ class WpcTest extends TestCase
 
         try {
             Wpc::convert($this->imageDir . '/test.png', $this->imageDir . '/test.webp', [
-                'url' => 'https://google.com/hello',
+                'api-url' => 'https://google.com/hello',
                 'secret' => 'bad dog!',
             ]);
             $this->fail('Expected an exception');
@@ -156,7 +156,7 @@ class WpcTest extends TestCase
 
         try {
             Wpc::convert($this->imageDir . '/test.png', $this->imageDir . '/test.webp', [
-                'url' => 'https://www.google.com/',
+                'api-url' => 'https://www.google.com/',
                 'secret' => 'bad dog!',
             ]);
             $this->fail('Expected an exception');
@@ -181,7 +181,7 @@ class WpcTest extends TestCase
         if (!empty(getenv('WPC_API_URL_API0'))) {
             ConverterTestHelper::runAllConvertTests($this, 'Wpc', [
                 'api-version' => 0,
-                'url' => getenv('WPC_API_URL_API0')
+                'api-url' => getenv('WPC_API_URL_API0')
             ]);
         }
     }
@@ -207,7 +207,7 @@ class WpcTest extends TestCase
         $this->expectException(ConverterNotOperationalException::class);
 
         Wpc::convert($this->imageDir . '/test.png', $this->imageDir . '/test.webp', [
-            'url' => '',
+            'api-url' => '',
             'secret' => 'bad dog!',
         ]);
     }*/
@@ -224,7 +224,7 @@ class WpcTest extends TestCase
 
         Wpc::convert($this->imageDir . '/test.png', $this->imageDir . '/test.webp', [
             'api-version' => 0,
-            'url' => getenv('WPC_API_URL'),
+            'api-url' => getenv('WPC_API_URL'),
             'secret' => 'purposely-wrong-secret!'
         ]);
     }
@@ -234,7 +234,7 @@ class WpcTest extends TestCase
         $this->expectException(ConverterNotOperationalException::class);
 
         Wpc::convert($this->imageDir . '/test.png', $this->imageDir . '/test.webp', [
-            'url' => 'badurl!',
+            'api-url' => 'badurl!',
             'secret' => 'bad dog!',
         ]);
     }*/
