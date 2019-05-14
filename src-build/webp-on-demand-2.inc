@@ -156,7 +156,8 @@ abstract class AbstractConverter
 
 
     /**
-     *  Default display name is simply the class name (short).
+     *  Get converter name for display (defaults to the class name (short)).
+     *
      *  Converters can override this.
      *
      * @return string  A display name, ie "Gd"
@@ -166,6 +167,20 @@ abstract class AbstractConverter
         // https://stackoverflow.com/questions/19901850/how-do-i-get-an-objects-unqualified-short-class-name/25308464
         return substr(strrchr('\\' . static::class, '\\'), 1);
     }
+
+
+    /**
+     *  Get converter id (defaults to the class name lowercased)
+     *
+     *  Converters can override this.
+     *
+     * @return string  A display name, ie "Gd"
+     */
+    protected static function getConverterId()
+    {
+        return strtolower(self::getConverterDisplayName());
+    }
+
 
     /**
      * Create an instance of this class
@@ -1144,7 +1159,7 @@ class Ewww extends AbstractConverter
     protected function getOptionDefinitionsExtra()
     {
         return [
-            ['key', 'string', '', true, true]
+            ['api-key', 'string', '', true, true]
         ];
     }
 
@@ -1155,8 +1170,8 @@ class Ewww extends AbstractConverter
      */
     private function getKey()
     {
-        if (!empty($this->options['key'])) {
-            return $this->options['key'];
+        if (!empty($this->options['api-key'])) {
+            return $this->options['api-key'];
         }
         if (!empty(getenv('EWWW_API_KEY'))) {
             return getenv('EWWW_API_KEY');
@@ -2535,7 +2550,7 @@ class Stack extends AbstractConverter
             [
                 'converters',
                 'array', [
-                    'cwebp', 'vips', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'gmagickbinary'
+                    'cwebp', 'vips', 'wpc', 'imagickbinary', 'ewww', 'imagick', 'gmagick', 'gmagickbinary', 'gd'
                 ],
                 true
             ],
@@ -2955,10 +2970,10 @@ class Wpc extends AbstractConverter
     protected function getOptionDefinitionsExtra()
     {
         return [
+            ['api-key', 'string', '', true],   /* new in api v.1 (renamed 'secret' to 'api-key') */
+            ['api-url', 'string', '', true, true],
             ['api-version', 'number', 0],                     /* Can currently be 0 or 1 */
             ['secret', 'string', '', true],    /* only in api v.0 */
-            ['api-key', 'string', '', true],   /* new in api v.1 (renamed 'secret' to 'api-key') */
-            ['url', 'string', '', true, true],
             ['crypt-api-key-in-transfer', 'boolean', false],  /* new in api v.1 */
         ];
     }
