@@ -217,7 +217,7 @@ $options = [
     ]
 ];
 ```
-<br><br>
+<br>
 
 ### `use-nice`
 ```
@@ -259,7 +259,7 @@ Type:          integer (0 - 1)
 Default:       0
 Supported by:  wpc
 ```
-<br><br>
+<br>
 
 ### `wpc-crypt-api-key-in-transfer`
 ```
@@ -267,7 +267,7 @@ Type:          boolean
 Default:       false
 Supported by:  wpc
 ```
-<br><br>
+<br>
 
 ### `wpc-secret`
 ```
