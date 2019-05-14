@@ -80,7 +80,7 @@ $options = [
 ]
 ```
 
-Alternatively, you can simply do this: (not implemented yet)
+As an alternative to this option, you can simply prefix options with a converter id in order to override it for that particular converter. With prefix, you can achieve the same as above this way:
 
 ```php
 $options = [
