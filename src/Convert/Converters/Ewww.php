@@ -54,8 +54,6 @@ class Ewww extends AbstractConverter
      */
     public function checkOperationality()
     {
-        // Check for curl requirements
-        $this->checkOperationalityForCurlTrait();
 
         $apiKey = $this->getKey();
 
@@ -68,6 +66,9 @@ class Ewww extends AbstractConverter
                 'Key is invalid. Keys are supposed to be 32 characters long - your key is much shorter'
             );
         }
+
+        // Check for curl requirements
+        $this->checkOperationalityForCurlTrait();
 
         $keyStatus = self::getKeyStatus($apiKey);
         switch ($keyStatus) {
