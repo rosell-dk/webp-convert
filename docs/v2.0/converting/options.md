@@ -194,11 +194,10 @@ Type:         array
 Default:      []
 Supported by: stack
 ```
-Extra options for specific converters. Example for setting quality to 72 for vips:
+Extra options for specific converters. Example:
 
 ```php
 $options = [
-    'quality' => 71,    // will apply to all converters, except vips.
     'converter-options' => [
         'vips' => [
             'quality' => 72
@@ -206,16 +205,15 @@ $options = [
     ]    
 ]
 ```
-
-As an alternative to this option, you can simply prefix options with a converter id in order to override it for that particular converter. With prefix, you can achieve the same as above this way:
-
-```php
-$options = [
-    'quality' => 71,
-    'vips-quality' => 72,
-]
-```
 <br>
+
+### `stack-extra-converters`
+```
+Type:         array
+Default:      []
+Supported by: stack
+```
+Add extra converters to the bottom of the stack. The items are similar to those in the `stack-converters` option.<br><br>
 
 ### `stack-preferred-converters`
 ```
