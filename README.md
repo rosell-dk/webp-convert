@@ -42,7 +42,7 @@ WebPConvert::convert($source, $destination, $options);
 ```
 
 The *WebPConvert::convert* method comes with a bunch of options. The following introduction is a *must-read*:
-[docs/convert-introduction.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md).
+[docs/convert-introduction.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md).
 
 ## Serving converted images
 The *WebPConvert::serveConverted* method tries to serve a converted image. If there already is an image at the destination, it will take that, unless the original is newer or smaller. If the method cannot serve a converted image, it will serve original image, a 404, or whatever the 'fail' option is set to - and return false. It also adds a *X-WebP-Convert-Status* header, which allows you to inspect what happened.
@@ -66,13 +66,13 @@ WebPConvert::serveConverted($source, $destination, [
 ```
 
 The following introduction is a *must-read* (for 2.0):
-[docs/convert-introduction.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/serving/introduction-for-serving.md).
+[docs/convert-introduction.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/serving/introduction-for-serving.md).
 
-The old introduction (for 1.3.9) is available here: [docs/serving/v1.3/convert-and-serve.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert-and-serve.md)
+The old introduction (for 1.3.9) is available here: [docs/serving/v1.3/convert-and-serve.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/v1.3/serving/convert-and-serve.md)
 
 
 ## WebP on demand
-The library can be used to create a *WebP On Demand* solution, which automatically serves WebP images instead of jpeg/pngs for browsers that supports WebP. To set this up, follow what's described  [in this tutorial](https://github.com/rosell-dk/webp-convert/blob/master/docs/webp-on-demand/webp-on-demand.md).
+The library can be used to create a *WebP On Demand* solution, which automatically serves WebP images instead of jpeg/pngs for browsers that supports WebP. To set this up, follow what's described  [in this tutorial (not updated for 2.0 yet)](https://github.com/rosell-dk/webp-convert/blob/master/docs/v1.3/webp-on-demand/webp-on-demand.md).
 
 
 ## WebP Convert in the wild
