@@ -162,7 +162,7 @@ $options = [
 
 ## Available options
 
-All available options are documented [here](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/options.md).
+All available options are documented [here](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md).
 
 
 ## General options overview
@@ -182,6 +182,6 @@ All available options are documented [here](https://github.com/rosell-dk/webp-co
 ## More info
 
 - As part of the 2.0 release, all classes and methods are doc commented. I have not uploaded the automated documentation yet (I shall do!), but you can easily create it with you favorite tool.
-- The converters are described in more detail here (for 1.3.9): [docs/converting/v1.3/converters.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/converters.md).
+- The converters are described in more detail here (for 1.3.9): [docs/v1.3/converting/converters.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/v1.3/converting/converters.md).
 - On the github wiki you can find installation instructions for imagick with webp, gd with webp, etc.
-- This document is a newly written introduction to the convert api, which has been created as part of the 2.0 release. The old introduction, which was made for 1.3 is available here: [docs/converting/v1.3/convert.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/api/convert.md).
+- This document is a newly written introduction to the convert api, which has been created as part of the 2.0 release. The old introduction, which was made for 1.3 is available here: [docs/converting/v1.3/convert.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/v1.3/converting/convert.md).
