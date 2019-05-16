@@ -2699,19 +2699,15 @@ class Stack extends AbstractConverter
 
         //$this->logLn('converters: ' . print_r($converters, true));
 
-        $defaultConverterOptions = $options;
-
-        unset($defaultConverterOptions['converters']);
-        unset($defaultConverterOptions['converter-options']);
-        $defaultConverterOptions['_skip_input_check'] = true;
-        $defaultConverterOptions['_suppress_success_message'] = true;
 
         $anyRuntimeErrors = false;
 
         $converters = $options['converters'];
-        $this->logLn(print_r($converters));
         if (count($options['extra-converters']) > 0) {
             $converters = array_merge($converters, $options['extra-converters']);
+            /*foreach ($options['extra-converters'] as $extra) {
+                $converters[] = $extra;
+            }*/
         }
 
         // preferred-converters
@@ -2724,7 +2720,6 @@ class Stack extends AbstractConverter
                         $converterId = $converter;
                     }
                     if ($converterId == $prioritizedConverter) {
-                        //$this->logLn($i . ':' . $prioritizedConverter);
                         unset($converters[$i]);
                         array_unshift($converters, $converter);
                         break;
@@ -2739,7 +2734,21 @@ class Stack extends AbstractConverter
             shuffle($converters);
         }
 
-        $this->logLn(print_r($converters));
+        //$this->logLn(print_r($converters));
+        //$options['converters'] = $converters;
+        $defaultConverterOptions = $options;
+
+        //unset($defaultConverterOptions['converters']);
+        //unset($defaultConverterOptions['converter-options']);
+        $defaultConverterOptions['_skip_input_check'] = true;
+        $defaultConverterOptions['_suppress_success_message'] = true;
+        unset($defaultConverterOptions['converters']);
+        unset($defaultConverterOptions['extra-converters']);
+        unset($defaultConverterOptions['converter-options']);
+        unset($defaultConverterOptions['preferred-converters']);
+
+
+        //return;
         foreach ($converters as $converter) {
             if (is_array($converter)) {
                 $converterId = $converter['converter'];
@@ -2753,8 +2762,16 @@ class Stack extends AbstractConverter
                     $converterOptions = $options['converter-options'][$converterId];
                 }
             }
-
             $converterOptions = array_merge($defaultConverterOptions, $converterOptions);
+            /*
+            if ($converterId != 'stack') {
+                //unset($converterOptions['converters']);
+                //unset($converterOptions['converter-options']);
+            } else {
+                //$converterOptions['converter-options'] =
+                $this->logLn('STACK');
+                $this->logLn('converterOptions: ' . print_r($converterOptions, true));
+            }*/
 
             $beginTime = microtime(true);
 
