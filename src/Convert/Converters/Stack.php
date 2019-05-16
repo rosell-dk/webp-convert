@@ -123,7 +123,7 @@ class Stack extends AbstractConverter
         $anyRuntimeErrors = false;
 
         $converters = $options['converters'];
-$this->logLn(print_r($converters));
+        $this->logLn(print_r($converters));
         if (count($options['extra-converters']) > 0) {
             $converters = array_merge($converters, $options['extra-converters']);
         }
@@ -153,7 +153,7 @@ $this->logLn(print_r($converters));
             shuffle($converters);
         }
 
-$this->logLn(print_r($converters));
+        $this->logLn(print_r($converters));
         foreach ($converters as $converter) {
             if (is_array($converter)) {
                 $converterId = $converter['converter'];
