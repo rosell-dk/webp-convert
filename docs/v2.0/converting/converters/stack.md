@@ -169,6 +169,8 @@ $options = [
 ```
 Note that we set `ewww-skip` in order to disable the *ewww* converter which is part of the defaults. As options are inherited, we have to reset this option again. These steps are not necessary when using the `stack-converters` option.
 
+Also note that the options for modifying the converters (`converters`, `extra-converters`, `converter-options`) does not get passed down.
+
 Also note that if you want to add two stacks with `extra-converters`, the `preferred-converters` option will not work, as there are two converters called "stack". One workaround is to add those two stacks to their own stack, so you have three levels. Or you can of course simply use the `converters` option to get complete control.
 
 
