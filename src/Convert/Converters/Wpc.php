@@ -152,7 +152,6 @@ class Wpc extends AbstractConverter
 
         // Check for curl requirements
         $this->checkOperationalityForCurlTrait();
-
     }
 
     /*
