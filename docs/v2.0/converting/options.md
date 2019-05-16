@@ -175,7 +175,7 @@ Supported by: stack
 
 Specify the converters to try and their order.
 
-Beware that if you use this option, you will miss out when more converters are added in future updates. If the purpose of setting this option is to remove converters that you do not want to use, you can use the *skip* option instead. Ie, to skip ewww, set *ewww-skip* to true. On the other hand, if what you actually want is to change the order, you can use the *stack-prioritize-converters* option, ie setting *stack-prioritize-converters* to `['vips', 'wpc']` will move vips and wpc in front of the others. Should they start to fail, you will still have the others as backup.
+Beware that if you use this option, you will miss out when more converters are added in future updates. If the purpose of setting this option is to remove converters that you do not want to use, you can use the *skip* option instead. Ie, to skip ewww, set *ewww-skip* to true. On the other hand, if what you actually want is to change the order, you can use the *stack-preferred-converters* option, ie setting *stack-preferred-converters* to `['vips', 'wpc']` will move vips and wpc in front of the others. Should they start to fail, you will still have the others as backup.
 
 The array specifies the converters to try and their order. Each item can be:
 
