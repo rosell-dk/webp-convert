@@ -150,6 +150,20 @@ $options = [
     ]
 ];
 ```
+
+Or it can be used to skip unwanted converters from the default stack, like this:
+```php
+$options = [
+    'ewww-skip' => true,
+    'wpc-skip' => true,
+    'gd-skip' => true,
+    'imagick-skip' => true,
+    'gmagick-skip' => true,
+];
+```
+
+
+
 <br>
 
 ### `stack-converters`
@@ -158,7 +172,12 @@ Type:         array
 Default:      ['cwebp', 'vips', 'wpc', 'imagickbinary', 'ewww', 'imagick', 'gmagick', 'gmagickbinary', 'gd']
 Supported by: stack
 ```
-Converters to try. Each item can be:
+
+Specify the converters to try and their order.
+
+Beware that if you use this option, you will miss out when more converters are added in future updates. If the purpose of setting this option is to remove converters that you do not want to use, you can use the *skip* option instead. Ie, to skip ewww, set *ewww-skip* to true. On the other hand, if what you actually want is to change the order, you can use the *stack-prioritize-converters* option, ie setting *stack-prioritize-converters* to `['vips', 'wpc']` will move vips and wpc in front of the others. Should they start to fail, you will still have the others as backup.
+
+The array specifies the converters to try and their order. Each item can be:
 
 - An id (ie "cwebp")
 - A fully qualified class name (in case you have programmed your own custom converter)
@@ -220,6 +239,14 @@ $options = [
 ]
 ```
 <br>
+
+### `stack-prioritized-converters`
+```
+Type:         array
+Default:      []
+Supported by: stack
+```
+With this option you can move specified converters to the top of the stack. The converters are specified by id. For example, setting this option to ['vips', 'wpc'] ensures that *vips* will be tried first and - in case that fails - *wpc* will be tried. The rest of the converters keeps their relative order.<br><br>
 
 ### `stack-shuffle`
 ```
