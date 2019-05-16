@@ -111,7 +111,7 @@ class Stack extends AbstractConverter
             }
         }*/
 
-        //$this->logLn('converters: ' . print_r($converters, true));
+
 
 
         $anyRuntimeErrors = false;
@@ -161,6 +161,7 @@ class Stack extends AbstractConverter
         unset($defaultConverterOptions['converter-options']);
         unset($defaultConverterOptions['preferred-converters']);
 
+//        $this->logLn('converters: ' . print_r($converters, true));
 
         //return;
         foreach ($converters as $converter) {
@@ -216,6 +217,7 @@ class Stack extends AbstractConverter
                 //self::runConverterWithTiming($converterId, $source, $destination, $converterOptions, false, $logger);
 
                 $this->logLn($converterDisplayName . ' succeeded :)');
+                //throw new ConverterNotOperationalException('...');
                 return;
             } catch (ConverterNotOperationalException $e) {
                 $this->logLn($e->getMessage());
