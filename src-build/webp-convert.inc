@@ -2620,7 +2620,8 @@ class Stack extends AbstractConverter
                 true
             ],
             ['shuffle', 'boolean', false],
-            ['prioritized-converters', 'array', []]
+            ['preferred-converters', 'array', []],
+            ['extra-converters', 'array', []]
         ];
     }
 
@@ -2690,13 +2691,13 @@ class Stack extends AbstractConverter
         /*
         if (isset($options['converter-options'])) {
             foreach ($options['converter-options'] as $converterName => $converterOptions) {
-                if (!in_array($converterName, $options['converters'])) {
-                    $options['converters'][] = $converterName;
+                if (!in_array($converterName, $converters)) {
+                    $converters[] = $converterName;
                 }
             }
         }*/
 
-        //$this->logLn('converters: ' . print_r($options['converters'], true));
+        //$this->logLn('converters: ' . print_r($converters, true));
 
         $defaultConverterOptions = $options;
 
@@ -2707,10 +2708,16 @@ class Stack extends AbstractConverter
 
         $anyRuntimeErrors = false;
 
-        // prioritized-converters
-        if (count($options['prioritized-converters']) > 0) {
-            foreach (array_reverse($options['prioritized-converters']) as $prioritizedConverter) {
-                foreach ($options['converters'] as $i => $converter) {
+        $converters = $options['converters'];
+        $this->logLn(print_r($converters));
+        if (count($options['extra-converters']) > 0) {
+            $converters = array_merge($converters, $options['extra-converters']);
+        }
+
+        // preferred-converters
+        if (count($options['preferred-converters']) > 0) {
+            foreach (array_reverse($options['preferred-converters']) as $prioritizedConverter) {
+                foreach ($converters as $i => $converter) {
                     if (is_array($converter)) {
                         $converterId = $converter['converter'];
                     } else {
@@ -2718,22 +2725,22 @@ class Stack extends AbstractConverter
                     }
                     if ($converterId == $prioritizedConverter) {
                         //$this->logLn($i . ':' . $prioritizedConverter);
-                        unset($options['converters'][$i]);
-                        array_unshift($options['converters'], $converter);
+                        unset($converters[$i]);
+                        array_unshift($converters, $converter);
                         break;
                     }
                 }
             }
             // perhaps write the order to the log? (without options) - but this requires some effort
-            //$this->logLn(print_r($options['converters']));
         }
 
         // shuffle
         if ($options['shuffle']) {
-            shuffle($options['converters']);
+            shuffle($converters);
         }
 
-        foreach ($options['converters'] as $converter) {
+        $this->logLn(print_r($converters));
+        foreach ($converters as $converter) {
             if (is_array($converter)) {
                 $converterId = $converter['converter'];
                 $converterOptions = $converter['options'];
