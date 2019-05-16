@@ -104,12 +104,17 @@ class Wpc extends AbstractConverter
      */
     public function checkOperationality()
     {
-        // Check for curl requirements
-        $this->checkOperationalityForCurlTrait();
 
         $options = $this->options;
 
         $apiVersion = $options['api-version'];
+
+        if ($this->getApiUrl() == '') {
+            throw new ConverterNotOperationalException(
+                'Missing URL. You must install Webp Convert Cloud Service on a server, ' .
+                'or the WebP Express plugin for Wordpress - and supply the url.'
+            );
+        }
 
         if ($apiVersion == 0) {
             if (!empty($this->getApiKey())) {
@@ -145,12 +150,9 @@ class Wpc extends AbstractConverter
             }
         }
 
-        if ($this->getApiUrl() == '') {
-            throw new ConverterNotOperationalException(
-                'Missing URL. You must install Webp Convert Cloud Service on a server, ' .
-                'or the WebP Express plugin for Wordpress - and supply the url.'
-            );
-        }
+        // Check for curl requirements
+        $this->checkOperationalityForCurlTrait();
+
     }
 
     /*
