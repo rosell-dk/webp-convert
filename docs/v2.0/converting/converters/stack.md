@@ -135,6 +135,43 @@ $options = [
 ];
 ```
 
+### Stacking
+Stack converters behave just like regular converters. They ARE in fact "regular", as they extend the same base class as all converters. This means that you can have a stack within a stack. You can for example utilize this for supplying a backup api key for the ewww converter. Like this:
+
+```php
+$options = [
+    'ewww-skip' => true,   // skip the default ewww converter (we use stack of ewww converters instead)
+    'extra-converters' => [
+        [
+            // stack of ewww converters
+            'converter' => 'stack',
+            'options' => [
+                'ewww-skip' => false,       // do not skip ewww from here on
+                'converters' => [
+                    [
+                        'converter' => 'ewww',
+                        'options' => [
+                            'api-key' => 'provide-preferred-key-here',
+                        ]
+                    ],
+                    [
+                        'converter' => 'ewww',
+                        'options' => [
+                            'api-key' => 'provide-backup-key-here',
+                        ]
+                    ]
+                ],
+            ]
+        ]
+    ],
+    'preferred-converters' => ['cwebp', 'vips', 'stack'],    // set our stack of ewww converters third in queue
+];
+```
+Note that we set `ewww-skip` in order to disable the *ewww* converter which is part of the defaults. As options are inherited, we have to reset this option again. These steps are not necessary when using the `stack-converters` option.
+
+Also note that if you want to add two stacks with `extra-converters`, the `preferred-converters` option will not work, as there are two converters called "stack". One workaround is to add those two stacks to their own stack, so you have three levels. Or you can of course simply use the `converters` option to get complete control.
+
+
 ### Shuffling
 
 The stack can be configured to shuffling, meaning that the the order will be random. This can for example be used to balance load between several wpc instances in a sub stack.
@@ -145,35 +182,38 @@ Here is an example of balancing load between several *wpc* instances:
 
 ```php
 $options = [
-    'converters' => [
-        'cwebp',
-        'vips',
+    'wpc-skip' => true,   // skip the default wpc converter (we use stack of wpc converters instead)
+    'extra-converters' => [
         [
-            'converter' => 'stack',
+            // stack of wpc converters
+            'converter' => 'stack',  
             'options' => [
-                'stack-shuffle' => true,
-
-                'crypt-api-key-in-transfer' => true,
-                'api-version' => 1,
+                'wpc-skip' => false,    // do not skip wpc from here on
+                'shuffle' => true,
 
                 'converters' => [
                     [
                         'converter' => 'wpc',
                         'options' => [
-                            'api-key' => 'my dog is white',
-                            'api-url' => 'https://example.com/wpc.php',
+                            'api-key' => 'my-dog',
+                            'api-url' => 'my-wpc.com/wpc.php',
+                            'api-version' => 1,
+                            'crypt-api-key-in-transfer' => true,
                         ]
                     ],
                     [
                         'converter' => 'wpc',
                         'options' => [
-                            'api-key' => 'my dog is also white',
-                            'api-url' => 'https://anonther-wpc-instance.com/wpc.php',
+                            'api-key' => 'my-other-dog',
+                            'api-url' => 'my-other-wpc.com/wpc.php',
+                            'api-version' => 1,
+                            'crypt-api-key-in-transfer' => true,
                         ]
-                    ],
-                ]
+                    ]
+                ],
             ]
         ]
     ],
+    'preferred-converters' => ['cwebp', 'vips', 'stack'],    // set our stack of wpc converters third in queue
 ];
 ```
