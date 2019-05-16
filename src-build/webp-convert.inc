@@ -1287,8 +1287,6 @@ class Ewww extends AbstractConverter
      */
     public function checkOperationality()
     {
-        // Check for curl requirements
-        $this->checkOperationalityForCurlTrait();
 
         $apiKey = $this->getKey();
 
@@ -1301,6 +1299,9 @@ class Ewww extends AbstractConverter
                 'Key is invalid. Keys are supposed to be 32 characters long - your key is much shorter'
             );
         }
+
+        // Check for curl requirements
+        $this->checkOperationalityForCurlTrait();
 
         $keyStatus = self::getKeyStatus($apiKey);
         switch ($keyStatus) {
@@ -2697,7 +2698,7 @@ class Stack extends AbstractConverter
             }
         }*/
 
-        //$this->logLn('converters: ' . print_r($converters, true));
+
 
 
         $anyRuntimeErrors = false;
@@ -2747,6 +2748,7 @@ class Stack extends AbstractConverter
         unset($defaultConverterOptions['converter-options']);
         unset($defaultConverterOptions['preferred-converters']);
 
+//        $this->logLn('converters: ' . print_r($converters, true));
 
         //return;
         foreach ($converters as $converter) {
@@ -2802,6 +2804,7 @@ class Stack extends AbstractConverter
                 //self::runConverterWithTiming($converterId, $source, $destination, $converterOptions, false, $logger);
 
                 $this->logLn($converterDisplayName . ' succeeded :)');
+                //throw new ConverterNotOperationalException('...');
                 return;
             } catch (ConverterNotOperationalException $e) {
                 $this->logLn($e->getMessage());
@@ -3160,12 +3163,17 @@ class Wpc extends AbstractConverter
      */
     public function checkOperationality()
     {
-        // Check for curl requirements
-        $this->checkOperationalityForCurlTrait();
 
         $options = $this->options;
 
         $apiVersion = $options['api-version'];
+
+        if ($this->getApiUrl() == '') {
+            throw new ConverterNotOperationalException(
+                'Missing URL. You must install Webp Convert Cloud Service on a server, ' .
+                'or the WebP Express plugin for Wordpress - and supply the url.'
+            );
+        }
 
         if ($apiVersion == 0) {
             if (!empty($this->getApiKey())) {
@@ -3201,12 +3209,8 @@ class Wpc extends AbstractConverter
             }
         }
 
-        if ($this->getApiUrl() == '') {
-            throw new ConverterNotOperationalException(
-                'Missing URL. You must install Webp Convert Cloud Service on a server, ' .
-                'or the WebP Express plugin for Wordpress - and supply the url.'
-            );
-        }
+        // Check for curl requirements
+        $this->checkOperationalityForCurlTrait();
     }
 
     /*
