@@ -34,7 +34,7 @@ class Stack extends AbstractConverter
                 true
             ],
             ['shuffle', 'boolean', false],
-            ['prioritized-converters', 'array', []]
+            ['preferred-converters', 'array', []]
         ];
     }
 
@@ -121,9 +121,9 @@ class Stack extends AbstractConverter
 
         $anyRuntimeErrors = false;
 
-        // prioritized-converters
-        if (count($options['prioritized-converters']) > 0) {
-            foreach (array_reverse($options['prioritized-converters']) as $prioritizedConverter) {
+        // preferred-converters
+        if (count($options['preferred-converters']) > 0) {
+            foreach (array_reverse($options['preferred-converters']) as $prioritizedConverter) {
                 foreach ($options['converters'] as $i => $converter) {
                     if (is_array($converter)) {
                         $converterId = $converter['converter'];

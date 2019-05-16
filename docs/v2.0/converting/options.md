@@ -34,7 +34,7 @@ Type:          integer (0-100)
 Default:       75 for jpegs and 85 for pngs
 Supported by:  all (cwebp, ewww, gd, gmagick, gmagickbinary, imagick, imagickbinary, vips)
 ```
-Read about this option in the ["auto quality" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md#auto-quality).<br><br>
+Read about this option in the ["auto quality" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality).<br><br>
 
 ### `ewww-api-key`
 ```
@@ -53,7 +53,7 @@ Default:       []
 Supported by:  all
 ```
 Override selected options when the source is a jpeg. The options provided here are simply merged into the other options when the source is a jpeg.
-Read about this option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md#png-og-jpeg-specific-options).<br><br>
+Read about this option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#png-og-jpeg-specific-options).<br><br>
 
 ### `lossless`
 ```
@@ -61,7 +61,7 @@ Type:          boolean | "auto"
 Default:       "auto" for jpegs and false for pngs
 Supported by:  cwebp, imagickbinary, vips  (the other converters always uses lossy encoding)
 ```
-Read about this option in the ["lossy/lossless" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md#auto-selecting-between-losslesslossy-encoding).<br><br>
+Read about this option in the ["lossy/lossless" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-selecting-between-losslesslossy-encoding).<br><br>
 
 ### `low-memory`
 ```
@@ -77,7 +77,7 @@ Type:          integer (0-100)
 Default:       85
 Supported by:  all (cwebp, ewww, gd, gmagick, gmagickbinary, imagick, imagickbinary, vips)
 ```
-Read about this option in the ["auto quality" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md#auto-quality).<br><br>
+Read about this option in the ["auto quality" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality).<br><br>
 
 ### `metadata`
 ```
@@ -110,7 +110,7 @@ Default:       []
 Supported by:  all
 ```
 Override selected options when the source is a png. The options provided here are simply merged into the other options when the source is a png.
-Read about this option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md#png-og-jpeg-specific-options).<br><br>
+Read about this option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#png-og-jpeg-specific-options).<br><br>
 
 ### `preset`
 ```
@@ -126,7 +126,7 @@ Type:          integer (0-100) | "auto"
 Default:       "auto" for jpegs and 85 for pngs
 Supported by:  all (cwebp, ewww, gd, gmagick, gmagickbinary, imagick, imagickbinary, vips)
 ```
-Quality for lossy encoding. Read about the "auto" option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md#auto-quality).<br><br>
+Quality for lossy encoding. Read about the "auto" option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality).<br><br>
 
 ### `size-in-percentage`
 ```
@@ -183,33 +183,10 @@ The array specifies the converters to try and their order. Each item can be:
 - A fully qualified class name (in case you have programmed your own custom converter)
 - An array with two keys: "converter" and "options".
 
-Example:
-```php
-$options = [
-    'quality' => 71,
-    'converters' => [
-        'cwebp',        
-        [
-            'converter' => 'vips',
-            'options' => [
-                'quality' => 72                
-            ]
-        ],
-        [
-            'converter' => 'ewww',
-            'options' => [
-                'quality' => 73               
-            ]
-        ],
-        'wpc',
-        'imagickbinary',
-        '\\MyNameSpace\\WonderConverter'
-    ],
-];
-```
+`
 Alternatively, converter options can be set using the *converter-options* option.
 
-Read more about the stack converter in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/converting/introduction-for-converting.md#the-stack-converter).<br><br>
+Read more about the stack converter in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#the-stack-converter).<br><br>
 
 ### `stack-converter-options`
 ```
@@ -240,7 +217,7 @@ $options = [
 ```
 <br>
 
-### `stack-prioritized-converters`
+### `stack-preferred-converters`
 ```
 Type:         array
 Default:      []
@@ -254,42 +231,7 @@ Type:          boolean
 Default:       false
 Supported by:  stack
 ```
-Shuffle the converters in the stack. This can for example be used to balance load between several wpc instances in a substack, like this:
-
-```php
-$options = [
-    'converters' => [
-        'cwebp', 'vips',
-        [
-            'converter' => 'stack',
-            'options' => [
-                'stack-shuffle' => true,
-
-                'crypt-api-key-in-transfer' => true,
-                'api-version' => 1,
-
-                'converters' => [
-                    [
-                        'converter' => 'wpc',
-                        'options' => [
-                            'api-key' => 'my dog is white',
-                            'api-url' => 'https://example.com/wpc.php',
-                        ]
-                    ],
-                    [
-                        'converter' => 'wpc',
-                        'options' => [
-                            'api-key' => 'my dog is also white',
-                            'api-url' => 'https://example.com/wpc.php',
-                        ]
-                    ],
-                ]
-            ]
-        ]
-    ],
-];
-```
-<br>
+Shuffle the converters in the stack. This can for example be used to balance load between several wpc instances in a substack, as illustrated [here](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/converters/stack.md)<br><br>
 
 ### `use-nice`
 ```

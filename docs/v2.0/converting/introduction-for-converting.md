@@ -33,7 +33,7 @@ Converted image in 20 ms, reducing file size with 34% (went from 12 kb to 8 kb)
 ```
 
 ## The stack converter
-When your software is going to be installed on a variety of systems which you do not control, you may can try the converters one at the time until success. The converters has been designed to exit quickly when system requirements are not met. To make this task easy, a *Stack* converter has been created.
+When your software is going to be installed on a variety of systems which you do not control, you can try the converters one at the time until success. The converters has been designed to exit quickly when system requirements are not met. To make this task easy, a *Stack* converter has been created.
 
 The stack converter has two special options:
 
