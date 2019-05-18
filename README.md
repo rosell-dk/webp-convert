@@ -44,6 +44,8 @@ WebPConvert::convert($source, $destination, $options);
 The *WebPConvert::convert* method comes with a bunch of options. The following introduction is a *must-read*:
 [docs/convert-introduction.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md).
 
+If you are migrating from 1.3.9, ["read this"](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/migrating-to-2.0.md)
+
 ## Serving converted images
 The *WebPConvert::serveConverted* method tries to serve a converted image. If there already is an image at the destination, it will take that, unless the original is newer or smaller. If the method cannot serve a converted image, it will serve original image, a 404, or whatever the 'fail' option is set to - and return false. It also adds a *X-WebP-Convert-Status* header, which allows you to inspect what happened.
 
