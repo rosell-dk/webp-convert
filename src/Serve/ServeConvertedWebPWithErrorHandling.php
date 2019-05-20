@@ -104,11 +104,17 @@ class ServeConvertedWebPWithErrorHandling
      *       - All options supported by ServeFile::serve()
      *       - All options supported by DecideWhatToServe::decide)
      * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
-     * @param   string  $serveClass     (optional) Full class name to a class that has a serve() method and a serveOriginal() method
+     * @param   string  $serveClass     (optional) Full class name to a class that has a serve() method and a
+     *                                  serveOriginal() method
      * @return  void
      */
-    public static function serve($source, $destination, $options = [], $logger = null, $serveClass = '\\WebPConvert\\Serve\\ServeConvertedWebP')
-    {
+    public static function serve(
+        $source,
+        $destination,
+        $options = [],
+        $logger = null,
+        $serveClass = '\\WebPConvert\\Serve\\ServeConvertedWebP'
+    ) {
         $options = array_merge(self::$defaultOptions, $options);
 
         try {
