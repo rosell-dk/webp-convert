@@ -25,7 +25,6 @@ Here we assume you are using Composer. [Not using composer? - Follow me!](https:
 composer require rosell-dk/webp-convert
 ```
 
-
 ### 2. Create the script
 
 Create a file *webp-on-demand.php*, and place it in webroot, or where-ever you like in you web-application.
@@ -34,6 +33,17 @@ Here is a minimal example to get started with:
 
 ```php
 <?php
+// To start with, lets display any errors.
+// - this will reveal if you entered wrong paths
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
+// Once you got it working, make sure that PHP warnings are not send to the output
+// - this will corrupt the image
+// For example, you can do it by commenting out the lines below:
+// error_reporting(0);
+// ini_set("display_errors", 0);
+
 require 'vendor/autoload.php';        // Make sure to point this correctly
 
 use WebPConvert\WebPConvert;
@@ -47,8 +57,10 @@ $options = [
     'show-report' => true             // Show a conversion report instead of serving the converted image.
 
     // More options available!
+    // https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md
+    // https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/serving/introduction-for-serving.md
 ];
-WebPConvert::convertAndServe($source, $destination, $options);
+WebPConvert::serveConverted($source, $destination, $options);
 ```
 
 ### 3. Add redirect rules

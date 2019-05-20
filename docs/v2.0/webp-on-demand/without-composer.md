@@ -47,9 +47,15 @@ Here is how to do it in 2.0:
 ```php
 <?php
 // To start with, lets display any errors.
-// You can later comment these out
+// - this will reveal if you entered wrong paths
 error_reporting(E_ALL);
 ini_set("display_errors", 1);
+
+// Once you got it working, make sure that PHP warnings are not send to the output
+// - this will corrupt the image
+// For example, you can do it by commenting out the lines below:
+// error_reporting(0);
+// ini_set("display_errors", 0);
 
 use WebPConvert\WebPConvert;
 
@@ -71,11 +77,11 @@ $options = [
     'show-report' => true             // Show a conversion report instead of serving the converted image.
 
     // More options available!
+    // https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md
+    // https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/serving/introduction-for-serving.md
 ];
-WebPConvert::convertAndServe($source, $destination, $options);
+WebPConvert::serveConverted($source, $destination, $options);
 ```
-
-
 
 
 
