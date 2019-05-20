@@ -35,7 +35,7 @@ class Wpc extends AbstractConverter
         return [
             ['api-key', 'string', '', true],   /* new in api v.1 (renamed 'secret' to 'api-key') */
             ['api-url', 'string', '', true, true],
-            ['api-version', 'number', 0],                     /* Can currently be 0 or 1 */
+            ['api-version', 'number', 0],                     /* Can currently be 0, 1 or 2 */
             ['secret', 'string', '', true],    /* only in api v.0 */
             ['crypt-api-key-in-transfer', 'boolean', false],  /* new in api v.1 */
         ];
@@ -180,6 +180,18 @@ class Wpc extends AbstractConverter
         unset($optionsToSend['secret']);
         unset($optionsToSend['api-key']);
         unset($optionsToSend['api-url']);
+
+        if ($options['api-version'] == 1) {
+            // Lossless can be "auto" in api 2, but in api 1 "auto" is not supported
+            unset($optionsToSend['lossless']);
+        } elseif ($options['api-version'] == 2) {
+            unset($optionsToSend['png']);
+            unset($optionsToSend['jpeg']);
+
+            // The following are unset for security reasons.
+            unset($optionsToSend['cwebp-command-line-options']);
+            unset($optionsToSend['command-line-options']);
+        }
 
         return $optionsToSend;
     }
