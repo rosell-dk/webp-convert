@@ -4,7 +4,7 @@ namespace WebPConvert\Tests\Serve;
 
 use WebPConvert\Serve\Header;
 use WebPConvert\Serve\MockedHeader;
-use WebPConvert\Loggers\VoidLogger;
+use WebPConvert\Loggers\BufferLogger;
 
 use PHPUnit\Framework\TestCase;
 
@@ -39,7 +39,7 @@ class HeaderTest extends TestCase
     public function testAddLogHeader()
     {
         MockedHeader::reset();
-        Header::addLogHeader('test', new VoidLogger());
+        Header::addLogHeader('test', new BufferLogger());
         $header0 = MockedHeader::getHeaders()[0];
         $this->assertEquals('X-WebP-Convert-Log: test', $header0[0]);
         $this->assertFalse($header0[1]);
