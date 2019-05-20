@@ -124,3 +124,7 @@ X-WebP-Convert-Log: Source file was not found
 X-WebP-Convert-Log: Performing fail action: original
 X-WebP-Convert-Log: Performing fail action: throw
 ```
+
+## More info
+
+- The complete api is available [here](https://www.bitwise-it.dk/webp-convert/api/2.0/html/index.xhtml)
