@@ -43,9 +43,10 @@ class ServeConvertedWebPWithErrorHandling
      * @param  string  $destination         path to destination
      * @param  array   $options (optional)  options for serving/converting
      * @param  \Exception  $e               exception that was thrown when trying to serve
+     * @param   string  $serveClass         (optional) Full class name to a class that has a serveOriginal() method
      * @return void
      */
-    public static function performFailAction($fail, $failIfFailFails, $source, $destination, $options, $e)
+    public static function performFailAction($fail, $failIfFailFails, $source, $destination, $options, $e, $serveClass)
     {
         self::addHeadersPreventingCaching();
 
@@ -55,7 +56,8 @@ class ServeConvertedWebPWithErrorHandling
         switch ($fail) {
             case 'original':
                 try {
-                    ServeConvertedWebP::serveOriginal($source, $options);
+                    //ServeConvertedWebP::serveOriginal($source, $options);
+                    call_user_func($serveClass . '::serveOriginal', $source, $options);
                 } catch (\Exception $e) {
                     self::performFailAction($failIfFailFails, '404', $source, $destination, $options, $e);
                 }
@@ -102,14 +104,16 @@ class ServeConvertedWebPWithErrorHandling
      *       - All options supported by ServeFile::serve()
      *       - All options supported by DecideWhatToServe::decide)
      * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
+     * @param   string  $serveClass     (optional) Full class name to a class that has a serve() method and a serveOriginal() method
      * @return  void
      */
-    public static function serve($source, $destination, $options = [], $logger = null)
+    public static function serve($source, $destination, $options = [], $logger = null, $serveClass = '\\WebPConvert\\Serve\\ServeConvertedWebP')
     {
         $options = array_merge(self::$defaultOptions, $options);
 
         try {
-            ServeConvertedWebP::serve($source, $destination, $options, $logger);
+            //ServeConvertedWebP::serve($source, $destination, $options, $logger);
+            call_user_func($serveClass . '::serve', $source, $destination, $options, $logger);
         } catch (\Exception $e) {
             if ($e instanceof \WebPConvert\Exceptions\WebPConvertException) {
                 Header::addLogHeader($e->getShortMessage(), $logger);
@@ -121,7 +125,8 @@ class ServeConvertedWebPWithErrorHandling
                 $source,
                 $destination,
                 $options,
-                $e
+                $e,
+                $serveClass
             );
         }
     }
