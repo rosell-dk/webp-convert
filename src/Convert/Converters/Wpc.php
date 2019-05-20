@@ -181,10 +181,12 @@ class Wpc extends AbstractConverter
         unset($optionsToSend['api-key']);
         unset($optionsToSend['api-url']);
 
-        if ($options['api-version'] == 1) {
+        $apiVersion = $optionsToSend['api-version'];
+
+        if ($apiVersion == 1) {
             // Lossless can be "auto" in api 2, but in api 1 "auto" is not supported
             unset($optionsToSend['lossless']);
-        } elseif ($options['api-version'] == 2) {
+        } elseif ($apiVersion == 2) {
             unset($optionsToSend['png']);
             unset($optionsToSend['jpeg']);
 
