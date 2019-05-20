@@ -17,6 +17,7 @@ use WebPConvert\Exceptions\WebPConvertException;
 class ServeConvertedWebPWithErrorHandling
 {
 
+    /** @var array  Array of default options */
     public static $defaultOptions = [
         'fail' => 'original',
         'fail-when-fail-fails' => 'throw',
@@ -59,7 +60,7 @@ class ServeConvertedWebPWithErrorHandling
                     //ServeConvertedWebP::serveOriginal($source, $options);
                     call_user_func($serveClass . '::serveOriginal', $source, $options);
                 } catch (\Exception $e) {
-                    self::performFailAction($failIfFailFails, '404', $source, $destination, $options, $e);
+                    self::performFailAction($failIfFailFails, '404', $source, $destination, $options, $e, $serveClass);
                 }
                 break;
 
