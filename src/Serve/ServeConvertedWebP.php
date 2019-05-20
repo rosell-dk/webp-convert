@@ -29,6 +29,7 @@ use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 class ServeConvertedWebP
 {
 
+    /** @var array  Array of default options */
     public static $defaultOptions = [
         'reconvert' => false,
         'serve-original' => false,

@@ -15,6 +15,7 @@ use WebPConvert\Serve\Exceptions\ServeFailedException;
 class ServeFile
 {
 
+    /** @var array  Array of default options */
     public static $defaultOptions = [
         'set-cache-control-header' => false,
         'set-expires-header' => false,

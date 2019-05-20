@@ -15,6 +15,7 @@ class Header
     /**
      * Convenience function for adding header (append).
      *
+     * @param  string  $header  The header to add.
      * @return void
      */
     public static function addHeader($header)
@@ -25,6 +26,7 @@ class Header
     /**
      * Convenience function for replacing header.
      *
+     * @param  string  $header  The header to set.
      * @return void
      */
     public static function setHeader($header)
@@ -33,6 +35,8 @@ class Header
     }
 
     /**
+     * Add log header and optionally send it to a logger as well.
+     *
      * @param  string  $msg  Message to add to "X-WebP-Convert-Log" header
      * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
      * @return void

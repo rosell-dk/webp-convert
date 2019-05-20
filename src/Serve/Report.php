@@ -6,6 +6,13 @@ use WebPConvert\Loggers\EchoLogger;
 
 //use WebPConvert\Loggers\EchoLogger;
 
+/**
+ * Class for generating a HTML report of converting an image.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class Report
 {
 
