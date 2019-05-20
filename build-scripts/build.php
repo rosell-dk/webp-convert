@@ -59,7 +59,7 @@ $jobsEverything = [
             // dirs will be required in specified order. There is no recursion, so you need to specify subdirs as well.
             // TODO: Implement recursion in PHPMerger.php,
             '.',
-            'Convert/BaseConverters/BaseTraits',
+            'Convert/Converters/BaseTraits',
             'Convert/Converters/ConverterTraits',
             'Convert/BaseConverters',
             'Convert/Converters',
