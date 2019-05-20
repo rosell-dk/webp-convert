@@ -498,6 +498,790 @@ class WebPConvert
 
 ?><?php
 
+namespace WebPConvert\Convert\Converters\BaseTraits;
+
+use WebPConvert\Convert\Helpers\JpegQualityDetector;
+
+/**
+ * Trait for handling the "quality:auto" option.
+ *
+ * This trait is only used in the AbstractConverter class. It has been extracted into a
+ * trait in order to bundle the methods concerning auto quality.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+trait AutoQualityTrait
+{
+
+    /** @var boolean  Whether the quality option has been processed or not */
+    private $processed = false;
+
+    /** @var boolean  Whether the quality of the source could be detected or not (set upon processing) */
+    private $qualityCouldNotBeDetected = false;
+
+    /** @var integer  The calculated quality (set upon processing - on successful detection) */
+    private $calculatedQuality;
+
+    abstract public function getMimeTypeOfSource();
+    abstract public function logLn($msg, $style = '');
+
+    /**
+     *  Determine if quality detection is required but failing.
+     *
+     *  It is considered "required" when:
+     *  - Mime type is "image/jpeg"
+     *  - Quality is set to "auto"
+     *
+     *  If quality option hasn't been proccessed yet, it is triggered.
+     *
+     *  @return  boolean
+     */
+    public function isQualityDetectionRequiredButFailing()
+    {
+        $this->processQualityOptionIfNotAlready();
+        return $this->qualityCouldNotBeDetected;
+    }
+
+    /**
+     * Get calculated quality.
+     *
+     * If the "quality" option is a number, that number is returned.
+     * If mime type of source is something else than "image/jpeg", the "default-quality" option is returned
+     * If quality is "auto" and source is a jpeg image, it will be attempted to detect jpeg quality.
+     * In case of failure, the value of the "default-quality" option is returned.
+     * In case of success, the detected quality is returned, or the value of the "max-quality" if that is lower.
+     *
+     *  @return  int
+     */
+    public function getCalculatedQuality()
+    {
+        $this->processQualityOptionIfNotAlready();
+        return $this->calculatedQuality;
+    }
+
+    /**
+     * Process the quality option if it is not already processed.
+     *
+     * @return void
+     */
+    private function processQualityOptionIfNotAlready()
+    {
+        if (!$this->processed) {
+            $this->processed = true;
+            $this->processQualityOption();
+        }
+    }
+
+    /**
+     * Process the quality option.
+     *
+     * Sets the private property "calculatedQuality" according to the description for the getCalculatedQuality
+     * function.
+     * In case quality detection was attempted and failed, the private property "qualityCouldNotBeDetected" is set
+     * to true. This is used by the "isQualityDetectionRequiredButFailing" (and documented there too).
+     *
+     * @return void
+     */
+    private function processQualityOption()
+    {
+        $options = $this->options;
+        $source = $this->source;
+
+        $q = $options['quality'];
+        if ($q == 'auto') {
+            if (($this->getMimeTypeOfSource() == 'image/jpeg')) {
+                $q = JpegQualityDetector::detectQualityOfJpg($source);
+                if (is_null($q)) {
+                    $q = $options['default-quality'];
+                    $this->logLn(
+                        'Quality of source could not be established (Imagick or GraphicsMagick is required)' .
+                        ' - Using default instead (' . $options['default-quality'] . ').'
+                    );
+
+                    $this->qualityCouldNotBeDetected = true;
+                } else {
+                    if ($q > $options['max-quality']) {
+                        $this->logLn(
+                            'Quality of source is ' . $q . '. ' .
+                            'This is higher than max-quality, so using max-quality instead (' .
+                                $options['max-quality'] . ')'
+                        );
+                    } else {
+                        $this->logLn('Quality set to same as source: ' . $q);
+                    }
+                }
+                $q = min($q, $options['max-quality']);
+            } else {
+                //$q = $options['default-quality'];
+                $q = min($options['default-quality'], $options['max-quality']);
+                $this->logLn('Quality: ' . $q . '. ');
+            }
+        } else {
+            $this->logLn(
+                'Quality: ' . $q . '. '
+            );
+            if (($this->getMimeTypeOfSource() == 'image/jpeg')) {
+                $this->logLn(
+                    'Consider setting quality to "auto" instead. It is generally a better idea'
+                );
+            }
+        }
+        $this->calculatedQuality = $q;
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Converters\BaseTraits;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFileException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFolderException;
+
+/**
+ * Trait for handling options
+ *
+ * This trait is currently only used in the AbstractConverter class. It has been extracted into a
+ * trait in order to bundle the methods concerning options.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+trait DestinationPreparationTrait
+{
+
+    abstract public function getDestination();
+    abstract public function logLn($msg, $style = '');
+
+    /**
+     * Create writable folder in provided path (if it does not exist already)
+     *
+     * @throws CreateDestinationFolderException  if folder cannot be removed
+     * @return void
+     */
+    private function createWritableDestinationFolder()
+    {
+        $destination = $this->getDestination();
+
+        $folder = dirname($destination);
+        if (!file_exists($folder)) {
+            $this->logLn('Destination folder does not exist. Creating folder: ' . $folder);
+            // TODO: what if this is outside open basedir?
+            // see http://php.net/manual/en/ini.core.php#ini.open-basedir
+
+            // Trying to create the given folder (recursively)
+            if (!mkdir($folder, 0777, true)) {
+                throw new CreateDestinationFolderException(
+                    'Failed creating folder. Check the permissions!',
+                    'Failed creating folder: ' . $folder . '. Check permissions!'
+                );
+            }
+        }
+    }
+
+    /**
+     * Check that we can write file at destination.
+     *
+     * It is assumed that the folder already exists (that ::createWritableDestinationFolder() was called first)
+     *
+     * @throws CreateDestinationFileException  if file cannot be created at destination
+     * @return void
+     */
+    private function checkDestinationWritable()
+    {
+        $destination = $this->getDestination();
+        $dirName = dirname($destination);
+
+        if (@is_writable($dirName) && @is_executable($dirName)) {
+            // all is well
+            return;
+        }
+
+        // The above might fail on Windows, even though dir is writable
+        // So, to be absolute sure that we cannot write, we make an actual write test (writing a dummy file)
+        // No harm in doing that for non-Windows systems either.
+        if (file_put_contents($destination, 'dummy') !== false) {
+            // all is well, after all
+            unlink($destination);
+            return;
+        }
+
+        throw new CreateDestinationFileException(
+            'Cannot create file: ' . basename($destination) . ' in dir:' . dirname($destination)
+        );
+    }
+
+    /**
+     * Remove existing destination.
+     *
+     * @throws CreateDestinationFileException  if file cannot be removed
+     * @return void
+     */
+    private function removeExistingDestinationIfExists()
+    {
+        $destination = $this->getDestination();
+        if (file_exists($destination)) {
+            // A file already exists in this folder...
+            // We delete it, to make way for a new webp
+            if (!unlink($destination)) {
+                throw new CreateDestinationFileException(
+                    'Existing file cannot be removed: ' . basename($destination)
+                );
+            }
+        }
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Converters\BaseTraits;
+
+/**
+ * Trait for providing logging capabilities.
+ *
+ * This trait is currently only used in the AbstractConverter class. It has been extracted into a
+ * trait in order to bundle the methods concerning logging.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+trait LoggerTrait
+{
+
+    /** @var \WebPConvert\Loggers\BaseLogger  The logger (or null if not set) */
+    protected $logger;
+
+    /**
+     * Set logger
+     *
+     * @param   \WebPConvert\Loggers\BaseLogger $logger (optional)  $logger
+     * @return  void
+     */
+    public function setLogger($logger = null)
+    {
+        $this->logger = $logger;
+    }
+
+    /**
+     * Write a line to the logger.
+     *
+     * @param  string  $msg    The line to write.
+     * @param  string  $style  (optional) Ie "italic" or "bold"
+     * @return void
+     */
+    protected function logLn($msg, $style = '')
+    {
+        if (isset($this->logger)) {
+            $this->logger->logLn($msg, $style);
+        }
+    }
+
+    /**
+     * New line
+     *
+     * @return  void
+     */
+    protected function ln()
+    {
+        if (isset($this->logger)) {
+            $this->logger->ln();
+        }
+    }
+
+    /**
+     * Write to the logger, without newline
+     *
+     * @param  string  $msg    What to write.
+     * @param  string  $style  (optional) Ie "italic" or "bold"
+     * @return void
+     */
+    protected function log($msg, $style = '')
+    {
+        if (isset($this->logger)) {
+            $this->logger->log($msg, $style);
+        }
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Converters\BaseTraits;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidOptionTypeException;
+
+/**
+ * Trait for handling options
+ *
+ * This trait is currently only used in the AbstractConverter class. It has been extracted into a
+ * trait in order to bundle the methods concerning options.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+trait OptionsTrait
+{
+
+    /** @var array  Provided conversion options */
+    public $providedOptions;
+
+    /** @var array  Calculated conversion options (merge of default options and provided options)*/
+    protected $options;
+
+    abstract protected function getMimeTypeOfSource();
+    abstract protected static function getConverterId();
+
+    /** @var array  Definitions of general options (the options that are available on all converters) */
+    protected static $optionDefinitionsBasic = [
+        ['alpha-quality', 'integer', 80],
+        ['autofilter', 'boolean', false],
+        ['default-quality', 'number', 75],       // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
+        ['lossless', 'boolean|string', false],  // PS: Default is altered to "auto" for PNG in ::getDefaultOptions()
+        ['low-memory', 'boolean', false],
+        ['max-quality', 'number', 85],
+        ['metadata', 'string', 'none'],
+        ['method', 'number', 6],
+        ['near-lossless', 'integer', 60],
+        ['preset', 'string', null],              // ('default' | 'photo' | 'picture' | 'drawing' | 'icon' | 'text')
+        ['quality', 'number|string', 'auto'],    // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
+        ['size-in-percentage', 'number', null],
+        ['skip', 'boolean', false],
+        ['use-nice', 'boolean', false],
+    ];
+
+    /**
+     * Set "provided options" (options provided by the user when calling convert().
+     *
+     * This also calculates the protected options array, by merging in the default options, merging
+     * jpeg and png options and merging prefixed options (such as 'vips-quality').
+     * The resulting options array are set in the protected property $this->options and can be
+     * retrieved using the public ::getOptions() function.
+     *
+     * @param   array $providedOptions (optional)
+     * @return  void
+     */
+    public function setProvidedOptions($providedOptions = [])
+    {
+        $this->providedOptions = $providedOptions;
+
+        if (isset($this->providedOptions['png'])) {
+            if ($this->getMimeTypeOfSource() == 'image/png') {
+                $this->providedOptions = array_merge($this->providedOptions, $this->providedOptions['png']);
+//                $this->logLn(print_r($this->providedOptions, true));
+            }
+        }
+
+        if (isset($this->providedOptions['jpeg'])) {
+            if ($this->getMimeTypeOfSource() == 'image/jpeg') {
+                $this->providedOptions = array_merge($this->providedOptions, $this->providedOptions['jpeg']);
+            }
+        }
+
+        // merge down converter-prefixed options
+        $converterId = self::getConverterId();
+        $strLen = strlen($converterId);
+        //$this->logLn('id:' . $converterId);
+        foreach ($this->providedOptions as $optionKey => $optionValue) {
+            //$this->logLn($optionKey . ':' . $optionValue);
+            //$this->logLn(substr($optionKey, 0, strlen($converterId)));
+            if (substr($optionKey, 0, $strLen + 1) == ($converterId . '-')) {
+                //$this->logLn($optionKey . ':' . $optionValue);
+                //$this->logLn(substr($optionKey, $strLen + 1));
+                $this->providedOptions[substr($optionKey, $strLen + 1)] = $optionValue;
+            }
+        }
+
+        // -  Merge $defaultOptions into provided options
+        $this->options = array_merge($this->getDefaultOptions(), $this->providedOptions);
+    }
+
+    /**
+     * Get the resulting options after merging provided options with default options.
+     *
+     * @return array  An associative array of options: ['metadata' => 'none', ...]
+     */
+    public function getOptions()
+    {
+        return $this->options;
+    }
+
+    /**
+     * Change an option specifically.
+     *
+     * This method is probably rarely neeeded. We are using it to change the "lossless" option temporarily
+     * in the LosslessAutoTrait.
+     *
+     * @param  string  $optionName   Name id of option (ie "metadata")
+     * @param  mixed   $optionValue  The new value.
+     * @return void
+     */
+    protected function setOption($optionName, $optionValue)
+    {
+        $this->options[$optionName] = $optionValue;
+    }
+
+
+    /**
+     * Get default options for the converter.
+     *
+     * Note that the defaults depends on the mime type of the source. For example, the default value for quality
+     * is "auto" for jpegs, and 85 for pngs.
+     *
+     * @return array  An associative array of option defaults: ['metadata' => 'none', ...]
+     */
+    public function getDefaultOptions()
+    {
+        $defaults = [];
+        foreach ($this->getOptionDefinitions() as list($name, $type, $default)) {
+            $defaults[$name] = $default;
+        }
+        if ($this->getMimeTypeOfSource() == 'image/png') {
+            $defaults['lossless'] = 'auto';
+            $defaults['quality'] = 85;
+            $defaults['default-quality'] = 85;
+        }
+        return $defaults;
+    }
+
+
+    /**
+     * Get definitions of general options (those available for all converters)
+     *
+     * To get only the extra definitions for a specific converter, call
+     * ::getOptionDefinitionsExtra(). To get both general and extra, merged together, call ::getOptionDefinitions().
+     *
+     * @return array  A numeric array of definitions of general options for the converter.
+     *                Each definition is a numeric array with three items: [option id, type, default value]
+     */
+    public function getGeneralOptionDefinitions()
+    {
+        return self::$optionDefinitionsBasic;
+    }
+
+    /**
+     * Get definitions of extra options unique for the actual converter.
+     *
+     * @return array  A numeric array of definitions of extra options for the converter.
+     *                Each definition is a numeric array with three items: [option id, type, default value]
+     */
+    protected function getOptionDefinitionsExtra()
+    {
+        return [];
+    }
+
+    /**
+     * Get option definitions for the converter (includes both general options and the extra options for the converter)
+     *
+     * To get only the general options definitions (those available for all converters), call
+     * ::getGeneralOptionDefinitions(). To get only the extra definitions for a specific converter, call
+     * ::getOptionDefinitionsExtra().
+     *
+     * @return array  A numeric array of definitions of all options for the converter.
+     *                Each definition is a numeric array with three items: [option id, type, default value]
+     */
+    public function getOptionDefinitions()
+    {
+        return array_merge(self::$optionDefinitionsBasic, $this->getOptionDefinitionsExtra());
+    }
+
+    /**
+     *  Check option types generally (against their definitions).
+     *
+     *  @throws InvalidOptionTypeException  if type is invalid
+     *  @return void
+     */
+    private function checkOptionTypesGenerally()
+    {
+        foreach ($this->getOptionDefinitions() as $def) {
+            list($optionName, $optionType) = $def;
+            if (isset($this->providedOptions[$optionName])) {
+                $actualType = gettype($this->providedOptions[$optionName]);
+                if ($actualType != $optionType) {
+                    $optionType = str_replace('number', 'integer|double', $optionType);
+                    if (!in_array($actualType, explode('|', $optionType))) {
+                        throw new InvalidOptionTypeException(
+                            'The provided ' . $optionName . ' option is not a ' . $optionType .
+                                ' (it is a ' . $actualType . ')'
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     *  Check quality option
+     *
+     *  @throws InvalidOptionTypeException  if value is out of range
+     *  @return void
+     */
+    private function checkQualityOption()
+    {
+        if (!isset($this->providedOptions['quality'])) {
+            return;
+        }
+        $optionValue = $this->providedOptions['quality'];
+        if (gettype($optionValue) == 'string') {
+            if ($optionValue != 'auto') {
+                throw new InvalidOptionTypeException(
+                    'Quality option must be either "auto" or a number between 0-100. ' .
+                    'A string, "' . $optionValue . '" was given'
+                );
+            }
+        } else {
+            if (($optionValue < 0) || ($optionValue > 100)) {
+                throw new InvalidOptionTypeException(
+                    'Quality option must be either "auto" or a number between 0-100. ' .
+                        'The number you provided (' . strval($optionValue) . ') is out of range.'
+                );
+            }
+        }
+    }
+
+    /**
+     *  Check lossless option
+     *
+     *  @throws InvalidOptionTypeException  if value is out of range
+     *  @return void
+     */
+    private function checkLosslessOption()
+    {
+        if (!isset($this->providedOptions['lossless'])) {
+            return;
+        }
+        $optionValue = $this->providedOptions['lossless'];
+        if ((gettype($optionValue) == 'string') && ($optionValue != 'auto')) {
+            throw new InvalidOptionTypeException(
+                'Lossless option must be true, false or "auto". It was set to: "' . $optionValue . '"'
+            );
+        }
+    }
+
+    /**
+     *  Check option types.
+     *
+     *  @throws InvalidOptionTypeException  if an option value have wrong type or is out of range
+     *  @return void
+     */
+    private function checkOptionTypes()
+    {
+        $this->checkOptionTypesGenerally();
+        $this->checkQualityOption();
+        $this->checkLosslessOption();
+    }
+
+    /**
+     *  Check options.
+     *
+     *  @throws InvalidOptionTypeException  if an option value have wrong type or is out of range
+     *  @throws ConversionSkippedException  if 'skip' option is set to true
+     *  @return void
+     */
+    protected function checkOptions()
+    {
+        $this->checkOptionTypes();
+
+        if ($this->options['skip']) {
+            if (($this->getMimeTypeOfSource() == 'image/png') && isset($this->options['png']['skip'])) {
+                throw new ConversionSkippedException(
+                    'skipped conversion (configured to do so for PNG)'
+                );
+            } else {
+                throw new ConversionSkippedException(
+                    'skipped conversion (configured to do so)'
+                );
+            }
+        }
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Converters\BaseTraits;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
+use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
+
+/**
+ * Trait for handling options
+ *
+ * This trait is currently only used in the AbstractConverter class. It has been extracted into a
+ * trait in order to bundle the methods concerning options.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+trait SourceValidationTrait
+{
+
+    abstract protected function getMimeTypeOfSource();
+    abstract public function getSource();
+
+    /** @var array  Array of allowed mime types for source.  */
+    public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
+
+    /**
+     * Check that source file exists.
+     *
+     * Note: As the input validations are only run one time in a stack,
+     * this method is not overridable
+     *
+     * @throws TargetNotFoundException
+     * @return void
+     */
+    private function checkSourceExists()
+    {
+        // Check if source exists
+        if (!@file_exists($this->getSource())) {
+            throw new TargetNotFoundException('File or directory not found: ' . $this->getSource());
+        }
+    }
+
+    /**
+     * Check that source has a valid mime type.
+     *
+     * Note: As the input validations are only run one time in a stack,
+     * this method is not overridable
+     *
+     * @throws InvalidImageTypeException  If mime type could not be detected or is unsupported
+     * @return void
+     */
+    private function checkSourceMimeType()
+    {
+        $fileMimeType = $this->getMimeTypeOfSource();
+        if (is_null($fileMimeType)) {
+            throw new InvalidImageTypeException('Image type could not be detected');
+        } elseif ($fileMimeType === false) {
+            throw new InvalidImageTypeException('File seems not to be an image.');
+        } elseif (!in_array($fileMimeType, self::$allowedMimeTypes)) {
+            throw new InvalidImageTypeException('Unsupported mime type: ' . $fileMimeType);
+        }
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Converters\BaseTraits;
+
+/**
+ * Trait for handling warnings (by logging them)
+ *
+ * This trait is currently only used in the AbstractConverter class. It has been extracted into a
+ * trait in order to bundle the methods concerning options.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+trait WarningLoggerTrait
+{
+    abstract protected function logLn($msg, $style = '');
+
+    /** @var string|array|null  Previous error handler (stored in order to be able pass warnings on) */
+    private $previousErrorHandler;
+
+    /**
+     *  Handle warnings and notices during conversion by logging them and passing them on.
+     *
+     *  The function is a callback used with "set_error_handler".
+     *  It is declared public because it needs to be accessible from the point where the warning happened.
+     *
+     *  @param  integer  $errno
+     *  @param  string   $errstr
+     *  @param  string   $errfile
+     *  @param  integer  $errline
+     *
+     *  @return false|null
+     */
+    public function warningHandler($errno, $errstr, $errfile, $errline)
+    {
+        /*
+        We do NOT do the following (even though it is generally recommended):
+
+        if (!(error_reporting() & $errno)) {
+            // This error code is not included in error_reporting, so let it fall
+            // through to the standard PHP error handler
+            return false;
+        }
+
+        - Because we want to log all warnings and errors (also the ones that was suppressed with @)
+        https://secure.php.net/manual/en/language.operators.errorcontrol.php
+        */
+
+        $errorTypes = [
+            E_WARNING =>             "Warning",
+            E_NOTICE =>              "Notice",
+            E_STRICT =>              "Strict Notice",
+            E_DEPRECATED =>          "Deprecated",
+            E_USER_DEPRECATED =>     "User Deprecated",
+
+            /*
+            The following can never be catched by a custom error handler:
+            E_PARSE, E_ERROR, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING
+
+            We do do not currently trigger the following:
+            E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE
+
+            But we may want to do that at some point, like this:
+            trigger_error('Your version of Gd is very old', E_USER_WARNING);
+            in that case, remember to add them to this array
+            */
+        ];
+
+        if (isset($errorTypes[$errno])) {
+            $errType = $errorTypes[$errno];
+        } else {
+            $errType = "Unknown error/warning/notice ($errno)";
+        }
+
+        $msg = $errType . ': ' . $errstr . ' in ' . $errfile . ', line ' . $errline . ', PHP ' . PHP_VERSION .
+            ' (' . PHP_OS . ')';
+        $this->logLn($msg);
+
+        //echo 'previously defined handler:' . print_r($this->previousErrorHandler, true);
+
+        if (!is_null($this->previousErrorHandler)) {
+            return call_user_func($this->previousErrorHandler, $errno, $errstr, $errfile, $errline);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     *  Activate warning logger.
+     *
+     *  Sets the error handler and stores the previous to our error handler can bubble up warnings
+     *
+     *  @return  void
+     */
+    protected function activateWarningLogger()
+    {
+        $this->previousErrorHandler = set_error_handler(
+            array($this, "warningHandler"),
+            E_WARNING | E_USER_WARNING | E_NOTICE | E_USER_NOTICE | E_USER_ERROR
+        );
+    }
+
+    /**
+     *  Deactivate warning logger.
+     *
+     *  Restores the previous error handler.
+     *
+     *  @return  void
+     */
+    protected function deactivateWarningLogger()
+    {
+        restore_error_handler();
+    }
+}
+
+?><?php
+
 namespace WebPConvert\Convert\Converters\ConverterTraits;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
@@ -3094,7 +3878,7 @@ class Wpc extends AbstractConverter
         return [
             ['api-key', 'string', '', true],   /* new in api v.1 (renamed 'secret' to 'api-key') */
             ['api-url', 'string', '', true, true],
-            ['api-version', 'number', 0],                     /* Can currently be 0 or 1 */
+            ['api-version', 'number', 0],                     /* Can currently be 0, 1 or 2 */
             ['secret', 'string', '', true],    /* only in api v.0 */
             ['crypt-api-key-in-transfer', 'boolean', false],  /* new in api v.1 */
         ];
@@ -3239,6 +4023,20 @@ class Wpc extends AbstractConverter
         unset($optionsToSend['secret']);
         unset($optionsToSend['api-key']);
         unset($optionsToSend['api-url']);
+
+        $apiVersion = $optionsToSend['api-version'];
+
+        if ($apiVersion == 1) {
+            // Lossless can be "auto" in api 2, but in api 1 "auto" is not supported
+            unset($optionsToSend['lossless']);
+        } elseif ($apiVersion == 2) {
+            unset($optionsToSend['png']);
+            unset($optionsToSend['jpeg']);
+
+            // The following are unset for security reasons.
+            unset($optionsToSend['cwebp-command-line-options']);
+            unset($optionsToSend['command-line-options']);
+        }
 
         return $optionsToSend;
     }
@@ -3681,85 +4479,45 @@ class PhpIniSizes
 
 ?><?php
 
-namespace WebPConvert\Exceptions;
-
-use WebPConvert\Exceptions\WebPConvertException;
-
-/**
- *  WebPConvertException is the base exception for all exceptions in this library.
- *
- *  Note that the parameters for the constructor differs from that of the Exception class.
- *  We do not use exception code here, but are instead allowing two version of the error message:
- *  a short version and a long version.
- *  The short version may not contain special characters or dynamic content.
- *  The detailed version may.
- *  If the detailed version isn't provided, getDetailedMessage will return the short version.
- *
- */
-class WarningException extends WebPConvertException
-{
-    public $description = 'A warning was issued and turned into an exception';
-}
-
-?><?php
-
-namespace WebPConvert\Helpers;
-
-use WebPConvert\Exceptions\WarningException;
-
-abstract class WarningsIntoExceptions
-{
-
-    public static function warningHandler($errno, $errstr, $errfile, $errline)
-    {
-        throw new WarningException(
-            'A warning was issued',
-            'A warning was issued: ' . ': ' . $errstr . ' in ' . $errfile . ', line ' . $errline .
-                ', PHP ' . PHP_VERSION .
-                ' (' . PHP_OS . ')'
-        );
-
-        /* Don't execute PHP internal error handler */
-        // return true;     // commented out (unreachable)
-    }
-
-    public static function activate()
-    {
-        set_error_handler(
-            array('\\WebPConvert\\Helpers\\WarningsIntoExceptions', "warningHandler"),
-            E_WARNING | E_USER_WARNING
-        );   // E_USER_WARNING  E_ALL
-    }
-
-    public static function deactivate()
-    {
-        restore_error_handler();
-    }
-}
-
-?><?php
-
 namespace WebPConvert\Loggers;
 
+/**
+ * Base for all logger classes.
+ *
+ * WebPConvert can provide insights into the conversion process by means of accepting a logger which
+ * extends this class.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 abstract class BaseLogger
 {
-    /*
-    $msg: message to log
-    $style: null | bold | italic
+    /**
+     * Write a message to the log
+     *
+     * @param  string  $msg     message to log
+     * @param  string  $style   style (null | bold | italic)
+     * @return void
     */
     abstract public function log($msg, $style = '');
 
+    /**
+     * Add new line to the log
+     * @return void
+     */
     abstract public function ln();
 
+    /**
+     * Write a line to the log
+     *
+     * @param  string  $msg     message to log
+     * @param  string  $style   style (null | bold | italic)
+     * @return void
+    */
     public function logLn($msg, $style = '')
     {
         $this->log($msg, $style);
-        $this->ln();
-    }
-
-    public function logLnLn($msg, $style = '')
-    {
-        $this->logLn($msg, $style);
         $this->ln();
     }
 }
@@ -3770,20 +4528,44 @@ namespace WebPConvert\Loggers;
 
 use WebPConvert\Loggers\BaseLogger;
 
+/**
+ * Collect the logging and retrieve it later in HTML or plain text format.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class BufferLogger extends BaseLogger
 {
     public $entries = array();
 
+    /**
+     * Write a message to the buffer - all entries can later be retrieved with getText() or getHtlm().
+     *
+     * @param  string  $msg     message to log
+     * @param  string  $style   style (null | bold | italic)
+     * @return void
+    */
     public function log($msg, $style = '')
     {
         $this->entries[] = [$msg, $style];
     }
 
+    /**
+     * Write a new line to the buffer.
+     *
+     * @return void
+     */
     public function ln()
     {
         $this->entries[] = '';
     }
 
+    /**
+     * Get everything logged - as HTML.
+     *
+     * @return string  The log, formatted as HTML.
+     */
     public function getHtml()
     {
         $html = '';
@@ -3805,6 +4587,12 @@ class BufferLogger extends BaseLogger
         return $html;
     }
 
+    /**
+     * Get everything logged - as plain text.
+     *
+     * @param  string  $newLineChar. The character used for new lines.
+     * @return string  The log, formatted as plain text.
+     */
     public function getText($newLineChar = ' ')
     {
         $text = '';
@@ -3827,8 +4615,23 @@ class BufferLogger extends BaseLogger
 
 namespace WebPConvert\Loggers;
 
+/**
+ * Echo the logs immediately (in HTML)
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class EchoLogger extends BaseLogger
 {
+
+    /**
+     * Handle log() by echoing the message.
+     *
+     * @param  string  $msg     message to log
+     * @param  string  $style   style (null | bold | italic)
+     * @return void
+    */
     public function log($msg, $style = '')
     {
         $msg = htmlspecialchars($msg);
@@ -3841,24 +4644,14 @@ class EchoLogger extends BaseLogger
         }
     }
 
+    /**
+     * Handle ln by echoing a <br> tag.
+     *
+     * @return void
+    */
     public function ln()
     {
         echo '<br>';
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Loggers;
-
-class VoidLogger extends BaseLogger
-{
-    public function log($msg, $style = '')
-    {
-    }
-
-    public function ln()
-    {
     }
 }
 
@@ -3879,6 +4672,7 @@ class Header
     /**
      * Convenience function for adding header (append).
      *
+     * @param  string  $header  The header to add.
      * @return void
      */
     public static function addHeader($header)
@@ -3889,6 +4683,7 @@ class Header
     /**
      * Convenience function for replacing header.
      *
+     * @param  string  $header  The header to set.
      * @return void
      */
     public static function setHeader($header)
@@ -3897,6 +4692,8 @@ class Header
     }
 
     /**
+     * Add log header and optionally send it to a logger as well.
+     *
      * @param  string  $msg  Message to add to "X-WebP-Convert-Log" header
      * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
      * @return void
@@ -3918,6 +4715,13 @@ use WebPConvert\Loggers\EchoLogger;
 
 //use WebPConvert\Loggers\EchoLogger;
 
+/**
+ * Class for generating a HTML report of converting an image.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
 class Report
 {
 
@@ -4134,6 +4938,7 @@ use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 class ServeConvertedWebP
 {
 
+    /** @var array  Array of default options */
     public static $defaultOptions = [
         'reconvert' => false,
         'serve-original' => false,
@@ -4283,6 +5088,7 @@ use WebPConvert\Exceptions\WebPConvertException;
 class ServeConvertedWebPWithErrorHandling
 {
 
+    /** @var array  Array of default options */
     public static $defaultOptions = [
         'fail' => 'original',
         'fail-when-fail-fails' => 'throw',
@@ -4309,9 +5115,10 @@ class ServeConvertedWebPWithErrorHandling
      * @param  string  $destination         path to destination
      * @param  array   $options (optional)  options for serving/converting
      * @param  \Exception  $e               exception that was thrown when trying to serve
+     * @param   string  $serveClass         (optional) Full class name to a class that has a serveOriginal() method
      * @return void
      */
-    public static function performFailAction($fail, $failIfFailFails, $source, $destination, $options, $e)
+    public static function performFailAction($fail, $failIfFailFails, $source, $destination, $options, $e, $serveClass)
     {
         self::addHeadersPreventingCaching();
 
@@ -4321,9 +5128,10 @@ class ServeConvertedWebPWithErrorHandling
         switch ($fail) {
             case 'original':
                 try {
-                    ServeConvertedWebP::serveOriginal($source, $options);
+                    //ServeConvertedWebP::serveOriginal($source, $options);
+                    call_user_func($serveClass . '::serveOriginal', $source, $options);
                 } catch (\Exception $e) {
-                    self::performFailAction($failIfFailFails, '404', $source, $destination, $options, $e);
+                    self::performFailAction($failIfFailFails, '404', $source, $destination, $options, $e, $serveClass);
                 }
                 break;
 
@@ -4368,14 +5176,22 @@ class ServeConvertedWebPWithErrorHandling
      *       - All options supported by ServeFile::serve()
      *       - All options supported by DecideWhatToServe::decide)
      * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
+     * @param   string  $serveClass     (optional) Full class name to a class that has a serve() method and a
+     *                                  serveOriginal() method
      * @return  void
      */
-    public static function serve($source, $destination, $options = [], $logger = null)
-    {
+    public static function serve(
+        $source,
+        $destination,
+        $options = [],
+        $logger = null,
+        $serveClass = '\\WebPConvert\\Serve\\ServeConvertedWebP'
+    ) {
         $options = array_merge(self::$defaultOptions, $options);
 
         try {
-            ServeConvertedWebP::serve($source, $destination, $options, $logger);
+            //ServeConvertedWebP::serve($source, $destination, $options, $logger);
+            call_user_func($serveClass . '::serve', $source, $destination, $options, $logger);
         } catch (\Exception $e) {
             if ($e instanceof \WebPConvert\Exceptions\WebPConvertException) {
                 Header::addLogHeader($e->getShortMessage(), $logger);
@@ -4387,7 +5203,8 @@ class ServeConvertedWebPWithErrorHandling
                 $source,
                 $destination,
                 $options,
-                $e
+                $e,
+                $serveClass
             );
         }
     }
@@ -4410,6 +5227,7 @@ use WebPConvert\Serve\Exceptions\ServeFailedException;
 class ServeFile
 {
 
+    /** @var array  Array of default options */
     public static $defaultOptions = [
         'set-cache-control-header' => false,
         'set-expires-header' => false,
