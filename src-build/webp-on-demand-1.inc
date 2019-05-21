@@ -515,8 +515,6 @@ class WebPConvert
     */
     public static function convert($source, $destination, $options = [], $logger = null)
     {
-        //return ConverterHelper::runConverterStack($source, $destination, $options, $logger);
-        //return Convert::runConverterStack($source, $destination, $options, $logger);
         Stack::convert($source, $destination, $options, $logger);
     }
 

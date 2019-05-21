@@ -4,8 +4,8 @@
 
 namespace WebPConvert\Convert\Converters;
 
+use WebPConvert\Convert\ConverterFactory;
 use WebPConvert\Convert\Converters\AbstractConverter;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFoundException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -39,42 +39,16 @@ class Stack extends AbstractConverter
         ];
     }
 
-    public static $availableConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'wpc', 'ewww'];
-    public static $localConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'gmagickbinary'];
-
-    public static function converterIdToClassname($converterId)
+    /**
+     * Get available converters (ids).
+     *
+     * @return  array  An array of ids of converters that comes with this library
+     */
+    public static function getAvailableConverters()
     {
-        switch ($converterId) {
-            case 'imagickbinary':
-                $classNameShort = 'ImagickBinary';
-                break;
-            case 'gmagickbinary':
-                $classNameShort = 'GmagickBinary';
-                break;
-            default:
-                $classNameShort = ucfirst($converterId);
-        }
-        $className = 'WebPConvert\\Convert\\Converters\\' . $classNameShort;
-        if (is_callable([$className, 'convert'])) {
-            return $className;
-        } else {
-            throw new ConverterNotFoundException('There is no converter with id:' . $converterId);
-        }
+        return ['cwebp', 'vips', 'wpc', 'imagickbinary', 'ewww', 'imagick', 'gmagick', 'gmagickbinary', 'gd'];
     }
-
-    public static function getClassNameOfConverter($converterId)
-    {
-        if (strtolower($converterId) == $converterId) {
-            return self::converterIdToClassname($converterId);
-        }
-        $className = $converterId;
-        if (!is_callable([$className, 'convert'])) {
-            throw new ConverterNotFoundException('There is no converter with class name:' . $className);
-        }
-
-        return $className;
-    }
-
+    
     /**
      * Check (general) operationality of imagack converter executable
      *
@@ -98,21 +72,6 @@ class Stack extends AbstractConverter
         $options = $this->options;
 
         $beginTimeStack = microtime(true);
-
-
-        // If we have set converter options for a converter, which is not in the converter array,
-        // then we add it to the array
-        /*
-        if (isset($options['converter-options'])) {
-            foreach ($options['converter-options'] as $converterName => $converterOptions) {
-                if (!in_array($converterName, $converters)) {
-                    $converters[] = $converterName;
-                }
-            }
-        }*/
-
-
-
 
         $anyRuntimeErrors = false;
 
@@ -190,33 +149,23 @@ class Stack extends AbstractConverter
 
             $beginTime = microtime(true);
 
-            $className = self::getClassNameOfConverter($converterId);
-
-
-            try {
-                $converterDisplayName = call_user_func(
-                    [$className, 'getConverterDisplayName']
-                );
-            } catch (\Exception $e) {
-                // TODO: handle failure better than this
-                $converterDisplayName = 'Untitled converter';
-            }
+            $converter = ConverterFactory::makeConverter(
+                $converterId,
+                $this->source,
+                $this->destination,
+                $converterOptions,
+                $this->logger
+            );
 
             try {
                 $this->ln();
                 $this->logLn('Trying: ' . $converterId, 'italic');
 
-                call_user_func(
-                    [$className, 'convert'],
-                    $this->source,
-                    $this->destination,
-                    $converterOptions,
-                    $this->logger
-                );
+                $converter->doConvert();
 
                 //self::runConverterWithTiming($converterId, $source, $destination, $converterOptions, false, $logger);
 
-                $this->logLn($converterDisplayName . ' succeeded :)');
+                $this->logLn($converterId . ' succeeded :)');
                 //throw new ConverterNotOperationalException('...');
                 return;
             } catch (ConverterNotOperationalException $e) {
@@ -235,7 +184,7 @@ class Stack extends AbstractConverter
                 $this->logLn($e->getMessage());
             }
 
-            $this->logLn($converterDisplayName . ' failed in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
+            $this->logLn($converterId . ' failed in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
         }
 
         $this->ln();

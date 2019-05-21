@@ -8,6 +8,7 @@ namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Converters\BaseTraits\AutoQualityTrait;
+//use WebPConvert\Convert\Converters\BaseTraits\ConverterFactoryTrait;
 use WebPConvert\Convert\Converters\BaseTraits\DestinationPreparationTrait;
 use WebPConvert\Convert\Converters\BaseTraits\LoggerTrait;
 use WebPConvert\Convert\Converters\BaseTraits\OptionsTrait;
@@ -32,6 +33,7 @@ abstract class AbstractConverter
     use WarningLoggerTrait;
     use DestinationPreparationTrait;
     use SourceValidationTrait;
+    //use ConverterFactoryTrait;
 
     /**
      * The actual conversion is be done by a concrete converter extending this class.
@@ -154,6 +156,20 @@ abstract class AbstractConverter
         $this->destination = $destination;
     }
 
+    /**
+     * Create an instance of this class
+     *
+     * @param  string  $source       The path to the file to convert
+     * @param  string  $destination  The path to save the converted file to
+     * @param  array   $options      (optional)
+     * @param  \WebPConvert\Loggers\BaseLogger   $logger       (optional)
+     *
+     * @return static
+     */
+    public static function createInstance($source, $destination, $options = [], $logger = null)
+    {
+        return new static($source, $destination, $options, $logger);
+    }
 
     /**
      *  Get converter name for display (defaults to the class name (short)).
@@ -180,23 +196,6 @@ abstract class AbstractConverter
     {
         return strtolower(self::getConverterDisplayName());
     }
-
-
-    /**
-     * Create an instance of this class
-     *
-     * @param  string  $source       The path to the file to convert
-     * @param  string  $destination  The path to save the converted file to
-     * @param  array   $options      (optional)
-     * @param  \WebPConvert\Loggers\BaseLogger   $logger       (optional)
-     *
-     * @return static
-     */
-    public static function createInstance($source, $destination, $options = [], $logger = null)
-    {
-        return new static($source, $destination, $options, $logger);
-    }
-
 
     /**
      * Start conversion.
@@ -528,6 +527,44 @@ trait AutoQualityTrait
             }
         }
         $this->calculatedQuality = $q;
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert\Converters\BaseTraits;
+
+/**
+ * Trait for handling the "quality:auto" option.
+ *
+ * This trait is only used in the AbstractConverter class. It has been extracted into a
+ * trait in order to bundle the methods concerning auto quality.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+trait ConverterFactoryTrait
+{
+
+    /**
+     * Create an instance of this class
+     *
+     * @param  string  $source       The path to the file to convert
+     * @param  string  $destination  The path to save the converted file to
+     * @param  array   $options      (optional)
+     * @param  \WebPConvert\Loggers\BaseLogger   $logger       (optional)
+     *
+     * @return static
+     */
+    public static function createInstance($source, $destination, $options = [], $logger = null)
+    {
+        return new static($source, $destination, $options, $logger);
+    }
+
+    public static function makeConverter($id, $source, $destination, $options = [], $logger = null)
+    {
+        return new static($source, $destination, $options, $logger);
     }
 }
 
@@ -3274,8 +3311,8 @@ class ImagickBinary extends AbstractConverter
 
 namespace WebPConvert\Convert\Converters;
 
+use WebPConvert\Convert\ConverterFactory;
 use WebPConvert\Convert\Converters\AbstractConverter;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFoundException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -3309,42 +3346,16 @@ class Stack extends AbstractConverter
         ];
     }
 
-    public static $availableConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'wpc', 'ewww'];
-    public static $localConverters = ['cwebp', 'gd', 'imagick', 'gmagick', 'imagickbinary', 'gmagickbinary'];
-
-    public static function converterIdToClassname($converterId)
+    /**
+     * Get available converters (ids).
+     *
+     * @return  array  An array of ids of converters that comes with this library
+     */
+    public static function getAvailableConverters()
     {
-        switch ($converterId) {
-            case 'imagickbinary':
-                $classNameShort = 'ImagickBinary';
-                break;
-            case 'gmagickbinary':
-                $classNameShort = 'GmagickBinary';
-                break;
-            default:
-                $classNameShort = ucfirst($converterId);
-        }
-        $className = 'WebPConvert\\Convert\\Converters\\' . $classNameShort;
-        if (is_callable([$className, 'convert'])) {
-            return $className;
-        } else {
-            throw new ConverterNotFoundException('There is no converter with id:' . $converterId);
-        }
+        return ['cwebp', 'vips', 'wpc', 'imagickbinary', 'ewww', 'imagick', 'gmagick', 'gmagickbinary', 'gd'];
     }
-
-    public static function getClassNameOfConverter($converterId)
-    {
-        if (strtolower($converterId) == $converterId) {
-            return self::converterIdToClassname($converterId);
-        }
-        $className = $converterId;
-        if (!is_callable([$className, 'convert'])) {
-            throw new ConverterNotFoundException('There is no converter with class name:' . $className);
-        }
-
-        return $className;
-    }
-
+    
     /**
      * Check (general) operationality of imagack converter executable
      *
@@ -3368,21 +3379,6 @@ class Stack extends AbstractConverter
         $options = $this->options;
 
         $beginTimeStack = microtime(true);
-
-
-        // If we have set converter options for a converter, which is not in the converter array,
-        // then we add it to the array
-        /*
-        if (isset($options['converter-options'])) {
-            foreach ($options['converter-options'] as $converterName => $converterOptions) {
-                if (!in_array($converterName, $converters)) {
-                    $converters[] = $converterName;
-                }
-            }
-        }*/
-
-
-
 
         $anyRuntimeErrors = false;
 
@@ -3460,33 +3456,23 @@ class Stack extends AbstractConverter
 
             $beginTime = microtime(true);
 
-            $className = self::getClassNameOfConverter($converterId);
-
-
-            try {
-                $converterDisplayName = call_user_func(
-                    [$className, 'getConverterDisplayName']
-                );
-            } catch (\Exception $e) {
-                // TODO: handle failure better than this
-                $converterDisplayName = 'Untitled converter';
-            }
+            $converter = ConverterFactory::makeConverter(
+                $converterId,
+                $this->source,
+                $this->destination,
+                $converterOptions,
+                $this->logger
+            );
 
             try {
                 $this->ln();
                 $this->logLn('Trying: ' . $converterId, 'italic');
 
-                call_user_func(
-                    [$className, 'convert'],
-                    $this->source,
-                    $this->destination,
-                    $converterOptions,
-                    $this->logger
-                );
+                $converter->doConvert();
 
                 //self::runConverterWithTiming($converterId, $source, $destination, $converterOptions, false, $logger);
 
-                $this->logLn($converterDisplayName . ' succeeded :)');
+                $this->logLn($converterId . ' succeeded :)');
                 //throw new ConverterNotOperationalException('...');
                 return;
             } catch (ConverterNotOperationalException $e) {
@@ -3505,7 +3491,7 @@ class Stack extends AbstractConverter
                 $this->logLn($e->getMessage());
             }
 
-            $this->logLn($converterDisplayName . ' failed in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
+            $this->logLn($converterId . ' failed in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
         }
 
         $this->ln();
@@ -4373,6 +4359,110 @@ class PhpIniSizes
             return false;
         }
         return self::parseShortHandSize($iniVarValue);
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Convert;
+
+use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\ConverterNotFoundException;
+use WebPConvert\Convert\Converters\AbstractConverter;
+
+/**
+ * Make converters from their ids.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class ConverterFactory
+{
+    /**
+     * Get classname of a converter (by id)
+     *
+     * @param  string  $converterId    Id of converter (ie "cwebp")
+     *
+     * @throws ConverterNotFoundException  If there is no converter with that id.
+     * @return string  Fully qualified class name of converter
+     */
+    public static function converterIdToClassname($converterId)
+    {
+        switch ($converterId) {
+            case 'imagickbinary':
+                $classNameShort = 'ImagickBinary';
+                break;
+            case 'gmagickbinary':
+                $classNameShort = 'GmagickBinary';
+                break;
+            default:
+                $classNameShort = ucfirst($converterId);
+        }
+        $className = 'WebPConvert\\Convert\\Converters\\' . $classNameShort;
+        if (is_callable([$className, 'convert'])) {
+            return $className;
+        } else {
+            throw new ConverterNotFoundException('There is no converter with id:' . $converterId);
+        }
+    }
+
+    /**
+     * Make a converter instance by class name.
+     *
+     * @param  string  $converterClassName    Fully qualified class name
+     * @param  string  $source                The path to the file to convert
+     * @param  string  $destination           The path to save the converted file to
+     * @param  array   $options               (optional)
+     * @param  \WebPConvert\Loggers\BaseLogger   $logger       (optional)
+     *
+     * @throws ConverterNotFoundException  If the specified converter class isn't found
+     * @return AbstractConverter  An instance of the specified converter
+     */
+    public static function makeConverterFromClassname(
+        $converterClassName,
+        $source,
+        $destination,
+        $options = [],
+        $logger = null
+    ) {
+        if (!is_callable([$converterClassName, 'convert'])) {
+            throw new ConverterNotFoundException(
+                'There is no converter with class name:' . $converterClassName . ' (or it is not a converter)'
+            );
+        }
+        //$converter = new $converterClassName($source, $destination, $options, $logger);
+
+        return call_user_func(
+            [$converterClassName, 'createInstance'],
+            $source,
+            $destination,
+            $options,
+            $logger
+        );
+    }
+
+    /**
+     * Make a converter instance by either id or class name.
+     *
+     * @param  string  $converterIdOrClassName   Either a converter ID or a fully qualified class name
+     * @param  string  $source                   The path to the file to convert
+     * @param  string  $destination              The path to save the converted file to
+     * @param  array   $options                  (optional)
+     * @param  \WebPConvert\Loggers\BaseLogger   $logger       (optional)
+     *
+     * @throws ConverterNotFoundException  If the specified converter class isn't found
+     * @return AbstractConverter  An instance of the specified converter
+     */
+    public static function makeConverter($converterIdOrClassName, $source, $destination, $options = [], $logger = null)
+    {
+        // We take it that all lowercase means it is an id rather than a class name
+        if (strtolower($converterIdOrClassName) == $converterIdOrClassName) {
+            $converterClassName = self::converterIdToClassname($converterIdOrClassName);
+        } else {
+            $converterClassName = $converterIdOrClassName;
+        }
+
+        return self::makeConverterFromClassname($converterClassName, $source, $destination, $options, $logger);
     }
 }
 
