@@ -16,37 +16,6 @@ Here is a minimal example to get started with:
 ```php
 <?php
 // To start with, lets display any errors.
-// You can later comment these out
-error_reporting(E_ALL);
-ini_set("display_errors", 1);
-
-require 'webp-on-demand-1.inc';
-
-use WebPConvert\WebPConvert;
-
-$source = $_GET['source'];            // Absolute file path to source file. Comes from the .htaccess
-$destination = $source . '.webp';     // Store the converted images besides the original images (other options are available!)
-
-$options = [
-
-    // Tell where to find the webp-convert-and-serve library, which will
-    // be dynamically loaded, if need be.
-    'require-for-conversion' => 'webp-on-demand-2.inc',
-
-    // UNCOMMENT NEXT LINE, WHEN YOU ARE UP AND RUNNING!
-    'show-report' => true             // Show a conversion report instead of serving the converted image.
-
-    // More options available!
-];
-WebPConvert::convertAndServe($source, $destination, $options);
-```
-
-*In 2.0, the "require-for-conversion" option will be removed*
-Here is how to do it in 2.0:
-
-```php
-<?php
-// To start with, lets display any errors.
 // - this will reveal if you entered wrong paths
 error_reporting(E_ALL);
 ini_set("display_errors", 1);
@@ -83,7 +52,7 @@ $options = [
 WebPConvert::serveConverted($source, $destination, $options);
 ```
 
-
+Note that the procedure has changed in 2.0. In 1.x, the library supported a `require-for-conversion` option, but this option has been removed in 2.0. It was not really needed, as the example above illustrates.
 
 ### 3. Continue the main install instructions from step 3
 [Click here to continue...](https://github.com/rosell-dk/webp-on-demand#3-add-redirect-rules)

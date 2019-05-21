@@ -11,7 +11,7 @@ Copy *webp-on-demand-1.inc* and *webp-on-demand-2.inc* from the *build* folder i
 
 Create a file *webp-on-demand.php*, and place it in webroot, or where-ever you like in you web-application.
 
-Here is a minimal example to get started with:
+Here is a minimal example to get started with. Note that this example only works in version 1.x. In 2.0, the `require-for-conversion` option has been removed, so the [procedure is different](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/webp-on-demand/without-composer.md).
 
 ```php
 <?php
@@ -40,44 +40,6 @@ $options = [
 ];
 WebPConvert::convertAndServe($source, $destination, $options);
 ```
-
-*In 2.0, the "require-for-conversion" option will be removed*
-Here is how to do it in 2.0:
-
-```php
-<?php
-// To start with, lets display any errors.
-// You can later comment these out
-error_reporting(E_ALL);
-ini_set("display_errors", 1);
-
-use WebPConvert\WebPConvert;
-
-require 'webp-on-demand-1.inc';
-
-function autoloader($class) {
-    if (strpos($class, 'WebPConvert\\') === 0) {
-        require_once __DIR__ . '/webp-on-demand-2.inc';
-    }
-}
-spl_autoload_register('autoloader', true, true);
-
-$source = $_GET['source'];            // Absolute file path to source file. Comes from the .htaccess
-$destination = $source . '.webp';     // Store the converted images besides the original images (other options are available!)
-
-$options = [
-
-    // UNCOMMENT NEXT LINE, WHEN YOU ARE UP AND RUNNING!
-    'show-report' => true             // Show a conversion report instead of serving the converted image.
-
-    // More options available!
-];
-WebPConvert::convertAndServe($source, $destination, $options);
-```
-
-
-
-
 
 ### 3. Continue the main install instructions from step 3
 [Click here to continue...](https://github.com/rosell-dk/webp-on-demand#3-add-redirect-rules)
