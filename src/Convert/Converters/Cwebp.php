@@ -3,7 +3,7 @@
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Converters\AbstractConverter;
-use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
+use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
@@ -19,7 +19,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalExcep
 class Cwebp extends AbstractConverter
 {
 
-    use LosslessAutoTrait;
+    use EncodingAutoTrait;
     use ExecTrait;
 
     protected function getOptionDefinitionsExtra()
@@ -158,7 +158,7 @@ class Cwebp extends AbstractConverter
         }
 
         // Losless PNG conversion
-        if ($options['lossless'] === true) {
+        if ($options['encoding'] == 'lossless') {
             // No need to add -lossless when near-lossless is used
             if ($options['near-lossless'] === 100) {
                 $cmdOptions[] = '-lossless';
@@ -167,9 +167,9 @@ class Cwebp extends AbstractConverter
 
         // Near-lossles
         if ($options['near-lossless'] !== 100) {
-            // We only let near_lossless have effect when lossless is set.
-            // otherwise lossless auto would not work as expected
-            if ($options['lossless'] === true) {
+            // We only let near_lossless have effect when encoding is set to "lossless"
+            // otherwise encoding=auto would not work as expected
+            if ($options['encoding'] == 'lossless') {
                 $cmdOptions[] ='-near_lossless ' . $options['near-lossless'];
             }
         }

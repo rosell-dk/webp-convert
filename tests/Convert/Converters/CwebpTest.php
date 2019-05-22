@@ -126,7 +126,7 @@ class CwebpTest extends TestCase
     {
         $source = self::$imageDir . '/test.png';
         $options = [
-            'lossless' => true,
+            'encoding' => 'lossless',
             'near-lossless' => 75,
             'autofilter' => true,
         ];
@@ -155,7 +155,7 @@ class CwebpTest extends TestCase
     {
         $source = self::$imageDir . '/test.png';
         $options = [
-            'lossless' => true,
+            'encoding' => 'lossless',
             'near-lossless' => 100,
             'low-memory' => true,
         ];

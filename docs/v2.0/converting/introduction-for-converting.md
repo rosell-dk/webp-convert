@@ -102,7 +102,9 @@ In case quality detection is unavailable, the quality defaults to 70 for JPEGs a
 ### Auto selecting between lossless/lossy encoding
 WebP files can be encoded using either *lossless* or *lossy* encoding. The JPEG format is lossy and the PNG is lossless. However, this does not mean that you necessarily get the best conversion by always encoding JPEG to lossy and PNG to lossless. With JPEGs it is almost the case, as they are usually pictures and pictures usually best encoded as lossy. With PNG it is however a different story, as you often can get a better compression using lossy encoding, also when using high quality level of say 85, which should be enough for the web.
 
-As unnecessary large conversions are rarely desirable, this library per default tries to convert PNGs using both lossy (q=85) and lossless encoding and automatically selects the smallest. Unless you changed the `near-lossless` option described below, the choice is actually between lossy and *near-lossless*.
+As unnecessary large conversions are rarely desirable, this library per default tries to convert PNGs using both lossy (q=85) and lossless encoding and automatically selects the smallest. This is controlled using the *encoding* option, which per default is "auto", but can also be set to "lossy" or "lossless".
+
+Unless you changed the `near-lossless` option described below, the choice is actually between lossy and *near-lossless*.
 
 Note that only *cwebp*, *vips* and *imagickbinary* supports this feature &ndash; and also *wpc* converter, if the cloud converter is configured to use one of these.
 

@@ -62,10 +62,9 @@ class VipsTest extends TestCase
     public function testCreateParamsForVipsWebPSave1()
     {
         $options = [
-            'lossless' => true,
+            'encoding' => 'lossless',
             'smart-subsample' => true,
             'near-lossless' => 90,
-            'lossless' => true,
             'preset' => 'picture',      // In vips, this has the constant: 1
         ];
         $vipsExposer = $this->createVipsExposer('test.png', $options);
@@ -73,7 +72,7 @@ class VipsTest extends TestCase
         $vipsParams = $vipsExposer->createParamsForVipsWebPSave();
 
         // Check some options that are straightforwardly copied
-        $this->assertSame($options['lossless'], $vipsParams['lossless']);
+        $this->assertSame(true, $vipsParams['lossless']);
         $this->assertSame($options['smart-subsample'], $vipsParams['smart_subsample']);
         $this->assertSame(1, $vipsParams['preset']);
 

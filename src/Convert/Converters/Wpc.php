@@ -5,7 +5,7 @@ namespace WebPConvert\Convert\Converters;
 use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\CloudConverterTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\CurlTrait;
-use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
+use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -22,9 +22,9 @@ class Wpc extends AbstractConverter
 {
     use CloudConverterTrait;
     use CurlTrait;
-    use LosslessAutoTrait;
+    use EncodingAutoTrait;
 
-    public function passOnLosslessAuto()
+    public function passOnEncodingAuto()
     {
         // TODO: Either make this configurable or perhaps depend on api version
         return true;
@@ -185,7 +185,7 @@ class Wpc extends AbstractConverter
 
         if ($apiVersion == 1) {
             // Lossless can be "auto" in api 2, but in api 1 "auto" is not supported
-            unset($optionsToSend['lossless']);
+            //unset($optionsToSend['lossless']);
         } elseif ($apiVersion == 2) {
             unset($optionsToSend['png']);
             unset($optionsToSend['jpeg']);

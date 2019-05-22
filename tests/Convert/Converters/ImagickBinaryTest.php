@@ -47,7 +47,7 @@ class ImagickBinaryTest extends TestCase
         $source = $this->imageDir . '/test.png';
         $options = [
             'use-nice' => true,
-            'lossless' => true,
+            'encoding' => 'lossless',
         ];
         self::tryThis($this, $source, $options);
     }

@@ -36,6 +36,14 @@ Supported by:  all (cwebp, ewww, gd, gmagick, gmagickbinary, imagick, imagickbin
 ```
 Read about this option in the ["auto quality" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality).<br><br>
 
+### `encoding`
+```
+Type:          string  ("lossy" | "lossless" | "auto")
+Default:       "auto" for pngs and "lossy" for jpegs
+Supported by:  cwebp, imagickbinary, vips  (the other converters always uses lossy encoding, except ewww, which uses lossless for pngs and lossy for jpegs)
+```
+Read about this option in the ["lossy/lossless" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-selecting-between-losslesslossy-encoding).<br><br>
+
 ### `ewww-api-key`
 ```
 Type:         string
@@ -54,14 +62,6 @@ Supported by:  all
 ```
 Override selected options when the source is a jpeg. The options provided here are simply merged into the other options when the source is a jpeg.
 Read about this option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#png-og-jpeg-specific-options).<br><br>
-
-### `lossless`
-```
-Type:          boolean | "auto"
-Default:       "auto" for jpegs and false for pngs
-Supported by:  cwebp, imagickbinary, vips  (the other converters always uses lossy encoding)
-```
-Read about this option in the ["lossy/lossless" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-selecting-between-losslesslossy-encoding).<br><br>
 
 ### `low-memory`
 ```

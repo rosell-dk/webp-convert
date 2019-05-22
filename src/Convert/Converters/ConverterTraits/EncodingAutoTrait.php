@@ -10,7 +10,7 @@ namespace WebPConvert\Convert\Converters\ConverterTraits;
  * @author     Bjørn Rosell <it@rosell.dk>
  * @since      Class available since Release 2.0.0
  */
-trait LosslessAutoTrait
+trait EncodingAutoTrait
 {
 
     abstract protected function logLn($msg, $style = '');
@@ -33,7 +33,7 @@ trait LosslessAutoTrait
      *  WPC currently implements it, but this might be configurable in the future.
      *
      */
-    public function passOnLosslessAuto()
+    public function passOnEncodingAuto()
     {
         return false;
     }
@@ -51,7 +51,7 @@ trait LosslessAutoTrait
         $this->ln();
         $this->logLn('Converting to lossy');
         $this->setDestination($destinationLossy);
-        $this->setOption('lossless', false);
+        $this->setOption('encoding', 'lossy');
         $this->doActualConvert();
         $this->logLn('Reduction: ' .
             round(
@@ -60,7 +60,7 @@ trait LosslessAutoTrait
         $this->ln();
         $this->logLn('Converting to lossless');
         $this->setDestination($destinationLossless);
-        $this->setOption('lossless', true);
+        $this->setOption('encoding', 'lossless');
         $this->doActualConvert();
         $this->logLn('Reduction: ' .
             round(
@@ -77,12 +77,12 @@ trait LosslessAutoTrait
             rename($destinationLossless, $destination);
         }
         $this->setDestination($destination);
-        $this->setOption('lossless', 'auto');
+        $this->setOption('encoding', 'auto');
     }
 
     protected function runActualConvert()
     {
-        if (!$this->passOnLosslessAuto() && ($this->getOptions()['lossless'] === 'auto') && $this->supportsLossless()) {
+        if (!$this->passOnEncodingAuto() && ($this->getOptions()['encoding'] == 'auto') && $this->supportsLossless()) {
             $this->convertTwoAndSelectSmallest();
         } else {
             $this->doActualConvert();

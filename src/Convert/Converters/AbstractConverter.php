@@ -51,7 +51,7 @@ abstract class AbstractConverter
     /**
      * Whether or not the converter supports lossless encoding (even for jpegs)
      *
-     * PS: Converters that supports lossless encoding all use the LosslessAutoTrait, which
+     * PS: Converters that supports lossless encoding all use the EncodingAutoTrait, which
      * overrides this function.
      *
      * @return  boolean  Whether the converter supports lossless encoding (even for jpegs).
@@ -267,7 +267,7 @@ abstract class AbstractConverter
     /**
      * Runs the actual conversion (after setup and checks)
      * Simply calls the doActualConvert() of the actual converter.
-     * However, in the LosslessAutoTrait, this method is overridden to make two conversions
+     * However, in the EncodingAutoTrait, this method is overridden to make two conversions
      * and select the smallest.
      *
      * @return void

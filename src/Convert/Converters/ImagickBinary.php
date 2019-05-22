@@ -4,7 +4,7 @@ namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
-use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
+use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
@@ -20,7 +20,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 class ImagickBinary extends AbstractConverter
 {
     use ExecTrait;
-    use LosslessAutoTrait;
+    use EncodingAutoTrait;
 
     // To futher improve this converter, I could check out:
     // https://github.com/Orbitale/ImageMagickPHP
@@ -79,6 +79,9 @@ class ImagickBinary extends AbstractConverter
      */
     private function createCommandLineOptions()
     {
+        // PS: Available webp options for imagick are documented here:
+        // https://imagemagick.org/script/webp.php
+
         $commandArguments = [];
         if ($this->isQualityDetectionRequiredButFailing()) {
             // quality:auto was specified, but could not be determined.
@@ -87,7 +90,7 @@ class ImagickBinary extends AbstractConverter
         } else {
             $commandArguments[] = '-quality ' . escapeshellarg($this->getCalculatedQuality());
         }
-        if ($this->options['lossless']) {
+        if ($this->options['encoding'] == 'lossless') {
             $commandArguments[] = '-define webp:lossless=true';
         }
         if ($this->options['low-memory']) {

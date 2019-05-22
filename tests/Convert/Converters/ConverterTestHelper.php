@@ -161,7 +161,7 @@ class ConverterTestHelper
 
     public static function runAllConvertTests($testCase, $converterClassName, $converterOptions = [])
     {
-        $converterOptions['lossless'] = 'auto';
+        $converterOptions['encoding'] = 'auto';
         self::testConvert('test.jpg', $testCase, $converterClassName, $converterOptions);
         self::testConvert('test.png', $testCase, $converterClassName, $converterOptions);
         //self::testConvert('not-true-color.png', $testCase, $converterClassName, $converterOptions);

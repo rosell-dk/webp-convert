@@ -3,7 +3,7 @@
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Converters\AbstractConverter;
-use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
+use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
@@ -18,7 +18,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
  */
 class Vips extends AbstractConverter
 {
-    use LosslessAutoTrait;
+    use EncodingAutoTrait;
 
 /*
     public function supportsLossless()
@@ -120,7 +120,7 @@ class Vips extends AbstractConverter
 
         $options = [
             "Q" => $this->getCalculatedQuality(),
-            'lossless' => $this->options['lossless'],
+            'lossless' => ($this->options['encoding'] == 'lossless'),
             'strip' => $this->options['metadata'] == 'none',
         ];
 
@@ -141,9 +141,9 @@ class Vips extends AbstractConverter
             );
         }
         if ($this->options['near-lossless'] !== 100) {
-            if ($options['lossless'] === true) {
-                // We only let near_lossless have effect when lossless is set.
-                // otherwise lossless auto would not work as expected
+            if ($this->options['encoding'] == 'lossless') {
+                // We only let near_lossless have effect when encoding is set to lossless
+                // otherwise encoding=auto would not work as expected
                 $options['near_lossless'] = true;
 
                 // In Vips, the near-lossless value is controlled by Q.

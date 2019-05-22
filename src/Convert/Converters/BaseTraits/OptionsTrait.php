@@ -32,7 +32,8 @@ trait OptionsTrait
         ['alpha-quality', 'integer', 80],
         ['autofilter', 'boolean', false],
         ['default-quality', 'number', 75],       // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
-        ['lossless', 'boolean|string', false],  // PS: Default is altered to "auto" for PNG in ::getDefaultOptions()
+        ['encoding', 'string', "auto"],          // PS: Default is altered to "lossy" for JPG in ::getDefaultOptions()
+        //['lossless', 'boolean|string', false],   // PS: Default is altered to "auto" for PNG in ::getDefaultOptions()
         ['low-memory', 'boolean', false],
         ['max-quality', 'number', 85],
         ['metadata', 'string', 'none'],
@@ -104,8 +105,8 @@ trait OptionsTrait
     /**
      * Change an option specifically.
      *
-     * This method is probably rarely neeeded. We are using it to change the "lossless" option temporarily
-     * in the LosslessAutoTrait.
+     * This method is probably rarely neeeded. We are using it to change the "encoding" option temporarily
+     * in the EncodingAutoTrait.
      *
      * @param  string  $optionName   Name id of option (ie "metadata")
      * @param  mixed   $optionValue  The new value.
@@ -132,9 +133,11 @@ trait OptionsTrait
             $defaults[$name] = $default;
         }
         if ($this->getMimeTypeOfSource() == 'image/png') {
-            $defaults['lossless'] = 'auto';
             $defaults['quality'] = 85;
             $defaults['default-quality'] = 85;
+        }
+        if ($this->getMimeTypeOfSource() == 'image/jpeg') {
+            $defaults['encoding'] = 'lossy';
         }
         return $defaults;
     }
@@ -235,20 +238,20 @@ trait OptionsTrait
     }
 
     /**
-     *  Check lossless option
+     *  Check "encoding" option.
      *
      *  @throws InvalidOptionTypeException  if value is out of range
      *  @return void
      */
-    private function checkLosslessOption()
+    private function checkEncodingOption()
     {
-        if (!isset($this->providedOptions['lossless'])) {
+        if (!isset($this->providedOptions['encoding'])) {
             return;
         }
-        $optionValue = $this->providedOptions['lossless'];
-        if ((gettype($optionValue) == 'string') && ($optionValue != 'auto')) {
+        $optionValue = $this->providedOptions['encoding'];
+        if (!in_array($optionValue, ['lossy', 'lossless', 'auto'])) {
             throw new InvalidOptionTypeException(
-                'Lossless option must be true, false or "auto". It was set to: "' . $optionValue . '"'
+                '"encoding" option must be "lossy", "lossless" or "auto". It was set to: "' . $optionValue . '"'
             );
         }
     }
@@ -263,7 +266,7 @@ trait OptionsTrait
     {
         $this->checkOptionTypesGenerally();
         $this->checkQualityOption();
-        $this->checkLosslessOption();
+        $this->checkEncodingOption();
     }
 
     /**

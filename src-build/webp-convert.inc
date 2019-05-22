@@ -8,7 +8,6 @@ namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Converters\BaseTraits\AutoQualityTrait;
-//use WebPConvert\Convert\Converters\BaseTraits\ConverterFactoryTrait;
 use WebPConvert\Convert\Converters\BaseTraits\DestinationPreparationTrait;
 use WebPConvert\Convert\Converters\BaseTraits\LoggerTrait;
 use WebPConvert\Convert\Converters\BaseTraits\OptionsTrait;
@@ -33,7 +32,6 @@ abstract class AbstractConverter
     use WarningLoggerTrait;
     use DestinationPreparationTrait;
     use SourceValidationTrait;
-    //use ConverterFactoryTrait;
 
     /**
      * The actual conversion is be done by a concrete converter extending this class.
@@ -54,7 +52,7 @@ abstract class AbstractConverter
     /**
      * Whether or not the converter supports lossless encoding (even for jpegs)
      *
-     * PS: Converters that supports lossless encoding all use the LosslessAutoTrait, which
+     * PS: Converters that supports lossless encoding all use the EncodingAutoTrait, which
      * overrides this function.
      *
      * @return  boolean  Whether the converter supports lossless encoding (even for jpegs).
@@ -156,20 +154,6 @@ abstract class AbstractConverter
         $this->destination = $destination;
     }
 
-    /**
-     * Create an instance of this class
-     *
-     * @param  string  $source       The path to the file to convert
-     * @param  string  $destination  The path to save the converted file to
-     * @param  array   $options      (optional)
-     * @param  \WebPConvert\Loggers\BaseLogger   $logger       (optional)
-     *
-     * @return static
-     */
-    public static function createInstance($source, $destination, $options = [], $logger = null)
-    {
-        return new static($source, $destination, $options, $logger);
-    }
 
     /**
      *  Get converter name for display (defaults to the class name (short)).
@@ -196,6 +180,23 @@ abstract class AbstractConverter
     {
         return strtolower(self::getConverterDisplayName());
     }
+
+
+    /**
+     * Create an instance of this class
+     *
+     * @param  string  $source       The path to the file to convert
+     * @param  string  $destination  The path to save the converted file to
+     * @param  array   $options      (optional)
+     * @param  \WebPConvert\Loggers\BaseLogger   $logger       (optional)
+     *
+     * @return static
+     */
+    public static function createInstance($source, $destination, $options = [], $logger = null)
+    {
+        return new static($source, $destination, $options, $logger);
+    }
+
 
     /**
      * Start conversion.
@@ -267,7 +268,7 @@ abstract class AbstractConverter
     /**
      * Runs the actual conversion (after setup and checks)
      * Simply calls the doActualConvert() of the actual converter.
-     * However, in the LosslessAutoTrait, this method is overridden to make two conversions
+     * However, in the EncodingAutoTrait, this method is overridden to make two conversions
      * and select the smallest.
      *
      * @return void
@@ -426,36 +427,8 @@ class WebPConvert
      *                               Image must be jpeg or png.
      * @param  string  $destination  Where to store the converted file (absolute path, no backslashes).
      * @param  array   $options      (optional) Array of named options
-     *       The following options are generally supported (individual converters provides more options):
-     *       'quality'     => (integer|"auto")   Quality. If set to auto and source image is jpeg, the quality will
-     *                                           be set to same as source - if detectable. The detection requires
-     *                                           imagick or gmagick. Default: "auto".
-     *       'max-quality' => (integer)          Limit quality (relevant only if "quality" is set to "auto").
-     *                                           Default: 85.
-     *       'default-quality' => (integer)      Default quality (used when auto detection fails). Default: 75
-     *       'metadata'    => (string)           Valid values: 'all', 'none', 'exif', 'icc', 'xmp'.
-     *                                           Note: Only *cwebp* supports all values. *gd* will always remove all
-     *                                           metadata. The rest can either strip all or keep all (they will keep
-     *                                           all, unless metadata is set to *none*). Default: 'none'.
-     *        'lossless'   => (boolean|"auto")   Whether to convert into the lossless webp format or the lossy.
-     *                                           If "auto" is selected, the format that results in the smallest file
-     *                                           is selected (two actual conversions are made and the smallest file
-     *                                           wins). Note that only *cwebp* and *vips* converters supports
-     *                                           the lossless encoding. Converters that does not support lossless
-     *                                           simply always converts to lossy encoding (and "auto" will not trigger
-     *                                           two conversions for these). Default is "auto" when converting PNGs and
-     *                                           false when converting JPEGs. The reason for this default is that it is
-     *                                           probably rare that a JPEG is compressed better with lossless encoding
-     *                                           (as the jpeg format typically have been choosen only for photos and
-     *                                           photos almost always is best encoding with the lossy encoding. On the
-     *                                           other hand, graphics and icons are sometimes compressed best with
-     *                                           lossy encoding and sometimes best with lossless encoding). Note that
-     *                                           you can use the 'png' and 'jpeg' options to set this option different
-     *                                           for png and jpegs. Ie: ['png' => ['lossless' => 'auto'], 'jpeg' =>
-     *                                           'lossless' => false]].
-     *        'skip'       => (boolean)          If set to true, conversion is skipped entirely. Can for example be used
-     *                                           to skip pngs for certain converters. You might for example want to use
-     *                                           Gd for jpegs and ewww for pngs.
+     *                               The options are documented here:
+     *                            https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md
      * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
      *
      * @throws  \WebPConvert\Convert\Exceptions\ConversionFailedException   in case conversion fails
@@ -626,44 +599,6 @@ trait AutoQualityTrait
             }
         }
         $this->calculatedQuality = $q;
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Convert\Converters\BaseTraits;
-
-/**
- * Trait for handling the "quality:auto" option.
- *
- * This trait is only used in the AbstractConverter class. It has been extracted into a
- * trait in order to bundle the methods concerning auto quality.
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-trait ConverterFactoryTrait
-{
-
-    /**
-     * Create an instance of this class
-     *
-     * @param  string  $source       The path to the file to convert
-     * @param  string  $destination  The path to save the converted file to
-     * @param  array   $options      (optional)
-     * @param  \WebPConvert\Loggers\BaseLogger   $logger       (optional)
-     *
-     * @return static
-     */
-    public static function createInstance($source, $destination, $options = [], $logger = null)
-    {
-        return new static($source, $destination, $options, $logger);
-    }
-
-    public static function makeConverter($id, $source, $destination, $options = [], $logger = null)
-    {
-        return new static($source, $destination, $options, $logger);
     }
 }
 
@@ -875,7 +810,8 @@ trait OptionsTrait
         ['alpha-quality', 'integer', 80],
         ['autofilter', 'boolean', false],
         ['default-quality', 'number', 75],       // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
-        ['lossless', 'boolean|string', false],  // PS: Default is altered to "auto" for PNG in ::getDefaultOptions()
+        ['encoding', 'string', "auto"],          // PS: Default is altered to "lossy" for JPG in ::getDefaultOptions()
+        //['lossless', 'boolean|string', false],   // PS: Default is altered to "auto" for PNG in ::getDefaultOptions()
         ['low-memory', 'boolean', false],
         ['max-quality', 'number', 85],
         ['metadata', 'string', 'none'],
@@ -947,8 +883,8 @@ trait OptionsTrait
     /**
      * Change an option specifically.
      *
-     * This method is probably rarely neeeded. We are using it to change the "lossless" option temporarily
-     * in the LosslessAutoTrait.
+     * This method is probably rarely neeeded. We are using it to change the "encoding" option temporarily
+     * in the EncodingAutoTrait.
      *
      * @param  string  $optionName   Name id of option (ie "metadata")
      * @param  mixed   $optionValue  The new value.
@@ -975,9 +911,11 @@ trait OptionsTrait
             $defaults[$name] = $default;
         }
         if ($this->getMimeTypeOfSource() == 'image/png') {
-            $defaults['lossless'] = 'auto';
             $defaults['quality'] = 85;
             $defaults['default-quality'] = 85;
+        }
+        if ($this->getMimeTypeOfSource() == 'image/jpeg') {
+            $defaults['encoding'] = 'lossy';
         }
         return $defaults;
     }
@@ -1078,20 +1016,20 @@ trait OptionsTrait
     }
 
     /**
-     *  Check lossless option
+     *  Check "encoding" option.
      *
      *  @throws InvalidOptionTypeException  if value is out of range
      *  @return void
      */
-    private function checkLosslessOption()
+    private function checkEncodingOption()
     {
-        if (!isset($this->providedOptions['lossless'])) {
+        if (!isset($this->providedOptions['encoding'])) {
             return;
         }
-        $optionValue = $this->providedOptions['lossless'];
-        if ((gettype($optionValue) == 'string') && ($optionValue != 'auto')) {
+        $optionValue = $this->providedOptions['encoding'];
+        if (!in_array($optionValue, ['lossy', 'lossless', 'auto'])) {
             throw new InvalidOptionTypeException(
-                'Lossless option must be true, false or "auto". It was set to: "' . $optionValue . '"'
+                '"encoding" option must be "lossy", "lossless" or "auto". It was set to: "' . $optionValue . '"'
             );
         }
     }
@@ -1106,7 +1044,7 @@ trait OptionsTrait
     {
         $this->checkOptionTypesGenerally();
         $this->checkQualityOption();
-        $this->checkLosslessOption();
+        $this->checkEncodingOption();
     }
 
     /**
@@ -1463,6 +1401,98 @@ trait CurlTrait
 
 ?><?php
 
+//namespace WebPConvert\Convert\Converters\BaseTraits;
+namespace WebPConvert\Convert\Converters\ConverterTraits;
+
+/**
+ * Trait for converters that supports lossless encoding and thus the "lossless:auto" option.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+trait EncodingAutoTrait
+{
+
+    abstract protected function logLn($msg, $style = '');
+    abstract protected function ln();
+    abstract protected function doActualConvert();
+    abstract public function getSource();
+    abstract public function getDestination();
+    abstract public function setDestination($destination);
+    abstract public function getOptions();
+    abstract protected function setOption($optionName, $optionValue);
+
+    public function supportsLossless()
+    {
+        return true;
+    }
+
+    /** Default is to not pass "lossless:auto" on, but implement it.
+     *
+     *  The Stack converter passes it on (it does not even use this trait)
+     *  WPC currently implements it, but this might be configurable in the future.
+     *
+     */
+    public function passOnEncodingAuto()
+    {
+        return false;
+    }
+
+    private function convertTwoAndSelectSmallest()
+    {
+        $destination = $this->getDestination();
+        $destinationLossless =  $destination . '.lossless.webp';
+        $destinationLossy =  $destination . '.lossy.webp';
+
+        $this->logLn(
+            'Lossless is set to auto. Converting to both lossless and lossy and selecting the smallest file'
+        );
+
+        $this->ln();
+        $this->logLn('Converting to lossy');
+        $this->setDestination($destinationLossy);
+        $this->setOption('encoding', 'lossy');
+        $this->doActualConvert();
+        $this->logLn('Reduction: ' .
+            round(
+                (filesize($this->getSource()) - filesize($destinationLossy))/filesize($this->getSource()) * 100
+            ) . '% ');
+        $this->ln();
+        $this->logLn('Converting to lossless');
+        $this->setDestination($destinationLossless);
+        $this->setOption('encoding', 'lossless');
+        $this->doActualConvert();
+        $this->logLn('Reduction: ' .
+            round(
+                (filesize($this->getSource()) - filesize($destinationLossless))/filesize($this->getSource()) * 100
+            ) . '% ');
+        $this->ln();
+        if (filesize($destinationLossless) > filesize($destinationLossy)) {
+            $this->logLn('Picking lossy');
+            unlink($destinationLossless);
+            rename($destinationLossy, $destination);
+        } else {
+            $this->logLn('Picking lossless');
+            unlink($destinationLossy);
+            rename($destinationLossless, $destination);
+        }
+        $this->setDestination($destination);
+        $this->setOption('encoding', 'auto');
+    }
+
+    protected function runActualConvert()
+    {
+        if (!$this->passOnEncodingAuto() && ($this->getOptions()['encoding'] == 'auto') && $this->supportsLossless()) {
+            $this->convertTwoAndSelectSmallest();
+        } else {
+            $this->doActualConvert();
+        }
+    }
+}
+
+?><?php
+
 namespace WebPConvert\Convert\Converters\ConverterTraits;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -1516,102 +1546,10 @@ trait ExecTrait
 
 ?><?php
 
-//namespace WebPConvert\Convert\Converters\BaseTraits;
-namespace WebPConvert\Convert\Converters\ConverterTraits;
-
-/**
- * Trait for converters that supports lossless encoding and thus the "lossless:auto" option.
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-trait LosslessAutoTrait
-{
-
-    abstract protected function logLn($msg, $style = '');
-    abstract protected function ln();
-    abstract protected function doActualConvert();
-    abstract public function getSource();
-    abstract public function getDestination();
-    abstract public function setDestination($destination);
-    abstract public function getOptions();
-    abstract protected function setOption($optionName, $optionValue);
-
-    public function supportsLossless()
-    {
-        return true;
-    }
-
-    /** Default is to not pass "lossless:auto" on, but implement it.
-     *
-     *  The Stack converter passes it on (it does not even use this trait)
-     *  WPC currently implements it, but this might be configurable in the future.
-     *
-     */
-    public function passOnLosslessAuto()
-    {
-        return false;
-    }
-
-    private function convertTwoAndSelectSmallest()
-    {
-        $destination = $this->getDestination();
-        $destinationLossless =  $destination . '.lossless.webp';
-        $destinationLossy =  $destination . '.lossy.webp';
-
-        $this->logLn(
-            'Lossless is set to auto. Converting to both lossless and lossy and selecting the smallest file'
-        );
-
-        $this->ln();
-        $this->logLn('Converting to lossy');
-        $this->setDestination($destinationLossy);
-        $this->setOption('lossless', false);
-        $this->doActualConvert();
-        $this->logLn('Reduction: ' .
-            round(
-                (filesize($this->getSource()) - filesize($destinationLossy))/filesize($this->getSource()) * 100
-            ) . '% ');
-        $this->ln();
-        $this->logLn('Converting to lossless');
-        $this->setDestination($destinationLossless);
-        $this->setOption('lossless', true);
-        $this->doActualConvert();
-        $this->logLn('Reduction: ' .
-            round(
-                (filesize($this->getSource()) - filesize($destinationLossless))/filesize($this->getSource()) * 100
-            ) . '% ');
-        $this->ln();
-        if (filesize($destinationLossless) > filesize($destinationLossy)) {
-            $this->logLn('Picking lossy');
-            unlink($destinationLossless);
-            rename($destinationLossy, $destination);
-        } else {
-            $this->logLn('Picking lossless');
-            unlink($destinationLossy);
-            rename($destinationLossless, $destination);
-        }
-        $this->setDestination($destination);
-        $this->setOption('lossless', 'auto');
-    }
-
-    protected function runActualConvert()
-    {
-        if (!$this->passOnLosslessAuto() && ($this->getOptions()['lossless'] === 'auto') && $this->supportsLossless()) {
-            $this->convertTwoAndSelectSmallest();
-        } else {
-            $this->doActualConvert();
-        }
-    }
-}
-
-?><?php
-
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Converters\AbstractConverter;
-use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
+use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
@@ -1627,7 +1565,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalExcep
 class Cwebp extends AbstractConverter
 {
 
-    use LosslessAutoTrait;
+    use EncodingAutoTrait;
     use ExecTrait;
 
     protected function getOptionDefinitionsExtra()
@@ -1766,7 +1704,7 @@ class Cwebp extends AbstractConverter
         }
 
         // Losless PNG conversion
-        if ($options['lossless'] === true) {
+        if ($options['encoding'] == 'lossless') {
             // No need to add -lossless when near-lossless is used
             if ($options['near-lossless'] === 100) {
                 $cmdOptions[] = '-lossless';
@@ -1775,9 +1713,9 @@ class Cwebp extends AbstractConverter
 
         // Near-lossles
         if ($options['near-lossless'] !== 100) {
-            // We only let near_lossless have effect when lossless is set.
-            // otherwise lossless auto would not work as expected
-            if ($options['lossless'] === true) {
+            // We only let near_lossless have effect when encoding is set to "lossless"
+            // otherwise encoding=auto would not work as expected
+            if ($options['encoding'] == 'lossless') {
                 $cmdOptions[] ='-near_lossless ' . $options['near-lossless'];
             }
         }
@@ -3264,7 +3202,7 @@ namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
-use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
+use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 
@@ -3280,7 +3218,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 class ImagickBinary extends AbstractConverter
 {
     use ExecTrait;
-    use LosslessAutoTrait;
+    use EncodingAutoTrait;
 
     // To futher improve this converter, I could check out:
     // https://github.com/Orbitale/ImageMagickPHP
@@ -3339,6 +3277,9 @@ class ImagickBinary extends AbstractConverter
      */
     private function createCommandLineOptions()
     {
+        // PS: Available webp options for imagick are documented here:
+        // https://imagemagick.org/script/webp.php
+
         $commandArguments = [];
         if ($this->isQualityDetectionRequiredButFailing()) {
             // quality:auto was specified, but could not be determined.
@@ -3347,7 +3288,7 @@ class ImagickBinary extends AbstractConverter
         } else {
             $commandArguments[] = '-quality ' . escapeshellarg($this->getCalculatedQuality());
         }
-        if ($this->options['lossless']) {
+        if ($this->options['encoding'] == 'lossless') {
             $commandArguments[] = '-define webp:lossless=true';
         }
         if ($this->options['low-memory']) {
@@ -3614,7 +3555,7 @@ class Stack extends AbstractConverter
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Converters\AbstractConverter;
-use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
+use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 
@@ -3629,7 +3570,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
  */
 class Vips extends AbstractConverter
 {
-    use LosslessAutoTrait;
+    use EncodingAutoTrait;
 
 /*
     public function supportsLossless()
@@ -3731,7 +3672,7 @@ class Vips extends AbstractConverter
 
         $options = [
             "Q" => $this->getCalculatedQuality(),
-            'lossless' => $this->options['lossless'],
+            'lossless' => ($this->options['encoding'] == 'lossless'),
             'strip' => $this->options['metadata'] == 'none',
         ];
 
@@ -3752,9 +3693,9 @@ class Vips extends AbstractConverter
             );
         }
         if ($this->options['near-lossless'] !== 100) {
-            if ($options['lossless'] === true) {
-                // We only let near_lossless have effect when lossless is set.
-                // otherwise lossless auto would not work as expected
+            if ($this->options['encoding'] == 'lossless') {
+                // We only let near_lossless have effect when encoding is set to lossless
+                // otherwise encoding=auto would not work as expected
                 $options['near_lossless'] = true;
 
                 // In Vips, the near-lossless value is controlled by Q.
@@ -3832,7 +3773,7 @@ namespace WebPConvert\Convert\Converters;
 use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\CloudConverterTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\CurlTrait;
-use WebPConvert\Convert\Converters\ConverterTraits\LosslessAutoTrait;
+use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -3849,9 +3790,9 @@ class Wpc extends AbstractConverter
 {
     use CloudConverterTrait;
     use CurlTrait;
-    use LosslessAutoTrait;
+    use EncodingAutoTrait;
 
-    public function passOnLosslessAuto()
+    public function passOnEncodingAuto()
     {
         // TODO: Either make this configurable or perhaps depend on api version
         return true;
@@ -4012,7 +3953,7 @@ class Wpc extends AbstractConverter
 
         if ($apiVersion == 1) {
             // Lossless can be "auto" in api 2, but in api 1 "auto" is not supported
-            unset($optionsToSend['lossless']);
+            //unset($optionsToSend['lossless']);
         } elseif ($apiVersion == 2) {
             unset($optionsToSend['png']);
             unset($optionsToSend['jpeg']);
