@@ -135,12 +135,12 @@ The following options mimics the default behaviour:
 ```php
 $options = [
     'png' => [
-        'lossless' => 'auto',    /* Try both lossy and lossless and pick smallest */
+        'encoding' => 'auto',    /* Try both lossy and lossless and pick smallest */
         'near-lossless' => 60,   /* The level of near-lossless image preprocessing (when trying lossless) */
         'quality' => 85,         /* Quality when trying lossy. It is set high because pngs is often selected to ensure high quality */
     ],
     'jpeg' => [
-        'lossless' => false,      /* We could also choose 'auto' but that would almost always result in lossy anyway) */
+        'encoding' => 'lossy',    /* We could also choose 'auto' but that would most often result in lossy anyway */
         'quality' => 'auto',      /* Set to same as jpeg (requires imagick or gmagick extension, not necessarily compiled with webp) */
         'max-quality' => 80,      /* Only relevant if quality is set to "auto" */
         'default-quality' => 75,  /* Fallback quality if quality detection isnt working */
@@ -164,10 +164,9 @@ $options = [
 
 ## Available options
 
-All available options are documented [here](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md).
+**All** available options are documented [here](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md).
 
-
-## General options overview
+Here is a quick overview of the few ones discussed here.
 
 | Option            | Default (jpeg)     | Default (png)       | Description                                                                        |
 | ----------------- | ------------------ | ------------------- | ---------------------------------------------------------------------------------- |
@@ -175,7 +174,7 @@ All available options are documented [here](https://github.com/rosell-dk/webp-co
 | max-quality       | 85                 | 85                  | Only relevant for jpegs and when quality is set to "auto".                         |
 | default-quality   | 75                 | 85                  |                                                                                    |
 | metadata          | "none"             | "none"              | Valid values: "all", "none", "exif", "icc", "xmp".<br><br>Note: Currently only *cwebp* supports all values. *gd* will always remove all metadata. *ewww*, *imagick* and *gmagick* can either strip all, or keep all (they will keep all, unless metadata is set to *none*)       |
-| lossless          | false              | "auto"              | See the "Auto selecting between lossless/lossy encoding" section above   |
+| encoding          | "lossy"            | "auto"              | See the "Auto selecting between lossless/lossy encoding" section above   |
 | jpeg              | -                  | -                   | Array of options which will be merged into the other options when source is a JPEG |
 | png               | -                  | -                   | Array of options which will be merged into the other options when source is a PNG  |
 | skip              | false              | false               | If true, conversion will be skipped (ie for skipping png conversion for some converters) |
