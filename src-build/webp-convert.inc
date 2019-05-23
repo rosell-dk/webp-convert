@@ -2048,6 +2048,13 @@ class Ewww extends AbstractConverter
         $apiKey = $this->getKey();
 
         if ($apiKey === false) {
+            if (isset($this->options['key'])) {
+                throw new InvalidApiKeyException(
+                    'The "key" option has been renamed to "api-key" in webp-convert 2.0. ' .
+                    'You must change the configuration accordingly.'
+                );
+            }
+
             throw new InvalidApiKeyException('Missing API key.');
         }
 
@@ -3878,6 +3885,12 @@ class Wpc extends AbstractConverter
         $apiVersion = $options['api-version'];
 
         if ($this->getApiUrl() == '') {
+            if (isset($this->options['url'])) {
+                throw new ConverterNotOperationalException(
+                    'The "url" option has been renamed to "api-url" in webp-convert 2.0. ' .
+                    'You must change the configuration accordingly.'
+                );
+            }
             throw new ConverterNotOperationalException(
                 'Missing URL. You must install Webp Convert Cloud Service on a server, ' .
                 'or the WebP Express plugin for Wordpress - and supply the url.'
