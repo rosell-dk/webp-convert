@@ -58,6 +58,13 @@ class Ewww extends AbstractConverter
         $apiKey = $this->getKey();
 
         if ($apiKey === false) {
+            if (isset($this->options['key'])) {
+                throw new InvalidApiKeyException(
+                    'The "key" option has been renamed to "api-key" in webp-convert 2.0. ' .
+                    'You must change the configuration accordingly.'
+                );
+            }
+
             throw new InvalidApiKeyException('Missing API key.');
         }
 
