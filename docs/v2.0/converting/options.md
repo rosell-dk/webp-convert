@@ -10,7 +10,7 @@ Type:         integer (0-100)
 Default:      85
 Supported by: cwebp, vips and imagickbinary
 ```
-Triggers lossy encoding of alpha channel with given quality.<br><br>
+Quality of alpha channel. Only relevant for lossy encoding and only relevant for images with alpha channel.<br><br>
 
 ### `autofilter`
 ```
@@ -114,11 +114,11 @@ Read about this option in the [introduction](https://github.com/rosell-dk/webp-c
 
 ### `preset`
 ```
-Type:          string  ('default' | 'photo' | 'picture' | 'drawing' | 'icon' | 'text')
-Default:       []
+Type:          string|null  Null means no preset. ('default', 'photo', 'picture', 'drawing',  'icon' or 'text')
+Default:       null
 Supported by:  cwebp, vips
 ```
-Specify a set of pre-defined parameters to suit a particular type of source material. Overrides many of the other options (but not *quality*).<br><br>
+Using a preset will set many of the other options to suit a particular type of source material. It even overrides them. It does however not override the quality option.<br><br>
 
 ### `quality`
 ```
