@@ -7,7 +7,7 @@ Note that as the *stack* and *wpc* converters delegates the options to their con
 ### `alpha-quality`
 ```
 Type:         integer (0-100)
-Default:      80
+Default:      85
 Supported by: cwebp, vips and imagickbinary
 ```
 Triggers lossy encoding of alpha channel with given quality.<br><br>

@@ -29,7 +29,7 @@ trait OptionsTrait
 
     /** @var array  Definitions of general options (the options that are available on all converters) */
     protected static $optionDefinitionsBasic = [
-        ['alpha-quality', 'integer', 80],
+        ['alpha-quality', 'integer', 85],
         ['autofilter', 'boolean', false],
         ['default-quality', 'number', 75],       // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
         ['encoding', 'string', "auto"],          // PS: Default is altered to "lossy" for JPG in ::getDefaultOptions()
