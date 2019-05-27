@@ -106,6 +106,9 @@ class ImagickBinary extends AbstractConverter
             $commandArguments[] = '-define webp:alpha-quality=' . strval($this->options['alpha-quality']);
         }
 
+        // Unfortunately, near-lossless does not seem to be supported.
+        // it does have a "preprocessing" option, which may be doing something similar
+
         $commandArguments[] = '-define webp:method=' . $this->options['method'];
 
         $commandArguments[] = escapeshellarg($this->source);
