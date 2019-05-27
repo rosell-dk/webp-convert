@@ -174,7 +174,7 @@ class Cwebp extends AbstractConverter
             }
         }
 
-        if ($options['autofilter'] === true) {
+        if ($options['auto-filter'] === true) {
             $cmdOptions[] = '-af';
         }
 

@@ -128,7 +128,7 @@ class CwebpTest extends TestCase
         $options = [
             'encoding' => 'lossless',
             'near-lossless' => 75,
-            'autofilter' => true,
+            'auto-filter' => true,
         ];
         $cwebp = new Cwebp($source, $source . '.webp', $options);
         $cwebpExposer = new CwebpExposer($cwebp);
@@ -141,7 +141,7 @@ class CwebpTest extends TestCase
         // There must be no -lossless option, because -near-lossless overrules it.
         $this->assertNotRegExp('#-lossless#', $commandLineOptions);
 
-        // autofilter
+        // auto-filter
         $this->assertRegExp('#-af#', $commandLineOptions);
 
         // no low-memory
@@ -173,7 +173,7 @@ class CwebpTest extends TestCase
         // low-memory
         $this->assertRegExp('#-low_memory#', $commandLineOptions);
 
-        // No autofilter
+        // No auto-filter
         $this->assertNotRegExp('#-af#', $commandLineOptions);
     }
 

@@ -737,7 +737,7 @@ trait OptionsTrait
     /** @var array  Definitions of general options (the options that are available on all converters) */
     protected static $optionDefinitionsBasic = [
         ['alpha-quality', 'integer', 85],
-        ['autofilter', 'boolean', false],
+        ['auto-filter', 'boolean', false],
         ['default-quality', 'number', 75],       // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
         ['encoding', 'string', "auto"],          // PS: Default is altered to "lossy" for JPG in ::getDefaultOptions()
         //['lossless', 'boolean|string', false],   // PS: Default is altered to "auto" for PNG in ::getDefaultOptions()
@@ -1649,7 +1649,7 @@ class Cwebp extends AbstractConverter
             }
         }
 
-        if ($options['autofilter'] === true) {
+        if ($options['auto-filter'] === true) {
             $cmdOptions[] = '-af';
         }
 
@@ -3129,7 +3129,10 @@ class Imagick extends AbstractConverter
         $im->setOption('webp:lossless', $options['encoding'] == 'lossless' ? 'true' : 'false');
         $im->setOption('webp:low-memory', $options['low-memory'] ? 'true' : 'false');
         $im->setOption('webp:alpha-quality', $options['alpha-quality']);
-        $im->setOption('webp:auto-filter', $options['autofilter'] ? 'true' : 'false');
+
+        if ($options['auto-filter'] === true) {
+            $im->setOption('webp:auto-filter', 'true');
+        }
 
         if ($options['metadata'] == 'none') {
             // Strip metadata and profiles
@@ -3275,7 +3278,7 @@ class ImagickBinary extends AbstractConverter
         if ($this->options['low-memory']) {
             $commandArguments[] = '-define webp:low-memory=true';
         }
-        if ($this->options['autofilter']) {
+        if ($this->options['auto-filter'] === true) {
             $commandArguments[] = '-define webp:auto-filter=true';
         }
         if ($this->options['metadata'] == 'none') {

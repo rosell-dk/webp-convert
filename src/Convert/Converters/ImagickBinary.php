@@ -96,7 +96,7 @@ class ImagickBinary extends AbstractConverter
         if ($this->options['low-memory']) {
             $commandArguments[] = '-define webp:low-memory=true';
         }
-        if ($this->options['autofilter']) {
+        if ($this->options['auto-filter'] === true) {
             $commandArguments[] = '-define webp:auto-filter=true';
         }
         if ($this->options['metadata'] == 'none') {

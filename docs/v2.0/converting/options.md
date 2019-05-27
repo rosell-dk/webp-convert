@@ -12,7 +12,7 @@ Supported by: cwebp, vips, imagick, imagickbinary and gmagickbinary
 ```
 Quality of alpha channel. Only relevant for lossy encoding and only relevant for images with alpha channel.<br><br>
 
-### `autofilter`
+### `auto-filter`
 ```
 Type:         boolean
 Default:      false

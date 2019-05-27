@@ -113,7 +113,10 @@ class Imagick extends AbstractConverter
         $im->setOption('webp:lossless', $options['encoding'] == 'lossless' ? 'true' : 'false');
         $im->setOption('webp:low-memory', $options['low-memory'] ? 'true' : 'false');
         $im->setOption('webp:alpha-quality', $options['alpha-quality']);
-        $im->setOption('webp:auto-filter', $options['autofilter'] ? 'true' : 'false');
+
+        if ($options['auto-filter'] === true) {
+            $im->setOption('webp:auto-filter', 'true');
+        }
 
         if ($options['metadata'] == 'none') {
             // Strip metadata and profiles
