@@ -106,7 +106,7 @@ As unnecessary large conversions are rarely desirable, this library per default 
 
 Unless you changed the `near-lossless` option described below, the choice is actually between lossy and *near-lossless*.
 
-Note that only *cwebp*, *vips* and *imagickbinary* supports this feature &ndash; and also *wpc* converter, if the cloud converter is configured to use one of these.
+Note that only *cwebp*, *vips*, *imagickbinary* and *gmagickbinary* supports this feature &ndash; and also *wpc* converter, if the cloud converter is configured to use one of these.
 
 *ewww* btw automatically uses *lossless* encoding for PNGs and lossy for JPEGs and therefore cannot be configured to auto select. While this is not good, I believe it is preferable to always using *lossy* encoding for PNGs, which is the case with *gd*, *imagick*, *gmagick*, *imagickbinary* and *gmagickbinary*.
 
@@ -119,7 +119,7 @@ As unnecessary large conversions are rarely desirable, this library per default 
 You can read more about the near-lossless mode [here](https://groups.google.com/a/webmproject.org/forum/#!topic/webp-discuss/0GmxDmlexek)
 
 ### Alpha-lossless
-*cwebp*, *vips* and *imagickbinary* supports "alpha-quality" option. This allows lossy compressing of the alpha channel.
+*cwebp*, *vips*, *imagickbinary* and *gmagickbinary* supports "alpha-quality" option. This allows lossy compressing of the alpha channel.
 
 As unnecessary large conversions are rarely desirable, this library per default sets *alpha-quality* to 80. Set it to 100 to achieve lossless compression of alhpa.
 

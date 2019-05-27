@@ -807,7 +807,7 @@ trait OptionsTrait
 
     /** @var array  Definitions of general options (the options that are available on all converters) */
     protected static $optionDefinitionsBasic = [
-        ['alpha-quality', 'integer', 80],
+        ['alpha-quality', 'integer', 85],
         ['autofilter', 'boolean', false],
         ['default-quality', 'number', 75],       // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
         ['encoding', 'string', "auto"],          // PS: Default is altered to "lossy" for JPG in ::getDefaultOptions()
@@ -2937,6 +2937,7 @@ class Gmagick extends AbstractConverter
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Converters\AbstractConverter;
+use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -2954,6 +2955,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 class GmagickBinary extends AbstractConverter
 {
     use ExecTrait;
+    use EncodingAutoTrait;
 
     private static function getGmagickPath()
     {
@@ -2968,6 +2970,15 @@ class GmagickBinary extends AbstractConverter
     {
         exec(self::getGmagickPath() . ' -version', $output, $returnCode);
         return ($returnCode == 0);
+    }
+
+    public static function gmagickVersion()
+    {
+        exec(self::getGmagickPath() . ' -version', $output, $returnCode);
+        if (($returnCode == 0) && isset($output[0])) {
+            return preg_replace('#http.*#', '', $output[0]);
+        }
+        return 'unknown';
     }
 
     // Check if webp delegate is installed
@@ -2999,22 +3010,61 @@ class GmagickBinary extends AbstractConverter
         }
     }
 
+    /**
+     * Build command line options
+     *
+     * @return string
+     */
+    private function createCommandLineOptions()
+    {
+        $commandArguments = [];
+
+        // Unlike imagick binary, it seems gmagick binary uses a fixed
+        // quality (75) when quality is omitted
+//        $commandArguments[] = '-quality ' . escapeshellarg($this->getCalculatedQuality());
+
+        // encoding
+        if ($this->options['encoding'] == 'lossless') {
+            // Btw:
+            // I am not sure if we should set "quality" for lossless.
+            // Quality should not apply to lossless, but my tests shows that it does in some way for gmagick
+            // setting it low, you get bad visual quality and small filesize. Setting it high, you get the opposite
+            // Some claim it is a bad idea to set quality, but I'm not so sure.
+            // https://stackoverflow.com/questions/4228027/
+            // First, I do not just get bigger images when setting quality, as toc777 does.
+            // Secondly, the answer is very old and that bad behaviour is probably fixed by now.
+            $commandArguments[] = '-define webp:lossless=true';
+        } else {
+            $commandArguments[] = '-define webp:lossless=false';
+        }
+
+        if ($this->options['alpha-quality'] !== 100) {
+            $commandArguments[] = '-define webp:alpha-quality=' . strval($this->options['alpha-quality']);
+        }
+
+        if ($this->options['low-memory']) {
+            $commandArguments[] = '-define webp:low-memory=true';
+        }
+
+        if ($this->options['metadata'] == 'none') {
+            $commandArguments[] = '-strip';
+        }
+
+        $commandArguments[] = '-define webp:method=' . $this->options['method'];
+
+        $commandArguments[] = escapeshellarg($this->source);
+        $commandArguments[] = escapeshellarg('webp:' . $this->destination);
+
+        return implode(' ', $commandArguments);
+    }
+
     protected function doActualConvert()
     {
         //$this->logLn('Using quality:' . $this->getCalculatedQuality());
 
-        $commandArguments = [];
-        if ($this->isQualityDetectionRequiredButFailing()) {
-            // quality:auto was specified, but could not be determined.
-            // we cannot apply the max-quality logic, but we can provide auto quality
-            // simply by not specifying the quality option.
-        } else {
-            $commandArguments[] = '-quality ' . escapeshellarg($this->getCalculatedQuality());
-        }
-        $commandArguments[] = escapeshellarg($this->source);
-        $commandArguments[] = escapeshellarg('webp:' . $this->destination);
+        $this->logLn('Version: ' . self::gmagickVersion());
 
-        $command = self::getGmagickPath() . ' convert ' . implode(' ', $commandArguments);
+        $command = self::getGmagickPath() . ' convert ' . $this->createCommandLineOptions();
 
         $useNice = (($this->options['use-nice']) && self::hasNiceSupport()) ? true : false;
         if ($useNice) {
@@ -3310,6 +3360,9 @@ class ImagickBinary extends AbstractConverter
         if ($this->options['alpha-quality'] !== 100) {
             $commandArguments[] = '-define webp:alpha-quality=' . strval($this->options['alpha-quality']);
         }
+
+        // Unfortunately, near-lossless does not seem to be supported.
+        // it does have a "preprocessing" option, which may be doing something similar
 
         $commandArguments[] = '-define webp:method=' . $this->options['method'];
 

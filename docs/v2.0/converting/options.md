@@ -8,7 +8,7 @@ Note that as the *stack* and *wpc* converters delegates the options to their con
 ```
 Type:         integer (0-100)
 Default:      85
-Supported by: cwebp, vips and imagickbinary
+Supported by: cwebp, vips, imagickbinary and gmagickbinary
 ```
 Quality of alpha channel. Only relevant for lossy encoding and only relevant for images with alpha channel.<br><br>
 
@@ -40,7 +40,7 @@ Read about this option in the ["auto quality" section in the introduction](https
 ```
 Type:          string  ("lossy" | "lossless" | "auto")
 Default:       "auto" for pngs and "lossy" for jpegs
-Supported by:  cwebp, imagickbinary, vips  (the other converters always uses lossy encoding, except ewww, which uses lossless for pngs and lossy for jpegs)
+Supported by:  cwebp, vips, imagickbinary and gmagickbinary  (the other converters always uses lossy encoding, except ewww, which uses lossless for pngs and lossy for jpegs)
 ```
 Read about this option in the ["lossy/lossless" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-selecting-between-losslesslossy-encoding).<br><br>
 
@@ -67,7 +67,7 @@ Read about this option in the [introduction](https://github.com/rosell-dk/webp-c
 ```
 Type:          false
 Default:       ''
-Supported by:  cwebp, imagickbinary
+Supported by:  cwebp, imagickbinary and gmagickbinary
 ```
 Reduce memory usage of lossy encoding at the cost of ~30% longer encoding time and marginally larger output size. Read more in [the docs](https://developers.google.com/speed/webp/docs/cwebp).<br><br>
 
@@ -85,7 +85,7 @@ Type:          string ("all" | "none" | "exif" | "icc" | "xmp")
 Default:       'none'
 Supported by:  'none' is supported by all. 'all' is supported by all, except *gd*. The rest is only supported by *cwebp*
 ```
-Only *cwebp* supports all values. *gd* will always remove all metadata. *ewww*, *imagick* and *gmagick* can either strip all or keep all (they will keep all, unless the option is set to *none*).<br><br>
+Only *cwebp* supports all values. *gd* will always remove all metadata. The rest can either strip all or keep all (they will keep all, unless the option is set to *none*).<br><br>
 
 ### `method`
 ```
