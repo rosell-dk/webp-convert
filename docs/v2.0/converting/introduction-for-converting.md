@@ -56,7 +56,7 @@ Stack::convert($source, $destination, $options = [
 
     // PS: only set converters if you have strong reasons to do so
     'converters' => [
-        'cwebp', 'vips', 'imagick', 'imagickbinary', 'gmagickbinary', 'wpc', 'ewww', 'gmagick', 'gd'
+        'cwebp', 'vips', 'imagick', 'gmagick', 'imagickbinary', 'gmagickbinary', 'wpc', 'ewww', 'gd'
     ],
 
     // Any available options can be set here, they dribble down to all converters.
@@ -106,10 +106,7 @@ As unnecessary large conversions are rarely desirable, this library per default 
 
 Unless you changed the `near-lossless` option described below, the choice is actually between lossy and *near-lossless*.
 
-Note that only *cwebp*, *vips*, *imagick*, *imagickbinary* and *gmagickbinary* supports this feature &ndash; and also *wpc* converter, if the cloud converter is configured to use one of these.
-
-*ewww* btw automatically uses *lossless* encoding for PNGs and lossy for JPEGs and therefore cannot be configured to auto select. While this is not good, I believe it is preferable to always using *lossy* encoding for PNGs, which is the case with *gd*, *imagick*, *gmagick*, *imagickbinary* and *gmagickbinary*.
-
+Note that *gd* and *ewww* doesn't support this feature. *gd* can only produce lossy, and will simply do that. *ewww* can not be configured to use a certain encoding, but automatically chooses *lossless* encoding for PNGs and lossy for JPEGs.
 
 ### Near-lossless
 *cwebp* and *vips* supports "near-lossless" mode. Near lossless produces a webp with lossless encoding but adjusts pixel values to help compressibility. The result is a smaller file. The price is described as a minimal impact on the visual quality.
@@ -118,10 +115,10 @@ As unnecessary large conversions are rarely desirable, this library per default 
 
 You can read more about the near-lossless mode [here](https://groups.google.com/a/webmproject.org/forum/#!topic/webp-discuss/0GmxDmlexek)
 
-### Alpha-lossless
-*cwebp*, *vips*, *imagick*, *imagickbinary* and *gmagickbinary* supports "alpha-quality" option. This allows lossy compressing of the alpha channel.
+### Alpha-quality
+All converters, except *gd* and *ewww* supports "alpha-quality" option. This allows lossy compressing of the alpha channel.
 
-As unnecessary large conversions are rarely desirable, this library per default sets *alpha-quality* to 80. Set it to 100 to achieve lossless compression of alhpa.
+As unnecessary large conversions are rarely desirable, this library per default sets *alpha-quality* to 85. Set it to 100 to achieve lossless compression of alhpa.
 
 You can read more about the alpha-quality option [here](https://developers.google.com/speed/webp/docs/cwebp)
 

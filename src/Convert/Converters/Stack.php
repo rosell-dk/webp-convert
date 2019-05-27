@@ -29,7 +29,7 @@ class Stack extends AbstractConverter
             [
                 'converters',
                 'array', [
-                    'cwebp', 'vips', 'imagick', 'imagickbinary', 'gmagickbinary', 'wpc', 'ewww', 'gmagick', 'gd'
+                    'cwebp', 'vips', 'imagick', 'gmagick', 'imagickbinary', 'gmagickbinary', 'wpc', 'ewww', 'gd'
                 ],
                 true
             ],
@@ -47,7 +47,7 @@ class Stack extends AbstractConverter
     public static function getAvailableConverters()
     {
         return [
-            'cwebp', 'vips', 'imagick', 'imagickbinary', 'gmagickbinary', 'wpc', 'ewww', 'gmagick', 'gd'
+            'cwebp', 'vips', 'imagick', 'gmagick', 'imagickbinary', 'gmagickbinary', 'wpc', 'ewww', 'gd'
         ];
     }
 

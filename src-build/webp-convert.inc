@@ -2784,6 +2784,7 @@ namespace WebPConvert\Convert\Converters;
 use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -2796,10 +2797,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
  */
 class Gmagick extends AbstractConverter
 {
-    public function supportsLossless()
-    {
-        return false;
-    }
+    use EncodingAutoTrait;
 
     /**
      * Check (general) operationality of Gmagick converter.
@@ -2842,14 +2840,14 @@ class Gmagick extends AbstractConverter
             case 'image/png':
                 if (!in_array('PNG', $im->queryFormats())) {
                     throw new SystemRequirementsNotMetException(
-                        'Imagick has been compiled without PNG support and can therefore not convert this PNG image.'
+                        'Gmagick has been compiled without PNG support and can therefore not convert this PNG image.'
                     );
                 }
                 break;
             case 'image/jpeg':
                 if (!in_array('JPEG', $im->queryFormats())) {
                     throw new SystemRequirementsNotMetException(
-                        'Imagick has been compiled without Jpeg support and can therefore not convert this Jpeg image.'
+                        'Gmagick has been compiled without Jpeg support and can therefore not convert this Jpeg image.'
                     );
                 }
                 break;
@@ -2874,25 +2872,23 @@ class Gmagick extends AbstractConverter
             );
         }
 
-        /*
-        Seems there are currently no way to set webp options
-        As noted in the following link, it should probably be done with a $im->addDefinition() method
-        - but that isn't exposed (yet)
-        (TODO: see if anyone has answered...)
-        https://stackoverflow.com/questions/47294962/how-to-write-lossless-webp-files-with-perlmagick
-        */
-        // The following two does not have any effect... How to set WebP options?
-        //$im->setimageoption('webp', 'webp:lossless', $options['lossless'] ? 'true' : 'false');
-        //$im->setimageoption('WEBP', 'method', strval($options['method']));
-
-        // It seems there is no COMPRESSION_WEBP...
-        // http://php.net/manual/en/imagick.setimagecompression.php
-        //$im->setImageCompression(Imagick::COMPRESSION_JPEG);
-        //$im->setImageCompression(Imagick::COMPRESSION_UNDEFINED);
-
-
-
         $im->setimageformat('WEBP');
+
+        // Finally cracked setting webp options.
+        // See #167 and https://stackoverflow.com/questions/47294962/how-to-write-lossless-webp-files-with-perlmagick
+
+        $im->setimageoption('webp', 'method', $options['method']);
+        $im->setimageoption('webp', 'lossless', $options['encoding'] == 'lossless' ? 'true' : 'false');
+        $im->setimageoption('webp', 'alpha-quality', $options['alpha-quality']);
+
+        if ($options['auto-filter'] === true) {
+            $im->setimageoption('webp', 'auto-filter', 'true');
+        }
+
+        /*
+        low-memory seems not to be supported:
+        $im->setimageoption('webp', 'low-memory', $options['low-memory'] ? true : false);
+        */
 
         if ($options['metadata'] == 'none') {
             // Strip metadata and profiles
@@ -3434,7 +3430,7 @@ class Stack extends AbstractConverter
             [
                 'converters',
                 'array', [
-                    'cwebp', 'vips', 'imagick', 'imagickbinary', 'gmagickbinary', 'wpc', 'ewww', 'gmagick', 'gd'
+                    'cwebp', 'vips', 'imagick', 'gmagick', 'imagickbinary', 'gmagickbinary', 'wpc', 'ewww', 'gd'
                 ],
                 true
             ],
@@ -3452,7 +3448,7 @@ class Stack extends AbstractConverter
     public static function getAvailableConverters()
     {
         return [
-            'cwebp', 'vips', 'imagick', 'imagickbinary', 'gmagickbinary', 'wpc', 'ewww', 'gmagick', 'gd'
+            'cwebp', 'vips', 'imagick', 'gmagick', 'imagickbinary', 'gmagickbinary', 'wpc', 'ewww', 'gd'
         ];
     }
 
