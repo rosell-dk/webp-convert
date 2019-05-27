@@ -2874,15 +2874,18 @@ class Gmagick extends AbstractConverter
 
         $im->setimageformat('WEBP');
 
-        // Finally cracked setting webp options.
-        // See #167 and https://stackoverflow.com/questions/47294962/how-to-write-lossless-webp-files-with-perlmagick
+        // Not completely sure if setimageoption() has always been there, so lets check first. #169
+        if (method_exists($im, 'setimageoption')) {
 
-        $im->setimageoption('webp', 'method', $options['method']);
-        $im->setimageoption('webp', 'lossless', $options['encoding'] == 'lossless' ? 'true' : 'false');
-        $im->setimageoption('webp', 'alpha-quality', $options['alpha-quality']);
+            // Finally cracked setting webp options.
+            // See #167 and https://stackoverflow.com/questions/47294962/how-to-write-lossless-webp-files-with-perlmagick
+            $im->setimageoption('webp', 'method', $options['method']);
+            $im->setimageoption('webp', 'lossless', $options['encoding'] == 'lossless' ? 'true' : 'false');
+            $im->setimageoption('webp', 'alpha-quality', $options['alpha-quality']);
 
-        if ($options['auto-filter'] === true) {
-            $im->setimageoption('webp', 'auto-filter', 'true');
+            if ($options['auto-filter'] === true) {
+                $im->setimageoption('webp', 'auto-filter', 'true');
+            }
         }
 
         /*
