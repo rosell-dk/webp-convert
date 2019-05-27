@@ -8,7 +8,7 @@ Note that as the *stack* and *wpc* converters delegates the options to their con
 ```
 Type:         integer (0-100)
 Default:      85
-Supported by: cwebp, vips, imagickbinary and gmagickbinary
+Supported by: cwebp, vips, imagick, imagickbinary and gmagickbinary
 ```
 Quality of alpha channel. Only relevant for lossy encoding and only relevant for images with alpha channel.<br><br>
 
@@ -16,7 +16,7 @@ Quality of alpha channel. Only relevant for lossy encoding and only relevant for
 ```
 Type:         boolean
 Default:      false
-Supported by: cwebp, vips and imagickbinary
+Supported by: cwebp, vips, imagick and imagickbinary
 ```
 Turns auto-filter on. This algorithm will spend additional time optimizing the filtering strength to reach a well-balanced quality. Unfortunately, it is extremely expensive in terms of computation. It takes about 5-10 times longer to do a conversion. A 1MB picture which perhaps typically takes about 2 seconds to convert, will takes about 15 seconds to convert with auto-filter. So in most cases, you will want to leave this at its default, which is off.<br><br>
 
@@ -40,7 +40,7 @@ Read about this option in the ["auto quality" section in the introduction](https
 ```
 Type:          string  ("lossy" | "lossless" | "auto")
 Default:       "auto" for pngs and "lossy" for jpegs
-Supported by:  cwebp, vips, imagickbinary and gmagickbinary  (the other converters always uses lossy encoding, except ewww, which uses lossless for pngs and lossy for jpegs)
+Supported by:  cwebp, vips, imagick, imagickbinary and gmagickbinary  (the other converters always uses lossy encoding, except ewww, which uses lossless for pngs and lossy for jpegs)
 ```
 Read about this option in the ["lossy/lossless" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-selecting-between-losslesslossy-encoding).<br><br>
 
@@ -67,7 +67,7 @@ Read about this option in the [introduction](https://github.com/rosell-dk/webp-c
 ```
 Type:          false
 Default:       ''
-Supported by:  cwebp, imagickbinary and gmagickbinary
+Supported by:  cwebp, imagick, imagickbinary and gmagickbinary
 ```
 Reduce memory usage of lossy encoding at the cost of ~30% longer encoding time and marginally larger output size. Read more in [the docs](https://developers.google.com/speed/webp/docs/cwebp).<br><br>
 
@@ -91,7 +91,7 @@ Only *cwebp* supports all values. *gd* will always remove all metadata. The rest
 ```
 Type:          integer (0-6)
 Default:       6
-Supported by:  cwebp, imagickbinary
+Supported by:  cwebp, imagick, imagickbinary and gmagickbinary
 ```
 This parameter controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. 0 is fastest. 6 results in best quality.<br><br>
 

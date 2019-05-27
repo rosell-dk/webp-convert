@@ -29,7 +29,7 @@ class Stack extends AbstractConverter
             [
                 'converters',
                 'array', [
-                    'cwebp', 'vips', 'wpc', 'imagickbinary', 'ewww', 'imagick', 'gmagick', 'gmagickbinary', 'gd'
+                    'cwebp', 'vips', 'imagick', 'imagickbinary', 'gmagickbinary', 'wpc', 'ewww', 'gmagick', 'gd'
                 ],
                 true
             ],
@@ -46,9 +46,11 @@ class Stack extends AbstractConverter
      */
     public static function getAvailableConverters()
     {
-        return ['cwebp', 'vips', 'wpc', 'imagickbinary', 'ewww', 'imagick', 'gmagick', 'gmagickbinary', 'gd'];
+        return [
+            'cwebp', 'vips', 'imagick', 'imagickbinary', 'gmagickbinary', 'wpc', 'ewww', 'gmagick', 'gd'
+        ];
     }
-    
+
     /**
      * Check (general) operationality of imagack converter executable
      *

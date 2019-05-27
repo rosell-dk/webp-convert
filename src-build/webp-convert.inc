@@ -3093,6 +3093,7 @@ use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFileException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -3105,10 +3106,13 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
  */
 class Imagick extends AbstractConverter
 {
+    use EncodingAutoTrait;
+
+    /*
     public function supportsLossless()
     {
         return false;
-    }
+    }*/
 
     /**
      * Check operationality of Imagick converter.
@@ -3172,34 +3176,31 @@ class Imagick extends AbstractConverter
      */
     protected function doActualConvert()
     {
+        /*
+         * More about iMagick's WebP options:
+         * - Inspect source code: https://github.com/ImageMagick/ImageMagick/blob/master/coders/webp.c#L559
+         *      (search for "webp:")
+         * - http://www.imagemagick.org/script/webp.php
+         * - https://developers.google.com/speed/webp/docs/cwebp
+         * - https://stackoverflow.com/questions/37711492/imagemagick-specific-webp-calls-in-php
+         */
+
         $options = $this->options;
 
         // This might throw - we let it!
         $im = new \Imagick($this->source);
 
         //$im = new \Imagick();
+        //$im->pingImage($this->source);
         //$im->readImage($this->source);
 
         $im->setImageFormat('WEBP');
 
-        /*
-         * More about iMagick's WebP options:
-         * http://www.imagemagick.org/script/webp.php
-         * https://developers.google.com/speed/webp/docs/cwebp
-         * https://stackoverflow.com/questions/37711492/imagemagick-specific-webp-calls-in-php
-         */
-
-        // TODO: We could easily support all webp options with a loop
-
-        /*
-        After using getImageBlob() to write image, the following setOption() calls
-        makes settings makes imagick fail. So can't use those. But its a small price
-        to get a converter that actually makes great quality conversions.
-
-        $im->setOption('webp:method', strval($options['method']));
-        $im->setOption('webp:low-memory', strval($options['low-memory']));
-        $im->setOption('webp:lossless', strval($options['lossless']));
-        */
+        $im->setOption('webp:method', $options['method']);
+        $im->setOption('webp:lossless', $options['encoding'] == 'lossless' ? 'true' : 'false');
+        $im->setOption('webp:low-memory', $options['low-memory'] ? 'true' : 'false');
+        $im->setOption('webp:alpha-quality', $options['alpha-quality']);
+        $im->setOption('webp:auto-filter', $options['autofilter'] ? 'true' : 'false');
 
         if ($options['metadata'] == 'none') {
             // Strip metadata and profiles
@@ -3231,13 +3232,7 @@ class Imagick extends AbstractConverter
         // https://gauntface.com/blog/2014/09/02/webp-support-with-imagemagick-and-php ??
         // It seems that alpha channel works without... (at least I see completely transparerent pixels)
 
-        // TODO: Check out other iMagick methods, see http://php.net/manual/de/imagick.writeimage.php#114714
-        // 1. file_put_contents($destination, $im)
-        // 2. $im->writeImage($destination)
-
         // We used to use writeImageFile() method. But we now use getImageBlob(). See issue #43
-        //$success = $im->writeImageFile(fopen($destination, 'wb'));
-
 
         // This might throw - we let it!
         $imageBlob = $im->getImageBlob();
@@ -3436,7 +3431,7 @@ class Stack extends AbstractConverter
             [
                 'converters',
                 'array', [
-                    'cwebp', 'vips', 'wpc', 'imagickbinary', 'ewww', 'imagick', 'gmagick', 'gmagickbinary', 'gd'
+                    'cwebp', 'vips', 'imagick', 'imagickbinary', 'gmagickbinary', 'wpc', 'ewww', 'gmagick', 'gd'
                 ],
                 true
             ],
@@ -3453,9 +3448,11 @@ class Stack extends AbstractConverter
      */
     public static function getAvailableConverters()
     {
-        return ['cwebp', 'vips', 'wpc', 'imagickbinary', 'ewww', 'imagick', 'gmagick', 'gmagickbinary', 'gd'];
+        return [
+            'cwebp', 'vips', 'imagick', 'imagickbinary', 'gmagickbinary', 'wpc', 'ewww', 'gmagick', 'gd'
+        ];
     }
-    
+
     /**
      * Check (general) operationality of imagack converter executable
      *
@@ -3729,6 +3726,7 @@ class Vips extends AbstractConverter
     {
         // webpsave options are described here:
         // https://jcupitt.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave
+        // Note that "method" is currently not supported (27 may 2019)
 
         $options = [
             "Q" => $this->getCalculatedQuality(),
@@ -3764,6 +3762,7 @@ class Vips extends AbstractConverter
                 $options['Q'] = $this->options['near-lossless'];
             }
         }
+
         return $options;
     }
 
