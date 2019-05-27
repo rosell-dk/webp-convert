@@ -124,30 +124,18 @@ class Gmagick extends AbstractConverter
         // TODO: However, it might be possible after all - see #91
         $im->setcompressionquality($this->getCalculatedQuality());
 
-        try {
-            // We call getImageBlob().
-            // That method is undocumented, but it is there!
-            // - just like it is in imagick, as pointed out here:
-            //   https://www.php.net/manual/ru/gmagick.readimageblob.php
+        // We call getImageBlob().
+        // That method is undocumented, but it is there!
+        // - just like it is in imagick, as pointed out here:
+        //   https://www.php.net/manual/ru/gmagick.readimageblob.php
 
-            /** @scrutinizer ignore-call */
-            $imageBlob = $im->getImageBlob();
-        } catch (\ImagickException $e) {
-            throw new ConversionFailedException(
-                'Gmagick failed converting - getImageBlob() threw an exception)',
-                0,
-                $e
-            );
-        }
+        /** @scrutinizer ignore-call */
+        $imageBlob = $im->getImageBlob();
 
-
-        //$success = $im->writeimagefile(fopen($destination, 'wb'));
         $success = @file_put_contents($this->destination, $imageBlob);
 
         if (!$success) {
             throw new ConversionFailedException('Failed writing file');
-        } else {
-            //$logger->logLn('sooms we made it!');
         }
     }
 }
