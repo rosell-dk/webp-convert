@@ -117,6 +117,7 @@ class Vips extends AbstractConverter
     {
         // webpsave options are described here:
         // https://jcupitt.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave
+        // Note that "method" is currently not supported (27 may 2019)
 
         $options = [
             "Q" => $this->getCalculatedQuality(),
@@ -152,6 +153,7 @@ class Vips extends AbstractConverter
                 $options['Q'] = $this->options['near-lossless'];
             }
         }
+
         return $options;
     }
 
