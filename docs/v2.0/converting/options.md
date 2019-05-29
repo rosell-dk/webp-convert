@@ -63,10 +63,18 @@ Supported by:  all
 Override selected options when the source is a jpeg. The options provided here are simply merged into the other options when the source is a jpeg.
 Read about this option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#png-og-jpeg-specific-options).<br><br>
 
+### `log-call-arguments`
+```
+Type:          boolean
+Default:       false
+Supported by:  all
+```
+Enabling this simply puts some more in the log - namely the arguments that was supplied to the call. Sensitive information is starred out.
+
 ### `low-memory`
 ```
-Type:          false
-Default:       ''
+Type:          boolean
+Default:       false
 Supported by:  cwebp, imagick, imagickbinary and gmagickbinary
 ```
 Reduce memory usage of lossy encoding at the cost of ~30% longer encoding time and marginally larger output size. Read more in [the docs](https://developers.google.com/speed/webp/docs/cwebp).<br><br>

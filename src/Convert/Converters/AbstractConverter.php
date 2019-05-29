@@ -209,6 +209,12 @@ abstract class AbstractConverter
     {
         $beginTime = microtime(true);
 
+        if ($this->options['log-call-arguments']) {
+            $this->logLn('source: ' . $this->source, 'italic');
+            $this->logLn('destination: ' . $this->destination, 'italic');
+            $this->logLn('');
+        }
+
         $this->activateWarningLogger();
 
         $this->checkOptions();
@@ -294,9 +300,6 @@ abstract class AbstractConverter
         $c = self::createInstance($source, $destination, $options, $logger);
 
         $c->logLn(self::getConverterDisplayName() . ' converter ignited');
-        $c->logLn('source: ' . $source, 'italic');
-        $c->logLn('destination: ' . $destination, 'italic');
-
 
         $c->doConvert();
         //echo $instance->id;

@@ -35,6 +35,7 @@ trait OptionsTrait
         ['encoding', 'string', "auto"],          // PS: Default is altered to "lossy" for JPG in ::getDefaultOptions()
         //['lossless', 'boolean|string', false],   // PS: Default is altered to "auto" for PNG in ::getDefaultOptions()
         ['low-memory', 'boolean', false],
+        ['log-call-arguments', 'boolean', false],
         ['max-quality', 'number', 85],
         ['metadata', 'string', 'none'],
         ['method', 'number', 6],
