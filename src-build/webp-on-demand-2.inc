@@ -292,8 +292,14 @@ abstract class AbstractConverter
      */
     public static function convert($source, $destination, $options = [], $logger = null)
     {
-        $instance = self::createInstance($source, $destination, $options, $logger);
-        $instance->doConvert();
+        $c = self::createInstance($source, $destination, $options, $logger);
+
+        $c->logLn(self::getConverterDisplayName() . ' converter ignited');
+        $c->logLn('source: ' . $source, 'italic');
+        $c->logLn('destination: ' . $destination, 'italic');
+
+
+        $c->doConvert();
         //echo $instance->id;
     }
 
@@ -2805,9 +2811,9 @@ class Gmagick extends AbstractConverter
 
         // Not completely sure if setimageoption() has always been there, so lets check first. #169
         if (method_exists($im, 'setimageoption')) {
-
             // Finally cracked setting webp options.
-            // See #167 and https://stackoverflow.com/questions/47294962/how-to-write-lossless-webp-files-with-perlmagick
+            // See #167
+            // - and https://stackoverflow.com/questions/47294962/how-to-write-lossless-webp-files-with-perlmagick
             $im->setimageoption('webp', 'method', $options['method']);
             $im->setimageoption('webp', 'lossless', $options['encoding'] == 'lossless' ? 'true' : 'false');
             $im->setimageoption('webp', 'alpha-quality', $options['alpha-quality']);
@@ -2832,30 +2838,18 @@ class Gmagick extends AbstractConverter
         // TODO: However, it might be possible after all - see #91
         $im->setcompressionquality($this->getCalculatedQuality());
 
-        try {
-            // We call getImageBlob().
-            // That method is undocumented, but it is there!
-            // - just like it is in imagick, as pointed out here:
-            //   https://www.php.net/manual/ru/gmagick.readimageblob.php
+        // We call getImageBlob().
+        // That method is undocumented, but it is there!
+        // - just like it is in imagick, as pointed out here:
+        //   https://www.php.net/manual/ru/gmagick.readimageblob.php
 
-            /** @scrutinizer ignore-call */
-            $imageBlob = $im->getImageBlob();
-        } catch (\ImagickException $e) {
-            throw new ConversionFailedException(
-                'Gmagick failed converting - getImageBlob() threw an exception)',
-                0,
-                $e
-            );
-        }
+        /** @scrutinizer ignore-call */
+        $imageBlob = $im->getImageBlob();
 
-
-        //$success = $im->writeimagefile(fopen($destination, 'wb'));
         $success = @file_put_contents($this->destination, $imageBlob);
 
         if (!$success) {
             throw new ConversionFailedException('Failed writing file');
-        } else {
-            //$logger->logLn('sooms we made it!');
         }
     }
 }
@@ -3399,7 +3393,7 @@ class Stack extends AbstractConverter
 
         // TODO: We should test if all converters are found in order to detect problems early
 
-        $this->logLn('Stack converter ignited');
+        //$this->logLn('Stack converter ignited');
     }
 
     protected function doActualConvert()
@@ -3484,6 +3478,9 @@ class Stack extends AbstractConverter
 
             $beginTime = microtime(true);
 
+            $this->ln();
+            $this->logLn('Trying: ' . $converterId, 'italic');
+
             $converter = ConverterFactory::makeConverter(
                 $converterId,
                 $this->source,
@@ -3493,9 +3490,6 @@ class Stack extends AbstractConverter
             );
 
             try {
-                $this->ln();
-                $this->logLn('Trying: ' . $converterId, 'italic');
-
                 $converter->doConvert();
 
                 //self::runConverterWithTiming($converterId, $source, $destination, $converterOptions, false, $logger);

@@ -66,7 +66,7 @@ class Stack extends AbstractConverter
 
         // TODO: We should test if all converters are found in order to detect problems early
 
-        $this->logLn('Stack converter ignited');
+        //$this->logLn('Stack converter ignited');
     }
 
     protected function doActualConvert()
@@ -151,6 +151,9 @@ class Stack extends AbstractConverter
 
             $beginTime = microtime(true);
 
+            $this->ln();
+            $this->logLn('Trying: ' . $converterId, 'italic');
+
             $converter = ConverterFactory::makeConverter(
                 $converterId,
                 $this->source,
@@ -160,9 +163,6 @@ class Stack extends AbstractConverter
             );
 
             try {
-                $this->ln();
-                $this->logLn('Trying: ' . $converterId, 'italic');
-
                 $converter->doConvert();
 
                 //self::runConverterWithTiming($converterId, $source, $destination, $converterOptions, false, $logger);

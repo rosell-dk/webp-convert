@@ -291,8 +291,14 @@ abstract class AbstractConverter
      */
     public static function convert($source, $destination, $options = [], $logger = null)
     {
-        $instance = self::createInstance($source, $destination, $options, $logger);
-        $instance->doConvert();
+        $c = self::createInstance($source, $destination, $options, $logger);
+
+        $c->logLn(self::getConverterDisplayName() . ' converter ignited');
+        $c->logLn('source: ' . $source, 'italic');
+        $c->logLn('destination: ' . $destination, 'italic');
+
+
+        $c->doConvert();
         //echo $instance->id;
     }
 
