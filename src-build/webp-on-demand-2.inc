@@ -4238,9 +4238,10 @@ class Vips extends AbstractConverter
         if ($this->options['alpha-quality'] !== 100) {
             $options['alpha_q'] = $this->options['alpha-quality'];
         }
-        if (!is_null($this->options['preset'])) {
-            // preset. 0:default, 1:picture, 2:photo, 3:drawing, 4:icon, 5:text, 6:last
 
+        if (!is_null($this->options['preset']) && ($this->options['preset'] != 'none')) {
+
+            // preset. 0:default, 1:picture, 2:photo, 3:drawing, 4:icon, 5:text, 6:last
             $options['preset'] = array_search(
                 $this->options['preset'],
                 ['default', 'picture', 'photo', 'drawing', 'icon', 'text']
