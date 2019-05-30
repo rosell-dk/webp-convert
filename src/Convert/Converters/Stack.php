@@ -12,6 +12,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Options\BooleanOption;
 use WebPConvert\Options\ArrayOption;
+use WebPConvert\Options\SensitiveArrayOption;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -35,10 +36,11 @@ class Stack extends AbstractConverter
         parent::createOptions();
 
         $this->options2->addOptions(
-            new ArrayOption('converters', self::getAvailableConverters()),
+            new SensitiveArrayOption('converters', self::getAvailableConverters()),
+            new SensitiveArrayOption('converter-options', []),
             new BooleanOption('shuffle', false),
             new ArrayOption('preferred-converters', []),
-            new ArrayOption('extra-converters', [])
+            new SensitiveArrayOption('extra-converters', [])
         );
     }
 
@@ -124,6 +126,7 @@ class Stack extends AbstractConverter
         unset($defaultConverterOptions['extra-converters']);
         unset($defaultConverterOptions['converter-options']);
         unset($defaultConverterOptions['preferred-converters']);
+        unset($defaultConverterOptions['shuffle']);
 
 //        $this->logLn('converters: ' . print_r($converters, true));
 

@@ -32,4 +32,12 @@ class IntegerOrNullOption extends IntegerOption
             );
         }
     }
+
+    public function getValueForPrint()
+    {
+        if (gettype($this->getValue() == 'NULL')) {
+            return 'null (not set)';
+        }
+        return parent::getValueForPrint();
+    }
 }

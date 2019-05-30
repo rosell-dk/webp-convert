@@ -67,8 +67,9 @@ class Options
     public function setOrCreateOption($id, $value)
     {
         if (!isset($this->options[$id])) {
-            $newOption = new Option($id, null);
+            $newOption = new GhostOption($id, null);
             $newOption->setValue($value);
+            //$newOption = new Option($id, $value);
             $this->addOption($newOption);
         } else {
             $this->setOption($id, $value);
@@ -91,6 +92,16 @@ class Options
         }
         $option = $this->options[$id];
         return $option->getValue();
+    }
+
+    /**
+     * Return map of option objects.
+     *
+     * @return array  map of option objects
+     */
+    public function getOptionsMap()
+    {
+        return $this->options;
     }
 
     /**

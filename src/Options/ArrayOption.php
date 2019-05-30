@@ -15,11 +15,6 @@ use WebPConvert\Options\Exceptions\InvalidOptionValueException;
 class ArrayOption extends Option
 {
 
-    public function __construct($id, $defaultValue)
-    {
-        parent::__construct($id, $defaultValue);
-    }
-
     public function check()
     {
         $this->checkType('array');

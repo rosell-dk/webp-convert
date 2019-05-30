@@ -78,6 +78,16 @@ class Option
     }
 
     /**
+     * Get to know if value has been explicitly set.
+     *
+     * @return  boolean  Whether or not the value has been set explicitly
+     */
+    public function isValueExplicitlySet()
+    {
+        return $this->isExplicitlySet;
+    }
+
+    /**
      * Set value
      *
      * @param  mixed  $value  The value
@@ -114,5 +124,10 @@ class Option
                 ' (you provided a ' . gettype($this->getValue()) . ')'
             );
         }
+    }
+
+    public function getValueForPrint()
+    {
+        return print_r($this->getValue(), true);
     }
 }

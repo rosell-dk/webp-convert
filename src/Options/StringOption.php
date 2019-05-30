@@ -35,4 +35,9 @@ class StringOption extends Option
             );
         }
     }
+
+    public function getValueForPrint()
+    {
+        return '"' . $this->getValue() . '"';
+    }
 }

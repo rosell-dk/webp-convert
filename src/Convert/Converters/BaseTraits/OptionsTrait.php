@@ -5,7 +5,9 @@ namespace WebPConvert\Convert\Converters\BaseTraits;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Options\Exceptions\InvalidOptionValueException;
 
+use WebPConvert\Options\ArrayOption;
 use WebPConvert\Options\BooleanOption;
+use WebPConvert\Options\GhostOption;
 use WebPConvert\Options\IntegerOption;
 use WebPConvert\Options\IntegerOrNullOption;
 use WebPConvert\Options\MetadataOption;
@@ -66,7 +68,9 @@ trait OptionsTrait
             new QualityOption('quality', ($isPng ? 85 : 'auto')),
             new IntegerOrNullOption('size-in-percentage', null, 0, 100),
             new BooleanOption('skip', false),
-            new BooleanOption('use-nice', false)
+            new BooleanOption('use-nice', false),
+            new ArrayOption('jpeg', []),
+            new ArrayOption('png', [])
         );
     }
 
@@ -178,45 +182,54 @@ trait OptionsTrait
         }
     }
 
-/*
-    private function logOption($def) {
-        list($optionName, $optionType) = $def;
-        $sensitive = (isset($def[3]) && $def[3] === true);
-        if ($sensitive) {
-            $printValue = '*****';
-        } else {
-            $printValue = $this->options[$optionName];
-            //switch ($optionType) {
-            switch (gettype($printValue)) {
-                case 'boolean':
-                    $printValue = ($printValue === true ? 'true' : 'false');
-                    break;
-                case 'string':
-                    $printValue = '"' . $printValue . '"';
-                    break;
-                case 'NULL':
-                    $printValue = 'NULL';
-                    break;
-                case 'array':
-                    //$printValue = print_r($printValue, true);
-                    if (count($printValue) == 0) {
-                        $printValue = '(empty array)';
-                    } else {
-                        $printValue = '(array of ' . count($printValue) . ' items)';
-                    }
-                    break;
-            }
-        }
-
-        $this->log($optionName . ': ', 'italic');
-        $this->logLn($printValue);
-        //$this->logLn($optionName . ': ' . $printValue, 'italic');
-            //(isset($this->providedOptions[$optionName]) ? '' : ' (using default)')
-
-        //$this->logLn(gettype($printValue));
-    }*/
-
     public function logOptions()
     {
+        $this->logLn('');
+        $this->logLn('Options:');
+        $this->logLn('------------');
+        $unsupported = $this->getUnsupportedDefaultOptions();
+        //$this->logLn('Unsupported:' . print_r($this->getUnsupportedDefaultOptions(), true));
+        $ignored = [];
+        $implicit = [];
+        foreach ($this->options2->getOptionsMap() as $id => $option) {
+            if ($option->isValueExplicitlySet()) {
+                if (($option instanceof GhostOption) || in_array($id, $unsupported)) {
+                    //$this->log(' (note: this option is ignored by this converter)', 'italic');
+                    $ignored[] = $option;
+                } else {
+                    $this->log('- ' . $id . ': ', 'italic');
+                    $this->log($option->getValueForPrint());
+                    $this->logLn('');
+                }
+            } else {
+                if (($option instanceof GhostOption) || in_array($id, $unsupported)) {
+                } else {
+                    $implicit[] = $option;
+                }
+            }
+        }
+        if (count($implicit) > 0) {
+            $this->logLn('');
+            $this->logLn('The following options have not been explicitly set, so using defaults');
+            foreach ($implicit as $option) {
+                $this->log('- ' . $option->getId() . ': ', 'italic');
+                $this->log($option->getValueForPrint());
+                $this->logLn('');
+            }
+        }
+        if (count($ignored) > 0) {
+            $this->logLn('');
+            $this->logLn('The following options are ignored, because they are not supported by this converter:');
+            foreach ($ignored as $option) {
+                $this->logLn('- ' . $option->getId(), 'italic');
+            }
+        }
+        $this->logLn('------------');
+    }
+
+    // to be overridden by converters
+    protected function getUnsupportedDefaultOptions()
+    {
+        return [];
     }
 }

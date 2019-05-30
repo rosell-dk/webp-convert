@@ -39,8 +39,9 @@ class Wpc extends AbstractConverter
         $this->options2->addOptions(
             new SensitiveStringOption('api-key', ''),   /* new in api v.1 (renamed 'secret' to 'api-key') */
             new SensitiveStringOption('secret', ''),    /* only in api v.0 */
-            new SensitiveStringOption('api-url', ''),
-            new IntegerOption('api-version', 0, 0, 2),
+            new SensitiveStringOption('api-url', ''),   /* in api v.2  */
+            new SensitiveStringOption('url', ''),       /* only in api v.1 */
+            new IntegerOption('api-version', 1, 0, 2),
             new BooleanOption('crypt-api-key-in-transfer', false)  /* new in api v.1 */
         );
     }

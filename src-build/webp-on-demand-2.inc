@@ -79,6 +79,16 @@ class Option
     }
 
     /**
+     * Get to know if value has been explicitly set.
+     *
+     * @return  boolean  Whether or not the value has been set explicitly
+     */
+    public function isValueExplicitlySet()
+    {
+        return $this->isExplicitlySet;
+    }
+
+    /**
      * Set value
      *
      * @param  mixed  $value  The value
@@ -115,6 +125,11 @@ class Option
                 ' (you provided a ' . gettype($this->getValue()) . ')'
             );
         }
+    }
+
+    public function getValueForPrint()
+    {
+        return print_r($this->getValue(), true);
     }
 }
 
@@ -541,11 +556,6 @@ use WebPConvert\Options\Exceptions\InvalidOptionValueException;
 class ArrayOption extends Option
 {
 
-    public function __construct($id, $defaultValue)
-    {
-        parent::__construct($id, $defaultValue);
-    }
-
     public function check()
     {
         $this->checkType('array');
@@ -560,7 +570,7 @@ use WebPConvert\Options\Option;
 use WebPConvert\Options\Exceptions\InvalidOptionValueException;
 
 /**
- * Abstract option class
+ * Boolean option
  *
  * @package    WebPConvert
  * @author     Bjørn Rosell <it@rosell.dk>
@@ -572,6 +582,34 @@ class BooleanOption extends Option
     public function check()
     {
         $this->checkType('boolean');
+    }
+
+    public function getValueForPrint()
+    {
+        return ($this->getValue() === true ? 'true' : 'false');
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Options;
+
+use WebPConvert\Options\Option;
+use WebPConvert\Options\Exceptions\InvalidOptionValueException;
+
+/**
+ * Ghost option
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class GhostOption extends Option
+{
+
+    public function getValueForPrint()
+    {
+        return '(not defined for this converter)';
     }
 }
 
@@ -676,6 +714,14 @@ class IntegerOrNullOption extends IntegerOption
                     'You however provided a value of type: ' . $valueType
             );
         }
+    }
+
+    public function getValueForPrint()
+    {
+        if (gettype($this->getValue() == 'NULL')) {
+            return 'null (not set)';
+        }
+        return parent::getValueForPrint();
     }
 }
 
@@ -793,8 +839,9 @@ class Options
     public function setOrCreateOption($id, $value)
     {
         if (!isset($this->options[$id])) {
-            $newOption = new Option($id, null);
+            $newOption = new GhostOption($id, null);
             $newOption->setValue($value);
+            //$newOption = new Option($id, $value);
             $this->addOption($newOption);
         } else {
             $this->setOption($id, $value);
@@ -817,6 +864,16 @@ class Options
         }
         $option = $this->options[$id];
         return $option->getValue();
+    }
+
+    /**
+     * Return map of option objects.
+     *
+     * @return array  map of option objects
+     */
+    public function getOptionsMap()
+    {
+        return $this->options;
     }
 
     /**
@@ -892,6 +949,47 @@ class QualityOption extends Option
             );
         }
     }
+
+    public function getValueForPrint()
+    {
+        if (gettype($this->getValue() == 'string')) {
+            return '"' . $this->getValue() . '"';
+        }
+        return $this->getValue();
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Options;
+
+use WebPConvert\Options\StringOption;
+use WebPConvert\Options\Exceptions\InvalidOptionValueException;
+
+/**
+ * Abstract option class
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class SensitiveArrayOption extends ArrayOption
+{
+
+    public function check()
+    {
+        parent::check();
+    }
+
+    public function getValueForPrint()
+    {
+        if (count($this->getValue()) == 0) {
+            return '(empty array)';
+        } else {
+            return '(array of ' . count($this->getValue()) . ' items)';
+        }
+        //return '*****';
+    }
 }
 
 ?><?php
@@ -919,6 +1017,11 @@ class SensitiveStringOption extends StringOption
     public function check()
     {
         parent::check();
+    }
+
+    public function getValueForPrint()
+    {
+        return '*****';
     }
 }
 
@@ -958,6 +1061,11 @@ class StringOption extends Option
                 'It was however set to: "' . $this->getValue() . '"'
             );
         }
+    }
+
+    public function getValueForPrint()
+    {
+        return '"' . $this->getValue() . '"';
     }
 }
 
@@ -1278,7 +1386,9 @@ namespace WebPConvert\Convert\Converters\BaseTraits;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Options\Exceptions\InvalidOptionValueException;
 
+use WebPConvert\Options\ArrayOption;
 use WebPConvert\Options\BooleanOption;
+use WebPConvert\Options\GhostOption;
 use WebPConvert\Options\IntegerOption;
 use WebPConvert\Options\IntegerOrNullOption;
 use WebPConvert\Options\MetadataOption;
@@ -1339,7 +1449,9 @@ trait OptionsTrait
             new QualityOption('quality', ($isPng ? 85 : 'auto')),
             new IntegerOrNullOption('size-in-percentage', null, 0, 100),
             new BooleanOption('skip', false),
-            new BooleanOption('use-nice', false)
+            new BooleanOption('use-nice', false),
+            new ArrayOption('jpeg', []),
+            new ArrayOption('png', [])
         );
     }
 
@@ -1451,46 +1563,55 @@ trait OptionsTrait
         }
     }
 
-/*
-    private function logOption($def) {
-        list($optionName, $optionType) = $def;
-        $sensitive = (isset($def[3]) && $def[3] === true);
-        if ($sensitive) {
-            $printValue = '*****';
-        } else {
-            $printValue = $this->options[$optionName];
-            //switch ($optionType) {
-            switch (gettype($printValue)) {
-                case 'boolean':
-                    $printValue = ($printValue === true ? 'true' : 'false');
-                    break;
-                case 'string':
-                    $printValue = '"' . $printValue . '"';
-                    break;
-                case 'NULL':
-                    $printValue = 'NULL';
-                    break;
-                case 'array':
-                    //$printValue = print_r($printValue, true);
-                    if (count($printValue) == 0) {
-                        $printValue = '(empty array)';
-                    } else {
-                        $printValue = '(array of ' . count($printValue) . ' items)';
-                    }
-                    break;
-            }
-        }
-
-        $this->log($optionName . ': ', 'italic');
-        $this->logLn($printValue);
-        //$this->logLn($optionName . ': ' . $printValue, 'italic');
-            //(isset($this->providedOptions[$optionName]) ? '' : ' (using default)')
-
-        //$this->logLn(gettype($printValue));
-    }*/
-
     public function logOptions()
     {
+        $this->logLn('');
+        $this->logLn('Options:');
+        $this->logLn('------------');
+        $unsupported = $this->getUnsupportedDefaultOptions();
+        //$this->logLn('Unsupported:' . print_r($this->getUnsupportedDefaultOptions(), true));
+        $ignored = [];
+        $implicit = [];
+        foreach ($this->options2->getOptionsMap() as $id => $option) {
+            if ($option->isValueExplicitlySet()) {
+                if (($option instanceof GhostOption) || in_array($id, $unsupported)) {
+                    //$this->log(' (note: this option is ignored by this converter)', 'italic');
+                    $ignored[] = $option;
+                } else {
+                    $this->log('- ' . $id . ': ', 'italic');
+                    $this->log($option->getValueForPrint());
+                    $this->logLn('');
+                }
+            } else {
+                if (($option instanceof GhostOption) || in_array($id, $unsupported)) {
+                } else {
+                    $implicit[] = $option;
+                }
+            }
+        }
+        if (count($implicit) > 0) {
+            $this->logLn('');
+            $this->logLn('The following options have not been explicitly set, so using defaults');
+            foreach ($implicit as $option) {
+                $this->log('- ' . $option->getId() . ': ', 'italic');
+                $this->log($option->getValueForPrint());
+                $this->logLn('');
+            }
+        }
+        if (count($ignored) > 0) {
+            $this->logLn('');
+            $this->logLn('The following options are ignored, because they are not supported by this converter:');
+            foreach ($ignored as $option) {
+                $this->logLn('- ' . $option->getId(), 'italic');
+            }
+        }
+        $this->logLn('------------');
+    }
+
+    // to be overridden by converters
+    protected function getUnsupportedDefaultOptions()
+    {
+        return [];
     }
 }
 
@@ -2816,6 +2937,10 @@ class Gd extends AbstractConverter
             'encoding',
             'low-memory',
             'metadata',
+            'method',
+            'near-lossless',
+            'preset',
+            'size-in-percentage',
             'use-nice'
         ];
     }
@@ -3903,6 +4028,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Options\BooleanOption;
 use WebPConvert\Options\ArrayOption;
+use WebPConvert\Options\SensitiveArrayOption;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -3926,10 +4052,11 @@ class Stack extends AbstractConverter
         parent::createOptions();
 
         $this->options2->addOptions(
-            new ArrayOption('converters', self::getAvailableConverters()),
+            new SensitiveArrayOption('converters', self::getAvailableConverters()),
+            new SensitiveArrayOption('converter-options', []),
             new BooleanOption('shuffle', false),
             new ArrayOption('preferred-converters', []),
-            new ArrayOption('extra-converters', [])
+            new SensitiveArrayOption('extra-converters', [])
         );
     }
 
@@ -4015,6 +4142,7 @@ class Stack extends AbstractConverter
         unset($defaultConverterOptions['extra-converters']);
         unset($defaultConverterOptions['converter-options']);
         unset($defaultConverterOptions['preferred-converters']);
+        unset($defaultConverterOptions['shuffle']);
 
 //        $this->logLn('converters: ' . print_r($converters, true));
 
@@ -4240,7 +4368,6 @@ class Vips extends AbstractConverter
         }
 
         if (!is_null($this->options['preset']) && ($this->options['preset'] != 'none')) {
-
             // preset. 0:default, 1:picture, 2:photo, 3:drawing, 4:icon, 5:text, 6:last
             $options['preset'] = array_search(
                 $this->options['preset'],
@@ -4363,8 +4490,9 @@ class Wpc extends AbstractConverter
         $this->options2->addOptions(
             new SensitiveStringOption('api-key', ''),   /* new in api v.1 (renamed 'secret' to 'api-key') */
             new SensitiveStringOption('secret', ''),    /* only in api v.0 */
-            new SensitiveStringOption('api-url', ''),
-            new IntegerOption('api-version', 0, 0, 2),
+            new SensitiveStringOption('api-url', ''),   /* in api v.2  */
+            new SensitiveStringOption('url', ''),       /* only in api v.1 */
+            new IntegerOption('api-version', 1, 0, 2),
             new BooleanOption('crypt-api-key-in-transfer', false)  /* new in api v.1 */
         );
     }

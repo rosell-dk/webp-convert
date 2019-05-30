@@ -29,6 +29,10 @@ class Gd extends AbstractConverter
             'encoding',
             'low-memory',
             'metadata',
+            'method',
+            'near-lossless',
+            'preset',
+            'size-in-percentage',
             'use-nice'
         ];
     }

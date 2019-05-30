@@ -12,13 +12,8 @@ use WebPConvert\Options\Exceptions\InvalidOptionValueException;
  * @author     Bjørn Rosell <it@rosell.dk>
  * @since      Class available since Release 2.0.0
  */
-class SensitiveStringOption extends StringOption
+class SensitiveArrayOption extends ArrayOption
 {
-
-    public function __construct($id, $defaultValue, $allowedValues = null)
-    {
-        parent::__construct($id, $defaultValue, $allowedValues);
-    }
 
     public function check()
     {
@@ -27,6 +22,11 @@ class SensitiveStringOption extends StringOption
 
     public function getValueForPrint()
     {
-        return '*****';
+        if (count($this->getValue()) == 0) {
+            return '(empty array)';
+        } else {
+            return '(array of ' . count($this->getValue()) . ' items)';
+        }
+        //return '*****';
     }
 }
