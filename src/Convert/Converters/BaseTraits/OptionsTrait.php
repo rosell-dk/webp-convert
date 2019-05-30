@@ -39,6 +39,8 @@ trait OptionsTrait
 
     abstract protected function getMimeTypeOfSource();
     abstract protected static function getConverterId();
+    abstract public function log($msg, $style = '');
+    abstract public function logLn($msg, $style = '');
 
     /**
      *  Create options.
