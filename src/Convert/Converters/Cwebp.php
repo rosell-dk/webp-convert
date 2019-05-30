@@ -8,6 +8,9 @@ use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
+use WebPConvert\Options\BooleanOption;
+use WebPConvert\Options\SensitiveStringOption;
+use WebPConvert\Options\StringOption;
 
 /**
  * Convert images to webp by calling cwebp binary.
@@ -22,14 +25,21 @@ class Cwebp extends AbstractConverter
     use EncodingAutoTrait;
     use ExecTrait;
 
-    protected function getOptionDefinitionsExtra()
+    protected function getUnsupportedDefaultOptions()
     {
-        return [
-            ['command-line-options', 'string', ''],
-            ['rel-path-to-precompiled-binaries', 'string', './Binaries'],
-            ['try-common-system-paths', 'boolean', true],
-            ['try-supplied-binary-for-os', 'boolean', true],
-        ];
+        return [];
+    }
+
+    protected function createOptions()
+    {
+        parent::createOptions();
+
+        $this->options2->addOptions(
+            new StringOption('command-line-options', ''),
+            new SensitiveStringOption('rel-path-to-precompiled-binaries', './Binaries'),
+            new BooleanOption('try-common-system-paths', true),
+            new BooleanOption('try-supplied-binary-for-os', true),
+        );
     }
 
     // System paths to look for cwebp binary
@@ -73,6 +83,12 @@ class Cwebp extends AbstractConverter
         //$logger->logLn('command options:' . $commandOptions);
         //$logger->logLn('Trying to execute binary:' . $binary);
         exec($command, $output, $returnCode);
+        if ($returnCode == 255) {
+            if (isset($output[0])) {
+                // Could be an error like 'Error! Cannot open output file' or 'Error! ...preset... '
+                $this->logLn(print_r($output[0], true));
+            }
+        }
         //$logger->logLn(self::msgForExitCode($returnCode));
         return intval($returnCode);
     }
@@ -133,7 +149,9 @@ class Cwebp extends AbstractConverter
 
         // preset. Appears first in the list as recommended in the docs
         if (!is_null($options['preset'])) {
-            $cmdOptions[] = '-preset ' . $options['preset'];
+            if ($options['preset'] != 'none') {
+                $cmdOptions[] = '-preset ' . $options['preset'];
+            }
         }
 
         // Size

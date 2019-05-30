@@ -20,6 +20,16 @@ class Gmagick extends AbstractConverter
 {
     use EncodingAutoTrait;
 
+    protected function getUnsupportedDefaultOptions()
+    {
+        return [
+            'near-lossless',
+            'preset',
+            'size-in-percentage',
+            'use-nice'
+        ];
+    }
+
     /**
      * Check (general) operationality of Gmagick converter.
      *

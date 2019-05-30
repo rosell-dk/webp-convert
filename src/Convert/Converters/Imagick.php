@@ -21,11 +21,15 @@ class Imagick extends AbstractConverter
 {
     use EncodingAutoTrait;
 
-    /*
-    public function supportsLossless()
+    protected function getUnsupportedDefaultOptions()
     {
-        return false;
-    }*/
+        return [
+            'near-lossless',
+            'preset',
+            'size-in-percentage',
+            'use-nice'
+        ];
+    }
 
     /**
      * Check operationality of Imagick converter.

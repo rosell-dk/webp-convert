@@ -10,6 +10,9 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\InvalidApiKeyException;
+use WebPConvert\Options\BooleanOption;
+use WebPConvert\Options\IntegerOption;
+use WebPConvert\Options\SensitiveStringOption;
 
 /**
  * Convert images to webp using Wpc (a cloud converter based on WebP Convert).
@@ -24,23 +27,30 @@ class Wpc extends AbstractConverter
     use CurlTrait;
     use EncodingAutoTrait;
 
+    protected function getUnsupportedDefaultOptions()
+    {
+        return [];
+    }
+
+    protected function createOptions()
+    {
+        parent::createOptions();
+
+        $this->options2->addOptions(
+            new SensitiveStringOption('api-key', ''),   /* new in api v.1 (renamed 'secret' to 'api-key') */
+            new SensitiveStringOption('secret', ''),    /* only in api v.0 */
+            new SensitiveStringOption('api-url', ''),
+            new IntegerOption('api-version', 0, 0, 2),
+            new BooleanOption('crypt-api-key-in-transfer', false),  /* new in api v.1 */
+        );
+    }
+
     public function passOnEncodingAuto()
     {
         // TODO: Either make this configurable or perhaps depend on api version
         return true;
     }
-
-    protected function getOptionDefinitionsExtra()
-    {
-        return [
-            ['api-key', 'string', '', true],   /* new in api v.1 (renamed 'secret' to 'api-key') */
-            ['api-url', 'string', '', true, true],
-            ['api-version', 'number', 0],                     /* Can currently be 0, 1 or 2 */
-            ['secret', 'string', '', true],    /* only in api v.0 */
-            ['crypt-api-key-in-transfer', 'boolean', false],  /* new in api v.1 */
-        ];
-    }
-
+    
     private static function createRandomSaltForBlowfish()
     {
         $salt = '';

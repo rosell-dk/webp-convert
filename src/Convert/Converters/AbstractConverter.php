@@ -212,6 +212,7 @@ abstract class AbstractConverter
         if ($this->options['log-call-arguments']) {
             $this->logLn('source: ' . $this->source, 'italic');
             $this->logLn('destination: ' . $this->destination, 'italic');
+            $this->logOptions();
             $this->logLn('');
         }
 

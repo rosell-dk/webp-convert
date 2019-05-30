@@ -60,7 +60,7 @@ class AbstractConverterTest extends TestCase
 
         $exposer = new AbstractConverterExposer($converter);
 
-        $defaultOptions = $exposer->getDefaultOptions();
+        $defaultOptions = $exposer->getOptions();
 
         $this->assertSame('auto', $defaultOptions['quality']);
         $this->assertSame(85, $defaultOptions['max-quality']);

@@ -39,7 +39,7 @@ Read about this option in the ["auto quality" section in the introduction](https
 ### `encoding`
 ```
 Type:          string  ("lossy" | "lossless" | "auto")
-Default:       "auto" for pngs and "lossy" for jpegs
+Default:       "auto"
 Supported by:  cwebp, vips, imagick, gmagick, imagickbinary and gmagickbinary  (gd always uses lossy encoding, ewww uses lossless for pngs and lossy for jpegs)
 ```
 Read about this option in the ["lossy/lossless" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-selecting-between-losslesslossy-encoding).<br><br>
@@ -122,11 +122,11 @@ Read about this option in the [introduction](https://github.com/rosell-dk/webp-c
 
 ### `preset`
 ```
-Type:          string|null  Null means no preset. ('default', 'photo', 'picture', 'drawing',  'icon' or 'text')
-Default:       null
+Type:          string ('none', 'default', 'photo', 'picture', 'drawing',  'icon' or 'text')
+Default:       "none"
 Supported by:  cwebp, vips
 ```
-Using a preset will set many of the other options to suit a particular type of source material. It even overrides them. It does however not override the quality option.<br><br>
+Using a preset will set many of the other options to suit a particular type of source material. It even overrides them. It does however not override the quality option. "none" means that no preset will be set<br><br>
 
 ### `quality`
 ```

@@ -21,6 +21,18 @@ class Gd extends AbstractConverter
         return false;
     }
 
+    protected function getUnsupportedDefaultOptions()
+    {
+        return [
+            'alpha-quality',
+            'auto-filter',
+            'encoding',
+            'low-memory',
+            'metadata',
+            'use-nice'
+        ];
+    }
+
     private $errorMessageWhileCreating = '';
     private $errorNumberWhileCreating;
 

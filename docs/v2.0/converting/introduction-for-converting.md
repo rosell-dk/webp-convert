@@ -100,9 +100,9 @@ The size of a webp file grows enormously with the quality setting. For the web h
 In case quality detection is unavailable, the quality defaults to 70 for JPEGs and 85 for PNGs. This can be changed by setting the *default-quality* setting.
 
 ### Auto selecting between lossless/lossy encoding
-WebP files can be encoded using either *lossless* or *lossy* encoding. The JPEG format is lossy and the PNG is lossless. However, this does not mean that you necessarily get the best conversion by always encoding JPEG to lossy and PNG to lossless. With JPEGs it is almost the case, as they are usually pictures and pictures usually best encoded as lossy. With PNG it is however a different story, as you often can get a better compression using lossy encoding, also when using high quality level of say 85, which should be enough for the web.
+WebP files can be encoded using either *lossless* or *lossy* encoding. The JPEG format is lossy and the PNG is lossless. However, this does not mean that you necessarily get the best conversion by always encoding JPEG to lossy and PNG to lossless. With JPEGs it is often the case, as they are usually pictures and pictures usually best encoded as lossy. With PNG it is however a different story, as you often can get a better compression using lossy encoding, also when using high quality level of say 85, which should be enough for the web.
 
-As unnecessary large conversions are rarely desirable, this library per default tries to convert PNGs using both lossy (q=85) and lossless encoding and automatically selects the smallest. This is controlled using the *encoding* option, which per default is "auto", but can also be set to "lossy" or "lossless".
+As unnecessary large conversions are rarely desirable, this library per default tries to convert images using both lossy and lossless encoding and automatically selects the smallest. This is controlled using the *encoding* option, which per default is "auto", but can also be set to "lossy" or "lossless".
 
 Unless you changed the `near-lossless` option described below, the choice is actually between lossy and *near-lossless*.
 
@@ -137,7 +137,7 @@ $options = [
         'quality' => 85,         /* Quality when trying lossy. It is set high because pngs is often selected to ensure high quality */
     ],
     'jpeg' => [
-        'encoding' => 'lossy',    /* We could also choose 'auto' but that would most often result in lossy anyway */
+        'encoding' => 'auto',     /* If you are worried about the longer conversion time, you could set it to "lossy" instead (lossy will often be smaller than lossless for jpegs) */
         'quality' => 'auto',      /* Set to same as jpeg (requires imagick or gmagick extension, not necessarily compiled with webp) */
         'max-quality' => 80,      /* Only relevant if quality is set to "auto" */
         'default-quality' => 75,  /* Fallback quality if quality detection isnt working */
@@ -171,7 +171,7 @@ Here is a quick overview of the few ones discussed here.
 | max-quality       | 85                 | 85                  | Only relevant for jpegs and when quality is set to "auto".                         |
 | default-quality   | 75                 | 85                  |                                                                                    |
 | metadata          | "none"             | "none"              | Valid values: "all", "none", "exif", "icc", "xmp".<br><br>Note: Currently only *cwebp* supports all values. *gd* will always remove all metadata. *ewww*, *imagick* and *gmagick* can either strip all, or keep all (they will keep all, unless metadata is set to *none*)       |
-| encoding          | "lossy"            | "auto"              | See the "Auto selecting between lossless/lossy encoding" section above   |
+| encoding          | "auto"             | "auto"              | See the "Auto selecting between lossless/lossy encoding" section above   |
 | jpeg              | -                  | -                   | Array of options which will be merged into the other options when source is a JPEG |
 | png               | -                  | -                   | Array of options which will be merged into the other options when source is a PNG  |
 | skip              | false              | false               | If true, conversion will be skipped (ie for skipping png conversion for some converters) |

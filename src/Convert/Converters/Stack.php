@@ -10,6 +10,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
+use WebPConvert\Options\BooleanOption;
+use WebPConvert\Options\ArrayOption;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -23,24 +25,25 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 class Stack extends AbstractConverter
 {
 
-    protected function getOptionDefinitionsExtra()
+    protected function getUnsupportedDefaultOptions()
     {
-        return [
-            [
-                'converters',
-                'array', [
-                    'cwebp', 'vips', 'imagick', 'gmagick', 'imagickbinary', 'gmagickbinary', 'wpc', 'ewww', 'gd'
-                ],
-                true
-            ],
-            ['shuffle', 'boolean', false],
-            ['preferred-converters', 'array', []],
-            ['extra-converters', 'array', []]
-        ];
+        return [];
+    }
+
+    protected function createOptions()
+    {
+        parent::createOptions();
+
+        $this->options2->addOptions(
+            new ArrayOption('converters', self::getAvailableConverters()),
+            new BooleanOption('shuffle', false),
+            new ArrayOption('preferred-converters', []),
+            new ArrayOption('extra-converters', []),
+        );
     }
 
     /**
-     * Get available converters (ids).
+     * Get available converters (ids) - ordered by awesomeness.
      *
      * @return  array  An array of ids of converters that comes with this library
      */

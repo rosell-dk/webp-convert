@@ -3,7 +3,15 @@
 namespace WebPConvert\Convert\Converters\BaseTraits;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidOptionTypeException;
+use WebPConvert\Options\Exceptions\InvalidOptionValueException;
+
+use WebPConvert\Options\BooleanOption;
+use WebPConvert\Options\IntegerOption;
+use WebPConvert\Options\IntegerOrNullOption;
+use WebPConvert\Options\MetadataOption;
+use WebPConvert\Options\Options;
+use WebPConvert\Options\StringOption;
+use WebPConvert\Options\QualityOption;
 
 /**
  * Trait for handling options
@@ -24,28 +32,43 @@ trait OptionsTrait
     /** @var array  Calculated conversion options (merge of default options and provided options)*/
     protected $options;
 
+    /** @var Options  */
+    protected $options2;
+
     abstract protected function getMimeTypeOfSource();
     abstract protected static function getConverterId();
 
-    /** @var array  Definitions of general options (the options that are available on all converters) */
-    protected static $optionDefinitionsBasic = [
-        ['alpha-quality', 'integer', 85],
-        ['auto-filter', 'boolean', false],
-        ['default-quality', 'number', 75],       // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
-        ['encoding', 'string', "auto"],          // PS: Default is altered to "lossy" for JPG in ::getDefaultOptions()
-        //['lossless', 'boolean|string', false],   // PS: Default is altered to "auto" for PNG in ::getDefaultOptions()
-        ['low-memory', 'boolean', false],
-        ['log-call-arguments', 'boolean', false],
-        ['max-quality', 'number', 85],
-        ['metadata', 'string', 'none'],
-        ['method', 'number', 6],
-        ['near-lossless', 'integer', 60],
-        ['preset', 'string', null],              // ('default' | 'photo' | 'picture' | 'drawing' | 'icon' | 'text')
-        ['quality', 'number|string', 'auto'],    // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
-        ['size-in-percentage', 'number', null],
-        ['skip', 'boolean', false],
-        ['use-nice', 'boolean', false],
-    ];
+    /**
+     *  Create options.
+     *
+     *  The options created here will be available to all converters.
+     *  Individual converters may add options by overriding this method.
+     *
+     *  @return void
+     */
+    protected function createOptions()
+    {
+        $isPng = ($this->getMimeTypeOfSource() == 'image/png');
+
+        $this->options2 = new Options();
+        $this->options2->addOptions(
+            new IntegerOption('alpha-quality', 85, 0, 100),
+            new BooleanOption('auto-filter', false),
+            new IntegerOption('default-quality', ($isPng ? 85 : 75), 0, 100),
+            new StringOption('encoding', 'auto', ['lossy', 'lossless', 'auto']),
+            new BooleanOption('low-memory', false),
+            new BooleanOption('log-call-arguments', false),
+            new IntegerOption('max-quality', 85, 0, 100),
+            new MetadataOption('metadata', 'none'),
+            new IntegerOption('method', 6, 0, 6),
+            new IntegerOption('near-lossless', 60, 0, 100),
+            new StringOption('preset', 'none', ['none', 'default', 'photo', 'picture', 'drawing', 'icon', 'text']),
+            new QualityOption('quality', ($isPng ? 85 : 'auto')),
+            new IntegerOrNullOption('size-in-percentage', null, 0, 100),
+            new BooleanOption('skip', false),
+            new BooleanOption('use-nice', false),
+        );
+    }
 
     /**
      * Set "provided options" (options provided by the user when calling convert().
@@ -60,6 +83,8 @@ trait OptionsTrait
      */
     public function setProvidedOptions($providedOptions = [])
     {
+        $this->createOptions();
+
         $this->providedOptions = $providedOptions;
 
         if (isset($this->providedOptions['png'])) {
@@ -78,23 +103,33 @@ trait OptionsTrait
         // merge down converter-prefixed options
         $converterId = self::getConverterId();
         $strLen = strlen($converterId);
-        //$this->logLn('id:' . $converterId);
         foreach ($this->providedOptions as $optionKey => $optionValue) {
-            //$this->logLn($optionKey . ':' . $optionValue);
-            //$this->logLn(substr($optionKey, 0, strlen($converterId)));
             if (substr($optionKey, 0, $strLen + 1) == ($converterId . '-')) {
-                //$this->logLn($optionKey . ':' . $optionValue);
-                //$this->logLn(substr($optionKey, $strLen + 1));
                 $this->providedOptions[substr($optionKey, $strLen + 1)] = $optionValue;
             }
         }
 
+        // Create options (Option objects)
+        foreach ($this->providedOptions as $optionId => $optionValue) {
+            $this->options2->setOrCreateOption($optionId, $optionValue);
+        }
+        //$this->logLn(print_r($this->options2->getOptions(), true));
+//$this->logLn($this->options2->getOption('hello'));
+
+        // Create flat associative array of options
+        $this->options = $this->options2->getOptions();
+
         // -  Merge $defaultOptions into provided options
-        $this->options = array_merge($this->getDefaultOptions(), $this->providedOptions);
+        //$this->options = array_merge($this->getDefaultOptions(), $this->providedOptions);
+
+        //$this->logOptions();
     }
 
     /**
      * Get the resulting options after merging provided options with default options.
+     *
+     * Note that the defaults depends on the mime type of the source. For example, the default value for quality
+     * is "auto" for jpegs, and 85 for pngs.
      *
      * @return array  An associative array of options: ['metadata' => 'none', ...]
      */
@@ -109,177 +144,26 @@ trait OptionsTrait
      * This method is probably rarely neeeded. We are using it to change the "encoding" option temporarily
      * in the EncodingAutoTrait.
      *
-     * @param  string  $optionName   Name id of option (ie "metadata")
-     * @param  mixed   $optionValue  The new value.
+     * @param  string  $id      Id of option (ie "metadata")
+     * @param  mixed   $value   The new value.
      * @return void
      */
-    protected function setOption($optionName, $optionValue)
+    protected function setOption($id, $value)
     {
-        $this->options[$optionName] = $optionValue;
-    }
-
-
-    /**
-     * Get default options for the converter.
-     *
-     * Note that the defaults depends on the mime type of the source. For example, the default value for quality
-     * is "auto" for jpegs, and 85 for pngs.
-     *
-     * @return array  An associative array of option defaults: ['metadata' => 'none', ...]
-     */
-    public function getDefaultOptions()
-    {
-        $defaults = [];
-        foreach ($this->getOptionDefinitions() as list($name, $type, $default)) {
-            $defaults[$name] = $default;
-        }
-        if ($this->getMimeTypeOfSource() == 'image/png') {
-            $defaults['quality'] = 85;
-            $defaults['default-quality'] = 85;
-        }
-        if ($this->getMimeTypeOfSource() == 'image/jpeg') {
-            $defaults['encoding'] = 'lossy';
-        }
-        return $defaults;
-    }
-
-
-    /**
-     * Get definitions of general options (those available for all converters)
-     *
-     * To get only the extra definitions for a specific converter, call
-     * ::getOptionDefinitionsExtra(). To get both general and extra, merged together, call ::getOptionDefinitions().
-     *
-     * @return array  A numeric array of definitions of general options for the converter.
-     *                Each definition is a numeric array with three items: [option id, type, default value]
-     */
-    public function getGeneralOptionDefinitions()
-    {
-        return self::$optionDefinitionsBasic;
-    }
-
-    /**
-     * Get definitions of extra options unique for the actual converter.
-     *
-     * @return array  A numeric array of definitions of extra options for the converter.
-     *                Each definition is a numeric array with three items: [option id, type, default value]
-     */
-    protected function getOptionDefinitionsExtra()
-    {
-        return [];
-    }
-
-    /**
-     * Get option definitions for the converter (includes both general options and the extra options for the converter)
-     *
-     * To get only the general options definitions (those available for all converters), call
-     * ::getGeneralOptionDefinitions(). To get only the extra definitions for a specific converter, call
-     * ::getOptionDefinitionsExtra().
-     *
-     * @return array  A numeric array of definitions of all options for the converter.
-     *                Each definition is a numeric array with three items: [option id, type, default value]
-     */
-    public function getOptionDefinitions()
-    {
-        return array_merge(self::$optionDefinitionsBasic, $this->getOptionDefinitionsExtra());
-    }
-
-    /**
-     *  Check option types generally (against their definitions).
-     *
-     *  @throws InvalidOptionTypeException  if type is invalid
-     *  @return void
-     */
-    private function checkOptionTypesGenerally()
-    {
-        foreach ($this->getOptionDefinitions() as $def) {
-            list($optionName, $optionType) = $def;
-            if (isset($this->providedOptions[$optionName])) {
-                $actualType = gettype($this->providedOptions[$optionName]);
-                if ($actualType != $optionType) {
-                    $optionType = str_replace('number', 'integer|double', $optionType);
-                    if (!in_array($actualType, explode('|', $optionType))) {
-                        throw new InvalidOptionTypeException(
-                            'The provided ' . $optionName . ' option is not a ' . $optionType .
-                                ' (it is a ' . $actualType . ')'
-                        );
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     *  Check quality option
-     *
-     *  @throws InvalidOptionTypeException  if value is out of range
-     *  @return void
-     */
-    private function checkQualityOption()
-    {
-        if (!isset($this->providedOptions['quality'])) {
-            return;
-        }
-        $optionValue = $this->providedOptions['quality'];
-        if (gettype($optionValue) == 'string') {
-            if ($optionValue != 'auto') {
-                throw new InvalidOptionTypeException(
-                    'Quality option must be either "auto" or a number between 0-100. ' .
-                    'A string, "' . $optionValue . '" was given'
-                );
-            }
-        } else {
-            if (($optionValue < 0) || ($optionValue > 100)) {
-                throw new InvalidOptionTypeException(
-                    'Quality option must be either "auto" or a number between 0-100. ' .
-                        'The number you provided (' . strval($optionValue) . ') is out of range.'
-                );
-            }
-        }
-    }
-
-    /**
-     *  Check "encoding" option.
-     *
-     *  @throws InvalidOptionTypeException  if value is out of range
-     *  @return void
-     */
-    private function checkEncodingOption()
-    {
-        if (!isset($this->providedOptions['encoding'])) {
-            return;
-        }
-        $optionValue = $this->providedOptions['encoding'];
-        if (!in_array($optionValue, ['lossy', 'lossless', 'auto'])) {
-            throw new InvalidOptionTypeException(
-                '"encoding" option must be "lossy", "lossless" or "auto". It was set to: "' . $optionValue . '"'
-            );
-        }
-    }
-
-    /**
-     *  Check option types.
-     *
-     *  @throws InvalidOptionTypeException  if an option value have wrong type or is out of range
-     *  @return void
-     */
-    private function checkOptionTypes()
-    {
-        $this->checkOptionTypesGenerally();
-        $this->checkQualityOption();
-        $this->checkEncodingOption();
+        $this->options[$id] = $value;
+        $this->options2->setOrCreateOption($id, $value);
     }
 
     /**
      *  Check options.
      *
-     *  @throws InvalidOptionTypeException  if an option value have wrong type or is out of range
+     *  @throws InvalidOptionValueException  if an option value have wrong type or is out of range
      *  @throws ConversionSkippedException  if 'skip' option is set to true
      *  @return void
      */
     protected function checkOptions()
     {
-        $this->checkOptionTypes();
+        $this->options2->check();
 
         if ($this->options['skip']) {
             if (($this->getMimeTypeOfSource() == 'image/png') && isset($this->options['png']['skip'])) {
@@ -292,5 +176,47 @@ trait OptionsTrait
                 );
             }
         }
+    }
+
+/*
+    private function logOption($def) {
+        list($optionName, $optionType) = $def;
+        $sensitive = (isset($def[3]) && $def[3] === true);
+        if ($sensitive) {
+            $printValue = '*****';
+        } else {
+            $printValue = $this->options[$optionName];
+            //switch ($optionType) {
+            switch (gettype($printValue)) {
+                case 'boolean':
+                    $printValue = ($printValue === true ? 'true' : 'false');
+                    break;
+                case 'string':
+                    $printValue = '"' . $printValue . '"';
+                    break;
+                case 'NULL':
+                    $printValue = 'NULL';
+                    break;
+                case 'array':
+                    //$printValue = print_r($printValue, true);
+                    if (count($printValue) == 0) {
+                        $printValue = '(empty array)';
+                    } else {
+                        $printValue = '(array of ' . count($printValue) . ' items)';
+                    }
+                    break;
+            }
+        }
+
+        $this->log($optionName . ': ', 'italic');
+        $this->logLn($printValue);
+        //$this->logLn($optionName . ': ' . $printValue, 'italic');
+            //(isset($this->providedOptions[$optionName]) ? '' : ' (using default)')
+
+        //$this->logLn(gettype($printValue));
+    }*/
+
+    public function logOptions()
+    {
     }
 }

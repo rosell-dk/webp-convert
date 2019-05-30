@@ -22,6 +22,15 @@ class ImagickBinary extends AbstractConverter
     use ExecTrait;
     use EncodingAutoTrait;
 
+    protected function getUnsupportedDefaultOptions()
+    {
+        return [
+            'near-lossless',
+            'preset',
+            'size-in-percentage',
+        ];
+    }
+
     // To futher improve this converter, I could check out:
     // https://github.com/Orbitale/ImageMagickPHP
 

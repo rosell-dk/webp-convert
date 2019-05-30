@@ -6,6 +6,7 @@ use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Options\BooleanOption;
 
 //require '/home/rosell/.composer/vendor/autoload.php';
 
@@ -20,18 +21,21 @@ class Vips extends AbstractConverter
 {
     use EncodingAutoTrait;
 
-/*
-    public function supportsLossless()
-    {
-        return true;
-    }
-    */
-
-    protected function getOptionDefinitionsExtra()
+    protected function getUnsupportedDefaultOptions()
     {
         return [
-            ['smart-subsample', 'boolean', false],
+            'size-in-percentage',
+            'use-nice'
         ];
+    }
+
+    protected function createOptions()
+    {
+        parent::createOptions();
+
+        $this->options2->addOptions(
+            new BooleanOption('smart-subsample', false),
+        );
     }
 
     /**

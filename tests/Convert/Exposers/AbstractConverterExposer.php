@@ -53,10 +53,11 @@ class AbstractConverterExposer extends BaseExposer {
         return $this->getPrivateProperty('options', AbstractConverter::class);
     }
 
+/*
     public function getDefaultOptions()
     {
         //return $this->getPrivateStaticProperty('defaultOptions', AbstractConverter::class);
         return $this->callPrivateFunction('getDefaultOptions', AbstractConverter::class);
-    }
+    }*/
 
 }

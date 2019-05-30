@@ -9,6 +9,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\InvalidApiKeyException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Options\SensitiveStringOption;
 
 /**
  * Convert images to webp using ewww cloud service.
@@ -22,11 +23,24 @@ class Ewww extends AbstractConverter
     use CloudConverterTrait;
     use CurlTrait;
 
-    protected function getOptionDefinitionsExtra()
+    protected function getUnsupportedDefaultOptions()
     {
         return [
-            ['api-key', 'string', '', true, true]
+            'alpha-quality',
+            'auto-filter',
+            'encoding',
+            'low-memory',
+            'use-nice'
         ];
+    }
+
+    protected function createOptions()
+    {
+        parent::createOptions();
+
+        $this->options2->addOptions(
+            new SensitiveStringOption('api-key', ''),
+        );
     }
 
     /**

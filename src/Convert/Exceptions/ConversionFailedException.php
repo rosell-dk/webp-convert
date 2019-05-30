@@ -21,7 +21,7 @@ use WebPConvert\Exceptions\WebPConvertException;
  *          InvalidInputException
  *              ConverterNotFoundException
  *              InvalidImageTypeException
- *              InvalidOptionTypeException
+ *              InvalidOptionValueException
  *              TargetNotFoundException
  */
 class ConversionFailedException extends WebPConvertException

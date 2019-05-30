@@ -23,6 +23,16 @@ class GmagickBinary extends AbstractConverter
     use ExecTrait;
     use EncodingAutoTrait;
 
+    protected function getUnsupportedDefaultOptions()
+    {
+        return [
+            'auto-filter',
+            'near-lossless',
+            'preset',
+            'size-in-percentage',
+        ];
+    }
+
     private static function getGmagickPath()
     {
         if (empty(getenv('GMAGICK_PATH'))) {
