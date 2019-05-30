@@ -1,6 +1,126 @@
 <?php 
 ?><?php
 
+namespace WebPConvert\Options;
+
+use WebPConvert\Options\Exceptions\InvalidOptionValueException;
+
+/**
+ * (base) option class.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class Option
+{
+    /** @var string  The id of the option */
+    protected $id;
+
+    /** @var mixed  The default value of the option */
+    protected $defaultValue;
+
+    /** @var mixed  The value of the option */
+    protected $value;
+
+    /** @var boolean  Whether the value has been explicitly set */
+    protected $isExplicitlySet = false;
+
+    /**
+     * Constructor.
+     *
+     * @param   string  $id              id of the option
+     * @param   string  $defaultValue    default value for the option
+     * @throws  InvalidOptionValueException  if the default value cannot pass the check
+     * @return  void
+     */
+
+    public function __construct($id, $defaultValue)
+    {
+        $this->id = $id;
+        $this->defaultValue = $defaultValue;
+
+        // Check that default value is ok
+        $this->check();
+    }
+
+    /**
+     * Get Id.
+     *
+     * @return  string  The id of the option
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Get default value.
+     *
+     * @return  mixed  The default value for the option
+     */
+    public function getDefaultValue()
+    {
+        return $this->defaultValue;
+    }
+
+
+    /**
+     * Get value, or default value if value has not been explicitly set.
+     *
+     * @return  mixed  The value/default value
+     */
+    public function getValue()
+    {
+        if (!$this->isExplicitlySet) {
+            return $this->defaultValue;
+        } else {
+            return $this->value;
+        }
+    }
+
+    /**
+     * Set value
+     *
+     * @param  mixed  $value  The value
+     * @return  void
+     */
+    public function setValue($value)
+    {
+        $this->isExplicitlySet = true;
+        $this->value = $value;
+    }
+
+    /**
+     * Check if the value is valid.
+     *
+     * This base class does no checking, but this method is overridden by most other options.
+     * @return  void
+     */
+    public function check()
+    {
+    }
+
+    /**
+     * Helpful function for checking type - used by subclasses.
+     *
+     * @param  string  $expectedType  The expected type, ie 'string'
+     * @throws  InvalidOptionValueException  If the type is invalid
+     * @return  void
+     */
+    protected function checkType($expectedType)
+    {
+        if (gettype($this->getValue()) != $expectedType) {
+            throw new InvalidOptionValueException(
+                'The "' . $this->id . '" option must be a ' . $expectedType .
+                ' (you provided a ' . gettype($this->getValue()) . ')'
+            );
+        }
+    }
+}
+
+?><?php
+
 // TODO:
 // Read this: https://sourcemaking.com/design_patterns/strategy
 
@@ -210,6 +330,13 @@ abstract class AbstractConverter
     {
         $beginTime = microtime(true);
 
+        if ($this->options['log-call-arguments']) {
+            $this->logLn('source: ' . $this->source, 'italic');
+            $this->logLn('destination: ' . $this->destination, 'italic');
+            $this->logOptions();
+            $this->logLn('');
+        }
+
         $this->activateWarningLogger();
 
         $this->checkOptions();
@@ -295,9 +422,6 @@ abstract class AbstractConverter
         $c = self::createInstance($source, $destination, $options, $logger);
 
         $c->logLn(self::getConverterDisplayName() . ' converter ignited');
-        $c->logLn('source: ' . $source, 'italic');
-        $c->logLn('destination: ' . $destination, 'italic');
-
 
         $c->doConvert();
         //echo $instance->id;
@@ -393,12 +517,441 @@ use WebPConvert\Exceptions\WebPConvertException;
  *          InvalidInputException
  *              ConverterNotFoundException
  *              InvalidImageTypeException
- *              InvalidOptionTypeException
+ *              InvalidOptionValueException
  *              TargetNotFoundException
  */
 class ConversionFailedException extends WebPConvertException
 {
     public $description = 'The converter failed converting, although requirements seemed to be met';
+}
+
+?><?php
+
+namespace WebPConvert\Options;
+
+use WebPConvert\Options\Option;
+use WebPConvert\Options\Exceptions\InvalidOptionValueException;
+
+/**
+ * Abstract option class
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class ArrayOption extends Option
+{
+
+    public function __construct($id, $defaultValue)
+    {
+        parent::__construct($id, $defaultValue);
+    }
+
+    public function check()
+    {
+        $this->checkType('array');
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Options;
+
+use WebPConvert\Options\Option;
+use WebPConvert\Options\Exceptions\InvalidOptionValueException;
+
+/**
+ * Abstract option class
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class BooleanOption extends Option
+{
+
+    public function check()
+    {
+        $this->checkType('boolean');
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Options;
+
+use WebPConvert\Options\Option;
+use WebPConvert\Options\Exceptions\InvalidOptionValueException;
+
+/**
+ * Abstract option class
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class IntegerOption extends Option
+{
+
+    protected $minValue;
+    protected $maxValue;
+
+    public function __construct($id, $defaultValue, $minValue = null, $maxValue = null)
+    {
+        $this->minValue = $minValue;
+        $this->maxValue = $maxValue;
+        parent::__construct($id, $defaultValue);
+    }
+
+    protected function checkMin()
+    {
+        if (!is_null($this->minValue) && $this->getValue() < $this->minValue) {
+            throw new InvalidOptionValueException(
+                '"' . $this->id . '" option must be set to minimum ' . $this->minValue . '. ' .
+                'It was however set to: ' . $this->getValue()
+            );
+        }
+    }
+
+    protected function checkMax()
+    {
+        if (!is_null($this->maxValue) && $this->getValue() > $this->maxValue) {
+            throw new InvalidOptionValueException(
+                '"' . $this->id . '" option must be set to max ' . $this->maxValue . '. ' .
+                'It was however set to: ' . $this->getValue()
+            );
+        }
+    }
+
+    protected function checkMinMax()
+    {
+        $this->checkMin();
+        $this->checkMax();
+    }
+
+    public function check()
+    {
+        $this->checkType('integer');
+        $this->checkMinMax();
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Options;
+
+use WebPConvert\Options\IntegerOption;
+use WebPConvert\Options\Exceptions\InvalidOptionValueException;
+
+/**
+ * Abstract option class
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class IntegerOrNullOption extends IntegerOption
+{
+
+    public function __construct($id, $defaultValue, $minValue = null, $maxValue = null)
+    {
+        parent::__construct($id, $defaultValue, $minValue, $maxValue);
+    }
+
+    public function check()
+    {
+        $this->checkMinMax();
+
+        $valueType = gettype($this->getValue());
+        if (!in_array($valueType, ['integer', 'NULL'])) {
+            throw new InvalidOptionValueException(
+                'The "' . $this->id . '" option must be either integer or NULL. ' .
+                    'You however provided a value of type: ' . $valueType
+            );
+        }
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Options;
+
+use WebPConvert\Options\StringOption;
+use WebPConvert\Options\Exceptions\InvalidOptionValueException;
+
+/**
+ * Metadata option. A Comma-separated list ('all', 'none', 'exif', 'icc', 'xmp')
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class MetadataOption extends StringOption
+{
+
+    public function __construct($id, $defaultValue)
+    {
+        parent::__construct($id, $defaultValue);
+    }
+
+    public function check()
+    {
+        parent::check();
+
+        $value = $this->getValue();
+
+        if (($value == 'all') || ($value == 'none')) {
+            return;
+        }
+
+        foreach (explode(',', $value) as $item) {
+            if (!in_array($value, ['exif', 'icc', 'xmp'])) {
+                throw new InvalidOptionValueException(
+                    '"metadata" option must be "all", "none" or a comma-separated list of "exif", "icc" or "xmp". ' .
+                    'It was however set to: "' . $value . '"'
+                );
+            }
+        }
+
+        //$this->checkType('string');
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Options;
+
+use WebPConvert\Options\Option;
+use WebPConvert\Options\Exceptions\OptionNotFoundException;
+
+/**
+ * Handles a collection of options.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class Options
+{
+
+    /** @var  array  A map of options, keyed by their id */
+    private $options = [];
+
+    /**
+     * Add option.
+     *
+     * @param  Option  $option  The option object to add to collection.
+     * @return void
+     */
+    public function addOption($option)
+    {
+        $this->options[$option->getId()] = $option;
+    }
+
+    /**
+     * Add options.
+     *
+     * Conveniently add several options in one call.
+     *
+     * @param  Option[]  ...$options  Array of options objects to add
+     * @return void
+     */
+    public function addOptions(...$options)
+    {
+        foreach ($options as $option) {
+            $this->addOption($option);
+        }
+    }
+
+    /**
+     * Set the value of an option.
+     *
+     * @param  string  $id      Id of the option
+     * @param  mixed   $value   Value of the option
+     * @return void
+     */
+    public function setOption($id, $value)
+    {
+        $option = $this->options[$id];
+        $option->setValue($value);
+    }
+
+    /**
+     * Set option, or create a new, if no such option exists.
+     *
+     * @param  string  $id  Id of option to set/create
+     * @param  mixed  $value  Value of option
+     * @return void
+     */
+    public function setOrCreateOption($id, $value)
+    {
+        if (!isset($this->options[$id])) {
+            $newOption = new Option($id, null);
+            $newOption->setValue($value);
+            $this->addOption($newOption);
+        } else {
+            $this->setOption($id, $value);
+        }
+    }
+
+    /**
+     * Get the value of an option in the collection - by id.
+     *
+     * @param  string  $id      Id of the option to get
+     * @throws  OptionNotFoundException  if the option is not in the collection
+     * @return mixed  The value of the option
+     */
+    public function getOption($id)
+    {
+        if (!isset($this->options[$id])) {
+            throw new OptionNotFoundException(
+                'There is no option called "' . $id . '" in the collection.'
+            );
+        }
+        $option = $this->options[$id];
+        return $option->getValue();
+    }
+
+    /**
+     * Return flat associative array of options.
+     *
+     * @return array  associative array of options
+     */
+    public function getOptions()
+    {
+        $values = [];
+        foreach ($this->options as $id => $option) {
+            $values[$id] = $option->getValue();
+        }
+        return $values;
+    }
+
+    /**
+     * Check all options in the collection.
+     */
+    public function check()
+    {
+        foreach ($this->options as $id => $option) {
+            $option->check();
+        }
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Options;
+
+use WebPConvert\Options\Option;
+use WebPConvert\Options\Exceptions\InvalidOptionValueException;
+
+/**
+ * Quality option.
+ *
+ * Quality can be a number between 0-100 or "auto"
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class QualityOption extends Option
+{
+
+    public function __construct($id, $defaultValue)
+    {
+        parent::__construct($id, $defaultValue);
+    }
+
+    public function check()
+    {
+        $value = $this->getValue();
+        if (gettype($value) == 'string') {
+            if ($value != 'auto') {
+                throw new InvalidOptionValueException(
+                    'The "quality" option must be either "auto" or a number between 0-100. ' .
+                    'A string, different from "auto" was given'
+                );
+            }
+        } elseif (gettype($value) == 'integer') {
+            if (($value < 0) || ($value > 100)) {
+                throw new InvalidOptionValueException(
+                    'The "quality" option must be either "auto" or a number between 0-100. ' .
+                        'The number you provided (' . strval($value) . ') is out of range.'
+                );
+            }
+        } else {
+            throw new InvalidOptionValueException(
+                'The "quality" option must be either "auto" or an integer. ' .
+                    'You however provided a value of type: ' . gettype($value)
+            );
+        }
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Options;
+
+use WebPConvert\Options\StringOption;
+use WebPConvert\Options\Exceptions\InvalidOptionValueException;
+
+/**
+ * Abstract option class
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class SensitiveStringOption extends StringOption
+{
+
+    public function __construct($id, $defaultValue, $allowedValues = null)
+    {
+        parent::__construct($id, $defaultValue, $allowedValues);
+    }
+
+    public function check()
+    {
+        parent::check();
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Options;
+
+use WebPConvert\Options\Option;
+use WebPConvert\Options\Exceptions\InvalidOptionValueException;
+
+/**
+ * Abstract option class
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.0
+ */
+class StringOption extends Option
+{
+
+    public $allowedValues;
+
+    public function __construct($id, $defaultValue, $allowedValues = null)
+    {
+        $this->allowedValues = $allowedValues;
+        parent::__construct($id, $defaultValue);
+    }
+
+    public function check()
+    {
+        $this->checkType('string');
+
+        if (!is_null($this->allowedValues) && (!in_array($this->getValue(), $this->allowedValues))) {
+            throw new InvalidOptionValueException(
+                '"' . $this->id . '" option must be on of these values: ' .
+                '[' . implode(', ', $this->allowedValues) . ']. ' .
+                'It was however set to: "' . $this->getValue() . '"'
+            );
+        }
+    }
 }
 
 ?><?php
@@ -716,7 +1269,15 @@ trait LoggerTrait
 namespace WebPConvert\Convert\Converters\BaseTraits;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidOptionTypeException;
+use WebPConvert\Options\Exceptions\InvalidOptionValueException;
+
+use WebPConvert\Options\BooleanOption;
+use WebPConvert\Options\IntegerOption;
+use WebPConvert\Options\IntegerOrNullOption;
+use WebPConvert\Options\MetadataOption;
+use WebPConvert\Options\Options;
+use WebPConvert\Options\StringOption;
+use WebPConvert\Options\QualityOption;
 
 /**
  * Trait for handling options
@@ -737,27 +1298,43 @@ trait OptionsTrait
     /** @var array  Calculated conversion options (merge of default options and provided options)*/
     protected $options;
 
+    /** @var Options  */
+    protected $options2;
+
     abstract protected function getMimeTypeOfSource();
     abstract protected static function getConverterId();
 
-    /** @var array  Definitions of general options (the options that are available on all converters) */
-    protected static $optionDefinitionsBasic = [
-        ['alpha-quality', 'integer', 85],
-        ['auto-filter', 'boolean', false],
-        ['default-quality', 'number', 75],       // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
-        ['encoding', 'string', "auto"],          // PS: Default is altered to "lossy" for JPG in ::getDefaultOptions()
-        //['lossless', 'boolean|string', false],   // PS: Default is altered to "auto" for PNG in ::getDefaultOptions()
-        ['low-memory', 'boolean', false],
-        ['max-quality', 'number', 85],
-        ['metadata', 'string', 'none'],
-        ['method', 'number', 6],
-        ['near-lossless', 'integer', 60],
-        ['preset', 'string', null],              // ('default' | 'photo' | 'picture' | 'drawing' | 'icon' | 'text')
-        ['quality', 'number|string', 'auto'],    // PS: Default is altered to 85 for PNG in ::getDefaultOptions()
-        ['size-in-percentage', 'number', null],
-        ['skip', 'boolean', false],
-        ['use-nice', 'boolean', false],
-    ];
+    /**
+     *  Create options.
+     *
+     *  The options created here will be available to all converters.
+     *  Individual converters may add options by overriding this method.
+     *
+     *  @return void
+     */
+    protected function createOptions()
+    {
+        $isPng = ($this->getMimeTypeOfSource() == 'image/png');
+
+        $this->options2 = new Options();
+        $this->options2->addOptions(
+            new IntegerOption('alpha-quality', 85, 0, 100),
+            new BooleanOption('auto-filter', false),
+            new IntegerOption('default-quality', ($isPng ? 85 : 75), 0, 100),
+            new StringOption('encoding', 'auto', ['lossy', 'lossless', 'auto']),
+            new BooleanOption('low-memory', false),
+            new BooleanOption('log-call-arguments', false),
+            new IntegerOption('max-quality', 85, 0, 100),
+            new MetadataOption('metadata', 'none'),
+            new IntegerOption('method', 6, 0, 6),
+            new IntegerOption('near-lossless', 60, 0, 100),
+            new StringOption('preset', 'none', ['none', 'default', 'photo', 'picture', 'drawing', 'icon', 'text']),
+            new QualityOption('quality', ($isPng ? 85 : 'auto')),
+            new IntegerOrNullOption('size-in-percentage', null, 0, 100),
+            new BooleanOption('skip', false),
+            new BooleanOption('use-nice', false),
+        );
+    }
 
     /**
      * Set "provided options" (options provided by the user when calling convert().
@@ -772,6 +1349,8 @@ trait OptionsTrait
      */
     public function setProvidedOptions($providedOptions = [])
     {
+        $this->createOptions();
+
         $this->providedOptions = $providedOptions;
 
         if (isset($this->providedOptions['png'])) {
@@ -790,23 +1369,33 @@ trait OptionsTrait
         // merge down converter-prefixed options
         $converterId = self::getConverterId();
         $strLen = strlen($converterId);
-        //$this->logLn('id:' . $converterId);
         foreach ($this->providedOptions as $optionKey => $optionValue) {
-            //$this->logLn($optionKey . ':' . $optionValue);
-            //$this->logLn(substr($optionKey, 0, strlen($converterId)));
             if (substr($optionKey, 0, $strLen + 1) == ($converterId . '-')) {
-                //$this->logLn($optionKey . ':' . $optionValue);
-                //$this->logLn(substr($optionKey, $strLen + 1));
                 $this->providedOptions[substr($optionKey, $strLen + 1)] = $optionValue;
             }
         }
 
+        // Create options (Option objects)
+        foreach ($this->providedOptions as $optionId => $optionValue) {
+            $this->options2->setOrCreateOption($optionId, $optionValue);
+        }
+        //$this->logLn(print_r($this->options2->getOptions(), true));
+//$this->logLn($this->options2->getOption('hello'));
+
+        // Create flat associative array of options
+        $this->options = $this->options2->getOptions();
+
         // -  Merge $defaultOptions into provided options
-        $this->options = array_merge($this->getDefaultOptions(), $this->providedOptions);
+        //$this->options = array_merge($this->getDefaultOptions(), $this->providedOptions);
+
+        //$this->logOptions();
     }
 
     /**
      * Get the resulting options after merging provided options with default options.
+     *
+     * Note that the defaults depends on the mime type of the source. For example, the default value for quality
+     * is "auto" for jpegs, and 85 for pngs.
      *
      * @return array  An associative array of options: ['metadata' => 'none', ...]
      */
@@ -821,177 +1410,26 @@ trait OptionsTrait
      * This method is probably rarely neeeded. We are using it to change the "encoding" option temporarily
      * in the EncodingAutoTrait.
      *
-     * @param  string  $optionName   Name id of option (ie "metadata")
-     * @param  mixed   $optionValue  The new value.
+     * @param  string  $id      Id of option (ie "metadata")
+     * @param  mixed   $value   The new value.
      * @return void
      */
-    protected function setOption($optionName, $optionValue)
+    protected function setOption($id, $value)
     {
-        $this->options[$optionName] = $optionValue;
-    }
-
-
-    /**
-     * Get default options for the converter.
-     *
-     * Note that the defaults depends on the mime type of the source. For example, the default value for quality
-     * is "auto" for jpegs, and 85 for pngs.
-     *
-     * @return array  An associative array of option defaults: ['metadata' => 'none', ...]
-     */
-    public function getDefaultOptions()
-    {
-        $defaults = [];
-        foreach ($this->getOptionDefinitions() as list($name, $type, $default)) {
-            $defaults[$name] = $default;
-        }
-        if ($this->getMimeTypeOfSource() == 'image/png') {
-            $defaults['quality'] = 85;
-            $defaults['default-quality'] = 85;
-        }
-        if ($this->getMimeTypeOfSource() == 'image/jpeg') {
-            $defaults['encoding'] = 'lossy';
-        }
-        return $defaults;
-    }
-
-
-    /**
-     * Get definitions of general options (those available for all converters)
-     *
-     * To get only the extra definitions for a specific converter, call
-     * ::getOptionDefinitionsExtra(). To get both general and extra, merged together, call ::getOptionDefinitions().
-     *
-     * @return array  A numeric array of definitions of general options for the converter.
-     *                Each definition is a numeric array with three items: [option id, type, default value]
-     */
-    public function getGeneralOptionDefinitions()
-    {
-        return self::$optionDefinitionsBasic;
-    }
-
-    /**
-     * Get definitions of extra options unique for the actual converter.
-     *
-     * @return array  A numeric array of definitions of extra options for the converter.
-     *                Each definition is a numeric array with three items: [option id, type, default value]
-     */
-    protected function getOptionDefinitionsExtra()
-    {
-        return [];
-    }
-
-    /**
-     * Get option definitions for the converter (includes both general options and the extra options for the converter)
-     *
-     * To get only the general options definitions (those available for all converters), call
-     * ::getGeneralOptionDefinitions(). To get only the extra definitions for a specific converter, call
-     * ::getOptionDefinitionsExtra().
-     *
-     * @return array  A numeric array of definitions of all options for the converter.
-     *                Each definition is a numeric array with three items: [option id, type, default value]
-     */
-    public function getOptionDefinitions()
-    {
-        return array_merge(self::$optionDefinitionsBasic, $this->getOptionDefinitionsExtra());
-    }
-
-    /**
-     *  Check option types generally (against their definitions).
-     *
-     *  @throws InvalidOptionTypeException  if type is invalid
-     *  @return void
-     */
-    private function checkOptionTypesGenerally()
-    {
-        foreach ($this->getOptionDefinitions() as $def) {
-            list($optionName, $optionType) = $def;
-            if (isset($this->providedOptions[$optionName])) {
-                $actualType = gettype($this->providedOptions[$optionName]);
-                if ($actualType != $optionType) {
-                    $optionType = str_replace('number', 'integer|double', $optionType);
-                    if (!in_array($actualType, explode('|', $optionType))) {
-                        throw new InvalidOptionTypeException(
-                            'The provided ' . $optionName . ' option is not a ' . $optionType .
-                                ' (it is a ' . $actualType . ')'
-                        );
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     *  Check quality option
-     *
-     *  @throws InvalidOptionTypeException  if value is out of range
-     *  @return void
-     */
-    private function checkQualityOption()
-    {
-        if (!isset($this->providedOptions['quality'])) {
-            return;
-        }
-        $optionValue = $this->providedOptions['quality'];
-        if (gettype($optionValue) == 'string') {
-            if ($optionValue != 'auto') {
-                throw new InvalidOptionTypeException(
-                    'Quality option must be either "auto" or a number between 0-100. ' .
-                    'A string, "' . $optionValue . '" was given'
-                );
-            }
-        } else {
-            if (($optionValue < 0) || ($optionValue > 100)) {
-                throw new InvalidOptionTypeException(
-                    'Quality option must be either "auto" or a number between 0-100. ' .
-                        'The number you provided (' . strval($optionValue) . ') is out of range.'
-                );
-            }
-        }
-    }
-
-    /**
-     *  Check "encoding" option.
-     *
-     *  @throws InvalidOptionTypeException  if value is out of range
-     *  @return void
-     */
-    private function checkEncodingOption()
-    {
-        if (!isset($this->providedOptions['encoding'])) {
-            return;
-        }
-        $optionValue = $this->providedOptions['encoding'];
-        if (!in_array($optionValue, ['lossy', 'lossless', 'auto'])) {
-            throw new InvalidOptionTypeException(
-                '"encoding" option must be "lossy", "lossless" or "auto". It was set to: "' . $optionValue . '"'
-            );
-        }
-    }
-
-    /**
-     *  Check option types.
-     *
-     *  @throws InvalidOptionTypeException  if an option value have wrong type or is out of range
-     *  @return void
-     */
-    private function checkOptionTypes()
-    {
-        $this->checkOptionTypesGenerally();
-        $this->checkQualityOption();
-        $this->checkEncodingOption();
+        $this->options[$id] = $value;
+        $this->options2->setOrCreateOption($id, $value);
     }
 
     /**
      *  Check options.
      *
-     *  @throws InvalidOptionTypeException  if an option value have wrong type or is out of range
+     *  @throws InvalidOptionValueException  if an option value have wrong type or is out of range
      *  @throws ConversionSkippedException  if 'skip' option is set to true
      *  @return void
      */
     protected function checkOptions()
     {
-        $this->checkOptionTypes();
+        $this->options2->check();
 
         if ($this->options['skip']) {
             if (($this->getMimeTypeOfSource() == 'image/png') && isset($this->options['png']['skip'])) {
@@ -1004,6 +1442,48 @@ trait OptionsTrait
                 );
             }
         }
+    }
+
+/*
+    private function logOption($def) {
+        list($optionName, $optionType) = $def;
+        $sensitive = (isset($def[3]) && $def[3] === true);
+        if ($sensitive) {
+            $printValue = '*****';
+        } else {
+            $printValue = $this->options[$optionName];
+            //switch ($optionType) {
+            switch (gettype($printValue)) {
+                case 'boolean':
+                    $printValue = ($printValue === true ? 'true' : 'false');
+                    break;
+                case 'string':
+                    $printValue = '"' . $printValue . '"';
+                    break;
+                case 'NULL':
+                    $printValue = 'NULL';
+                    break;
+                case 'array':
+                    //$printValue = print_r($printValue, true);
+                    if (count($printValue) == 0) {
+                        $printValue = '(empty array)';
+                    } else {
+                        $printValue = '(array of ' . count($printValue) . ' items)';
+                    }
+                    break;
+            }
+        }
+
+        $this->log($optionName . ': ', 'italic');
+        $this->logLn($printValue);
+        //$this->logLn($optionName . ': ' . $printValue, 'italic');
+            //(isset($this->providedOptions[$optionName]) ? '' : ' (using default)')
+
+        //$this->logLn(gettype($printValue));
+    }*/
+
+    public function logOptions()
+    {
     }
 }
 
@@ -1489,6 +1969,9 @@ use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
+use WebPConvert\Options\BooleanOption;
+use WebPConvert\Options\SensitiveStringOption;
+use WebPConvert\Options\StringOption;
 
 /**
  * Convert images to webp by calling cwebp binary.
@@ -1503,14 +1986,21 @@ class Cwebp extends AbstractConverter
     use EncodingAutoTrait;
     use ExecTrait;
 
-    protected function getOptionDefinitionsExtra()
+    protected function getUnsupportedDefaultOptions()
     {
-        return [
-            ['command-line-options', 'string', ''],
-            ['rel-path-to-precompiled-binaries', 'string', './Binaries'],
-            ['try-common-system-paths', 'boolean', true],
-            ['try-supplied-binary-for-os', 'boolean', true],
-        ];
+        return [];
+    }
+
+    protected function createOptions()
+    {
+        parent::createOptions();
+
+        $this->options2->addOptions(
+            new StringOption('command-line-options', ''),
+            new SensitiveStringOption('rel-path-to-precompiled-binaries', './Binaries'),
+            new BooleanOption('try-common-system-paths', true),
+            new BooleanOption('try-supplied-binary-for-os', true),
+        );
     }
 
     // System paths to look for cwebp binary
@@ -1554,6 +2044,12 @@ class Cwebp extends AbstractConverter
         //$logger->logLn('command options:' . $commandOptions);
         //$logger->logLn('Trying to execute binary:' . $binary);
         exec($command, $output, $returnCode);
+        if ($returnCode == 255) {
+            if (isset($output[0])) {
+                // Could be an error like 'Error! Cannot open output file' or 'Error! ...preset... '
+                $this->logLn(print_r($output[0], true));
+            }
+        }
         //$logger->logLn(self::msgForExitCode($returnCode));
         return intval($returnCode);
     }
@@ -1614,7 +2110,9 @@ class Cwebp extends AbstractConverter
 
         // preset. Appears first in the list as recommended in the docs
         if (!is_null($options['preset'])) {
-            $cmdOptions[] = '-preset ' . $options['preset'];
+            if ($options['preset'] != 'none') {
+                $cmdOptions[] = '-preset ' . $options['preset'];
+            }
         }
 
         // Size
@@ -1934,6 +2432,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\InvalidApiKeyException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Options\SensitiveStringOption;
 
 /**
  * Convert images to webp using ewww cloud service.
@@ -1947,11 +2446,24 @@ class Ewww extends AbstractConverter
     use CloudConverterTrait;
     use CurlTrait;
 
-    protected function getOptionDefinitionsExtra()
+    protected function getUnsupportedDefaultOptions()
     {
         return [
-            ['api-key', 'string', '', true, true]
+            'alpha-quality',
+            'auto-filter',
+            'encoding',
+            'low-memory',
+            'use-nice'
         ];
+    }
+
+    protected function createOptions()
+    {
+        parent::createOptions();
+
+        $this->options2->addOptions(
+            new SensitiveStringOption('api-key', ''),
+        );
     }
 
     /**
@@ -2287,6 +2799,18 @@ class Gd extends AbstractConverter
     public function supportsLossless()
     {
         return false;
+    }
+
+    protected function getUnsupportedDefaultOptions()
+    {
+        return [
+            'alpha-quality',
+            'auto-filter',
+            'encoding',
+            'low-memory',
+            'metadata',
+            'use-nice'
+        ];
     }
 
     private $errorMessageWhileCreating = '';
@@ -2734,6 +3258,16 @@ class Gmagick extends AbstractConverter
 {
     use EncodingAutoTrait;
 
+    protected function getUnsupportedDefaultOptions()
+    {
+        return [
+            'near-lossless',
+            'preset',
+            'size-in-percentage',
+            'use-nice'
+        ];
+    }
+
     /**
      * Check (general) operationality of Gmagick converter.
      *
@@ -2878,6 +3412,16 @@ class GmagickBinary extends AbstractConverter
 {
     use ExecTrait;
     use EncodingAutoTrait;
+
+    protected function getUnsupportedDefaultOptions()
+    {
+        return [
+            'auto-filter',
+            'near-lossless',
+            'preset',
+            'size-in-percentage',
+        ];
+    }
 
     private static function getGmagickPath()
     {
@@ -3030,11 +3574,15 @@ class Imagick extends AbstractConverter
 {
     use EncodingAutoTrait;
 
-    /*
-    public function supportsLossless()
+    protected function getUnsupportedDefaultOptions()
     {
-        return false;
-    }*/
+        return [
+            'near-lossless',
+            'preset',
+            'size-in-percentage',
+            'use-nice'
+        ];
+    }
 
     /**
      * Check operationality of Imagick converter.
@@ -3197,6 +3745,15 @@ class ImagickBinary extends AbstractConverter
     use ExecTrait;
     use EncodingAutoTrait;
 
+    protected function getUnsupportedDefaultOptions()
+    {
+        return [
+            'near-lossless',
+            'preset',
+            'size-in-percentage',
+        ];
+    }
+
     // To futher improve this converter, I could check out:
     // https://github.com/Orbitale/ImageMagickPHP
 
@@ -3337,6 +3894,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
+use WebPConvert\Options\BooleanOption;
+use WebPConvert\Options\ArrayOption;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -3350,24 +3909,25 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 class Stack extends AbstractConverter
 {
 
-    protected function getOptionDefinitionsExtra()
+    protected function getUnsupportedDefaultOptions()
     {
-        return [
-            [
-                'converters',
-                'array', [
-                    'cwebp', 'vips', 'imagick', 'gmagick', 'imagickbinary', 'gmagickbinary', 'wpc', 'ewww', 'gd'
-                ],
-                true
-            ],
-            ['shuffle', 'boolean', false],
-            ['preferred-converters', 'array', []],
-            ['extra-converters', 'array', []]
-        ];
+        return [];
+    }
+
+    protected function createOptions()
+    {
+        parent::createOptions();
+
+        $this->options2->addOptions(
+            new ArrayOption('converters', self::getAvailableConverters()),
+            new BooleanOption('shuffle', false),
+            new ArrayOption('preferred-converters', []),
+            new ArrayOption('extra-converters', []),
+        );
     }
 
     /**
-     * Get available converters (ids).
+     * Get available converters (ids) - ordered by awesomeness.
      *
      * @return  array  An array of ids of converters that comes with this library
      */
@@ -3540,6 +4100,7 @@ use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use WebPConvert\Options\BooleanOption;
 
 //require '/home/rosell/.composer/vendor/autoload.php';
 
@@ -3554,18 +4115,21 @@ class Vips extends AbstractConverter
 {
     use EncodingAutoTrait;
 
-/*
-    public function supportsLossless()
-    {
-        return true;
-    }
-    */
-
-    protected function getOptionDefinitionsExtra()
+    protected function getUnsupportedDefaultOptions()
     {
         return [
-            ['smart-subsample', 'boolean', false],
+            'size-in-percentage',
+            'use-nice'
         ];
+    }
+
+    protected function createOptions()
+    {
+        parent::createOptions();
+
+        $this->options2->addOptions(
+            new BooleanOption('smart-subsample', false),
+        );
     }
 
     /**
@@ -3762,6 +4326,9 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\InvalidApiKeyException;
+use WebPConvert\Options\BooleanOption;
+use WebPConvert\Options\IntegerOption;
+use WebPConvert\Options\SensitiveStringOption;
 
 /**
  * Convert images to webp using Wpc (a cloud converter based on WebP Convert).
@@ -3776,23 +4343,30 @@ class Wpc extends AbstractConverter
     use CurlTrait;
     use EncodingAutoTrait;
 
+    protected function getUnsupportedDefaultOptions()
+    {
+        return [];
+    }
+
+    protected function createOptions()
+    {
+        parent::createOptions();
+
+        $this->options2->addOptions(
+            new SensitiveStringOption('api-key', ''),   /* new in api v.1 (renamed 'secret' to 'api-key') */
+            new SensitiveStringOption('secret', ''),    /* only in api v.0 */
+            new SensitiveStringOption('api-url', ''),
+            new IntegerOption('api-version', 0, 0, 2),
+            new BooleanOption('crypt-api-key-in-transfer', false),  /* new in api v.1 */
+        );
+    }
+
     public function passOnEncodingAuto()
     {
         // TODO: Either make this configurable or perhaps depend on api version
         return true;
     }
-
-    protected function getOptionDefinitionsExtra()
-    {
-        return [
-            ['api-key', 'string', '', true],   /* new in api v.1 (renamed 'secret' to 'api-key') */
-            ['api-url', 'string', '', true, true],
-            ['api-version', 'number', 0],                     /* Can currently be 0, 1 or 2 */
-            ['secret', 'string', '', true],    /* only in api v.0 */
-            ['crypt-api-key-in-transfer', 'boolean', false],  /* new in api v.1 */
-        ];
-    }
-
+    
     private static function createRandomSaltForBlowfish()
     {
         $salt = '';
@@ -4184,17 +4758,6 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInputException;
 class InvalidImageTypeException extends InvalidInputException
 {
     public $description = 'The converter does not handle the supplied image type';
-}
-
-?><?php
-
-namespace WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput;
-
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInputException;
-
-class InvalidOptionTypeException extends InvalidInputException
-{
-    public $description = '';
 }
 
 ?><?php

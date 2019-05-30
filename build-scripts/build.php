@@ -46,6 +46,7 @@ $jobsEverything = [
 
         'files' => [
             // put base classes here
+            'Options/Option.php',
             'Convert/Converters/AbstractConverter.php',
             'Exceptions/WebPConvertException.php',
             'Convert/Exceptions/ConversionFailedException.php',
@@ -59,6 +60,7 @@ $jobsEverything = [
             // dirs will be required in specified order. There is no recursion, so you need to specify subdirs as well.
             // TODO: Implement recursion in PHPMerger.php,
             '.',
+            'Options',
             'Convert/Converters/BaseTraits',
             'Convert/Converters/ConverterTraits',
             'Convert/BaseConverters',
