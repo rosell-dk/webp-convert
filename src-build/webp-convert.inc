@@ -1410,7 +1410,7 @@ trait OptionsTrait
             new QualityOption('quality', ($isPng ? 85 : 'auto')),
             new IntegerOrNullOption('size-in-percentage', null, 0, 100),
             new BooleanOption('skip', false),
-            new BooleanOption('use-nice', false),
+            new BooleanOption('use-nice', false)
         );
     }
 
@@ -2077,7 +2077,7 @@ class Cwebp extends AbstractConverter
             new StringOption('command-line-options', ''),
             new SensitiveStringOption('rel-path-to-precompiled-binaries', './Binaries'),
             new BooleanOption('try-common-system-paths', true),
-            new BooleanOption('try-supplied-binary-for-os', true),
+            new BooleanOption('try-supplied-binary-for-os', true)
         );
     }
 
@@ -2540,7 +2540,7 @@ class Ewww extends AbstractConverter
         parent::createOptions();
 
         $this->options2->addOptions(
-            new SensitiveStringOption('api-key', ''),
+            new SensitiveStringOption('api-key', '')
         );
     }
 
@@ -4000,7 +4000,7 @@ class Stack extends AbstractConverter
             new ArrayOption('converters', self::getAvailableConverters()),
             new BooleanOption('shuffle', false),
             new ArrayOption('preferred-converters', []),
-            new ArrayOption('extra-converters', []),
+            new ArrayOption('extra-converters', [])
         );
     }
 
@@ -4206,7 +4206,7 @@ class Vips extends AbstractConverter
         parent::createOptions();
 
         $this->options2->addOptions(
-            new BooleanOption('smart-subsample', false),
+            new BooleanOption('smart-subsample', false)
         );
     }
 
@@ -4435,7 +4435,7 @@ class Wpc extends AbstractConverter
             new SensitiveStringOption('secret', ''),    /* only in api v.0 */
             new SensitiveStringOption('api-url', ''),
             new IntegerOption('api-version', 0, 0, 2),
-            new BooleanOption('crypt-api-key-in-transfer', false),  /* new in api v.1 */
+            new BooleanOption('crypt-api-key-in-transfer', false)  /* new in api v.1 */
         );
     }
 
@@ -4444,7 +4444,7 @@ class Wpc extends AbstractConverter
         // TODO: Either make this configurable or perhaps depend on api version
         return true;
     }
-    
+
     private static function createRandomSaltForBlowfish()
     {
         $salt = '';

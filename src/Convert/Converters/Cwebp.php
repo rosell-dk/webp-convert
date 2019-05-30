@@ -38,7 +38,7 @@ class Cwebp extends AbstractConverter
             new StringOption('command-line-options', ''),
             new SensitiveStringOption('rel-path-to-precompiled-binaries', './Binaries'),
             new BooleanOption('try-common-system-paths', true),
-            new BooleanOption('try-supplied-binary-for-os', true),
+            new BooleanOption('try-supplied-binary-for-os', true)
         );
     }
 

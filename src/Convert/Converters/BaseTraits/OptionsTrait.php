@@ -66,7 +66,7 @@ trait OptionsTrait
             new QualityOption('quality', ($isPng ? 85 : 'auto')),
             new IntegerOrNullOption('size-in-percentage', null, 0, 100),
             new BooleanOption('skip', false),
-            new BooleanOption('use-nice', false),
+            new BooleanOption('use-nice', false)
         );
     }
 

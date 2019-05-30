@@ -39,7 +39,7 @@ class Ewww extends AbstractConverter
         parent::createOptions();
 
         $this->options2->addOptions(
-            new SensitiveStringOption('api-key', ''),
+            new SensitiveStringOption('api-key', '')
         );
     }
 

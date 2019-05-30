@@ -41,7 +41,7 @@ class Wpc extends AbstractConverter
             new SensitiveStringOption('secret', ''),    /* only in api v.0 */
             new SensitiveStringOption('api-url', ''),
             new IntegerOption('api-version', 0, 0, 2),
-            new BooleanOption('crypt-api-key-in-transfer', false),  /* new in api v.1 */
+            new BooleanOption('crypt-api-key-in-transfer', false)  /* new in api v.1 */
         );
     }
 
@@ -50,7 +50,7 @@ class Wpc extends AbstractConverter
         // TODO: Either make this configurable or perhaps depend on api version
         return true;
     }
-    
+
     private static function createRandomSaltForBlowfish()
     {
         $salt = '';

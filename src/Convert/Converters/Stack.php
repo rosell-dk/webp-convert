@@ -38,7 +38,7 @@ class Stack extends AbstractConverter
             new ArrayOption('converters', self::getAvailableConverters()),
             new BooleanOption('shuffle', false),
             new ArrayOption('preferred-converters', []),
-            new ArrayOption('extra-converters', []),
+            new ArrayOption('extra-converters', [])
         );
     }
 

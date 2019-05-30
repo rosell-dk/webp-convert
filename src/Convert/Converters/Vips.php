@@ -34,7 +34,7 @@ class Vips extends AbstractConverter
         parent::createOptions();
 
         $this->options2->addOptions(
-            new BooleanOption('smart-subsample', false),
+            new BooleanOption('smart-subsample', false)
         );
     }
 
