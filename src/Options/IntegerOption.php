@@ -18,6 +18,14 @@ class IntegerOption extends Option
     protected $minValue;
     protected $maxValue;
 
+    /**
+     * Constructor.
+     *
+     * @param   string   $id              id of the option
+     * @param   integer  $defaultValue    default value for the option
+     * @throws  InvalidOptionValueException  if the default value cannot pass the check
+     * @return  void
+     */
     public function __construct($id, $defaultValue, $minValue = null, $maxValue = null)
     {
         $this->minValue = $minValue;
