@@ -93,8 +93,7 @@ class ServeConvertedWebP
      *       - All options supported by ServeFile::serve()
      * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
      *
-     * @throws  \WebPConvert\Convert\Exceptions\ConversionFailedException  If conversion failed
-     * @throws  ServeFailedException       If an argument is invalid or source file does not exists
+     * @throws  \WebPConvert\Exceptions\WebPConvertException  If something went wrong.
      * @return  void
      */
     public static function serve($source, $destination, $options = [], $logger = null)
