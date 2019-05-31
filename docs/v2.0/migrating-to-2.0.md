@@ -48,6 +48,8 @@ First and foremost, *`WebPConvert::convertAndServe` has been renamed to `WebPCon
 
 Besides this, there is the following changes in options:
 
+- A new option `conversion` has been created for supplying the conversion options. So the conversion options are no longer "mingled" with the serving options, but has its own option.
+- A new option `set-cache-control-header` controls whether to set cache control header (default: false).
 - The `fail` option no longer support the "report-as-image" value. It however supports a new value: "throw".
 - The `fail-when-original-unavailable` option has been renamed to `fail-when-fail-fails`. In 2.0, the original not being available is no longer the only thing that can cause the fail action to fail &ndash; the library now checks the mime type of the source file and only serves it if it is either png or jpeg.
 - The `error-reporting` option has been removed. The reason for it being removed is that it is considered bad practice for a library to mess with error handling. However, *this pushes the responsibility to you*. You should make sure that no warnings ends up in the output, as this will corrupt the image being served. You can for example ensure that by calling `ini_set('display_errors', '0');` or `error_reporting(0);` (or both), or by creating your own error handler.
