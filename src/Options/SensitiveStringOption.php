@@ -27,6 +27,9 @@ class SensitiveStringOption extends StringOption
 
     public function getValueForPrint()
     {
+        if (strlen($this->getValue()) == 0) {
+            return '""';
+        }
         return '*****';
     }
 }
