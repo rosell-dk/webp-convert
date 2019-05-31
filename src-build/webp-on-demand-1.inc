@@ -35,6 +35,7 @@ class ServeConvertedWebP
         'reconvert' => false,
         'serve-original' => false,
         'show-report' => false,
+        'conversion' => []
     ];
 
     /**
@@ -122,10 +123,10 @@ class ServeConvertedWebP
 
         if (!@file_exists($destination)) {
             Header::addLogHeader('Converting (there were no file at destination)', $logger);
-            WebPConvert::convert($source, $destination, $options, $logger);
+            WebPConvert::convert($source, $destination, $options['conversion'], $logger);
         } elseif ($options['reconvert']) {
             Header::addLogHeader('Converting (told to reconvert)', $logger);
-            WebPConvert::convert($source, $destination, $options, $logger);
+            WebPConvert::convert($source, $destination, $options['conversion'], $logger);
         } else {
             // Step 2: Is the destination older than the source?
             //         If yes, trigger conversion (deleting destination is implicit)
@@ -135,7 +136,7 @@ class ServeConvertedWebP
                 ($timestampDestination !== false) &&
                 ($timestampSource > $timestampDestination)) {
                     Header::addLogHeader('Converting (destination was older than the source)', $logger);
-                    WebPConvert::convert($source, $destination, $options, $logger);
+                    WebPConvert::convert($source, $destination, $options['conversion'], $logger);
             }
         }
 
@@ -328,6 +329,19 @@ class ServeFile
         'set-last-modified-header' => true,
         'set-content-length-header' => true,
     ];
+
+/*
+    public static $defaultOptions = [
+        'header-switches' => [
+            'cache-control' => false,
+            'expires' => false,
+            'vary-accept' => false,
+            'content-type' => true,
+            'last-modified' => true,
+            'content-length' => true,
+        ],
+        'cache-control-header' => 'public, max-age=31536000',
+    ];*/
 
     /**
      * Serve existing file.

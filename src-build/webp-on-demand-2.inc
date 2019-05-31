@@ -1021,6 +1021,9 @@ class SensitiveStringOption extends StringOption
 
     public function getValueForPrint()
     {
+        if (strlen($this->getValue()) == 0) {
+            return '""';
+        }
         return '*****';
     }
 }
@@ -1420,6 +1423,8 @@ trait OptionsTrait
 
     abstract protected function getMimeTypeOfSource();
     abstract protected static function getConverterId();
+    abstract public function log($msg, $style = '');
+    abstract public function logLn($msg, $style = '');
 
     /**
      *  Create options.
@@ -1476,12 +1481,14 @@ trait OptionsTrait
             if ($this->getMimeTypeOfSource() == 'image/png') {
                 $this->providedOptions = array_merge($this->providedOptions, $this->providedOptions['png']);
 //                $this->logLn(print_r($this->providedOptions, true));
+                unset($this->providedOptions['png']);
             }
         }
 
         if (isset($this->providedOptions['jpeg'])) {
             if ($this->getMimeTypeOfSource() == 'image/jpeg') {
                 $this->providedOptions = array_merge($this->providedOptions, $this->providedOptions['jpeg']);
+                unset($this->providedOptions['jpeg']);
             }
         }
 
@@ -1568,11 +1575,19 @@ trait OptionsTrait
         $this->logLn('');
         $this->logLn('Options:');
         $this->logLn('------------');
+        $this->logLn(
+            'The following options have been set explicitly. ' .
+            'Note: it is the resulting options after merging down the "jpeg" and "png" options and any ' .
+            'converter-prefixed options.'
+        );
         $unsupported = $this->getUnsupportedDefaultOptions();
         //$this->logLn('Unsupported:' . print_r($this->getUnsupportedDefaultOptions(), true));
         $ignored = [];
         $implicit = [];
         foreach ($this->options2->getOptionsMap() as $id => $option) {
+            if (($id == 'png') || ($id == 'jpeg')) {
+                continue;
+            }
             if ($option->isValueExplicitlySet()) {
                 if (($option instanceof GhostOption) || in_array($id, $unsupported)) {
                     //$this->log(' (note: this option is ignored by this converter)', 'italic');
@@ -1589,9 +1604,12 @@ trait OptionsTrait
                 }
             }
         }
+
         if (count($implicit) > 0) {
             $this->logLn('');
-            $this->logLn('The following options have not been explicitly set, so using defaults');
+            $this->logLn(
+                'The following options have not been explicitly set, so using the following defaults:'
+            );
             foreach ($implicit as $option) {
                 $this->log('- ' . $option->getId() . ': ', 'italic');
                 $this->log($option->getValueForPrint());
@@ -1600,7 +1618,9 @@ trait OptionsTrait
         }
         if (count($ignored) > 0) {
             $this->logLn('');
-            $this->logLn('The following options are ignored, because they are not supported by this converter:');
+            $this->logLn(
+                'The following options were supplied but are ignored because they are not supported by this converter:'
+            );
             foreach ($ignored as $option) {
                 $this->logLn('- ' . $option->getId(), 'italic');
             }

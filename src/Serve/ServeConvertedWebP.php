@@ -34,6 +34,7 @@ class ServeConvertedWebP
         'reconvert' => false,
         'serve-original' => false,
         'show-report' => false,
+        'conversion' => []
     ];
 
     /**

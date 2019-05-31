@@ -34,8 +34,10 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
-            'converters' => [
-                '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+            'conversion' => [
+                'converters' => [
+                    '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+                ]
             ]
         ];
         ServeConvertedWebP::serveOriginal($source, $options);
@@ -68,8 +70,10 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
-            'converters' => [
-                '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+            'conversion' => [
+                'converters' => [
+                    '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+                ]
             ]
         ];
         ServeConvertedWebP::serveOriginal($source, []);
@@ -94,8 +98,10 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
-            'converters' => [
-                '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+            'conversion' => [
+                'converters' => [
+                    '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+                ]
             ]
         ];
         ServeConvertedWebP::serveOriginal($source, $options);
@@ -117,8 +123,10 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             //'serve-original' => true,
             'reconvert' => true,
-            'converters' => [
-                '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+            'conversion' => [
+                'converters' => [
+                    '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+                ]
             ]
         ];
         ServeConvertedWebP::serve($source, $destination, $options);
@@ -147,8 +155,10 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             'serve-original' => true,
             //'reconvert' => true,
-            'converters' => [
-                '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+            'conversion' => [
+                'converters' => [
+                    '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+                ]
             ]
         ];
         ServeConvertedWebP::serve($source, $destination, $options);
@@ -181,8 +191,10 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
-            'converters' => [
-                '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+            'conversion' => [
+                'converters' => [
+                    '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+                ]
             ]
         ];
         ServeConvertedWebP::serve($source, $destination, $options);
@@ -208,8 +220,10 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
-            'converters' => [
-                '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+            'conversion' => [
+                'converters' => [
+                    '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+                ]
             ]
         ];
 
@@ -234,8 +248,10 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
-            'converters' => [
-                '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+            'conversion' => [
+                'converters' => [
+                    '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+                ]
             ]
         ];
         ServeConvertedWebP::serve($source, $destination, $options);
@@ -258,8 +274,10 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
-            'converters' => [
-                '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+            'conversion' => [
+                'converters' => [
+                    '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+                ]
             ]
         ];
         ServeConvertedWebP::serve($source, $destination, $options);
@@ -280,8 +298,10 @@ class ServeConvertedWebPTest extends TestCase
             //'serve-original' => true,
             //'reconvert' => true,
             'show-report' => true,
-            'converters' => [
-                '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+            'conversion' => [
+                'converters' => [
+                    '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+                ]
             ]
         ];
         ServeConvertedWebP::serve($source, $destination, $options);
@@ -308,8 +328,10 @@ class ServeConvertedWebPTest extends TestCase
 
         ob_start();
         $options = [
-            'converters' => [
-                '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+            'conversion' => [
+                'converters' => [
+                    '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+                ]
             ]
         ];
         ServeConvertedWebP::serve($source, $source . '.webp', $options);
@@ -336,8 +358,10 @@ class ServeConvertedWebPTest extends TestCase
 
         ob_start();
         $options = [
-            'converters' => [
-                '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+            'conversion' => [
+                'converters' => [
+                    '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+                ]
             ]
         ];
         ServeConvertedWebP::serve($source, $source . '.webp', $options);
@@ -363,8 +387,10 @@ class ServeConvertedWebPTest extends TestCase
 
         ob_start();
         $options = [
-            'converters' => [
-                '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+            'conversion' => [
+                'converters' => [
+                    '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+                ]
             ]
         ];
         ServeConvertedWebP::serve($source, $source . '.webp', $options);
