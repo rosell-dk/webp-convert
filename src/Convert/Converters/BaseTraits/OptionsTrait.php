@@ -232,7 +232,9 @@ trait OptionsTrait
         }
         if (count($ignored) > 0) {
             $this->logLn('');
-            $this->logLn('The following options were supplied but are ignored because they are not supported by this converter:');
+            $this->logLn(
+                'The following options were supplied but are ignored because they are not supported by this converter:'
+            );
             foreach ($ignored as $option) {
                 $this->logLn('- ' . $option->getId(), 'italic');
             }
