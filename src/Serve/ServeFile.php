@@ -26,6 +26,19 @@ class ServeFile
         'set-content-length-header' => true,
     ];
 
+/*
+    public static $defaultOptions = [
+        'header-switches' => [
+            'cache-control' => false,
+            'expires' => false,
+            'vary-accept' => false,
+            'content-type' => true,
+            'last-modified' => true,
+            'content-length' => true,
+        ],
+        'cache-control-header' => 'public, max-age=31536000',
+    ];*/
+
     /**
      * Serve existing file.
      *
