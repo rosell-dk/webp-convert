@@ -223,7 +223,9 @@ trait OptionsTrait
 
         if (count($implicit) > 0) {
             $this->logLn('');
-            $this->logLn('The following options have not been explicitly set, so using the following defaults:');
+            $this->logLn(
+                'The following options have not been explicitly set, so using the following defaults:'
+            );
             foreach ($implicit as $option) {
                 $this->log('- ' . $option->getId() . ': ', 'italic');
                 $this->log($option->getValueForPrint());
