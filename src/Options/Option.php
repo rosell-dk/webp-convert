@@ -3,6 +3,7 @@
 namespace WebPConvert\Options;
 
 use WebPConvert\Options\Exceptions\InvalidOptionTypeException;
+use WebPConvert\Options\Exceptions\InvalidOptionValueException;
 
 /**
  * (base) option class.
@@ -31,6 +32,7 @@ class Option
      * @param   string  $id              id of the option
      * @param   mixed   $defaultValue    default value for the option
      * @throws  InvalidOptionValueException  if the default value cannot pass the check
+     * @throws  InvalidOptionTypeException   if the default value is wrong type
      * @return  void
      */
     public function __construct($id, $defaultValue)
