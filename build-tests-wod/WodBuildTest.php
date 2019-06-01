@@ -47,7 +47,7 @@ class WodBuildTest extends TestCase
             $source,
             [
                 //'reconvert' => true,
-                /* 'conversion' => [
+                /* 'convert' => [
                     'converters' => ['imagick'],
                 ]*/
                 //
@@ -116,7 +116,6 @@ class WodBuildTest extends TestCase
             $source . '.webp',
             [
                 'reconvert' => true,
-                'require-for-conversion' => $wod2,
                 //'converters' => ['imagick'],
                 'aboutToServeImageCallBack' => function() {
                     // Return false, in order to cancel serving
@@ -137,8 +136,7 @@ class WodBuildTest extends TestCase
             $source . '.webp',
             [
                 'reconvert' => true,
-                'require-for-conversion' => $wod2,
-                'conversion' => [
+                'convert' => [
                     'converters' => [
                         'imagick',
                         'gd',

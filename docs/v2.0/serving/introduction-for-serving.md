@@ -30,6 +30,10 @@ WebPConvert::serveConverted($source, $destination, [
     'set-last-modified-header' => true,
     'set-content-length-header' => true,
 
+    'convert' => [
+        // options for converting goes here
+        'quality' => 'auto',
+    ]
     // Besides the specific options for serving, you can also use the options for the conversion,
     // such as 'quality' etc
 ]);

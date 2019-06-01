@@ -34,7 +34,7 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
-            'conversion' => [
+            'convert' => [
                 'converters' => [
                     '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
                 ]
@@ -70,7 +70,7 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
-            'conversion' => [
+            'convert' => [
                 'converters' => [
                     '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
                 ]
@@ -98,7 +98,7 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
-            'conversion' => [
+            'convert' => [
                 'converters' => [
                     '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
                 ]
@@ -123,7 +123,7 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             //'serve-original' => true,
             'reconvert' => true,
-            'conversion' => [
+            'convert' => [
                 'converters' => [
                     '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
                 ]
@@ -155,7 +155,7 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             'serve-original' => true,
             //'reconvert' => true,
-            'conversion' => [
+            'convert' => [
                 'converters' => [
                     '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
                 ]
@@ -191,7 +191,7 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
-            'conversion' => [
+            'convert' => [
                 'converters' => [
                     '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
                 ]
@@ -220,7 +220,7 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
-            'conversion' => [
+            'convert' => [
                 'converters' => [
                     '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
                 ]
@@ -248,7 +248,7 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
-            'conversion' => [
+            'convert' => [
                 'converters' => [
                     '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
                 ]
@@ -274,7 +274,7 @@ class ServeConvertedWebPTest extends TestCase
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
-            'conversion' => [
+            'convert' => [
                 'converters' => [
                     '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
                 ]
@@ -298,7 +298,7 @@ class ServeConvertedWebPTest extends TestCase
             //'serve-original' => true,
             //'reconvert' => true,
             'show-report' => true,
-            'conversion' => [
+            'convert' => [
                 'converters' => [
                     '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
                 ]
@@ -328,7 +328,7 @@ class ServeConvertedWebPTest extends TestCase
 
         ob_start();
         $options = [
-            'conversion' => [
+            'convert' => [
                 'converters' => [
                     '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
                 ]
@@ -358,7 +358,7 @@ class ServeConvertedWebPTest extends TestCase
 
         ob_start();
         $options = [
-            'conversion' => [
+            'convert' => [
                 'converters' => [
                     '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
                 ]
@@ -387,7 +387,7 @@ class ServeConvertedWebPTest extends TestCase
 
         ob_start();
         $options = [
-            'conversion' => [
+            'convert' => [
                 'converters' => [
                     '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
                 ]
@@ -398,7 +398,7 @@ class ServeConvertedWebPTest extends TestCase
 
         // Our success-converter always creates fake webps with the content:
         // "we-pretend-this-is-a-valid-webp!".
-        // So testing that we got this back is the same as testing that a "conversion" was
+        // So testing that we got this back is the same as testing that a "convert" was
         // done and the converted file was served. It is btw smaller than the source.
 
         $this->assertRegExp('#we-pretend-this-is-a-valid-webp!#', $result);

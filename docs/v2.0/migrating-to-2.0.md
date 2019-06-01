@@ -1,4 +1,4 @@
-# Migrating to 2.0
+convert# Migrating to 2.0
 
 ## Converting
 
@@ -48,7 +48,7 @@ First and foremost, *`WebPConvert::convertAndServe` has been renamed to `WebPCon
 
 Besides this, there is the following changes in options:
 
-- A new option `conversion` has been created for supplying the conversion options. So the conversion options are no longer "mingled" with the serving options, but has its own option.
+- A new option `convert` has been created for supplying the conversion options. So the conversion options are no longer "mingled" with the serving options, but has its own option.
 - A new option `set-cache-control-header` controls whether to set cache control header (default: false).
 - The `fail` option no longer support the "report-as-image" value. It however supports a new value: "throw".
 - The `fail-when-original-unavailable` option has been renamed to `fail-when-fail-fails`. In 2.0, the original not being available is no longer the only thing that can cause the fail action to fail &ndash; the library now checks the mime type of the source file and only serves it if it is either png or jpeg.

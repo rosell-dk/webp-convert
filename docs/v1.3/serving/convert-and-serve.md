@@ -15,6 +15,9 @@ The method tries to serve a converted image. If destination already exists, the 
 ## The *$options* argument
 The options argument is a named array. Besides the options described below, you can also use any options that the *convert* method takes (if a fresh convertion needs to be created, this method will call the *convert* method and hand over the options argument)
 
+### *convert*
+Conversion options, handed over to the convert method, in case a conversion needs to be made. The convert options are documented [here](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md).
+
 ### *fail*
 Indicate what to do, in case of normal conversion failure.
 Default value: *"original"*
