@@ -4,6 +4,7 @@ namespace WebPConvert\Convert\Converters\BaseTraits;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Options\Exceptions\InvalidOptionValueException;
+use WebPConvert\Options\Exceptions\InvalidOptionTypeException;
 
 use WebPConvert\Options\ArrayOption;
 use WebPConvert\Options\BooleanOption;
@@ -165,8 +166,9 @@ trait OptionsTrait
     /**
      *  Check options.
      *
-     *  @throws InvalidOptionValueException  if an option value have wrong type or is out of range
-     *  @throws ConversionSkippedException  if 'skip' option is set to true
+     *  @throws InvalidOptionTypeException   if an option have wrong type
+     *  @throws InvalidOptionValueException  if an option value is out of range
+     *  @throws ConversionSkippedException   if 'skip' option is set to true
      *  @return void
      */
     protected function checkOptions()

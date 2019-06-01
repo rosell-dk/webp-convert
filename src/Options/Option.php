@@ -2,7 +2,7 @@
 
 namespace WebPConvert\Options;
 
-use WebPConvert\Options\Exceptions\InvalidOptionValueException;
+use WebPConvert\Options\Exceptions\InvalidOptionTypeException;
 
 /**
  * (base) option class.
@@ -113,13 +113,13 @@ class Option
      * Helpful function for checking type - used by subclasses.
      *
      * @param  string  $expectedType  The expected type, ie 'string'
-     * @throws  InvalidOptionValueException  If the type is invalid
+     * @throws  InvalidOptionTypeException  If the type is invalid
      * @return  void
      */
     protected function checkType($expectedType)
     {
         if (gettype($this->getValue()) != $expectedType) {
-            throw new InvalidOptionValueException(
+            throw new InvalidOptionTypeException(
                 'The "' . $this->id . '" option must be a ' . $expectedType .
                 ' (you provided a ' . gettype($this->getValue()) . ')'
             );
