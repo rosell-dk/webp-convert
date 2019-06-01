@@ -84,7 +84,8 @@ class Ewww extends AbstractConverter
 
         if (strlen($apiKey) < 20) {
             throw new InvalidApiKeyException(
-                'Api key is invalid. Api keys are supposed to be 32 characters long - the provided api key is much shorter'
+                'Api key is invalid. Api keys are supposed to be 32 characters long - ' .
+                'the provided api key is much shorter'
             );
         }
 

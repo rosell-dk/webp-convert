@@ -281,7 +281,6 @@ abstract class AbstractConverter
         try {
             //trigger_error('hello', E_USER_ERROR);
             $this->doConvertImplementation();
-
         } catch (WebPConvertException $e) {
             $this->logLn('');
             /*
