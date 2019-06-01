@@ -84,7 +84,7 @@ class Ewww extends AbstractConverter
 
         if (strlen($apiKey) < 20) {
             throw new InvalidApiKeyException(
-                'Key is invalid. Keys are supposed to be 32 characters long - your key is much shorter'
+                'Api key is invalid. Api keys are supposed to be 32 characters long - the provided api key is much shorter'
             );
         }
 
@@ -96,10 +96,10 @@ class Ewww extends AbstractConverter
             case 'great':
                 break;
             case 'exceeded':
-                throw new ConverterNotOperationalException('quota has exceeded');
+                throw new ConverterNotOperationalException('Quota has exceeded');
                 break;
             case 'invalid':
-                throw new InvalidApiKeyException('key is invalid');
+                throw new InvalidApiKeyException('Api key is invalid');
                 break;
         }
     }
@@ -170,7 +170,7 @@ class Ewww extends AbstractConverter
                 //echo $response;
                 //self::blacklistKey($key);
                 //throw new SystemRequirementsNotMetException('The key is invalid. Blacklisted it!');
-                throw new InvalidApiKeyException('The key is invalid');
+                throw new InvalidApiKeyException('The api key is invalid');
             }
 
             throw new ConversionFailedException(
