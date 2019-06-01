@@ -3,6 +3,7 @@
 
 namespace WebPConvert\Options;
 
+use WebPConvert\Options\Exceptions\InvalidOptionTypeException;
 use WebPConvert\Options\Exceptions\InvalidOptionValueException;
 
 /**
@@ -32,6 +33,7 @@ class Option
      * @param   string  $id              id of the option
      * @param   mixed   $defaultValue    default value for the option
      * @throws  InvalidOptionValueException  if the default value cannot pass the check
+     * @throws  InvalidOptionTypeException   if the default value is wrong type
      * @return  void
      */
     public function __construct($id, $defaultValue)
@@ -114,13 +116,13 @@ class Option
      * Helpful function for checking type - used by subclasses.
      *
      * @param  string  $expectedType  The expected type, ie 'string'
-     * @throws  InvalidOptionValueException  If the type is invalid
+     * @throws  InvalidOptionTypeException  If the type is invalid
      * @return  void
      */
     protected function checkType($expectedType)
     {
         if (gettype($this->getValue()) != $expectedType) {
-            throw new InvalidOptionValueException(
+            throw new InvalidOptionTypeException(
                 'The "' . $this->id . '" option must be a ' . $expectedType .
                 ' (you provided a ' . gettype($this->getValue()) . ')'
             );
@@ -141,6 +143,7 @@ class Option
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
+use WebPConvert\Exceptions\WebPConvertException;
 use WebPConvert\Convert\Converters\BaseTraits\AutoQualityTrait;
 use WebPConvert\Convert\Converters\BaseTraits\DestinationPreparationTrait;
 use WebPConvert\Convert\Converters\BaseTraits\LoggerTrait;
@@ -333,14 +336,11 @@ abstract class AbstractConverter
 
 
     /**
-     * Start conversion.
-     *
-     * Usually you would rather call the static convert method, but alternatively you can call
-     * call ::createInstance to get an instance and then ::doConvert().
+     * Run conversion.
      *
      * @return void
      */
-    public function doConvert()
+    private function doConvertImplementation()
     {
         $beginTime = microtime(true);
 
@@ -402,6 +402,56 @@ abstract class AbstractConverter
         }
 
         $this->deactivateWarningLogger();
+    }
+
+    //private function logEx
+    /**
+     * Start conversion.
+     *
+     * Usually you would rather call the static convert method, but alternatively you can call
+     * call ::createInstance to get an instance and then ::doConvert().
+     *
+     * @return void
+     */
+    public function doConvert()
+    {
+        try {
+            //trigger_error('hello', E_USER_ERROR);
+            $this->doConvertImplementation();
+        } catch (WebPConvertException $e) {
+            $this->logLn('');
+            /*
+            if (isset($e->description) && ($e->description != '')) {
+                $this->log('Error: ' . $e->description . '. ', 'bold');
+            } else {
+                $this->log('Error: ', 'bold');
+            }
+            */
+            $this->log('Error: ', 'bold');
+            $this->logLn($e->getMessage(), 'bold');
+            throw $e;
+        } catch (\Exception $e) {
+            $className = get_class($e);
+
+            $classNameParts = explode("\\", $className);
+            $shortClassName = array_pop($classNameParts);
+
+            $this->logLn('');
+            $this->logLn($shortClassName . ' thrown in ' . $e->getFile() . ':' . $e->getLine(), 'bold');
+            $this->logLn('Message: "' . $e->getMessage() . '"', 'bold');
+            //$this->logLn('Exception class: ' . $className);
+
+            $this->logLn('Trace:');
+            foreach ($e->getTrace() as $trace) {
+                //$this->logLn(print_r($trace, true));
+                $this->logLn(
+                    $trace['file'] . ':' . $trace['line']
+                );
+            }
+            throw $e;
+        } /*catch (\Error $e) {
+            $this->logLn('ERROR');
+        }*/
     }
 
     /**
@@ -478,7 +528,7 @@ namespace WebPConvert\Exceptions;
  */
 class WebPConvertException extends \Exception
 {
-    public $description = 'The converter failed converting, although requirements seemed to be met';
+    public $description = '';
     protected $detailedMessage;
     protected $shortMessage;
 
@@ -534,7 +584,8 @@ use WebPConvert\Exceptions\WebPConvertException;
  */
 class ConversionFailedException extends WebPConvertException
 {
-    public $description = 'The converter failed converting, although requirements seemed to be met';
+    //public $description = 'Conversion failed';
+    public $description = '';
 }
 
 ?><?php
@@ -1386,6 +1437,7 @@ namespace WebPConvert\Convert\Converters\BaseTraits;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Options\Exceptions\InvalidOptionValueException;
+use WebPConvert\Options\Exceptions\InvalidOptionTypeException;
 
 use WebPConvert\Options\ArrayOption;
 use WebPConvert\Options\BooleanOption;
@@ -1547,8 +1599,9 @@ trait OptionsTrait
     /**
      *  Check options.
      *
-     *  @throws InvalidOptionValueException  if an option value have wrong type or is out of range
-     *  @throws ConversionSkippedException  if 'skip' option is set to true
+     *  @throws InvalidOptionTypeException   if an option have wrong type
+     *  @throws InvalidOptionValueException  if an option value is out of range
+     *  @throws ConversionSkippedException   if 'skip' option is set to true
      *  @return void
      */
     protected function checkOptions()
@@ -1570,7 +1623,6 @@ trait OptionsTrait
 
     public function logOptions()
     {
-        $this->logLn('');
         $this->logLn('Options:');
         $this->logLn('------------');
         $this->logLn(
@@ -1792,7 +1844,7 @@ trait WarningLoggerTrait
     /**
      *  Activate warning logger.
      *
-     *  Sets the error handler and stores the previous to our error handler can bubble up warnings
+     *  Sets the error handler and stores the previous so our error handler can bubble up warnings
      *
      *  @return  void
      */
@@ -2010,7 +2062,7 @@ trait EncodingAutoTrait
         $destinationLossy =  $destination . '.lossy.webp';
 
         $this->logLn(
-            'Lossless is set to auto. Converting to both lossless and lossy and selecting the smallest file'
+            'Encoding is set to auto - converting to both lossless and lossy and selecting the smallest file'
         );
 
         $this->ln();
@@ -2656,7 +2708,8 @@ class Ewww extends AbstractConverter
 
         if (strlen($apiKey) < 20) {
             throw new InvalidApiKeyException(
-                'Key is invalid. Keys are supposed to be 32 characters long - your key is much shorter'
+                'Api key is invalid. Api keys are supposed to be 32 characters long - ' .
+                'the provided api key is much shorter'
             );
         }
 
@@ -2668,10 +2721,10 @@ class Ewww extends AbstractConverter
             case 'great':
                 break;
             case 'exceeded':
-                throw new ConverterNotOperationalException('quota has exceeded');
+                throw new ConverterNotOperationalException('Quota has exceeded');
                 break;
             case 'invalid':
-                throw new InvalidApiKeyException('key is invalid');
+                throw new InvalidApiKeyException('Api key is invalid');
                 break;
         }
     }
@@ -2742,7 +2795,7 @@ class Ewww extends AbstractConverter
                 //echo $response;
                 //self::blacklistKey($key);
                 //throw new SystemRequirementsNotMetException('The key is invalid. Blacklisted it!');
-                throw new InvalidApiKeyException('The key is invalid');
+                throw new InvalidApiKeyException('The api key is invalid');
             }
 
             throw new ConversionFailedException(
