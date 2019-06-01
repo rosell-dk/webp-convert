@@ -4664,7 +4664,7 @@ class Wpc extends AbstractConverter
         $apiVersion = $options['api-version'];
 
         if ($this->getApiUrl() == '') {
-            if (isset($this->options['url'])) {
+            if (isset($this->options['url']) && ($this->options['url'] != '')) {
                 throw new ConverterNotOperationalException(
                     'The "url" option has been renamed to "api-url" in webp-convert 2.0. ' .
                     'You must change the configuration accordingly.'
