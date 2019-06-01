@@ -45,7 +45,7 @@ trait EncodingAutoTrait
         $destinationLossy =  $destination . '.lossy.webp';
 
         $this->logLn(
-            'Lossless is set to auto. Converting to both lossless and lossy and selecting the smallest file'
+            'Encoding is set to auto - converting to both lossless and lossy and selecting the smallest file'
         );
 
         $this->ln();
