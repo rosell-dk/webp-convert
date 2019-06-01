@@ -89,7 +89,7 @@ trait WarningLoggerTrait
     /**
      *  Activate warning logger.
      *
-     *  Sets the error handler and stores the previous to our error handler can bubble up warnings
+     *  Sets the error handler and stores the previous so our error handler can bubble up warnings
      *
      *  @return  void
      */
