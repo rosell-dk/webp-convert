@@ -6,6 +6,7 @@
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
+use WebPConvert\Exceptions\WebPConvertException;
 use WebPConvert\Convert\Converters\BaseTraits\AutoQualityTrait;
 use WebPConvert\Convert\Converters\BaseTraits\DestinationPreparationTrait;
 use WebPConvert\Convert\Converters\BaseTraits\LoggerTrait;
@@ -198,14 +199,11 @@ abstract class AbstractConverter
 
 
     /**
-     * Start conversion.
-     *
-     * Usually you would rather call the static convert method, but alternatively you can call
-     * call ::createInstance to get an instance and then ::doConvert().
+     * Run conversion.
      *
      * @return void
      */
-    public function doConvert()
+    private function doConvertImplementation()
     {
         $beginTime = microtime(true);
 
@@ -267,6 +265,57 @@ abstract class AbstractConverter
         }
 
         $this->deactivateWarningLogger();
+    }
+
+    //private function logEx
+    /**
+     * Start conversion.
+     *
+     * Usually you would rather call the static convert method, but alternatively you can call
+     * call ::createInstance to get an instance and then ::doConvert().
+     *
+     * @return void
+     */
+    public function doConvert()
+    {
+        try {
+            //trigger_error('hello', E_USER_ERROR);
+            $this->doConvertImplementation();
+
+        } catch (WebPConvertException $e) {
+            $this->logLn('');
+            /*
+            if (isset($e->description) && ($e->description != '')) {
+                $this->log('Error: ' . $e->description . '. ', 'bold');
+            } else {
+                $this->log('Error: ', 'bold');
+            }
+            */
+            $this->log('Error: ', 'bold');
+            $this->logLn($e->getMessage(), 'bold');
+            throw $e;
+        } catch (\Exception $e) {
+            $className = get_class($e);
+
+            $classNameParts = explode("\\", $className);
+            $shortClassName = array_pop($classNameParts);
+
+            $this->logLn('');
+            $this->logLn($shortClassName . ' thrown in ' . $e->getFile() . ':' . $e->getLine(), 'bold');
+            $this->logLn('Message: "' . $e->getMessage() . '"', 'bold');
+            //$this->logLn('Exception class: ' . $className);
+
+            $this->logLn('Trace:');
+            foreach ($e->getTrace() as $trace) {
+                //$this->logLn(print_r($trace, true));
+                $this->logLn(
+                    $trace['file'] . ':' . $trace['line']
+                );
+            }
+            throw $e;
+        } /*catch (\Error $e) {
+            $this->logLn('ERROR');
+        }*/
     }
 
     /**
