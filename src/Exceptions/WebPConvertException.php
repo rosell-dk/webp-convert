@@ -15,7 +15,7 @@ namespace WebPConvert\Exceptions;
  */
 class WebPConvertException extends \Exception
 {
-    public $description = 'The converter failed converting, although requirements seemed to be met';
+    public $description = '';
     protected $detailedMessage;
     protected $shortMessage;
 

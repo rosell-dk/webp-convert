@@ -6,5 +6,5 @@ use WebPConvert\Exceptions\WebPConvertException;
 
 class InvalidOptionValueException extends WebPConvertException
 {
-    public $description = '';
+    public $description = 'Invalid option value';
 }

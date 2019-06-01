@@ -26,5 +26,6 @@ use WebPConvert\Exceptions\WebPConvertException;
  */
 class ConversionFailedException extends WebPConvertException
 {
-    public $description = 'The converter failed converting, although requirements seemed to be met';
+    //public $description = 'Conversion failed';
+    public $description = '';
 }
