@@ -49,7 +49,7 @@ class ServeConvertedWebP
             new BooleanOption('serve-original', false),
             new BooleanOption('show-report', false),
             new ArrayOption('serve-image', []),
-            new SensitiveArrayOption('convert', []),
+            new SensitiveArrayOption('convert', [])
         );
         foreach ($options as $optionId => $optionValue) {
             $options2->setOrCreateOption($optionId, $optionValue);

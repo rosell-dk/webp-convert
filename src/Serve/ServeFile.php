@@ -31,7 +31,7 @@ class ServeFile
         $options2 = new Options();
         $options2->addOptions(
             new ArrayOption('headers', []),
-            new StringOption('cache-control-header', 'public, max-age=31536000'),
+            new StringOption('cache-control-header', 'public, max-age=31536000')
         );
         foreach ($options as $optionId => $optionValue) {
             $options2->setOrCreateOption($optionId, $optionValue);
