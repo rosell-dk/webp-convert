@@ -13,19 +13,22 @@ use WebPConvert\WebPConvert;
 WebPConvert::serveConverted($source, $destination, [
 
     // failure handling
-    'fail'                 => 'original',     // ('original' | 404' | 'throw' | 'report')
-    'fail-when-fail-fails' => 'throw',        // ('original' | 404' | 'throw' | 'report')
+    'fail'                 => 'original',   // ('original' | 404' | 'throw' | 'report')
+    'fail-when-fail-fails' => 'throw',      // ('original' | 404' | 'throw' | 'report')
 
     // options influencing the decision process of what to be served
-    'reconvert' => false,       // if true, existing (cached) image will be discarded
-    'serve-original' => false,  // if true, the original image will be served rather than the converted
-    'show-report' => false,     // if true, a report will be output rather than the raw image
+    'reconvert' => false,         // if true, existing (cached) image will be discarded
+    'serve-original' => false,    // if true, the original image will be served rather than the converted
+    'show-report' => false,       // if true, a report will be output rather than the raw image
+
+    // warning handling
+    'suppress-warnings' => true,            // if you set to false, make sure that warnings are not echoed out!
 
     // options when serving an image (be it the webp or the original, if the original is smaller than the webp)
     'serve-image' => [
         'headers' => [
             'cache-control' => true,
-            'content-length' => true, 
+            'content-length' => true,
             'content-type' => true,
             'expires' => false,
             'last-modified' => true,
@@ -42,11 +45,11 @@ WebPConvert::serveConverted($source, $destination, [
 ```
 
 ## Failure handling
-The *fail* option gives you an easy way to handle errors. Setting it to 'original' tells it to handle errors by serving the original file instead (*$source*). This could be a good choice on production servers. On development servers, 'throw' might be a good option. It simply rethrows the exception that was thrown by *WebPConvert::convert()*. '404' could also be an option, but it has the weakness that it will probably only be discovered by real persons seeing a missing image.
+The `fail` option gives you an easy way to handle errors. Setting it to 'original' tells it to handle errors by serving the original file instead (*$source*). This could be a good choice on production servers. On development servers, 'throw' might be a good option. It simply rethrows the exception that was thrown by *WebPConvert::convert()*. '404' could also be an option, but it has the weakness that it will probably only be discovered by real persons seeing a missing image.
 
 The fail action might fail too. For example, if it is set to 'original' and the failure is that the original file doesn't exist. Or, more delicately, it may have a wrong mime type - our serve method will not let itself be tricked into serving *exe* files as the 'original'. Anyway, you can control what to do when fail fails using the *fail-when-fail-fails* option. If that fails too, the original exception is thrown. The fun stops there, there is no "fail-when-fail-when-fail-fails" option to customize this.
 
-The failure handling is implemented as an extra layer. You can bypass it by calling `WebPConvert\Serve\ServeConvertedWebP::serve()` directly. Doing that will give the same result as if you set *fail* to 'throw'.
+The failure handling is implemented as an extra layer. You can bypass it by calling `WebPConvert\Serve\ServeConvertedWebP::serve()` directly. Doing that will give the same result as if you set `fail` to 'throw'.
 
 ## Options influencing the decision process
 The default process is like this:
@@ -64,7 +67,7 @@ If you set *reconvert* to true, the destination and conversion is triggered (bet
 If you set *serve-original* to true, process will take its cause from (1) to (2) and then end with source being served.
 
 *show-report*
-If you set *show-report*, the process is skipped entirely, and instead a report is generated of how a fresh conversion using the supplied options goes.
+If you set `show-report`, the process is skipped entirely, and instead a report is generated of how a fresh conversion using the supplied options goes.
 
 ## Headers
 Leaving errors and reports out of account for a moment, the *WebPConvert::serveConverted()* ultimately has two possible outcomes: Either a converted image is served or - if smaller - the source image. If the source is to be served, its mime type will be detected in order to make sure it is an image and to be able to set the content type header. Either way, the actual serving is passed to `Serve\ServeFile::serve`. The main purpose of this class is to add/set headers.
@@ -128,7 +131,7 @@ X-WebP-Convert-Log: Performing fail action: original
 
 If you need more info about the conversion process in order to learn why the converters aren't working, enable the *show-report* option.
 
-As a last example, say you have supplied a non-existing file as source and *fail* is set to "original" (which will also fail). Result:
+As a last example, say you have supplied a non-existing file as source and `fail` is set to "original" (which will also fail). Result:
 ```
 X-WebP-Convert-Log: Source file was not found
 X-WebP-Convert-Log: Performing fail action: original

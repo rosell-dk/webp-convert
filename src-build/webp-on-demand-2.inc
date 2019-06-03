@@ -1858,7 +1858,7 @@ trait WarningLoggerTrait
     {
         $this->previousErrorHandler = set_error_handler(
             array($this, "warningHandler"),
-            E_WARNING | E_USER_WARNING | E_NOTICE | E_USER_NOTICE | E_USER_ERROR
+            E_WARNING | E_USER_WARNING | E_NOTICE | E_USER_NOTICE
         );
     }
 

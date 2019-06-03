@@ -48,6 +48,7 @@ class ServeConvertedWebP
             new BooleanOption('reconvert', false),
             new BooleanOption('serve-original', false),
             new BooleanOption('show-report', false),
+            new BooleanOption('suppress-warnings', true),
             new ArrayOption('serve-image', []),
             new SensitiveArrayOption('convert', [])
         );
@@ -94,6 +95,12 @@ class ServeConvertedWebP
         ServeFile::serve($destination, 'image/webp', $serveImageOptions);
     }
 
+
+    public static function warningHandler()
+    {
+        // do nothing! - as we do not return anything, the warning is suppressed
+    }
+
     /**
      * Serve converted webp.
      *
@@ -119,6 +126,7 @@ class ServeConvertedWebP
      */
     public static function serve($source, $destination, $options = [], $logger = null)
     {
+
         if (empty($source)) {
             throw new ServeFailedException('Source argument missing');
         }
@@ -130,7 +138,14 @@ class ServeConvertedWebP
         }
 
         $options = self::processOptions($options);
-//print_r($options); exit;
+
+        if ($options['suppress-warnings']) {
+            set_error_handler(
+                array('\\WebPConvert\\Serve\\ServeConvertedWebP', "warningHandler"),
+                E_WARNING | E_USER_WARNING | E_NOTICE | E_USER_NOTICE
+            );
+        }
+
 
         //$options = array_merge(self::$defaultOptions, $options);
 
