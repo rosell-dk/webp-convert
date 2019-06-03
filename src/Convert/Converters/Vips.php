@@ -177,7 +177,7 @@ class Vips extends AbstractConverter
      * @throws  ConversionFailedException  if conversion fails.
      */
     private function webpsave($im, $options)
-    {
+    {        
         $result = /** @scrutinizer ignore-call */ vips_call('webpsave', $im, $this->destination, $options);
 
         //trigger_error('test-warning', E_USER_WARNING);
@@ -188,6 +188,8 @@ class Vips extends AbstractConverter
             if (preg_match("#no property named .(.*).#", $message, $matches)) {
                 $nameOfPropertyNotFound = $matches[1];
             } elseif (preg_match("#(.*)\\sunsupported$#", $message, $matches)) {
+                // Actually, I am not quite sure if this ever happens.
+                // I got a "near_lossless unsupported" error message in a build, but perhaps it rather a warning
                 if (in_array($matches[1], ['lossless', 'alpha_q', 'near_lossless', 'smart_subsample'])) {
                     $nameOfPropertyNotFound = $matches[1];
                 }
