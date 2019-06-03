@@ -75,7 +75,9 @@ trait WarningLoggerTrait
 
         $msg = $errType . ': ' . $errstr . ' in ' . $errfile . ', line ' . $errline . ', PHP ' . PHP_VERSION .
             ' (' . PHP_OS . ')';
-        $this->logLn($msg);
+        $this->logLn('');
+        $this->logLn($msg, 'italic');
+        $this->logLn('');
 
         //echo 'previously defined handler:' . print_r($this->previousErrorHandler, true);
 
