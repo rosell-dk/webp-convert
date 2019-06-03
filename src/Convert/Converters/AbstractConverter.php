@@ -207,11 +207,6 @@ abstract class AbstractConverter
     {
         $beginTime = microtime(true);
 
-        if ($this->options['log-call-arguments']) {
-            $this->logOptions();
-            $this->logLn('');
-        }
-
         $this->activateWarningLogger();
 
         $this->checkOptions();
@@ -231,6 +226,12 @@ abstract class AbstractConverter
 
         $this->checkOperationality();
         $this->checkConvertability();
+
+        if ($this->options['log-call-arguments']) {
+            $this->logOptions();
+            $this->logLn('');
+        }
+
         $this->runActualConvert();
 
         $source = $this->source;
