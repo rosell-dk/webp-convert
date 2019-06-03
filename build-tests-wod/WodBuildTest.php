@@ -49,10 +49,13 @@ class WodBuildTest extends TestCase
                 'convert' => [
                     'converters' => [
                         'gd',
-                        'imagickbinary',
                         'imagick',
                         '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
-                        // vips?
+                        // vips? - causes build error:
+                        // PHPUnit_Framework_Exception: (banana:9793): VIPS-WARNING **: near_lossless unsupported
+
+                        //'imagickbinary',
+                        // PHPUnit_Framework_Exception: convert: delegate failed `"cwebp" -quiet -q %Q "%i" -o "%o"' @ error/delegate.c/InvokeDelegate/1310.
                     ],
                 ]
                 //'reconvert' => true,
