@@ -21,21 +21,23 @@ WebPConvert::serveConverted($source, $destination, [
     'serve-original' => false,  // if true, the original image will be served rather than the converted
     'show-report' => false,     // if true, a report will be output rather than the raw image
 
-    // headers, in case an image is served
-    'set-cache-control-header' => false,
-    'set-expires-header' => false,
-    'cache-control-header' => 'public, max-age=31536000',
-    'add-vary-accept-header' => false,
-    'set-content-type-header' => true,
-    'set-last-modified-header' => true,
-    'set-content-length-header' => true,
+    // options when serving an image (be it the webp or the original, if the original is smaller than the webp)
+    'serve-image' => [
+        'headers' => [
+            'cache-control' => true,
+            'content-length' => true, 
+            'content-type' => true,
+            'expires' => false,
+            'last-modified' => true,
+            'vary-accept' => false
+        ],
+        'cache-control-header' => 'public, max-age=31536000',
+    ],
 
     'convert' => [
         // options for converting goes here
         'quality' => 'auto',
     ]
-    // Besides the specific options for serving, you can also use the options for the conversion,
-    // such as 'quality' etc
 ]);
 ```
 
@@ -71,26 +73,30 @@ Leaving errors and reports out of account for a moment, the *WebPConvert::serveC
 Default behavior is to neither set the *Cache-Control* nor the *Expires* header. Once you are on production, you will probably want to turn these on. The default is btw one year (31536000 seconds). I recommend the following for production:
 
 ```
-'set-cache-control-header' => true,
-'set-expires-header' => true,
-'cache-control-header' => 'public, max-age=31536000',
+'serve-image' => [
+    'headers' => [
+        'cache-control' => true,        
+        'expires' => false,
+    ],
+    'cache-control-header' => 'public, max-age=31536000',
+],
 ```
 
 The value for the *Expires* header is calculated from "max-age" found in the *cache-control-header* option and the time of the request. The result is an absolute time, ie "Expires: Thu, 07 May 2020 07:02:37 GMT". As most browsers now supports the *Cache-Control* header, *from a performance perspective*, there is no need to also add the expires header. However, some tools complains if you don't (gtmetrix allegedly), and there is no harm in adding both headers. More on this discussion [[here]](https://github.com/rosell-dk/webp-convert/issues/126).
 
 #### *Vary: Accept* header
-This library can be used as part of a solution that serves webp files to browsers that supports it, while serving the original file to browsers that does not *on the same URL*. Such a solution typically inspects the *Accept* request header in order to determine if the client supports webp or not. Thus, the response will *vary* along with the "Accept" header and the world (and proxies) should be informed about this, so they don't end up serving cached webps to browsers that does not support it. To add the "Vary: Accept" header, simply set the *add-vary-accept-header* option to true.
+This library can be used as part of a solution that serves webp files to browsers that supports it, while serving the original file to browsers that does not *on the same URL*. Such a solution typically inspects the *Accept* request header in order to determine if the client supports webp or not. Thus, the response will *vary* along with the "Accept" header and the world (and proxies) should be informed about this, so they don't end up serving cached webps to browsers that does not support it. To add the "Vary: Accept" header, simply set the *serve-image >  headers > vary-accept* option to true.
 
 #### *Last-Modified* header
-The Last-Modified header is also used for caching purposes. You should leave that setting on, unless you set it by other means. You control it with the *set-last-modified-header* option.
+The Last-Modified header is also used for caching purposes. You should leave that setting on, unless you set it by other means. You control it with the *serve-image >  headers > last-modified* option.
 
 #### *Content-Type* header
-The *Content-Type* header tells browsers what they are receiving. This is important information and you should leave the *set-content-type-header* option at its default (true), unless you set it by other means.
+The *Content-Type* header tells browsers what they are receiving. This is important information and you should leave the *serve-image >  headers > content-type* option at its default (true), unless you set it by other means.
 
 When the outcome is to serve a webp, the header will be set to: "Content-Type: image/webp". When the original is to be served, the library will try to detect the mime type of the file and set the content type accordingly. The [image-mime-type-guesser](https://github.com/rosell-dk/image-mime-type-guesser) library is used for that.
 
 #### *Content-Length* header
-The *Content-Length* header tells browsers the length of the content. According to [the specs](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.13), it should be set unless it is prohibited by rules in [section 4.4](https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.4). In that section we learn that it should not be set when the *Transfer-Encoding* header is set (which it often is, to "chunked"). However, no harm done, because it also says that clients should ignore the header in case *Transfer-Encoding* is set. From this I concluded that it makes sense to default the *set-content-length-header* to true. I might however change this in case I should learn that the header could be problematic in some way. So if you decided you want it, do not rely on the default, but set it to *true*. See discussion on this subject [here](https://stackoverflow.com/questions/3854842/content-length-header-with-head-requests/3854983#3854983).
+The *Content-Length* header tells browsers the length of the content. According to [the specs](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.13), it should be set unless it is prohibited by rules in [section 4.4](https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.4). In that section we learn that it should not be set when the *Transfer-Encoding* header is set (which it often is, to "chunked"). However, no harm done, because it also says that clients should ignore the header in case *Transfer-Encoding* is set. From this I concluded that it makes sense to default the *serve-image >  headers > content-length* to true. I might however change this in case I should learn that the header could be problematic in some way. So if you decided you want it, do not rely on the default, but set it to *true*. See discussion on this subject [here](https://stackoverflow.com/questions/3854842/content-length-header-with-head-requests/3854983#3854983).
 
 #### *X-WebP-Convert-Log* headers
 The serve method adds *X-WebP-Convert-Log* headers in order to let you know what went on.

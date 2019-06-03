@@ -2,6 +2,10 @@
 namespace WebPConvert\Serve;
 
 //use WebPConvert\Serve\Report;
+use WebPConvert\Options\ArrayOption;
+use WebPConvert\Options\BooleanOption;
+use WebPConvert\Options\Options;
+use WebPConvert\Options\StringOption;
 use WebPConvert\Serve\Header;
 use WebPConvert\Serve\Exceptions\ServeFailedException;
 
@@ -15,29 +19,44 @@ use WebPConvert\Serve\Exceptions\ServeFailedException;
 class ServeFile
 {
 
-    /** @var array  Array of default options */
-    public static $defaultOptions = [
-        'set-cache-control-header' => false,
-        'set-expires-header' => false,
-        'cache-control-header' => 'public, max-age=31536000',
-        'add-vary-accept-header' => false,
-        'set-content-type-header' => true,
-        'set-last-modified-header' => true,
-        'set-content-length-header' => true,
-    ];
+    /**
+     * Process options.
+     *
+     * @throws \WebPConvert\Options\Exceptions\InvalidOptionTypeException   If the type of an option is invalid
+     * @throws \WebPConvert\Options\Exceptions\InvalidOptionValueException  If the value of an option is invalid
+     * @param array $options
+     */
+    private static function processOptions($options)
+    {
+        $options2 = new Options();
+        $options2->addOptions(
+            new ArrayOption('headers', []),
+            new StringOption('cache-control-header', 'public, max-age=31536000'),
+        );
+        foreach ($options as $optionId => $optionValue) {
+            $options2->setOrCreateOption($optionId, $optionValue);
+        }
+        $options2->check();
+        $options = $options2->getOptions();
 
-/*
-    public static $defaultOptions = [
-        'header-switches' => [
-            'cache-control' => false,
-            'expires' => false,
-            'vary-accept' => false,
-            'content-type' => true,
-            'last-modified' => true,
-            'content-length' => true,
-        ],
-        'cache-control-header' => 'public, max-age=31536000',
-    ];*/
+        // headers option
+        // --------------
+
+        $headerOptions = new Options();
+        $headerOptions->addOptions(
+            new BooleanOption('cache-control', false),
+            new BooleanOption('content-length', true),
+            new BooleanOption('content-type', true),
+            new BooleanOption('expires', false),
+            new BooleanOption('last-modified', true),
+            new BooleanOption('vary-accept', false)
+        );
+        foreach ($options['headers'] as $optionId => $optionValue) {
+            $headerOptions->setOrCreateOption($optionId, $optionValue);
+        }
+        $options['headers'] = $headerOptions->getOptions();
+        return $options;
+    }
 
     /**
      * Serve existing file.
@@ -64,25 +83,25 @@ class ServeFile
             throw new ServeFailedException('Could not read file');
         }
 
-        $options = array_merge(self::$defaultOptions, $options);
+        $options = self::processOptions($options);
 
-        if ($options['set-last-modified-header']) {
+        if ($options['headers']['last-modified']) {
             Header::setHeader("Last-Modified: " . gmdate("D, d M Y H:i:s", @filemtime($filename)) ." GMT");
         }
 
-        if ($options['set-content-type-header']) {
+        if ($options['headers']['content-type']) {
             Header::setHeader('Content-Type: ' . $contentType);
         }
 
-        if ($options['add-vary-accept-header']) {
+        if ($options['headers']['vary-accept']) {
             Header::addHeader('Vary: Accept');
         }
 
         if (!empty($options['cache-control-header'])) {
-            if ($options['set-cache-control-header']) {
+            if ($options['headers']['cache-control']) {
                 Header::setHeader('Cache-Control: ' . $options['cache-control-header']);
             }
-            if ($options['set-expires-header']) {
+            if ($options['headers']['expires']) {
                 // Add exprires header too (#126)
                 // Check string for something like this: max-age:86400
                 if (preg_match('#max-age\\s*=\\s*(\\d*)#', $options['cache-control-header'], $matches)) {
@@ -92,7 +111,7 @@ class ServeFile
             }
         }
 
-        if ($options['set-content-length-header']) {
+        if ($options['headers']['content-length']) {
             Header::setHeader('Content-Length: ' . filesize($filename));
         }
 

@@ -1,6 +1,8 @@
 <?php
 namespace WebPConvert\Serve;
 
+use WebPConvert\Options\Options;
+use WebPConvert\Options\StringOption;
 use WebPConvert\Serve\Header;
 use WebPConvert\Serve\Report;
 use WebPConvert\Serve\ServeConvertedWeb;
@@ -17,11 +19,26 @@ use WebPConvert\Exceptions\WebPConvertException;
 class ServeConvertedWebPWithErrorHandling
 {
 
-    /** @var array  Array of default options */
-    public static $defaultOptions = [
-        'fail' => 'original',
-        'fail-when-fail-fails' => 'throw',
-    ];
+    /**
+     * Process options.
+     *
+     * @throws \WebPConvert\Options\Exceptions\InvalidOptionTypeException   If the type of an option is invalid
+     * @throws \WebPConvert\Options\Exceptions\InvalidOptionValueException  If the value of an option is invalid
+     * @param array $options
+     */
+    private static function processOptions($options)
+    {
+        $options2 = new Options();
+        $options2->addOptions(
+            new StringOption('fail', 'original', ['original', '404', 'throw', 'report']),
+            new StringOption('fail-when-fail-fails', 'throw', ['original', '404', 'throw', 'report'])
+        );
+        foreach ($options as $optionId => $optionValue) {
+            $options2->setOrCreateOption($optionId, $optionValue);
+        }
+        $options2->check();
+        return $options2->getOptions();
+    }
 
     /**
      *  Add headers for preventing caching.
@@ -116,7 +133,7 @@ class ServeConvertedWebPWithErrorHandling
         $logger = null,
         $serveClass = '\\WebPConvert\\Serve\\ServeConvertedWebP'
     ) {
-        $options = array_merge(self::$defaultOptions, $options);
+        $options = self::processOptions($options);
 
         try {
             //ServeConvertedWebP::serve($source, $destination, $options, $logger);

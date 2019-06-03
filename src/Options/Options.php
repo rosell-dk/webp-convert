@@ -53,6 +53,11 @@ class Options
      */
     public function setOption($id, $value)
     {
+        if (!isset($this->options[$id])) {
+            throw new OptionNotFoundException(
+                'Could not set option. There is no option called "' . $id . '" in the collection.'
+            );
+        }
         $option = $this->options[$id];
         $option->setValue($value);
     }

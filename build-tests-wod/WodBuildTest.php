@@ -44,7 +44,7 @@ class WodBuildTest extends TestCase
         ob_start();
         WebPConvert::serveConverted(
             $source,
-            $source,
+            $source . '.webp',
             [
                 //'reconvert' => true,
                 /* 'convert' => [

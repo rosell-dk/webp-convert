@@ -53,7 +53,9 @@ class ServeFileTest extends TestCase
         $this->assertTrue(file_exists($filename));
 
         $options = [
-            'add-vary-accept-header' => true,
+            'headers' => [
+                'vary-accept' => true
+            ]
         ];
 
         ob_start();
@@ -75,11 +77,14 @@ class ServeFileTest extends TestCase
         $this->assertTrue(file_exists($filename));
 
         $options = [
-            'add-vary-accept-header' => false,
-            'set-content-type-header' => false,
-            'set-last-modified-header' => false,
-            'set-cache-control-header' => false,
-            'set-content-length-header' => false,
+            'headers' => [
+                'cache-control' => false,
+                'content-length' => false,
+                'content-type' => false,
+                'expires' => false,
+                'last-modified' => false,
+                'vary-accept' => false
+            ],
             'cache-control-header' => 'private, max-age=100',
         ];
 
@@ -116,11 +121,15 @@ class ServeFileTest extends TestCase
         MockedHeader::reset();
         $filename = __DIR__ . '/../images/plaintext-with-jpg-extension.jpg';
         $this->assertTrue(file_exists($filename));
+
         $options = [
-            'set-cache-control-header' => true,
-            'set-expires-header' => true,
+            'headers' => [
+                'cache-control' => true,
+                'expires' => true,
+            ],
             'cache-control-header' => 'private, max-age=100',
         ];
+
         ob_start();
         ServeFile::serve($filename, 'image/webp', $options);
         $result = ob_get_clean();
@@ -134,7 +143,9 @@ class ServeFileTest extends TestCase
         $filename = __DIR__ . '/../images/plaintext-with-jpg-extension.jpg';
         $this->assertTrue(file_exists($filename));
         $options = [
-            'set-cache-control-header' => true,
+            'headers' => [
+                'cache-control' => true,
+            ],
             'cache-control-header' => 'private',
         ];
         ob_start();

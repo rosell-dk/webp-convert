@@ -59,11 +59,21 @@ $source = __DIR__ . '/logo.jpg';
 $destination = $source . '.webp';
 
 WebPConvert::serveConverted($source, $destination, [
-    'fail' => 'original',     // If failure, serve the original image (source).
-    //'fail' => '404',        // If failure, respond with 404. Other options include 'throw' and 'report'
+    'fail' => 'original',     // If failure, serve the original image (source). Other options include 'throw', '404' and 'report'
     //'show-report' => true,  // Generates a report instead of serving an image
 
-    // Besides the specific options for serving, you can also use the options for convert()
+    'serve-image' => [
+        'headers' => [
+            'cache-control' => true,
+            'vary-accept' => true,
+            // other headers can be toggled...
+        ],
+        'cache-control-header' => 'max-age=2',
+    ],
+
+    'convert' => [
+        // all convert option can be entered here (ie "quality")
+    ],
 ]);
 ```
 

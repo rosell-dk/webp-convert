@@ -1,15 +1,20 @@
 <?php
 namespace WebPConvert\Serve;
 
+use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
+
+use WebPConvert\Convert\Exceptions\ConversionFailedException;
+use WebPConvert\Serve\Exceptions\ServeFailedException;
 use WebPConvert\Serve\Header;
 use WebPConvert\Serve\Report;
 use WebPConvert\Serve\ServeFile;
-
+use WebPConvert\Options\ArrayOption;
+use WebPConvert\Options\BooleanOption;
+use WebPConvert\Options\Options;
+use WebPConvert\Options\SensitiveArrayOption;
+use WebPConvert\Options\Exceptions\InvalidOptionTypeException;
+use WebPConvert\Options\Exceptions\InvalidOptionValueException;
 use WebPConvert\WebPConvert;
-use WebPConvert\Serve\Exceptions\ServeFailedException;
-use WebPConvert\Convert\Exceptions\ConversionFailedException;
-
-use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 
 /**
  * Serve a converted webp image.
@@ -29,25 +34,41 @@ use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 class ServeConvertedWebP
 {
 
-    /** @var array  Array of default options */
-    public static $defaultOptions = [
-        'reconvert' => false,
-        'serve-original' => false,
-        'show-report' => false,
-        'convert' => []
-    ];
+    /**
+     * Process options.
+     *
+     * @throws \WebPConvert\Options\Exceptions\InvalidOptionTypeException   If the type of an option is invalid
+     * @throws \WebPConvert\Options\Exceptions\InvalidOptionValueException  If the value of an option is invalid
+     * @param array $options
+     */
+    private static function processOptions($options)
+    {
+        $options2 = new Options();
+        $options2->addOptions(
+            new BooleanOption('reconvert', false),
+            new BooleanOption('serve-original', false),
+            new BooleanOption('show-report', false),
+            new ArrayOption('serve-image', []),
+            new SensitiveArrayOption('convert', []),
+        );
+        foreach ($options as $optionId => $optionValue) {
+            $options2->setOrCreateOption($optionId, $optionValue);
+        }
+        $options2->check();
+        return $options2->getOptions();
+    }
 
     /**
      * Serve original file (source).
      *
-     * @param   string  $source              path to source file
-     * @param   array   $options (optional)  options for serving
+     * @param   string  $source                        path to source file
+     * @param   array   $serveImageOptions (optional)  options for serving an image
      *                  Supported options:
      *                  - All options supported by ServeFile::serve()
      * @throws  ServeFailedException  if source is not an image or mime type cannot be determined
      * @return  void
      */
-    public static function serveOriginal($source, $options = [])
+    public static function serveOriginal($source, $serveImageOptions = [])
     {
         $contentType = ImageMimeTypeGuesser::lenientGuess($source);
         if (is_null($contentType)) {
@@ -55,24 +76,23 @@ class ServeConvertedWebP
         } elseif ($contentType === false) {
             throw new ServeFailedException('Rejecting to serve original (it is not an image)');
         } else {
-            ServeFile::serve($source, $contentType, $options);
+            ServeFile::serve($source, $contentType, $serveImageOptions);
         }
     }
 
     /**
      * Serve destination file.
      *
-     * @param   string  $destination         path to destination file
-     * @param   array   $options (optional)  options for serving (such as which headers to add)
+     * @param   string  $destination                   path to destination file
+     * @param   array   $serveImageOptions (optional)  options for serving (such as which headers to add)
      *       Supported options:
      *       - All options supported by ServeFile::serve()
      * @return  void
      */
-    public static function serveDestination($destination, $options = [])
+    public static function serveDestination($destination, $serveImageOptions = [])
     {
-        ServeFile::serve($destination, 'image/webp', $options);
+        ServeFile::serve($destination, 'image/webp', $serveImageOptions);
     }
-
 
     /**
      * Serve converted webp.
@@ -109,7 +129,10 @@ class ServeConvertedWebP
             throw new ServeFailedException('Source file was not found');
         }
 
-        $options = array_merge(self::$defaultOptions, $options);
+        $options = self::processOptions($options);
+//print_r($options); exit;
+
+        //$options = array_merge(self::$defaultOptions, $options);
 
         // Step 1: Is there a file at the destination? If not, trigger conversion
         // However 1: if "show-report" option is set, serve the report instead
@@ -143,7 +166,7 @@ class ServeConvertedWebP
         // However, first check if 'serve-original' is set
         if ($options['serve-original']) {
             Header::addLogHeader('Serving original (told to)', $logger);
-            self::serveOriginal($source, $options);
+            self::serveOriginal($source, $options['serve-image']);
         }
 
         $filesizeDestination = @filesize($destination);
@@ -152,10 +175,10 @@ class ServeConvertedWebP
             ($filesizeDestination !== false) &&
             ($filesizeDestination > $filesizeSource)) {
                 Header::addLogHeader('Serving original (it is smaller)', $logger);
-                self::serveOriginal($source, $options);
+                self::serveOriginal($source, $options['serve-image']);
         }
 
         Header::addLogHeader('Serving converted file', $logger);
-        self::serveDestination($destination, $options);
+        self::serveDestination($destination, $options['serve-image']);
     }
 }
