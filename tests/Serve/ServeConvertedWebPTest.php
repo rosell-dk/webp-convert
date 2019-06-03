@@ -348,7 +348,7 @@ class ServeConvertedWebPTest extends TestCase
 
         $destination = $source . '.webp';
         @unlink($destination);
-        copy(self::$imageFolder . '/png-without-extension.webp', $destination);
+        copy(self::$imageFolder . '/pre-converted/test.webp', $destination);
 
         // set modification date earlier than source
         touch($destination, filemtime($source) - 1000);
