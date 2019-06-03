@@ -46,6 +46,15 @@ class WodBuildTest extends TestCase
             $source,
             $source . '.webp',
             [
+                'convert' => [
+                    'converters' => [
+                        'gd',
+                        'imagickbinary',
+                        'imagick',
+                        '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
+                        // vips?
+                    ],
+                ]
                 //'reconvert' => true,
                 /* 'convert' => [
                     'converters' => ['imagick'],

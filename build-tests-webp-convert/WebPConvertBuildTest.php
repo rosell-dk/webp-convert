@@ -33,7 +33,7 @@ class WebPConvertBuildTest extends TestCase
                     'imagick',
                     'gd',
                     'cwebp',
-                    'vips',
+                    //'vips',
                     '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'
                 ],
             ]
