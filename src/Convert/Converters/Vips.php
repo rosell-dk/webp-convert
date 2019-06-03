@@ -120,7 +120,10 @@ class Vips extends AbstractConverter
     private function createParamsForVipsWebPSave()
     {
         // webpsave options are described here:
-        // https://jcupitt.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave
+        // v 8.8.0:  https://libvips.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave
+        // v ?.?.?:  https://jcupitt.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave
+        // near_lossless option is described here: https://github.com/libvips/libvips/pull/430
+
         // Note that "method" is currently not supported (27 may 2019)
 
         $options = [
@@ -149,6 +152,8 @@ class Vips extends AbstractConverter
             if ($this->options['encoding'] == 'lossless') {
                 // We only let near_lossless have effect when encoding is set to lossless
                 // otherwise encoding=auto would not work as expected
+                // Available in https://github.com/libvips/libvips/pull/430, merged 1 may 2016
+                // seems it corresponds to release 8.4.2
                 $options['near_lossless'] = true;
 
                 // In Vips, the near-lossless value is controlled by Q.
@@ -175,12 +180,20 @@ class Vips extends AbstractConverter
     {
         $result = /** @scrutinizer ignore-call */ vips_call('webpsave', $im, $this->destination, $options);
 
+        //trigger_error('test-warning', E_USER_WARNING);
         if ($result === -1) {
             $message = /** @scrutinizer ignore-call */ vips_error_buffer();
 
-            // If the error
+            $nameOfPropertyNotFound = '';
             if (preg_match("#no property named .(.*).#", $message, $matches)) {
                 $nameOfPropertyNotFound = $matches[1];
+            } elseif (preg_match("#(.*)\\sunsupported$#", $message, $matches)) {
+                if (in_array($matches[1], ['lossless', 'alpha_q', 'near_lossless', 'smart_subsample'])) {
+                    $nameOfPropertyNotFound = $matches[1];
+                }
+            }
+
+            if ($nameOfPropertyNotFound != '') {
                 $this->logLn(
                     'Your version of vipslib does not support the "' . $nameOfPropertyNotFound . '" property. ' .
                     'The option is ignored.'
