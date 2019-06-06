@@ -18,7 +18,7 @@ class JpegQualityDetector
      * @param  string  $filename  A complete file path to file to be examined
      * @return int|null  Quality, or null if it was not possible to detect quality
      */
-    private static function detectQualityOfJpgUsingImagickExtension($filename)
+    private static function detectQualityOfJpgUsingImagick($filename)
     {
         if (extension_loaded('imagick') && class_exists('\\Imagick')) {
             try {
@@ -43,7 +43,7 @@ class JpegQualityDetector
      * @param  string  $filename  A complete file path to file to be examined
      * @return int|null  Quality, or null if it was not possible to detect quality
      */
-    private static function detectQualityOfJpgUsingImagickBinary($filename)
+    private static function detectQualityOfJpgUsingImageMagick($filename)
     {
         if (function_exists('exec')) {
             // Try Imagick using exec, and routing stderr to stdout (the "2>$1" magic)
@@ -63,7 +63,7 @@ class JpegQualityDetector
      * @param  string  $filename  A complete file path to file to be examined
      * @return int|null  Quality, or null if it was not possible to detect quality
      */
-    private static function detectQualityOfJpgUsingGmagickBinary($filename)
+    private static function detectQualityOfJpgUsingGraphicsMagick($filename)
     {
         if (function_exists('exec')) {
             // Try GraphicsMagick
@@ -97,14 +97,14 @@ class JpegQualityDetector
         }
 
         // Try Imagick extension, if available
-        $quality = self::detectQualityOfJpgUsingImagickExtension($filename);
+        $quality = self::detectQualityOfJpgUsingImagick($filename);
 
         if (is_null($quality)) {
-            $quality = self::detectQualityOfJpgUsingImagickBinary($filename);
+            $quality = self::detectQualityOfJpgUsingImageMagick($filename);
         }
 
         if (is_null($quality)) {
-            $quality = self::detectQualityOfJpgUsingGmagickBinary($filename);
+            $quality = self::detectQualityOfJpgUsingGraphicsMagick($filename);
         }
 
         return $quality;
