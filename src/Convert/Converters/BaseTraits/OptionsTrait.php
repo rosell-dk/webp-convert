@@ -190,6 +190,7 @@ trait OptionsTrait
 
     public function logOptions()
     {
+        $this->logLn('');
         $this->logLn('Options:');
         $this->logLn('------------');
         $this->logLn(
