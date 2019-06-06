@@ -212,7 +212,9 @@ trait OptionsTrait
             if ($option->isValueExplicitlySet()) {
                 if (($option instanceof GhostOption) || in_array($id, $unsupported)) {
                     //$this->log(' (note: this option is ignored by this converter)');
-                    $ignored[] = $option;
+                    if (($id != '_skip_input_check') && ($id != '_suppress_success_message')) {
+                        $ignored[] = $option;                        
+                    }
                 } else {
                     $this->log('- ' . $id . ': ');
                     $this->log($option->getValueForPrint());
