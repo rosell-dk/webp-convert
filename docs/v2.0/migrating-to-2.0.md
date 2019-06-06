@@ -33,13 +33,13 @@ You might also be interested in the new options available in 2.0:
 - Added new *gmagickbinary* converter.
 - Added new *stack* converter (the stack functionality has been moved into a converter)
 - Added [`jpeg`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#jpeg) and [`png`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#png) options
-- Added [`alpha-quality`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#alpha-quality) option for *cwebp*, *vips*, *imagick*, *imagickbinary* and *gmagickbinary*.
-- Added [`auto-filter`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#autofilter) option for *cwebp*, *imagick*, *imagickbinary* and the new *vips* converter.
-- Added [`encoding`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#encoding) option (lossy | lossless | auto). lossless and auto is supported for *cwebp*, *imagick*, *imagickbinary*, *gmagickbinary* and the new *vips* converter.
-- Added [`near-lossless`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#near-lossless) option for *cwebp* and *imagickbinary*.
+- Added [`alpha-quality`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#alpha-quality) option for *cwebp*, *vips*, *imagick*, *imagemagick* and *gmagickbinary*.
+- Added [`auto-filter`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#autofilter) option for *cwebp*, *imagick*, *imagemagick* and the new *vips* converter.
+- Added [`encoding`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#encoding) option (lossy | lossless | auto). lossless and auto is supported for *cwebp*, *imagick*, *imagemagick*, *gmagickbinary* and the new *vips* converter.
+- Added [`near-lossless`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#near-lossless) option for *cwebp* and *imagemagick*.
 - Added [`preset`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#preset) option for *cwebp* and the new *vips* converter.
 - Added [`skip`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#skip) option (its general and works for all converters)
-- Besides the ones mentioned above, *imagickbinary* now also supports [`low-memory`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#low-memory), [`metadata`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#metadata) ("all" or "none") and [`method`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#method). *imagickbinary* has become very potent!
+- Besides the ones mentioned above, *imagemagick* now also supports [`low-memory`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#low-memory), [`metadata`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#metadata) ("all" or "none") and [`method`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#method). *imagemagick* has become very potent!
 
 ## Serving
 The classes for serving has also been refactored quite extensively, but again, if you have stuck to `WebPConvert::convertAndServe`, there is only a few things you need to know.

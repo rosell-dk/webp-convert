@@ -59,7 +59,7 @@ The default stack consists of the following converters:
 - cwebp
 - vips
 - wpc
-- imagickbinary
+- imagemagick
 - ewww
 - imagick
 - gmagick
@@ -156,7 +156,7 @@ $options = [
             ]
         ],
         'wpc',
-        'imagickbinary',
+        'imagemagick',
         '\\MyNameSpace\\WonderConverter'
     ],
 ];

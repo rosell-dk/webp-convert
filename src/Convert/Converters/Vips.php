@@ -177,7 +177,7 @@ class Vips extends AbstractConverter
      * @throws  ConversionFailedException  if conversion fails.
      */
     private function webpsave($im, $options)
-    {        
+    {
         $result = /** @scrutinizer ignore-call */ vips_call('webpsave', $im, $this->destination, $options);
 
         //trigger_error('test-warning', E_USER_WARNING);

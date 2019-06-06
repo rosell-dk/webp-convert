@@ -28,6 +28,9 @@ class ConverterFactory
             case 'imagickbinary':
                 $classNameShort = 'ImagickBinary';
                 break;
+            case 'imagemagick':
+                $classNameShort = 'ImageMagick';
+                break;
             case 'gmagickbinary':
                 $classNameShort = 'GmagickBinary';
                 break;
