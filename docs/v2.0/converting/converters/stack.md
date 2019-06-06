@@ -58,12 +58,12 @@ This option is explained further down this document.
 The default stack consists of the following converters:
 - cwebp
 - vips
-- wpc
-- imagemagick
-- ewww
 - imagick
 - gmagick
-- gmagickbinary
+- imagemagick
+- graphicsmagick
+- wpc
+- ewww
 - gd
 
 The order has carefully been chosen based on the capabilities of the converters. It is a rank, if you will.

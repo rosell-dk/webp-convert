@@ -11,6 +11,7 @@ Also, a few options has been renamed and a few option defaults has been changed.
 
 #### The options that has been renamed are the following:
 
+- Two converters have changed IDs and class names: The ids that are changed are: *imagickbinary* => *imagemagick* and *gmagickbinary* => *graphicsmagick*
 - In *ewww*, the `key` option has been renamed to `api-key` (or [`ewww-api-key`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#ewww-api-key))
 - In *wpc*, the `url` option has been renamed to `api-url` (or [`wpc-api-url`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#wpc-api-url))
 * In *cwebp*, the [`lossless`] option is now replaced with the new `encoding` option (which is not boolean, but "lossy", "lossless" or ["auto"](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-selecting-between-losslesslossy-encoding))
@@ -18,7 +19,7 @@ Also, a few options has been renamed and a few option defaults has been changed.
 - In *gd*, the `skip-pngs` option has been removed and replaced with the general `skip` option and prefixing. So `gd-skip` amounts to the same thing, but notice that Gd no longer skips per default.
 
 #### The option defaults that has been changed are the following:
-- the `converters` default now includes the cloud converters (*ewww* and *wpc*) and also two new converters, *vips* and *gmagickbinary*. So it is not necessary to add *ewww* or *wpc* explicitly. Also, when you set options with `converter-options` and point to a converter that isn't in the stack, in 1.3.9, this resulted in the converter automatically being added. This behavior has been removed.
+- the `converters` default now includes the cloud converters (*ewww* and *wpc*) and also two new converters, *vips* and *graphicsmagick*. So it is not necessary to add *ewww* or *wpc* explicitly. Also, when you set options with `converter-options` and point to a converter that isn't in the stack, in 1.3.9, this resulted in the converter automatically being added. This behavior has been removed.
 - *gd* no longer skips pngs per default. To make it skip pngs, set `gd-skip` to *true*
 - Default quality is now 75 for jpegs and 85 for pngs (it was 75 for both)
 - For *cwebp*, the `lossless` has been removed. Use the new `encoding` option instead.
@@ -30,12 +31,12 @@ You might also be interested in the new options available in 2.0:
 - Added a syntax for conveniently targeting specific converters. If you for example prefix the "quality" option with "gd-", it will override the "quality" option, but only for gd.
 - Certain options can now be set with environment variables too ("EWWW_API_KEY", "WPC_API_KEY" and "WPC_API_URL")
 - Added new *vips* converter.
-- Added new *gmagickbinary* converter.
+- Added new *graphicsmagick* converter.
 - Added new *stack* converter (the stack functionality has been moved into a converter)
 - Added [`jpeg`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#jpeg) and [`png`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#png) options
-- Added [`alpha-quality`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#alpha-quality) option for *cwebp*, *vips*, *imagick*, *imagemagick* and *gmagickbinary*.
+- Added [`alpha-quality`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#alpha-quality) option for *cwebp*, *vips*, *imagick*, *imagemagick* and *graphicsmagick*.
 - Added [`auto-filter`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#autofilter) option for *cwebp*, *imagick*, *imagemagick* and the new *vips* converter.
-- Added [`encoding`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#encoding) option (lossy | lossless | auto). lossless and auto is supported for *cwebp*, *imagick*, *imagemagick*, *gmagickbinary* and the new *vips* converter.
+- Added [`encoding`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#encoding) option (lossy | lossless | auto). lossless and auto is supported for *cwebp*, *imagick*, *imagemagick*, *graphicsmagick* and the new *vips* converter.
 - Added [`near-lossless`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#near-lossless) option for *cwebp* and *imagemagick*.
 - Added [`preset`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#preset) option for *cwebp* and the new *vips* converter.
 - Added [`skip`](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#skip) option (its general and works for all converters)

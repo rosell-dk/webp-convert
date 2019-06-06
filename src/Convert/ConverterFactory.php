@@ -34,6 +34,9 @@ class ConverterFactory
             case 'gmagickbinary':
                 $classNameShort = 'GmagickBinary';
                 break;
+            case 'graphicsmagick':
+                $classNameShort = 'GraphicsMagick';
+                break;
             default:
                 $classNameShort = ucfirst($converterId);
         }

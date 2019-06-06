@@ -8,24 +8,24 @@
 
 namespace WebPConvert\Tests\Convert\Converters;
 
-use WebPConvert\Convert\Converters\GmagickBinary;
+use WebPConvert\Convert\Converters\GraphicsMagick;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Loggers\BufferLogger;
 
 use PHPUnit\Framework\TestCase;
 
 /**
- * @coversDefaultClass WebPConvert\Convert\Converters\GmagickBinary
- * @covers WebPConvert\Convert\Converters\GmagickBinary
+ * @coversDefaultClass WebPConvert\Convert\Converters\GraphicsMagick
+ * @covers WebPConvert\Convert\Converters\GraphicsMagick
  */
-class GmagickBinaryTest extends TestCase
+class GraphicsMagickTest extends TestCase
 {
 
     public $imageDir = __DIR__ . '/../../images/';
 
     public function testConvert()
     {
-        ConverterTestHelper::runAllConvertTests($this, 'GmagickBinary');
+        ConverterTestHelper::runAllConvertTests($this, 'GraphicsMagick');
     }
 
     private static function tryThis($test, $source, $options)
@@ -33,7 +33,7 @@ class GmagickBinaryTest extends TestCase
         $bufferLogger = new BufferLogger();
 
         try {
-            GmagickBinary::convert($source, $source . '.webp', $options, $bufferLogger);
+            GraphicsMagick::convert($source, $source . '.webp', $options, $bufferLogger);
 
             $test->addToAssertionCount(1);
         } catch (ConversionFailedException $e) {

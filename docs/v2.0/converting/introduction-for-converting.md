@@ -56,7 +56,7 @@ Stack::convert($source, $destination, $options = [
 
     // PS: only set converters if you have strong reasons to do so
     'converters' => [
-        'cwebp', 'vips', 'imagick', 'gmagick', 'imagemagick', 'gmagickbinary', 'wpc', 'ewww', 'gd'
+        'cwebp', 'vips', 'imagick', 'gmagick', 'imagemagick', 'graphicsmagick', 'wpc', 'ewww', 'gd'
     ],
 
     // Any available options can be set here, they dribble down to all converters.

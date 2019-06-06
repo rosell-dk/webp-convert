@@ -8,7 +8,7 @@ Note that as the *stack* and *wpc* converters delegates the options to their con
 ```
 Type:         integer (0-100)
 Default:      85
-Supported by: cwebp, vips, imagick, gmagick, imagemagick and gmagickbinary
+Supported by: cwebp, vips, imagick, gmagick, imagemagick and graphicsmagick
 ```
 Quality of alpha channel. Only relevant for lossy encoding and only relevant for images with alpha channel.<br><br>
 
@@ -32,7 +32,7 @@ This allows you to set any parameter available for cwebp in the same way as you 
 ```
 Type:          integer (0-100)
 Default:       75 for jpegs and 85 for pngs
-Supported by:  all (cwebp, ewww, gd, gmagick, gmagickbinary, imagick, imagemagick, vips)
+Supported by:  all (cwebp, ewww, gd, gmagick, graphicsmagick, imagick, imagemagick, vips)
 ```
 Read about this option in the ["auto quality" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality).<br><br>
 
@@ -40,7 +40,7 @@ Read about this option in the ["auto quality" section in the introduction](https
 ```
 Type:          string  ("lossy" | "lossless" | "auto")
 Default:       "auto"
-Supported by:  cwebp, vips, imagick, gmagick, imagemagick and gmagickbinary  (gd always uses lossy encoding, ewww uses lossless for pngs and lossy for jpegs)
+Supported by:  cwebp, vips, imagick, gmagick, imagemagick and graphicsmagick  (gd always uses lossy encoding, ewww uses lossless for pngs and lossy for jpegs)
 ```
 Read about this option in the ["lossy/lossless" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-selecting-between-losslesslossy-encoding).<br><br>
 
@@ -75,7 +75,7 @@ Enabling this simply puts some more in the log - namely the arguments that was s
 ```
 Type:          boolean
 Default:       false
-Supported by:  cwebp, imagick, imagemagick and gmagickbinary
+Supported by:  cwebp, imagick, imagemagick and graphicsmagick
 ```
 Reduce memory usage of lossy encoding at the cost of ~30% longer encoding time and marginally larger output size. Read more in [the docs](https://developers.google.com/speed/webp/docs/cwebp).<br><br>
 
@@ -83,7 +83,7 @@ Reduce memory usage of lossy encoding at the cost of ~30% longer encoding time a
 ```
 Type:          integer (0-100)
 Default:       85
-Supported by:  all (cwebp, ewww, gd, gmagick, gmagickbinary, imagick, imagemagick, vips)
+Supported by:  all (cwebp, ewww, gd, gmagick, graphicsmagick, imagick, imagemagick, vips)
 ```
 Read about this option in the ["auto quality" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality).<br><br>
 
@@ -99,7 +99,7 @@ Only *cwebp* supports all values. *gd* will always remove all metadata. The rest
 ```
 Type:          integer (0-6)
 Default:       6
-Supported by:  cwebp, imagick, gmagick, imagemagick and gmagickbinary
+Supported by:  cwebp, imagick, gmagick, imagemagick and graphicsmagick
 ```
 This parameter controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. 0 is fastest. 6 results in best quality.<br><br>
 
@@ -132,7 +132,7 @@ Using a preset will set many of the other options to suit a particular type of s
 ```
 Type:          integer (0-100) | "auto"
 Default:       "auto" for jpegs and 85 for pngs
-Supported by:  all (cwebp, ewww, gd, gmagick, gmagickbinary, imagick, imagemagick, vips)
+Supported by:  all (cwebp, ewww, gd, gmagick, graphicsmagick, imagick, imagemagick, vips)
 ```
 Quality for lossy encoding. Read about the "auto" option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality).<br><br>
 
@@ -177,7 +177,7 @@ $options = [
 ### `stack-converters`
 ```
 Type:         array
-Default:      ['cwebp', 'vips', 'imagick', 'gmagick', 'imagemagick', 'gmagickbinary', 'wpc', 'ewww', 'gd']
+Default:      ['cwebp', 'vips', 'imagick', 'gmagick', 'imagemagick', 'graphicsmagick', 'wpc', 'ewww', 'gd']
 Supported by: stack
 ```
 
@@ -243,7 +243,7 @@ Shuffle the converters in the stack. This can for example be used to balance loa
 ```
 Type:          boolean
 Default:       false
-Supported by:  cwebp, gmagickbinary, imagemagick
+Supported by:  cwebp, graphicsmagick, imagemagick
 ```
 This option only applies to converters which are using exec() to execute a binary directly on the host. If *use-nice* is set, it will be examined if the [`nice`]( https://en.wikipedia.org/wiki/Nice_(Unix)) command is available on the host. If it is, the binary is executed using *nice*. This assigns low priority to the process and will save system resources - but result in slower conversion.<br><br>
 
