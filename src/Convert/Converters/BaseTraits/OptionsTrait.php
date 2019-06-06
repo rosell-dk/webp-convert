@@ -197,8 +197,8 @@ trait OptionsTrait
             'Note: it is the resulting options after merging down the "jpeg" and "png" options and any ' .
             'converter-prefixed options.'
         );
-        $this->logLn('- source: ' . $this->source, 'italic');
-        $this->logLn('- destination: ' . $this->destination, 'italic');
+        $this->logLn('- source: ' . $this->source);
+        $this->logLn('- destination: ' . $this->destination);
 
         $unsupported = $this->getUnsupportedDefaultOptions();
         //$this->logLn('Unsupported:' . print_r($this->getUnsupportedDefaultOptions(), true));
@@ -210,10 +210,10 @@ trait OptionsTrait
             }
             if ($option->isValueExplicitlySet()) {
                 if (($option instanceof GhostOption) || in_array($id, $unsupported)) {
-                    //$this->log(' (note: this option is ignored by this converter)', 'italic');
+                    //$this->log(' (note: this option is ignored by this converter)');
                     $ignored[] = $option;
                 } else {
-                    $this->log('- ' . $id . ': ', 'italic');
+                    $this->log('- ' . $id . ': ');
                     $this->log($option->getValueForPrint());
                     $this->logLn('');
                 }
@@ -231,7 +231,7 @@ trait OptionsTrait
                 'The following options have not been explicitly set, so using the following defaults:'
             );
             foreach ($implicit as $option) {
-                $this->log('- ' . $option->getId() . ': ', 'italic');
+                $this->log('- ' . $option->getId() . ': ');
                 $this->log($option->getValueForPrint());
                 $this->logLn('');
             }
@@ -242,7 +242,7 @@ trait OptionsTrait
                 'The following options were supplied but are ignored because they are not supported by this converter:'
             );
             foreach ($ignored as $option) {
-                $this->logLn('- ' . $option->getId(), 'italic');
+                $this->logLn('- ' . $option->getId());
             }
         }
         $this->logLn('------------');
