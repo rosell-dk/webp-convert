@@ -64,6 +64,31 @@ class BufferLogger extends BaseLogger
     }
 
     /**
+     * Get everything logged - as markdown.
+     *
+     * @return string  The log, formatted as MarkDown.
+     */
+    public function getMarkDown($newLineChar = "\n\r")
+    {
+        $md = '';
+        foreach ($this->entries as $entry) {
+            if ($entry == '') {
+                $md .= $newLineChar;
+            } else {
+                list($msg, $style) = $entry;
+                if ($style == 'bold') {
+                    $md .= '**' . $msg . '** ';
+                } elseif ($style == 'italic') {
+                    $md .= '*' . $msg . '* ';
+                } else {
+                    $md .= $msg;
+                }
+            }
+        }
+        return $md;
+    }
+
+    /**
      * Get everything logged - as plain text.
      *
      * @param  string  $newLineChar. The character used for new lines.
