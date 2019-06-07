@@ -345,6 +345,10 @@ abstract class AbstractConverter
      */
     public static function convert($source, $destination, $options = [], $logger = null)
     {
+        $logger->log('WebP Convert 2.0.beta', 'italic');
+        $logger->logLn(' ignited conversion.');
+        $logger->logLn('');
+        
         $c = self::createInstance($source, $destination, $options, $logger);
 
         $c->logLn(self::getConverterDisplayName() . ' converter ignited');
