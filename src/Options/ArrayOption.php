@@ -19,4 +19,13 @@ class ArrayOption extends Option
     {
         $this->checkType('array');
     }
+
+    public function getValueForPrint()
+    {
+        if (count($this->getValue()) == 0) {
+            return '(empty array)';
+        } else {
+            return parent::getValueForPrint();
+        }
+    }
 }
