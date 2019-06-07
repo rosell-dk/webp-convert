@@ -1,7 +1,5 @@
 <?php
 
-// TODO: Quality option
-
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\ConverterFactory;
@@ -12,6 +10,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Options\BooleanOption;
 use WebPConvert\Options\ArrayOption;
+use WebPConvert\Options\GhostOption;
 use WebPConvert\Options\SensitiveArrayOption;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
@@ -28,7 +27,22 @@ class Stack extends AbstractConverter
 
     protected function getUnsupportedDefaultOptions()
     {
-        return [];
+        return [
+            'alpha-quality',
+            'auto-filter',
+            'encoding',
+            'low-memory',
+            'metadata',
+            'method',
+            'near-lossless',
+            'preset',
+            'size-in-percentage',
+            'use-nice',
+            'skip',
+            'default-quality',
+            'quality',
+            'max-quality',
+        ];
     }
 
     protected function createOptions()
@@ -116,7 +130,15 @@ class Stack extends AbstractConverter
 
         //$this->logLn(print_r($converters));
         //$options['converters'] = $converters;
-        $defaultConverterOptions = $options;
+        //$defaultConverterOptions = $options;
+        $defaultConverterOptions = [];
+
+        foreach ($this->options2->getOptionsMap() as $id => $option) {
+            if ($option->isValueExplicitlySet() && ! ($option instanceof GhostOption)) {
+                //$this->logLn('hi' . $id);
+                $defaultConverterOptions[$id] = $option->getValue();
+            }
+        }
 
         //unset($defaultConverterOptions['converters']);
         //unset($defaultConverterOptions['converter-options']);

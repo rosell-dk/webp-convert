@@ -482,6 +482,10 @@ abstract class AbstractConverter
      */
     public static function convert($source, $destination, $options = [], $logger = null)
     {
+        $logger->log('WebP Convert 2.0.beta', 'italic');
+        $logger->logLn(' ignited conversion.');
+        $logger->logLn('');
+        
         $c = self::createInstance($source, $destination, $options, $logger);
 
         $c->logLn(self::getConverterDisplayName() . ' converter ignited');
@@ -1518,6 +1522,7 @@ trait LoggerTrait
 
 namespace WebPConvert\Convert\Converters\BaseTraits;
 
+use WebPConvert\Convert\Converters\Stack;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Options\Exceptions\InvalidOptionValueException;
 use WebPConvert\Options\Exceptions\InvalidOptionTypeException;
@@ -1757,11 +1762,23 @@ trait OptionsTrait
         }
         if (count($ignored) > 0) {
             $this->logLn('');
-            $this->logLn(
-                'The following options were supplied but are ignored because they are not supported by this converter:'
-            );
-            foreach ($ignored as $option) {
-                $this->logLn('- ' . $option->getId());
+            if ($this instanceof Stack) {
+                $this->logLn(
+                    'The following options were supplied and are passed on to the converters in the stack:'
+                );
+                foreach ($ignored as $option) {
+                    $this->log('- ' . $option->getId() . ': ');
+                    $this->log($option->getValueForPrint());
+                    $this->logLn('');
+                }
+            } else {
+                $this->logLn(
+                    'The following options were supplied but are ignored because they are not supported by this ' .
+                        'converter:'
+                );
+                foreach ($ignored as $option) {
+                    $this->logLn('- ' . $option->getId());
+                }
             }
         }
         $this->logLn('------------');
@@ -4236,8 +4253,6 @@ class ImagickBinary extends AbstractConverter
 
 ?><?php
 
-// TODO: Quality option
-
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\ConverterFactory;
@@ -4248,6 +4263,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Options\BooleanOption;
 use WebPConvert\Options\ArrayOption;
+use WebPConvert\Options\GhostOption;
 use WebPConvert\Options\SensitiveArrayOption;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
@@ -4264,7 +4280,22 @@ class Stack extends AbstractConverter
 
     protected function getUnsupportedDefaultOptions()
     {
-        return [];
+        return [
+            'alpha-quality',
+            'auto-filter',
+            'encoding',
+            'low-memory',
+            'metadata',
+            'method',
+            'near-lossless',
+            'preset',
+            'size-in-percentage',
+            'use-nice',
+            'skip',
+            'default-quality',
+            'quality',
+            'max-quality',
+        ];
     }
 
     protected function createOptions()
@@ -4352,7 +4383,15 @@ class Stack extends AbstractConverter
 
         //$this->logLn(print_r($converters));
         //$options['converters'] = $converters;
-        $defaultConverterOptions = $options;
+        //$defaultConverterOptions = $options;
+        $defaultConverterOptions = [];
+
+        foreach ($this->options2->getOptionsMap() as $id => $option) {
+            if ($option->isValueExplicitlySet() && ! ($option instanceof GhostOption)) {
+                //$this->logLn('hi' . $id);
+                $defaultConverterOptions[$id] = $option->getValue();
+            }
+        }
 
         //unset($defaultConverterOptions['converters']);
         //unset($defaultConverterOptions['converter-options']);

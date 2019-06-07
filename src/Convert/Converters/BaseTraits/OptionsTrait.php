@@ -2,6 +2,7 @@
 
 namespace WebPConvert\Convert\Converters\BaseTraits;
 
+use WebPConvert\Convert\Converters\Stack;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Options\Exceptions\InvalidOptionValueException;
 use WebPConvert\Options\Exceptions\InvalidOptionTypeException;
@@ -241,11 +242,23 @@ trait OptionsTrait
         }
         if (count($ignored) > 0) {
             $this->logLn('');
-            $this->logLn(
-                'The following options were supplied but are ignored because they are not supported by this converter:'
-            );
-            foreach ($ignored as $option) {
-                $this->logLn('- ' . $option->getId());
+            if ($this instanceof Stack) {
+                $this->logLn(
+                    'The following options were supplied and are passed on to the converters in the stack:'
+                );
+                foreach ($ignored as $option) {
+                    $this->log('- ' . $option->getId() . ': ');
+                    $this->log($option->getValueForPrint());
+                    $this->logLn('');
+                }
+            } else {
+                $this->logLn(
+                    'The following options were supplied but are ignored because they are not supported by this ' .
+                        'converter:'
+                );
+                foreach ($ignored as $option) {
+                    $this->logLn('- ' . $option->getId());
+                }
             }
         }
         $this->logLn('------------');
