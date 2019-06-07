@@ -49,7 +49,7 @@ class QualityOption extends Option
 
     public function getValueForPrint()
     {
-        if (gettype($this->getValue() == 'string')) {
+        if (gettype($this->getValue()) == 'string') {
             return '"' . $this->getValue() . '"';
         }
         return $this->getValue();
