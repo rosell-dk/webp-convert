@@ -1007,7 +1007,7 @@ class QualityOption extends Option
 
     public function getValueForPrint()
     {
-        if (gettype($this->getValue() == 'string')) {
+        if (gettype($this->getValue()) == 'string') {
             return '"' . $this->getValue() . '"';
         }
         return $this->getValue();
@@ -1629,6 +1629,7 @@ trait OptionsTrait
 
     public function logOptions()
     {
+        $this->logLn('');
         $this->logLn('Options:');
         $this->logLn('------------');
         $this->logLn(
@@ -1650,7 +1651,9 @@ trait OptionsTrait
             if ($option->isValueExplicitlySet()) {
                 if (($option instanceof GhostOption) || in_array($id, $unsupported)) {
                     //$this->log(' (note: this option is ignored by this converter)');
-                    $ignored[] = $option;
+                    if (($id != '_skip_input_check') && ($id != '_suppress_success_message')) {
+                        $ignored[] = $option;                        
+                    }
                 } else {
                     $this->log('- ' . $id . ': ');
                     $this->log($option->getValueForPrint());

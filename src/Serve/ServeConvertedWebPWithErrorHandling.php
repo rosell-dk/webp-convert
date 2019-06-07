@@ -121,7 +121,8 @@ class ServeConvertedWebPWithErrorHandling
      *       - All options supported by WebPConvert::convert()
      *       - All options supported by ServeFile::serve()
      *       - All options supported by DecideWhatToServe::decide)
-     * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
+     * @param  \WebPConvert\Loggers\BaseLogger $serveLogger (optional)
+     * @param  \WebPConvert\Loggers\BaseLogger $convertLogger (optional)
      * @param   string  $serveClass     (optional) Full class name to a class that has a serve() method and a
      *                                  serveOriginal() method
      * @return  void
@@ -130,17 +131,18 @@ class ServeConvertedWebPWithErrorHandling
         $source,
         $destination,
         $options = [],
-        $logger = null,
+        $serveLogger = null,
+        $convertLogger = null,
         $serveClass = '\\WebPConvert\\Serve\\ServeConvertedWebP'
     ) {
         $options = self::processOptions($options);
 
         try {
-            //ServeConvertedWebP::serve($source, $destination, $options, $logger);
-            call_user_func($serveClass . '::serve', $source, $destination, $options, $logger);
+            //ServeConvertedWebP::serve($source, $destination, $options, $serveLogger);
+            call_user_func($serveClass . '::serve', $source, $destination, $options, $serveLogger, $convertLogger);
         } catch (\Exception $e) {
             if ($e instanceof \WebPConvert\Exceptions\WebPConvertException) {
-                Header::addLogHeader($e->getShortMessage(), $logger);
+                Header::addLogHeader($e->getShortMessage(), $serveLogger);
             }
 
             self::performFailAction(
