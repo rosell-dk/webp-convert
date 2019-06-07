@@ -646,16 +646,22 @@ class WebPConvert
      * @param   string  $destination         path to destination
      * @param   array   $options (optional)  options for serving/converting. The options are documented in the
      *                                       ServeConvertedWebPWithErrorHandling::serve() method
-     * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
+     * @param  \WebPConvert\Loggers\BaseLogger $serveLogger (optional)
+     * @param  \WebPConvert\Loggers\BaseLogger $convertLogger (optional)
      */
-    public static function serveConverted($source, $destination, $options = [], $logger = null)
-    {
+    public static function serveConverted(
+        $source,
+        $destination,
+        $options = [],
+        $serveLogger = null,
+        $convertLogger = null
+    ) {
         //return ServeExistingOrHandOver::serveConverted($source, $destination, $options);
         //if (isset($options['handle-errors']) && $options['handle-errors'] === true) {
         if (isset($options['fail']) && ($options['fail'] != 'throw')) {
-            ServeConvertedWebPWithErrorHandling::serve($source, $destination, $options, $logger);
+            ServeConvertedWebPWithErrorHandling::serve($source, $destination, $options, $serveLogger, $convertLogger);
         } else {
-            ServeConvertedWebP::serve($source, $destination, $options, $logger);
+            ServeConvertedWebP::serve($source, $destination, $options, $serveLogger, $convertLogger);
         }
     }
 }
@@ -1723,7 +1729,7 @@ trait OptionsTrait
                 if (($option instanceof GhostOption) || in_array($id, $unsupported)) {
                     //$this->log(' (note: this option is ignored by this converter)');
                     if (($id != '_skip_input_check') && ($id != '_suppress_success_message')) {
-                        $ignored[] = $option;                        
+                        $ignored[] = $option;
                     }
                 } else {
                     $this->log('- ' . $id . ': ');
@@ -6006,12 +6012,13 @@ class ServeConvertedWebP
      *                                        above options is set)
      *       - All options supported by WebPConvert::convert()
      *       - All options supported by ServeFile::serve()
-     * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
+     * @param  \WebPConvert\Loggers\BaseLogger $serveLogger (optional)
+     * @param  \WebPConvert\Loggers\BaseLogger $convertLogger (optional)
      *
      * @throws  \WebPConvert\Exceptions\WebPConvertException  If something went wrong.
      * @return  void
      */
-    public static function serve($source, $destination, $options = [], $logger = null)
+    public static function serve($source, $destination, $options = [], $serveLogger = null, $convertLogger = null)
     {
 
         if (empty($source)) {
@@ -6040,17 +6047,17 @@ class ServeConvertedWebP
         // However 1: if "show-report" option is set, serve the report instead
         // However 2: "reconvert" option should also trigger conversion
         if ($options['show-report']) {
-            Header::addLogHeader('Showing report', $logger);
+            Header::addLogHeader('Showing report', $serveLogger);
             Report::convertAndReport($source, $destination, $options);
             return;
         }
 
         if (!@file_exists($destination)) {
-            Header::addLogHeader('Converting (there were no file at destination)', $logger);
-            WebPConvert::convert($source, $destination, $options['convert'], $logger);
+            Header::addLogHeader('Converting (there were no file at destination)', $serveLogger);
+            WebPConvert::convert($source, $destination, $options['convert'], $convertLogger);
         } elseif ($options['reconvert']) {
-            Header::addLogHeader('Converting (told to reconvert)', $logger);
-            WebPConvert::convert($source, $destination, $options['convert'], $logger);
+            Header::addLogHeader('Converting (told to reconvert)', $serveLogger);
+            WebPConvert::convert($source, $destination, $options['convert'], $convertLogger);
         } else {
             // Step 2: Is the destination older than the source?
             //         If yes, trigger conversion (deleting destination is implicit)
@@ -6059,15 +6066,15 @@ class ServeConvertedWebP
             if (($timestampSource !== false) &&
                 ($timestampDestination !== false) &&
                 ($timestampSource > $timestampDestination)) {
-                    Header::addLogHeader('Converting (destination was older than the source)', $logger);
-                    WebPConvert::convert($source, $destination, $options['convert'], $logger);
+                    Header::addLogHeader('Converting (destination was older than the source)', $serveLogger);
+                    WebPConvert::convert($source, $destination, $options['convert'], $convertLogger);
             }
         }
 
         // Step 3: Serve the smallest file (destination or source)
         // However, first check if 'serve-original' is set
         if ($options['serve-original']) {
-            Header::addLogHeader('Serving original (told to)', $logger);
+            Header::addLogHeader('Serving original (told to)', $serveLogger);
             self::serveOriginal($source, $options['serve-image']);
         }
 
@@ -6076,11 +6083,11 @@ class ServeConvertedWebP
         if (($filesizeSource !== false) &&
             ($filesizeDestination !== false) &&
             ($filesizeDestination > $filesizeSource)) {
-                Header::addLogHeader('Serving original (it is smaller)', $logger);
+                Header::addLogHeader('Serving original (it is smaller)', $serveLogger);
                 self::serveOriginal($source, $options['serve-image']);
         }
 
-        Header::addLogHeader('Serving converted file', $logger);
+        Header::addLogHeader('Serving converted file', $serveLogger);
         self::serveDestination($destination, $options['serve-image']);
     }
 }
@@ -6208,7 +6215,8 @@ class ServeConvertedWebPWithErrorHandling
      *       - All options supported by WebPConvert::convert()
      *       - All options supported by ServeFile::serve()
      *       - All options supported by DecideWhatToServe::decide)
-     * @param  \WebPConvert\Loggers\BaseLogger $logger (optional)
+     * @param  \WebPConvert\Loggers\BaseLogger $serveLogger (optional)
+     * @param  \WebPConvert\Loggers\BaseLogger $convertLogger (optional)
      * @param   string  $serveClass     (optional) Full class name to a class that has a serve() method and a
      *                                  serveOriginal() method
      * @return  void
@@ -6217,17 +6225,18 @@ class ServeConvertedWebPWithErrorHandling
         $source,
         $destination,
         $options = [],
-        $logger = null,
+        $serveLogger = null,
+        $convertLogger = null,
         $serveClass = '\\WebPConvert\\Serve\\ServeConvertedWebP'
     ) {
         $options = self::processOptions($options);
 
         try {
-            //ServeConvertedWebP::serve($source, $destination, $options, $logger);
-            call_user_func($serveClass . '::serve', $source, $destination, $options, $logger);
+            //ServeConvertedWebP::serve($source, $destination, $options, $serveLogger);
+            call_user_func($serveClass . '::serve', $source, $destination, $options, $serveLogger, $convertLogger);
         } catch (\Exception $e) {
             if ($e instanceof \WebPConvert\Exceptions\WebPConvertException) {
-                Header::addLogHeader($e->getShortMessage(), $logger);
+                Header::addLogHeader($e->getShortMessage(), $serveLogger);
             }
 
             self::performFailAction(
