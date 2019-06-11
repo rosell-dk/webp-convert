@@ -18,7 +18,7 @@ trait AutoQualityTrait
 {
 
     abstract public function getMimeTypeOfSource();
-    abstract public function logLn($msg, $style = '');
+    //abstract public function logLn($msg, $style = '');
 
     /** @var boolean  Whether the quality option has been processed or not */
     private $processed = false;
