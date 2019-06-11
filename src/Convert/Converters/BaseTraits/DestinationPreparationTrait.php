@@ -21,9 +21,9 @@ trait DestinationPreparationTrait
     /*
     The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
 
-    abstract public function logLn($msg, $style = '');
     */
     abstract public function getDestination();
+    abstract public function logLn($msg, $style = '');
 
     /**
      * Create writable folder in provided path (if it does not exist already)
