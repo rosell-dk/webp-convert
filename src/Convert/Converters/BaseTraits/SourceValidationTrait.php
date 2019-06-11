@@ -18,8 +18,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTyp
 trait SourceValidationTrait
 {
 
-    //abstract protected function getMimeTypeOfSource();
-    //abstract public function getSource();
+    abstract protected function getMimeTypeOfSource();
+    abstract public function getSource();
 
     /** @var array  Array of allowed mime types for source.  */
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];

@@ -30,14 +30,10 @@ use WebPConvert\Options\QualityOption;
 trait OptionsTrait
 {
 
-    /*
-    The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
-
     abstract protected function getMimeTypeOfSource();
     abstract protected static function getConverterId();
     abstract public function log($msg, $style = '');
     abstract public function logLn($msg, $style = '');
-    */
 
     /** @var array  Provided conversion options */
     public $providedOptions;

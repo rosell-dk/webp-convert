@@ -1304,12 +1304,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDes
 trait DestinationPreparationTrait
 {
 
-    /*
-    The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
-
     abstract public function getDestination();
     abstract public function logLn($msg, $style = '');
-    */
 
     /**
      * Create writable folder in provided path (if it does not exist already)
@@ -1494,14 +1490,10 @@ use WebPConvert\Options\QualityOption;
 trait OptionsTrait
 {
 
-    /*
-    The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
-
     abstract protected function getMimeTypeOfSource();
     abstract protected static function getConverterId();
     abstract public function log($msg, $style = '');
     abstract public function logLn($msg, $style = '');
-    */
 
     /** @var array  Provided conversion options */
     public $providedOptions;
@@ -1760,8 +1752,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTyp
 trait SourceValidationTrait
 {
 
-    //abstract protected function getMimeTypeOfSource();
-    //abstract public function getSource();
+    abstract protected function getMimeTypeOfSource();
+    abstract public function getSource();
 
     /** @var array  Array of allowed mime types for source.  */
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
@@ -1821,7 +1813,7 @@ namespace WebPConvert\Convert\Converters\BaseTraits;
  */
 trait WarningLoggerTrait
 {
-    //abstract protected function logLn($msg, $style = '');
+    abstract protected function logLn($msg, $style = '');
 
     /** @var string|array|null  Previous error handler (stored in order to be able pass warnings on) */
     private $previousErrorHandler;
