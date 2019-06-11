@@ -45,7 +45,7 @@ sudo: false
 matrix:
   fast_finish: true
   include:
-    - name: "Test suite 1"
+    - name: "Standard setup (PHP 7.1, Xenial)"
     # php: 5.6
       php: 7.1
     # php: 7.3
@@ -60,7 +60,7 @@ matrix:
       - VIPS_VERSION="8.6.3"
       #- VIPS_VERSION="8.7.4"
 
-    - name: "Test suite 2"
+    - name: "Old setup (PHP 5.6, Xenial)"
       php: 5.6
     # php: 7.1
     # php: 7.3

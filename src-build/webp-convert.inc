@@ -1580,9 +1580,9 @@ trait OptionsTrait
 
     abstract public function log($msg, $style = '');
     abstract public function logLn($msg, $style = '');
+    abstract protected static function getConverterId();
     */
     abstract protected function getMimeTypeOfSource();
-    abstract protected static function getConverterId();
 
     /** @var array  Provided conversion options */
     public $providedOptions;
