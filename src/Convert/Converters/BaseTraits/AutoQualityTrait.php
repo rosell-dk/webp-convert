@@ -93,11 +93,11 @@ trait AutoQualityTrait
 
         $q = $options['quality'];
         if ($q == 'auto') {
-            if (($this->getMimeTypeOfSource() == 'image/jpeg')) {
+            if (($this->/** @scrutinizer ignore-call */getMimeTypeOfSource() == 'image/jpeg')) {
                 $q = JpegQualityDetector::detectQualityOfJpg($source);
                 if (is_null($q)) {
                     $q = $options['default-quality'];
-                    $this->logLn(
+                    $this->/** @scrutinizer ignore-call */logLn(
                         'Quality of source could not be established (Imagick or GraphicsMagick is required)' .
                         ' - Using default instead (' . $options['default-quality'] . ').'
                     );
