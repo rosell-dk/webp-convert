@@ -14,7 +14,11 @@ namespace WebPConvert\Convert\Converters\BaseTraits;
  */
 trait WarningLoggerTrait
 {
-    //abstract protected function logLn($msg, $style = '');
+    /*
+    The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
+
+    abstract protected function logLn($msg, $style = '');
+    */
 
     /** @var string|array|null  Previous error handler (stored in order to be able pass warnings on) */
     private $previousErrorHandler;

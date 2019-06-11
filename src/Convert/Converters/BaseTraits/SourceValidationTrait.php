@@ -18,8 +18,12 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTyp
 trait SourceValidationTrait
 {
 
+    /*
+    The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
+
     abstract protected function getMimeTypeOfSource();
     abstract public function getSource();
+    */
 
     /** @var array  Array of allowed mime types for source.  */
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
