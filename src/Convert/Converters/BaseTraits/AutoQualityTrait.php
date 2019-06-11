@@ -17,10 +17,6 @@ use WebPConvert\Convert\Helpers\JpegQualityDetector;
 trait AutoQualityTrait
 {
 
-    /*
-    The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
-
-    */
     abstract public function logLn($msg, $style = '');
     abstract public function getMimeTypeOfSource();
 
