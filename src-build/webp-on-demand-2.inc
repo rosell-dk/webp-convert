@@ -1166,10 +1166,6 @@ use WebPConvert\Convert\Helpers\JpegQualityDetector;
 trait AutoQualityTrait
 {
 
-    /*
-    The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
-
-    */
     abstract public function logLn($msg, $style = '');
     abstract public function getMimeTypeOfSource();
 
@@ -1308,10 +1304,6 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDes
 trait DestinationPreparationTrait
 {
 
-    /*
-    The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
-
-    */
     abstract public function getDestination();
     abstract public function logLn($msg, $style = '');
 
@@ -1498,11 +1490,6 @@ use WebPConvert\Options\QualityOption;
 trait OptionsTrait
 {
 
-    /*
-    The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
-
-    abstract protected static function getConverterId();
-    */
     abstract public function log($msg, $style = '');
     abstract public function logLn($msg, $style = '');
     abstract protected function getMimeTypeOfSource();
@@ -1764,10 +1751,6 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTyp
 trait SourceValidationTrait
 {
 
-    /*
-    The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
-
-    */
     abstract protected function getMimeTypeOfSource();
     abstract public function getSource();
 
@@ -1829,10 +1812,6 @@ namespace WebPConvert\Convert\Converters\BaseTraits;
  */
 trait WarningLoggerTrait
 {
-    /*
-    The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
-
-    */
     abstract protected function logLn($msg, $style = '');
 
     /** @var string|array|null  Previous error handler (stored in order to be able pass warnings on) */
