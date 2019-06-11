@@ -1169,9 +1169,9 @@ trait AutoQualityTrait
     /*
     The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
 
-    abstract public function getMimeTypeOfSource();
     abstract public function logLn($msg, $style = '');
     */
+    abstract public function getMimeTypeOfSource();
 
     /** @var boolean  Whether the quality option has been processed or not */
     private $processed = false;
@@ -1311,9 +1311,9 @@ trait DestinationPreparationTrait
     /*
     The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
 
-    abstract public function getDestination();
     abstract public function logLn($msg, $style = '');
     */
+    abstract public function getDestination();
 
     /**
      * Create writable folder in provided path (if it does not exist already)
@@ -1501,11 +1501,11 @@ trait OptionsTrait
     /*
     The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
 
-    abstract protected function getMimeTypeOfSource();
-    abstract protected static function getConverterId();
     abstract public function log($msg, $style = '');
     abstract public function logLn($msg, $style = '');
     */
+    abstract protected function getMimeTypeOfSource();
+    abstract protected static function getConverterId();
 
     /** @var array  Provided conversion options */
     public $providedOptions;
@@ -1767,9 +1767,9 @@ trait SourceValidationTrait
     /*
     The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
 
-    abstract protected function getMimeTypeOfSource();
     abstract public function getSource();
     */
+    abstract protected function getMimeTypeOfSource();
 
     /** @var array  Array of allowed mime types for source.  */
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];

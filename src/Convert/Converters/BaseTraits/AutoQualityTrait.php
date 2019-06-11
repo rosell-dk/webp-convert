@@ -20,9 +20,9 @@ trait AutoQualityTrait
     /*
     The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
 
-    abstract public function getMimeTypeOfSource();
     abstract public function logLn($msg, $style = '');
     */
+    abstract public function getMimeTypeOfSource();
 
     /** @var boolean  Whether the quality option has been processed or not */
     private $processed = false;
