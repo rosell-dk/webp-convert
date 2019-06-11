@@ -164,11 +164,11 @@ use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 abstract class AbstractConverter
 {
     use AutoQualityTrait;
-    use LoggerTrait;
     use OptionsTrait;
     use WarningLoggerTrait;
     use DestinationPreparationTrait;
     use SourceValidationTrait;
+    use LoggerTrait;
 
     /**
      * The actual conversion is be done by a concrete converter extending this class.
@@ -1243,6 +1243,9 @@ use WebPConvert\Convert\Helpers\JpegQualityDetector;
 trait AutoQualityTrait
 {
 
+    abstract public function getMimeTypeOfSource();
+    abstract public function logLn($msg, $style = '');
+
     /** @var boolean  Whether the quality option has been processed or not */
     private $processed = false;
 
@@ -1252,8 +1255,6 @@ trait AutoQualityTrait
     /** @var integer  The calculated quality (set upon processing - on successful detection) */
     private $calculatedQuality;
 
-    //abstract public function getMimeTypeOfSource();
-    //abstract public function logLn($msg, $style = '');
 
     /**
      *  Determine if quality detection is required but failing.
@@ -1319,11 +1320,11 @@ trait AutoQualityTrait
 
         $q = $options['quality'];
         if ($q == 'auto') {
-            if (($this->getMimeTypeOfSource() == 'image/jpeg')) {
+            if (($this->/** @scrutinizer ignore-call */getMimeTypeOfSource() == 'image/jpeg')) {
                 $q = JpegQualityDetector::detectQualityOfJpg($source);
                 if (is_null($q)) {
                     $q = $options['default-quality'];
-                    $this->logLn(
+                    $this->/** @scrutinizer ignore-call */logLn(
                         'Quality of source could not be established (Imagick or GraphicsMagick is required)' .
                         ' - Using default instead (' . $options['default-quality'] . ').'
                     );
@@ -1380,8 +1381,12 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDes
 trait DestinationPreparationTrait
 {
 
-    //abstract public function getDestination();
-    //abstract public function logLn($msg, $style = '');
+    /*
+    The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
+
+    abstract public function getDestination();
+    abstract public function logLn($msg, $style = '');
+    */
 
     /**
      * Create writable folder in provided path (if it does not exist already)
@@ -1566,6 +1571,15 @@ use WebPConvert\Options\QualityOption;
 trait OptionsTrait
 {
 
+    /*
+    The following abstract declarations are commented out because they causes problems with PHP 5.6 (#182)
+
+    abstract protected function getMimeTypeOfSource();
+    abstract protected static function getConverterId();
+    abstract public function log($msg, $style = '');
+    abstract public function logLn($msg, $style = '');
+    */
+
     /** @var array  Provided conversion options */
     public $providedOptions;
 
@@ -1575,12 +1589,6 @@ trait OptionsTrait
     /** @var Options  */
     protected $options2;
 
-    /*
-    abstract protected function getMimeTypeOfSource();
-    abstract protected static function getConverterId();
-    abstract public function log($msg, $style = '');
-    abstract public function logLn($msg, $style = '');
-    */
 
     /**
      *  Create options.
