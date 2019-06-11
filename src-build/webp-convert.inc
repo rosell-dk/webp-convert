@@ -2173,16 +2173,14 @@ namespace WebPConvert\Convert\Converters\ConverterTraits;
 trait EncodingAutoTrait
 {
 
-    /*
-    abstract protected function logLn($msg, $style = '');
-    abstract protected function ln();
     abstract protected function doActualConvert();
     abstract public function getSource();
     abstract public function getDestination();
     abstract public function setDestination($destination);
     abstract public function getOptions();
     abstract protected function setOption($optionName, $optionValue);
-    */
+    abstract protected function logLn($msg, $style = '');
+    abstract protected function ln();
 
     public function supportsLossless()
     {
