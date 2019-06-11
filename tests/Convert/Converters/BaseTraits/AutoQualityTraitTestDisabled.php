@@ -7,7 +7,7 @@ use WebPConvert\Tests\Convert\TestConverters\SuccessGuaranteedConverter;
 
 use PHPUnit\Framework\TestCase;
 
-class AutoQualityTraitTest extends TestCase
+class AutoQualityTraitTestDisabled extends TestCase
 {
 
     private static $imgDir = __DIR__ . '/../../../images';
