@@ -1,9 +1,11 @@
 
 # Install imagick with webp support (if not already there) and update library paths
-
-
 # Got the script from here:
 # https://stackoverflow.com/questions/41138404/how-to-install-newer-imagemagick-with-webp-support-in-travis-ci-container
+
+if ! [[ $IMAGEMAGICK_VERSION ]]; then
+    export IMAGEMAGICK_VERSION="7.0.8-43"
+fi;
 
 convert -list delegate | grep 'webp =>' && {
     echo "Imagick is already compiled with webp. Nothing to do :)" &&
@@ -15,7 +17,6 @@ convert -list delegate | grep 'webp =>' && {
 convert -list delegate | grep 'webp =>' || {
     export CORES=$(nproc) &&
     export LIBWEBP_VERSION=1.0.2 &&
-    export IMAGEMAGICK_VERSION=7.0.8-43 &&
     echo "Using $CORES cores for compiling..." &&
     cd /tmp &&
     curl -O https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-$LIBWEBP_VERSION.tar.gz &&
