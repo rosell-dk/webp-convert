@@ -57,6 +57,7 @@ matrix:
       - INSTALLVIPS=1
       - VIPS_VERSION="8.6.3"
       #- VIPS_VERSION="8.7.4"
+      - INSTALLIMAGICK=1
 
     - name: "Old setup (PHP 5.6, Trusty)"
       php: 5.6
@@ -69,6 +70,7 @@ matrix:
       - TESTSRCBUILD=0
       - INSTALLVIPS=0
       - VIPS_VERSION="8.7.4"
+      - INSTALLIMAGEMAGICK=0        # ImageMagick installation currently fails on trusty, so we disable
   #allow_failures:
 
 before_install:
@@ -78,11 +80,8 @@ before_install:
   # Update PATH so that travis can find our imagemagick / gmagick
   - export PATH=$HOME/opt/bin:$PATH
 
-  # install imagick with webp support (if not already there) and update library paths
-  - bash install-imagick-with-webp.sh
-  - export LD_FLAGS=-L$HOME/opt/lib
-  - export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:$HOME/opt/lib
-  - export CPATH=$CPATH:$HOME/opt/include
+  # ImageMagick
+  - if [[ $INSTALLIMAGEMAGICK == 1 ]]; then bash install-imagemagick-with-webp.sh; fi
 
   # install imagick extension (if not already there)
   # hm, not working
