@@ -60,7 +60,6 @@ matrix:
       - INSTALLIMAGEMAGICK=0        # imagemagick.org is currently down... - so installation cannot download gzip
       #- IMAGEMAGICK_VERSION="7.0.8-43"
 
-  include:
     - name: "Standard setup (PHP 7.1, Xenial) - with coverage upload"
       php: 7.1
       #dist: trusty
