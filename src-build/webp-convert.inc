@@ -256,6 +256,16 @@ abstract class AbstractConverter
         $this->setLogger($logger);
         $this->setProvidedOptions($options);
 
+        if (!isset($this->options['_skip_input_check'])) {
+            $this->log('WebP Convert 2.0.beta', 'italic');
+            $this->logLn(' ignited.');
+            $this->logLn('- PHP version: ' . phpversion());
+            if (isset($_SERVER['SERVER_SOFTWARE'])) {
+                $this->logLn('- Server software: ' . $_SERVER['SERVER_SOFTWARE']);
+            }
+            $this->logLn('');
+        }
+
         $this->checkSourceExists();
         $this->checkSourceMimeType();
     }
@@ -331,6 +341,7 @@ abstract class AbstractConverter
      */
     public static function createInstance($source, $destination, $options = [], $logger = null)
     {
+
         return new static($source, $destination, $options, $logger);
     }
 
@@ -482,12 +493,6 @@ abstract class AbstractConverter
      */
     public static function convert($source, $destination, $options = [], $logger = null)
     {
-        if (!is_null($logger)) {
-            $logger->log('WebP Convert 2.0.beta', 'italic');
-            $logger->logLn(' ignited conversion.');
-            $logger->logLn('');
-        }
-        
         $c = self::createInstance($source, $destination, $options, $logger);
 
         $c->logLn(self::getConverterDisplayName() . ' converter ignited');
@@ -1247,8 +1252,8 @@ trait AutoQualityTrait
     /** @var integer  The calculated quality (set upon processing - on successful detection) */
     private $calculatedQuality;
 
-    abstract public function getMimeTypeOfSource();
-    abstract public function logLn($msg, $style = '');
+    //abstract public function getMimeTypeOfSource();
+    //abstract public function logLn($msg, $style = '');
 
     /**
      *  Determine if quality detection is required but failing.
@@ -1375,8 +1380,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDes
 trait DestinationPreparationTrait
 {
 
-    abstract public function getDestination();
-    abstract public function logLn($msg, $style = '');
+    //abstract public function getDestination();
+    //abstract public function logLn($msg, $style = '');
 
     /**
      * Create writable folder in provided path (if it does not exist already)
@@ -1570,10 +1575,12 @@ trait OptionsTrait
     /** @var Options  */
     protected $options2;
 
+    /*
     abstract protected function getMimeTypeOfSource();
     abstract protected static function getConverterId();
     abstract public function log($msg, $style = '');
     abstract public function logLn($msg, $style = '');
+    */
 
     /**
      *  Create options.
@@ -1822,8 +1829,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTyp
 trait SourceValidationTrait
 {
 
-    abstract protected function getMimeTypeOfSource();
-    abstract public function getSource();
+    //abstract protected function getMimeTypeOfSource();
+    //abstract public function getSource();
 
     /** @var array  Array of allowed mime types for source.  */
     public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
@@ -1883,7 +1890,7 @@ namespace WebPConvert\Convert\Converters\BaseTraits;
  */
 trait WarningLoggerTrait
 {
-    abstract protected function logLn($msg, $style = '');
+    //abstract protected function logLn($msg, $style = '');
 
     /** @var string|array|null  Previous error handler (stored in order to be able pass warnings on) */
     private $previousErrorHandler;
@@ -2146,6 +2153,7 @@ namespace WebPConvert\Convert\Converters\ConverterTraits;
 trait EncodingAutoTrait
 {
 
+    /*
     abstract protected function logLn($msg, $style = '');
     abstract protected function ln();
     abstract protected function doActualConvert();
@@ -2154,6 +2162,7 @@ trait EncodingAutoTrait
     abstract public function setDestination($destination);
     abstract public function getOptions();
     abstract protected function setOption($optionName, $optionValue);
+    */
 
     public function supportsLossless()
     {

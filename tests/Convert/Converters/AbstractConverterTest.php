@@ -14,7 +14,7 @@ class AbstractConverterTest extends TestCase
 
     private static $imgDir = __DIR__ . '/../../images';
 
-/*
+    /*
     temporarily disabling all tests to debug build error in travis, with php 5.6
     public function testConvert()
     {

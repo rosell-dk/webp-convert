@@ -119,6 +119,16 @@ abstract class AbstractConverter
         $this->setLogger($logger);
         $this->setProvidedOptions($options);
 
+        if (!isset($this->options['_skip_input_check'])) {
+            $this->log('WebP Convert 2.0.beta', 'italic');
+            $this->logLn(' ignited.');
+            $this->logLn('- PHP version: ' . phpversion());
+            if (isset($_SERVER['SERVER_SOFTWARE'])) {
+                $this->logLn('- Server software: ' . $_SERVER['SERVER_SOFTWARE']);
+            }
+            $this->logLn('');
+        }
+
         $this->checkSourceExists();
         $this->checkSourceMimeType();
     }
@@ -194,6 +204,7 @@ abstract class AbstractConverter
      */
     public static function createInstance($source, $destination, $options = [], $logger = null)
     {
+
         return new static($source, $destination, $options, $logger);
     }
 
@@ -345,12 +356,6 @@ abstract class AbstractConverter
      */
     public static function convert($source, $destination, $options = [], $logger = null)
     {
-        if (!is_null($logger)) {
-            $logger->log('WebP Convert 2.0.beta', 'italic');
-            $logger->logLn(' ignited conversion.');
-            $logger->logLn('');
-        }
-        
         $c = self::createInstance($source, $destination, $options, $logger);
 
         $c->logLn(self::getConverterDisplayName() . ' converter ignited');

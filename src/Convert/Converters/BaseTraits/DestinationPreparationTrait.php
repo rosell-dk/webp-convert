@@ -18,8 +18,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDes
 trait DestinationPreparationTrait
 {
 
-    abstract public function getDestination();
-    abstract public function logLn($msg, $style = '');
+    //abstract public function getDestination();
+    //abstract public function logLn($msg, $style = '');
 
     /**
      * Create writable folder in provided path (if it does not exist already)

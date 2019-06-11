@@ -26,8 +26,8 @@ trait AutoQualityTrait
     /** @var integer  The calculated quality (set upon processing - on successful detection) */
     private $calculatedQuality;
 
-    abstract public function getMimeTypeOfSource();
-    abstract public function logLn($msg, $style = '');
+    //abstract public function getMimeTypeOfSource();
+    //abstract public function logLn($msg, $style = '');
 
     /**
      *  Determine if quality detection is required but failing.
