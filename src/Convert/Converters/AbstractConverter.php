@@ -27,11 +27,11 @@ use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 abstract class AbstractConverter
 {
     use AutoQualityTrait;
-    use LoggerTrait;
     use OptionsTrait;
     use WarningLoggerTrait;
     use DestinationPreparationTrait;
     use SourceValidationTrait;
+    use LoggerTrait;
 
     /**
      * The actual conversion is be done by a concrete converter extending this class.
