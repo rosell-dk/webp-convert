@@ -53,20 +53,18 @@ trait EncodingAutoTrait
         $this->setDestination($destinationLossy);
         $this->setOption('encoding', 'lossy');
         $this->doActualConvert();
-        $this->logLn('Reduction: ' .
-            round(
-                (filesize($this->getSource()) - filesize($destinationLossy))/filesize($this->getSource()) * 100
-            ) . '% ');
+        $this->log('Reduction: ');
+        $this->logReduction($this->getSource(), $destinationLossy);
         $this->ln();
+
         $this->logLn('Converting to lossless');
         $this->setDestination($destinationLossless);
         $this->setOption('encoding', 'lossless');
         $this->doActualConvert();
-        $this->logLn('Reduction: ' .
-            round(
-                (filesize($this->getSource()) - filesize($destinationLossless))/filesize($this->getSource()) * 100
-            ) . '% ');
+        $this->log('Reduction: ');
+        $this->logReduction($this->getSource(), $destinationLossless);
         $this->ln();
+
         if (filesize($destinationLossless) > filesize($destinationLossy)) {
             $this->logLn('Picking lossy');
             unlink($destinationLossless);

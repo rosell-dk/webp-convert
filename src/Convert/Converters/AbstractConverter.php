@@ -208,6 +208,17 @@ abstract class AbstractConverter
         return new static($source, $destination, $options, $logger);
     }
 
+    protected function logReduction($source, $destination)
+    {
+        $sourceSize = filesize($source);
+        $destSize = filesize($destination);
+        $this->log(round(($sourceSize - $destSize)/$sourceSize * 100) . '% ');
+        if ($sourceSize < 10000) {
+            $this->logLn('(went from ' . strval($sourceSize) . ' bytes to '. strval($destSize) . ' bytes)');
+        } else {
+            $this->logLn('(went from ' . round($sourceSize/1024) . ' kb to ' . round($destSize/1024) . ' kb)');
+        }
+    }
 
     /**
      * Run conversion.
@@ -256,23 +267,13 @@ abstract class AbstractConverter
         } else {
             if (!isset($this->options['_suppress_success_message'])) {
                 $this->ln();
-                $msg = 'Converted image in ' .
-                    round((microtime(true) - $beginTime) * 1000) . ' ms';
+                $this->log('Converted image in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
 
                 $sourceSize = @filesize($source);
                 if ($sourceSize !== false) {
-                    $msg .= ', reducing file size with ' .
-                        round((filesize($source) - filesize($destination))/filesize($source) * 100) . '% ';
-
-                    if ($sourceSize < 10000) {
-                        $msg .= '(went from ' . round(filesize($source)) . ' bytes to ';
-                        $msg .= round(filesize($destination)) . ' bytes)';
-                    } else {
-                        $msg .= '(went from ' . round(filesize($source)/1024) . ' kb to ';
-                        $msg .= round(filesize($destination)/1024) . ' kb)';
-                    }
+                    $this->log(', reducing file size with ');
+                    $this->logReduction($source, $destination);
                 }
-                $this->logLn($msg);
             }
         }
 
