@@ -37,10 +37,10 @@ class Wpc extends AbstractConverter
         parent::createOptions();
 
         $this->options2->addOptions(
-            new SensitiveStringOption('api-key', ''),   /* new in api v.1 (renamed 'secret' to 'api-key') */
-            new SensitiveStringOption('secret', ''),    /* only in api v.0 */
-            new SensitiveStringOption('api-url', ''),   /* in api v.2  */
-            new SensitiveStringOption('url', ''),       /* only in api v.1 */
+            new SensitiveStringOption('api-key', ''),   /* for communicating with wpc api v.1+ */
+            new SensitiveStringOption('secret', ''),    /* for communicating with wpc api v.0 */
+            new SensitiveStringOption('api-url', ''),
+            new SensitiveStringOption('url', ''),       /* DO NOT USE. Only here to keep the protection */
             new IntegerOption('api-version', 1, 0, 2),
             new BooleanOption('crypt-api-key-in-transfer', false)  /* new in api v.1 */
         );
@@ -48,7 +48,8 @@ class Wpc extends AbstractConverter
 
     public function passOnEncodingAuto()
     {
-        // TODO: Either make this configurable or perhaps depend on api version
+        // We could make this configurable. But I guess passing it on is always to be preferred (except for
+        // api = 1, but people ought to update their wpc anyway)
         return true;
     }
 
@@ -79,7 +80,7 @@ class Wpc extends AbstractConverter
             if (!empty($this->options['secret'])) {
                 return $this->options['secret'];
             }
-        } elseif ($this->options['api-version'] == 1) {
+        } elseif ($this->options['api-version'] >= 1) {
             if (!empty($this->options['api-key'])) {
                 return $this->options['api-key'];
             }
@@ -150,7 +151,7 @@ class Wpc extends AbstractConverter
                     );
                 }
             }
-        } elseif ($apiVersion == 1) {
+        } elseif ($apiVersion >= 1) {
             if ($options['crypt-api-key-in-transfer']) {
                 if (!function_exists('crypt')) {
                     throw new ConverterNotOperationalException(
@@ -193,6 +194,7 @@ class Wpc extends AbstractConverter
             $optionsToSend['quality'] = $this->getCalculatedQuality();
         }
 
+        // The following are unset for security reasons.
         unset($optionsToSend['converters']);
         unset($optionsToSend['secret']);
         unset($optionsToSend['api-key']);
@@ -204,8 +206,8 @@ class Wpc extends AbstractConverter
             // Lossless can be "auto" in api 2, but in api 1 "auto" is not supported
             //unset($optionsToSend['lossless']);
         } elseif ($apiVersion == 2) {
-            unset($optionsToSend['png']);
-            unset($optionsToSend['jpeg']);
+            //unset($optionsToSend['png']);
+            //unset($optionsToSend['jpeg']);
 
             // The following are unset for security reasons.
             unset($optionsToSend['cwebp-command-line-options']);
@@ -265,7 +267,9 @@ class Wpc extends AbstractConverter
 
         $response = curl_exec($ch);
         if (curl_errno($ch)) {
-            throw new ConverterNotOperationalException('Curl error:' . curl_error($ch));
+            $this->logLn('Curl error: ', 'bold');
+            $this->logLn(curl_error($ch));
+            throw new ConverterNotOperationalException('Curl error:');
         }
 
         // Check if we got a 404
@@ -320,9 +324,13 @@ class Wpc extends AbstractConverter
                 );
             }
 
-            $errorMsg = 'Error: Unexpected result. We did not receive an image. We received: "';
-            $errorMsg .= str_replace("\r", '', str_replace("\n", '', htmlentities(substr($response, 0, 400))));
-            throw new ConversionFailedException($errorMsg . '..."');
+            $this->logLn('Bummer, we did not receive an image');
+            $this->log('What we received starts with: "');
+            $this->logLn(
+                str_replace("\r", '', str_replace("\n", '', htmlentities(substr($response, 0, 400)))) . '..."'
+            );
+
+            throw new ConversionFailedException('Unexpected result. We did not receive an image but something else.');
             //throw new ConverterNotOperationalException($response);
         }
 
