@@ -80,7 +80,13 @@ Stack::convert($source, $destination, $options = [
 ], $logger=null);
 ```
 
-Note: As an alternative to setting the third party credentials in the options, you can set them through environment variables ("EWWW_API_KEY", "WPC_API_KEY" and "WPC_API_URL").
+Note: As an alternative to setting the third party credentials in the options, you can set them through environment variables ("EWWW_API_KEY", "WPC_API_KEY", "WPC_API_URL") - and "CWEBP_PATH" for setting custom cwebp binary.
+
+To set an environment variable in Apache, you can add a line like this in your `.htaccess` or vhost configuration:
+```
+SetEnv EWWW_API_KEY yourVerySecretApiKeyGoesHere
+```
+
 
 ## Configuring the options
 

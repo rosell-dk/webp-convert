@@ -285,8 +285,14 @@ class Cwebp extends AbstractConverter
     {
         $failureCodes = [];
 
+        $paths = self::$cwebpDefaultPaths;
+
+        if (!empty(getenv('CWEBP_PATH'))) {
+            array_unshift($paths, getenv('CWEBP_PATH'));
+        }
+
         // Loop through paths
-        foreach (self::$cwebpDefaultPaths as $index => $binary) {
+        foreach ($paths as $index => $binary) {
             $returnCode = $this->executeBinary($binary, $commandOptions, $useNice);
             if ($returnCode == 0) {
                 $this->logLn('Successfully executed binary: ' . $binary);

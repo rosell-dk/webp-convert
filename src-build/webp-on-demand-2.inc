@@ -257,13 +257,14 @@ abstract class AbstractConverter
         $this->setProvidedOptions($options);
 
         if (!isset($this->options['_skip_input_check'])) {
-            $this->log('WebP Convert 2.0.beta', 'italic');
+            $this->log('WebP Convert 2.0.0', 'italic');
             $this->logLn(' ignited.');
             $this->logLn('- PHP version: ' . phpversion());
             if (isset($_SERVER['SERVER_SOFTWARE'])) {
                 $this->logLn('- Server software: ' . $_SERVER['SERVER_SOFTWARE']);
             }
             $this->logLn('');
+            $this->logLn(self::getConverterDisplayName() . ' converter ignited');
         }
 
         $this->checkSourceExists();
@@ -495,9 +496,6 @@ abstract class AbstractConverter
     public static function convert($source, $destination, $options = [], $logger = null)
     {
         $c = self::createInstance($source, $destination, $options, $logger);
-
-        $c->logLn(self::getConverterDisplayName() . ' converter ignited');
-
         $c->doConvert();
         //echo $instance->id;
     }
@@ -2491,8 +2489,14 @@ class Cwebp extends AbstractConverter
     {
         $failureCodes = [];
 
+        $paths = self::$cwebpDefaultPaths;
+
+        if (!empty(getenv('CWEBP_PATH'))) {
+            array_unshift($paths, getenv('CWEBP_PATH'));
+        }
+
         // Loop through paths
-        foreach (self::$cwebpDefaultPaths as $index => $binary) {
+        foreach ($paths as $index => $binary) {
             $returnCode = $this->executeBinary($binary, $commandOptions, $useNice);
             if ($returnCode == 0) {
                 $this->logLn('Successfully executed binary: ' . $binary);
