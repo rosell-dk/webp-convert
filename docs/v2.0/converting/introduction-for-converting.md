@@ -104,7 +104,7 @@ WebP files can be encoded using either *lossless* or *lossy* encoding. The JPEG 
 
 As unnecessary large conversions are rarely desirable, this library per default tries to convert images using both lossy and lossless encoding and automatically selects the smallest. This is controlled using the *encoding* option, which per default is "auto", but can also be set to "lossy" or "lossless".
 
-As an example, the following PNG (231 kb) will be compressed to 156 kb when converting to *lossless* webp. But when converting to *lossy* (quality: 85), it is compressed to merely 71 kb - less than half.
+As an example, the following PNG (231 kb) will be compressed to 156 kb when converting to *lossless* webp. But when converting to *lossy* (quality: 85), it is compressed to merely 68 kb - less than half.
 
 ![Dice](https://raw.githubusercontent.com/rosell-dk/webp-convert/master/docs/v2.0/converting/dice.png)
 
@@ -117,12 +117,16 @@ Note that *gd* and *ewww* doesn't support this feature. *gd* can only produce lo
 
 As unnecessary large conversions are rarely desirable, this library per default sets *near-lossless* to 60. To disable near-lossless, set it to 100.
 
+When compressing the image above (231 kb) to lossless, it compressed to 156 kb when near-lossless is set to 100. Setting near-lossless to 60 gets the size down to 110 kb while still looking great.
+
 You can read more about the near-lossless mode [here](https://groups.google.com/a/webmproject.org/forum/#!topic/webp-discuss/0GmxDmlexek)
 
 ### Alpha-quality
 All converters, except *gd* and *ewww* supports "alpha-quality" option. This allows lossy compressing of the alpha channel.
 
 As unnecessary large conversions are rarely desirable, this library per default sets *alpha-quality* to 85. Set it to 100 to achieve lossless compression of alhpa.
+
+Btw, the image above gets compressed to 68 kb with alpha quality set to 100. Surprisingly, it gets slightly larger (70 kb) with alpha quality set to 85. Setting alpha quality to 50 gets it down to merely 35 kb - about half - while still looking great.
 
 You can read more about the alpha-quality option [here](https://developers.google.com/speed/webp/docs/cwebp)
 
