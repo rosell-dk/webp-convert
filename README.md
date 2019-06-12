@@ -9,11 +9,20 @@
 
 *Convert JPEG & PNG to WebP with PHP*
 
-This library enables you to do webp conversion with PHP using *cwebp*, *vips*, *gd*, *imagick*, *gmagick*, *ewww* cloud converter or the open source *wpc* cloud converter. It also allows you to try a whole stack &ndash; useful if you do not have control over the environment, and simply want the library to do *everything it can* to convert the image to webp.
+This library enables you to do webp conversion with PHP. It supports an abundance of methods for converting and automatically selects the most capable of these that is available on the system.
+
+The library can convert using the following methods:
+- *cwebp* (executing [cwebp](https://developers.google.com/speed/webp/docs/cwebp) binary using an `exec` call)
+- *vips* (using [Vips PHP extension](https://github.com/libvips/php-vips-ext))
+- *imagick* (using [Imagick PHP extension](https://github.com/Imagick/imagick))
+- *gmagick* (using [Gmagick PHP extension](https://www.php.net/manual/en/book.gmagick.php))
+- *imagemagick* (executing [imagemagick](https://imagemagick.org/index.php) binary using an `exec` call)
+- *graphicsmagick* (executing [graphicsmagick](http://www.graphicsmagick.org/) binary using an `exec` call)
+- *wpc* (using [WebPConvert Cloud Service](https://github.com/rosell-dk/webp-convert-cloud-service/) - an open source webp converter for PHP - based on this library)
+- *ewwww* (using the [ewww](https://ewww.io/plans/) cloud converter (1 USD startup and then free webp conversion))
+- *gd* (using the [Gd PHP extension](https://www.php.net/manual/en/book.image.php))
 
 In addition to converting, the library also has a method for *serving* converted images, and we have instructions here on how to set up a solution for automatically serving webp images to browsers that supports webp.
-
-**NOTE: This master branch contains code for the upcoming 2.0 release. It is not stable yet ()- but very close!)**
 
 ## Installation
 Require the library with *Composer*, like this:
@@ -49,7 +58,7 @@ If you are migrating from 1.3.9, [read this](https://github.com/rosell-dk/webp-c
 ## Serving converted images
 The *WebPConvert::serveConverted* method tries to serve a converted image. If there already is an image at the destination, it will take that, unless the original is newer or smaller. If the method cannot serve a converted image, it will serve original image, a 404, or whatever the 'fail' option is set to - and return false. It also adds a *X-WebP-Convert-Status* header, which allows you to inspect what happened.
 
-Example (API 2.0):
+Example (version 2.0):
 ```php
 <?php
 require 'vendor/autoload.php';
