@@ -14,6 +14,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 trait ExecTrait
 {
 
+    abstract protected function logLn($msg, $style = '');
+
     /**
      * Helper function for examining if "nice" command is available
      *
@@ -34,6 +36,25 @@ trait ExecTrait
                 return true;
             }
             return false;
+        }
+    }
+
+    /**
+     * Logs output from the exec call.
+     *
+     * @param  array  $output
+     *
+     * @return  void
+     */
+    protected function logExecOutput($output)
+    {
+        if (is_array($output) && count($output) > 0) {
+            $this->logLn('');
+            $this->logLn('Output:', 'italic');
+            foreach ($output as $line) {
+                $this->logLn(print_r($line, true));
+            }
+            $this->logLn('');
         }
     }
 
