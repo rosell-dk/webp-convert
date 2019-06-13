@@ -11,7 +11,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
 /**
- * Convert images to webp by calling imagick binary.
+ * Convert images to webp by calling imagemagick binary.
  *
  * @package    WebPConvert
  * @author     Bjørn Rosell <it@rosell.dk>
@@ -114,7 +114,7 @@ class ImageMagick extends AbstractConverter
      */
     private function createCommandLineOptions()
     {
-        // PS: Available webp options for imagick are documented here:
+        // PS: Available webp options for imagemagick are documented here:
         // https://imagemagick.org/script/webp.php
 
         $commandArguments = [];
