@@ -57,6 +57,7 @@ class WebPConvert
      *                                       ServeConvertedWebPWithErrorHandling::serve() method
      * @param  \WebPConvert\Loggers\BaseLogger $serveLogger (optional)
      * @param  \WebPConvert\Loggers\BaseLogger $convertLogger (optional)
+     * @return void
      */
     public static function serveConverted(
         $source,
