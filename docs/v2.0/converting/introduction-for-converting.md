@@ -96,14 +96,25 @@ SetEnv EWWW_API_KEY yourVerySecretApiKeyGoesHere
 
 What should we have done instead? We should have converted with a quality around 50. Of course, quality is still low - we cannot fix that - but it will not be less, *and the converted file will be much smaller*.
 
-As unnecessary large conversions are rarely desirable, this library per default converts jpeg files with the same quality level as the source. This functionality requires that either *imagick* or *gmagick* is installed (not necessarily with webp support). When they are, all converters will have the "auto" quality functionality. The *wpc* cloud converter supports auto quality without requiring *imagick* or *gmagick*.
+As unnecessary large conversions are rarely desirable, this library per default converts jpeg files with the same quality level as the source. This functionality requires that either *imagemagick*, *graphicsmagick* or *imagick* is installed (not necessarily compiled with webp support). When they are, all converters will have the "auto" quality functionality. The *wpc* cloud converter supports auto quality if these are installed on the server that *wpc* is installed on.
+
+How much can be gained? A lot!
+The following low quality (q=50) jpeg weighs 54 kb. If this is converted to webp with quality=80, the size of the converted file is 52kb - almost no reduction! With auto, the quality of the webp will be set to 50, and the size will be 34kb. Visually, the results are indistinguable.
+
+![A low quality jpeg](https://raw.githubusercontent.com/rosell-dk/webp-convert/master/docs/v2.0/converting/architecture-q50-w600.jpg)
 
 **Q:** What do you get if you convert an excessively high quality jpeg into an excessively high quality webp?\
 **A:** An excessively big file
 
-The size of a webp file grows enormously with the quality setting. For the web however, a quality above 80 is rarely needed. For this reason the library per default limits the quality to 85. A jpeg with quality 72 is converted into quality 72, but a jpeg with quality=95 is converted into quality 85. The maximum quality can be set with the *max-quality* option.
+The size of a webp file grows enormously with the quality setting. For the web however, a quality above 80 is rarely needed. For this reason the library has a per default limits the quality to the value of the *max-quality* option (default: 85).
 
-In case quality detection is unavailable, the quality defaults to 70 for JPEGs and 85 for PNGs. This can be changed by setting the *default-quality* setting.
+In case quality detection is unavailable, the quality gets the value of the *default-quality* option (default is 70 for JPEGs and 85 for PNGs).
+
+So, how much can be gained? A lot!
+The following excessively high quality jpeg (q=100) weighs 146 kb. Converting it to webp with q=100 results in a 99kb image (this would happen if we had the auto feature, but not the max-quality feature). Converting it to q=85 results in a 40kb image.
+
+![A (too) high quality jpeg](https://raw.githubusercontent.com/rosell-dk/webp-convert/master/docs/v2.0/converting/mouse-q100.jpg)
+
 
 ### Auto selecting between lossless/lossy encoding
 WebP files can be encoded using either *lossless* or *lossy* encoding. The JPEG format is lossy and the PNG is lossless. However, this does not mean that you necessarily get the best conversion by always encoding JPEG to lossy and PNG to lossless. With JPEGs it is often the case, as they are usually pictures and pictures usually best encoded as lossy. With PNG it is however a different story, as you often can get a better compression using lossy encoding, also when using high quality level of say 85, which should be enough for the web.
