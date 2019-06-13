@@ -121,7 +121,7 @@ WebP files can be encoded using either *lossless* or *lossy* encoding. The JPEG 
 
 As unnecessary large conversions are rarely desirable, this library per default tries to convert images using both lossy and lossless encoding and automatically selects the smallest. This is controlled using the *encoding* option, which per default is "auto", but can also be set to "lossy" or "lossless".
 
-As an example, the following PNG (231 kb) will be compressed to 156 kb when converting to *lossless* webp. But when converting to *lossy* (quality: 85), it is compressed to merely 68 kb - less than half.
+As an example, the following PNG (231 kb) will be compressed to 156 kb when converting to *lossless* webp. But when converting to *lossy* (quality: 85), it is compressed to merely 68 kb - less than half. (in case you are confused about the combination of lossy and transparency: Yes, you can have both at the same time with webp).
 
 ![Dice](https://raw.githubusercontent.com/rosell-dk/webp-convert/master/docs/v2.0/converting/dice.png)
 
