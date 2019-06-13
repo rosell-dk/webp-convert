@@ -51,7 +51,7 @@ WebPConvert::convert($source, $destination, $options);
 ```
 
 The *WebPConvert::convert* method comes with a bunch of options. The following introduction is a *must-read*:
-[docs/convert-introduction.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md).
+[docs/v2.0/converting/introduction-for-converting.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md).
 
 If you are migrating from 1.3.9, [read this](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/migrating-to-2.0.md)
 
@@ -87,9 +87,9 @@ WebPConvert::serveConverted($source, $destination, [
 ```
 
 The following introduction is a *must-read* (for 2.0):
-[docs/convert-introduction.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/serving/introduction-for-serving.md).
+[docs/v2.0/serving/introduction-for-serving.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/serving/introduction-for-serving.md).
 
-The old introduction (for 1.3.9) is available here: [docs/serving/v1.3/convert-and-serve.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/v1.3/serving/convert-and-serve.md)
+The old introduction (for 1.3.9) is available here: [docs/v1.3/serving/convert-and-serve.md](https://github.com/rosell-dk/webp-convert/blob/master/docs/v1.3/serving/convert-and-serve.md)
 
 
 ## WebP on demand
