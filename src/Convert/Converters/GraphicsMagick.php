@@ -33,24 +33,24 @@ class GraphicsMagick extends AbstractConverter
         ];
     }
 
-    private static function getGmagickPath()
+    private function getPath()
     {
-        if (empty(getenv('GMAGICK_PATH'))) {
+        if (empty(getenv('GRAPHICSMAGICK_PATH'))) {
             return 'gm';
         } else {
-            return getenv('GMAGICK_PATH') . '/gm';
+            return getenv('GRAPHICSMAGICK_PATH');
         }
     }
 
-    public static function gmagickInstalled()
+    public function isInstalled()
     {
-        exec(self::getGmagickPath() . ' -version', $output, $returnCode);
+        exec($this->getPath() . ' -version', $output, $returnCode);
         return ($returnCode == 0);
     }
 
-    public static function gmagickVersion()
+    public function getVersion()
     {
-        exec(self::getGmagickPath() . ' -version', $output, $returnCode);
+        exec($this->getPath() . ' -version', $output, $returnCode);
         if (($returnCode == 0) && isset($output[0])) {
             return preg_replace('#http.*#', '', $output[0]);
         }
@@ -58,9 +58,9 @@ class GraphicsMagick extends AbstractConverter
     }
 
     // Check if webp delegate is installed
-    public static function webPDelegateInstalled()
+    public function isWebPDelegateInstalled()
     {
-        exec(self::getGmagickPath() . ' -version', $output, $returnCode);
+        exec($this->getPath() . ' -version', $output, $returnCode);
         foreach ($output as $line) {
             if (preg_match('#WebP.*yes#i', $line)) {
                 return true;
@@ -78,10 +78,10 @@ class GraphicsMagick extends AbstractConverter
     {
         $this->checkOperationalityExecTrait();
 
-        if (!self::gmagickInstalled()) {
+        if (!$this->isInstalled()) {
             throw new SystemRequirementsNotMetException('gmagick is not installed');
         }
-        if (!self::webPDelegateInstalled()) {
+        if (!$this->isWebPDelegateInstalled()) {
             throw new SystemRequirementsNotMetException('webp delegate missing');
         }
     }
@@ -97,7 +97,7 @@ class GraphicsMagick extends AbstractConverter
 
         // Unlike imagick binary, it seems gmagick binary uses a fixed
         // quality (75) when quality is omitted
-//        $commandArguments[] = '-quality ' . escapeshellarg($this->getCalculatedQuality());
+        $commandArguments[] = '-quality ' . escapeshellarg($this->getCalculatedQuality());
 
         // encoding
         if ($this->options['encoding'] == 'lossless') {
@@ -138,17 +138,25 @@ class GraphicsMagick extends AbstractConverter
     {
         //$this->logLn('Using quality:' . $this->getCalculatedQuality());
 
-        $this->logLn('Version: ' . self::gmagickVersion());
+        $this->logLn('Version: ' . $this->getVersion());
 
-        $command = self::getGmagickPath() . ' convert ' . $this->createCommandLineOptions();
+        $command = $this->getPath() . ' convert ' . $this->createCommandLineOptions();
 
         $useNice = (($this->options['use-nice']) && self::hasNiceSupport()) ? true : false;
         if ($useNice) {
             $this->logLn('using nice');
             $command = 'nice ' . $command;
         }
-        $this->logLn('command: ' . $command);
+        $this->logLn('Executing command: ' . $command);
         exec($command, $output, $returnCode);
+
+        $this->logExecOutput($output);
+        if ($returnCode == 0) {
+            $this->logLn('success');
+        } else {
+            $this->logLn('return code: ' . $returnCode);
+        }
+
         if ($returnCode == 127) {
             throw new SystemRequirementsNotMetException('gmagick is not installed');
         }
