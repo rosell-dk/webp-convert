@@ -34,14 +34,38 @@ class ImageMagick extends AbstractConverter
     // To futher improve this converter, I could check out:
     // https://github.com/Orbitale/ImageMagickPHP
 
-    public static function imagickInstalled()
+    private function getPath()
     {
-        exec('convert -version', $output, $returnCode);
+        // Should we use "magick" or "convert" command?
+        // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
+        // Should we perhaps try both?
+        // For now, we just go with "convert"
+
+        if (!empty(getenv('IMAGEMAGICK_PATH'))) {
+            return getenv('IMAGEMAGICK_PATH');
+        } else {
+            return 'convert';
+        }
+    }
+
+    private function getVersion()
+    {
+        exec($this->getPath() . ' -version', $output, $returnCode);
+        if (($returnCode == 0) && isset($output[0])) {
+            return $output[0];
+        } else {
+            return 'unknown';
+        }
+    }
+
+    public function isInstalled()
+    {
+        exec($this->getPath() . ' -version', $output, $returnCode);
         return ($returnCode == 0);
     }
 
     // Check if webp delegate is installed
-    public static function webPDelegateInstalled()
+    public function isWebPDelegateInstalled()
     {
 
         exec('convert -list delegate', $output, $returnCode);
@@ -73,10 +97,12 @@ class ImageMagick extends AbstractConverter
     {
         $this->checkOperationalityExecTrait();
 
-        if (!self::imagickInstalled()) {
-            throw new SystemRequirementsNotMetException('imagick is not installed');
+        if (!$this->isInstalled()) {
+            throw new SystemRequirementsNotMetException(
+                'imagemagick is not installed (cannot execute: "' . $this->getPath() . '")'
+            );
         }
-        if (!self::webPDelegateInstalled()) {
+        if (!$this->isWebPDelegateInstalled()) {
             throw new SystemRequirementsNotMetException('webp delegate missing');
         }
     }
@@ -128,32 +154,29 @@ class ImageMagick extends AbstractConverter
 
     protected function doActualConvert()
     {
-        //$this->logLn('Using quality:' . $this->getCalculatedQuality());
+        $this->logLn($this->getVersion());
 
-        // Should we use "magick" or "convert" command?
-        // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
-        // Should we perhaps try both?
-        // For now, we just go with "convert"
-
-        $command = 'convert ' . $this->createCommandLineOptions();
-
-        // also try common system paths?, or perhaps allow path to be set in environment?
-        //$command = '/home/rosell/opt/bin/magick ' . implode(' ', $commandArguments);
+        $command = $this->getPath() . ' ' . $this->createCommandLineOptions();
 
         $useNice = (($this->options['use-nice']) && self::hasNiceSupport()) ? true : false;
         if ($useNice) {
             $this->logLn('using nice');
             $command = 'nice ' . $command;
         }
-        $this->logLn('command: ' . $command);
+        $this->logLn('Executing command: ' . $command);
         exec($command, $output, $returnCode);
+
+        $this->logExecOutput($output);
+        if ($returnCode == 0) {
+            $this->logLn('success');
+        } else {
+            $this->logLn('return code: ' . $returnCode);
+        }
+
         if ($returnCode == 127) {
-            throw new SystemRequirementsNotMetException('imagick is not installed');
+            throw new SystemRequirementsNotMetException('imagemagick is not installed');
         }
         if ($returnCode != 0) {
-            //$this->logLn('command:' . $command);
-            $this->logLn('return code:' . $returnCode);
-            $this->logLn('output:' . print_r(implode("\n", $output), true));
             throw new SystemRequirementsNotMetException('The exec call failed');
         }
     }
