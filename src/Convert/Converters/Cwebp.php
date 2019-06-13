@@ -83,12 +83,14 @@ class Cwebp extends AbstractConverter
         //$logger->logLn('command options:' . $commandOptions);
         //$logger->logLn('Trying to execute binary:' . $binary);
         exec($command, $output, $returnCode);
+        $this->logExecOutput($output);
+        /*
         if ($returnCode == 255) {
             if (isset($output[0])) {
                 // Could be an error like 'Error! Cannot open output file' or 'Error! ...preset... '
                 $this->logLn(print_r($output[0], true));
             }
-        }
+        }*/
         //$logger->logLn(self::msgForExitCode($returnCode));
         return intval($returnCode);
     }
