@@ -2165,6 +2165,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 trait ExecTrait
 {
 
+    abstract protected function logLn($msg, $style = '');
+
     /**
      * Helper function for examining if "nice" command is available
      *
@@ -2185,6 +2187,25 @@ trait ExecTrait
                 return true;
             }
             return false;
+        }
+    }
+
+    /**
+     * Logs output from the exec call.
+     *
+     * @param  array  $output
+     *
+     * @return  void
+     */
+    protected function logExecOutput($output)
+    {
+        if (is_array($output) && count($output) > 0) {
+            $this->logLn('');
+            $this->logLn('Output:', 'italic');
+            foreach ($output as $line) {
+                $this->logLn(print_r($line, true));
+            }
+            $this->logLn('');
         }
     }
 
@@ -2287,12 +2308,14 @@ class Cwebp extends AbstractConverter
         //$logger->logLn('command options:' . $commandOptions);
         //$logger->logLn('Trying to execute binary:' . $binary);
         exec($command, $output, $returnCode);
+        $this->logExecOutput($output);
+        /*
         if ($returnCode == 255) {
             if (isset($output[0])) {
                 // Could be an error like 'Error! Cannot open output file' or 'Error! ...preset... '
                 $this->logLn(print_r($output[0], true));
             }
-        }
+        }*/
         //$logger->logLn(self::msgForExitCode($returnCode));
         return intval($returnCode);
     }
@@ -3706,24 +3729,24 @@ class GraphicsMagick extends AbstractConverter
         ];
     }
 
-    private static function getGmagickPath()
+    private function getPath()
     {
-        if (empty(getenv('GMAGICK_PATH'))) {
+        if (empty(getenv('GRAPHICSMAGICK_PATH'))) {
             return 'gm';
         } else {
-            return getenv('GMAGICK_PATH') . '/gm';
+            return getenv('GRAPHICSMAGICK_PATH');
         }
     }
 
-    public static function gmagickInstalled()
+    public function isInstalled()
     {
-        exec(self::getGmagickPath() . ' -version', $output, $returnCode);
+        exec($this->getPath() . ' -version', $output, $returnCode);
         return ($returnCode == 0);
     }
 
-    public static function gmagickVersion()
+    public function getVersion()
     {
-        exec(self::getGmagickPath() . ' -version', $output, $returnCode);
+        exec($this->getPath() . ' -version', $output, $returnCode);
         if (($returnCode == 0) && isset($output[0])) {
             return preg_replace('#http.*#', '', $output[0]);
         }
@@ -3731,9 +3754,9 @@ class GraphicsMagick extends AbstractConverter
     }
 
     // Check if webp delegate is installed
-    public static function webPDelegateInstalled()
+    public function isWebPDelegateInstalled()
     {
-        exec(self::getGmagickPath() . ' -version', $output, $returnCode);
+        exec($this->getPath() . ' -version', $output, $returnCode);
         foreach ($output as $line) {
             if (preg_match('#WebP.*yes#i', $line)) {
                 return true;
@@ -3751,10 +3774,10 @@ class GraphicsMagick extends AbstractConverter
     {
         $this->checkOperationalityExecTrait();
 
-        if (!self::gmagickInstalled()) {
+        if (!$this->isInstalled()) {
             throw new SystemRequirementsNotMetException('gmagick is not installed');
         }
-        if (!self::webPDelegateInstalled()) {
+        if (!$this->isWebPDelegateInstalled()) {
             throw new SystemRequirementsNotMetException('webp delegate missing');
         }
     }
@@ -3770,7 +3793,7 @@ class GraphicsMagick extends AbstractConverter
 
         // Unlike imagick binary, it seems gmagick binary uses a fixed
         // quality (75) when quality is omitted
-//        $commandArguments[] = '-quality ' . escapeshellarg($this->getCalculatedQuality());
+        $commandArguments[] = '-quality ' . escapeshellarg($this->getCalculatedQuality());
 
         // encoding
         if ($this->options['encoding'] == 'lossless') {
@@ -3811,17 +3834,25 @@ class GraphicsMagick extends AbstractConverter
     {
         //$this->logLn('Using quality:' . $this->getCalculatedQuality());
 
-        $this->logLn('Version: ' . self::gmagickVersion());
+        $this->logLn('Version: ' . $this->getVersion());
 
-        $command = self::getGmagickPath() . ' convert ' . $this->createCommandLineOptions();
+        $command = $this->getPath() . ' convert ' . $this->createCommandLineOptions();
 
         $useNice = (($this->options['use-nice']) && self::hasNiceSupport()) ? true : false;
         if ($useNice) {
             $this->logLn('using nice');
             $command = 'nice ' . $command;
         }
-        $this->logLn('command: ' . $command);
+        $this->logLn('Executing command: ' . $command);
         exec($command, $output, $returnCode);
+
+        $this->logExecOutput($output);
+        if ($returnCode == 0) {
+            $this->logLn('success');
+        } else {
+            $this->logLn('return code: ' . $returnCode);
+        }
+
         if ($returnCode == 127) {
             throw new SystemRequirementsNotMetException('gmagick is not installed');
         }
@@ -3847,7 +3878,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
 /**
- * Convert images to webp by calling imagick binary.
+ * Convert images to webp by calling imagemagick binary.
  *
  * @package    WebPConvert
  * @author     Bjørn Rosell <it@rosell.dk>
@@ -3870,14 +3901,38 @@ class ImageMagick extends AbstractConverter
     // To futher improve this converter, I could check out:
     // https://github.com/Orbitale/ImageMagickPHP
 
-    public static function imagickInstalled()
+    private function getPath()
     {
-        exec('convert -version', $output, $returnCode);
+        // Should we use "magick" or "convert" command?
+        // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
+        // Should we perhaps try both?
+        // For now, we just go with "convert"
+
+        if (!empty(getenv('IMAGEMAGICK_PATH'))) {
+            return getenv('IMAGEMAGICK_PATH');
+        } else {
+            return 'convert';
+        }
+    }
+
+    private function getVersion()
+    {
+        exec($this->getPath() . ' -version', $output, $returnCode);
+        if (($returnCode == 0) && isset($output[0])) {
+            return $output[0];
+        } else {
+            return 'unknown';
+        }
+    }
+
+    public function isInstalled()
+    {
+        exec($this->getPath() . ' -version', $output, $returnCode);
         return ($returnCode == 0);
     }
 
     // Check if webp delegate is installed
-    public static function webPDelegateInstalled()
+    public function isWebPDelegateInstalled()
     {
 
         exec('convert -list delegate', $output, $returnCode);
@@ -3909,10 +3964,12 @@ class ImageMagick extends AbstractConverter
     {
         $this->checkOperationalityExecTrait();
 
-        if (!self::imagickInstalled()) {
-            throw new SystemRequirementsNotMetException('imagick is not installed');
+        if (!$this->isInstalled()) {
+            throw new SystemRequirementsNotMetException(
+                'imagemagick is not installed (cannot execute: "' . $this->getPath() . '")'
+            );
         }
-        if (!self::webPDelegateInstalled()) {
+        if (!$this->isWebPDelegateInstalled()) {
             throw new SystemRequirementsNotMetException('webp delegate missing');
         }
     }
@@ -3924,7 +3981,7 @@ class ImageMagick extends AbstractConverter
      */
     private function createCommandLineOptions()
     {
-        // PS: Available webp options for imagick are documented here:
+        // PS: Available webp options for imagemagick are documented here:
         // https://imagemagick.org/script/webp.php
 
         $commandArguments = [];
@@ -3964,32 +4021,29 @@ class ImageMagick extends AbstractConverter
 
     protected function doActualConvert()
     {
-        //$this->logLn('Using quality:' . $this->getCalculatedQuality());
+        $this->logLn($this->getVersion());
 
-        // Should we use "magick" or "convert" command?
-        // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
-        // Should we perhaps try both?
-        // For now, we just go with "convert"
-
-        $command = 'convert ' . $this->createCommandLineOptions();
-
-        // also try common system paths?, or perhaps allow path to be set in environment?
-        //$command = '/home/rosell/opt/bin/magick ' . implode(' ', $commandArguments);
+        $command = $this->getPath() . ' ' . $this->createCommandLineOptions();
 
         $useNice = (($this->options['use-nice']) && self::hasNiceSupport()) ? true : false;
         if ($useNice) {
             $this->logLn('using nice');
             $command = 'nice ' . $command;
         }
-        $this->logLn('command: ' . $command);
+        $this->logLn('Executing command: ' . $command);
         exec($command, $output, $returnCode);
+
+        $this->logExecOutput($output);
+        if ($returnCode == 0) {
+            $this->logLn('success');
+        } else {
+            $this->logLn('return code: ' . $returnCode);
+        }
+
         if ($returnCode == 127) {
-            throw new SystemRequirementsNotMetException('imagick is not installed');
+            throw new SystemRequirementsNotMetException('imagemagick is not installed');
         }
         if ($returnCode != 0) {
-            //$this->logLn('command:' . $command);
-            $this->logLn('return code:' . $returnCode);
-            $this->logLn('output:' . print_r(implode("\n", $output), true));
             throw new SystemRequirementsNotMetException('The exec call failed');
         }
     }
