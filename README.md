@@ -32,8 +32,6 @@ composer require rosell-dk/webp-convert
 ```
 
 ## Converting images
-To convert an image using a stack of converters, you can use the *WebPConvert::convert* method.
-
 Here is a minimal example of converting using the *WebPConvert::convert* method:
 
 ```php
