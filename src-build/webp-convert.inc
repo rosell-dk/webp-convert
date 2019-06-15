@@ -4484,7 +4484,7 @@ class Stack extends AbstractConverter
         foreach ($converters as $converter) {
             if (is_array($converter)) {
                 $converterId = $converter['converter'];
-                $converterOptions = $converter['options'];
+                $converterOptions = isset($converter['options']) ? $converter['options'] : [];
             } else {
                 $converterId = $converter;
                 $converterOptions = [];
