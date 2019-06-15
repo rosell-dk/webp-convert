@@ -321,9 +321,11 @@ abstract class AbstractConverter
             $this->logLn('Trace:');
             foreach ($e->getTrace() as $trace) {
                 //$this->logLn(print_r($trace, true));
-                $this->logLn(
-                    $trace['file'] . ':' . $trace['line']
-                );
+                if (isset($trace['file']) && isset($trace['line'])) {
+                    $this->logLn(
+                        $trace['file'] . ':' . $trace['line']
+                    );                    
+                }
             }
             throw $e;
         } /*catch (\Error $e) {

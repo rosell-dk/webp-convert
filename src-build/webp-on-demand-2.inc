@@ -458,9 +458,11 @@ abstract class AbstractConverter
             $this->logLn('Trace:');
             foreach ($e->getTrace() as $trace) {
                 //$this->logLn(print_r($trace, true));
-                $this->logLn(
-                    $trace['file'] . ':' . $trace['line']
-                );
+                if (isset($trace['file']) && isset($trace['line'])) {
+                    $this->logLn(
+                        $trace['file'] . ':' . $trace['line']
+                    );                    
+                }
             }
             throw $e;
         } /*catch (\Error $e) {
@@ -4754,6 +4756,18 @@ class Wpc extends AbstractConverter
         return [];
     }
 
+    public function supportsLossless()
+    {
+        return ($this->options['api-version'] >= 2);
+    }
+
+    public function passOnEncodingAuto()
+    {
+        // We could make this configurable. But I guess passing it on is always to be preferred
+        // for api >= 2.
+        return ($this->options['api-version'] >= 2);
+    }
+
     protected function createOptions()
     {
         parent::createOptions();
@@ -4763,16 +4777,9 @@ class Wpc extends AbstractConverter
             new SensitiveStringOption('secret', ''),    /* for communicating with wpc api v.0 */
             new SensitiveStringOption('api-url', ''),
             new SensitiveStringOption('url', ''),       /* DO NOT USE. Only here to keep the protection */
-            new IntegerOption('api-version', 1, 0, 2),
+            new IntegerOption('api-version', 2, 0, 2),
             new BooleanOption('crypt-api-key-in-transfer', false)  /* new in api v.1 */
         );
-    }
-
-    public function passOnEncodingAuto()
-    {
-        // We could make this configurable. But I guess passing it on is always to be preferred (except for
-        // api = 1, but people ought to update their wpc anyway)
-        return true;
     }
 
     private static function createRandomSaltForBlowfish()
