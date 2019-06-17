@@ -20,7 +20,9 @@ trait EncodingAutoTrait
     abstract public function getOptions();
     abstract protected function setOption($optionName, $optionValue);
     abstract protected function logLn($msg, $style = '');
+    abstract protected function log($msg, $style = '');
     abstract protected function ln();
+    abstract protected function logReduction($source, $destination);
 
     public function supportsLossless()
     {

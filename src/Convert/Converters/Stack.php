@@ -220,11 +220,11 @@ class Stack extends AbstractConverter
         $this->ln();
         $this->logLn('Stack failed in ' . round((microtime(true) - $beginTimeStack) * 1000) . ' ms');
 
+        // Hm, Scrutinizer complains that $anyRuntimeErrors is always false. But that is not true!
         if ($anyRuntimeErrors) {
             // At least one converter failed
             throw new ConversionFailedException(
-                'None of the converters in the stack could convert the image. ' .
-                'At least one failed, even though its requirements seemed to be met.'
+                'None of the converters in the stack could convert the image.'
             );
         } else {
             // All converters threw a SystemRequirementsNotMetException

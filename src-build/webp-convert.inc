@@ -518,6 +518,8 @@ abstract class AbstractConverter
     public function getMimeTypeOfSource()
     {
         if (!isset($this->sourceMimeType)) {
+            // PS: Scrutinizer complains that ImageMimeTypeGuesser::lenientGuess could also return a boolean
+            // but this is not true! - it returns string|false|null, just as this method does.
             $this->sourceMimeType = ImageMimeTypeGuesser::lenientGuess($this->source);
         }
         return $this->sourceMimeType;
@@ -2161,7 +2163,9 @@ trait EncodingAutoTrait
     abstract public function getOptions();
     abstract protected function setOption($optionName, $optionValue);
     abstract protected function logLn($msg, $style = '');
+    abstract protected function log($msg, $style = '');
     abstract protected function ln();
+    abstract protected function logReduction($source, $destination);
 
     public function supportsLossless()
     {
@@ -4612,11 +4616,11 @@ class Stack extends AbstractConverter
         $this->ln();
         $this->logLn('Stack failed in ' . round((microtime(true) - $beginTimeStack) * 1000) . ' ms');
 
+        // Hm, Scrutinizer complains that $anyRuntimeErrors is always false. But that is not true!
         if ($anyRuntimeErrors) {
             // At least one converter failed
             throw new ConversionFailedException(
-                'None of the converters in the stack could convert the image. ' .
-                'At least one failed, even though its requirements seemed to be met.'
+                'None of the converters in the stack could convert the image.'
             );
         } else {
             // All converters threw a SystemRequirementsNotMetException
@@ -5928,10 +5932,7 @@ class Report
             $options['log-call-arguments'] = true;
             WebPConvert::convert($source, $destination, $options, $echoLogger);
         } catch (\Exception $e) {
-            $success = false;
-
             $msg = $e->getMessage();
-
             echo '<b>' . $msg . '</b>';
 
             //echo '<p>Rethrowing exception for your convenience</p>';

@@ -381,6 +381,8 @@ abstract class AbstractConverter
     public function getMimeTypeOfSource()
     {
         if (!isset($this->sourceMimeType)) {
+            // PS: Scrutinizer complains that ImageMimeTypeGuesser::lenientGuess could also return a boolean
+            // but this is not true! - it returns string|false|null, just as this method does.
             $this->sourceMimeType = ImageMimeTypeGuesser::lenientGuess($this->source);
         }
         return $this->sourceMimeType;
