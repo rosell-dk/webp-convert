@@ -15,9 +15,9 @@ class CwebpExposer extends AbstractConverterExposer {
         parent::__construct($gd);
     }
 
-    public function createCommandLineOptions()
+    public function createCommandLineOptions($version = '0.6.1')
     {
-        return $this->callPrivateFunction('createCommandLineOptions');
+        return $this->callPrivateFunction('createCommandLineOptions', null, $version);
     }
 
 }

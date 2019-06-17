@@ -324,7 +324,7 @@ abstract class AbstractConverter
                 if (isset($trace['file']) && isset($trace['line'])) {
                     $this->logLn(
                         $trace['file'] . ':' . $trace['line']
-                    );                    
+                    );
                 }
             }
             throw $e;
