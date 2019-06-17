@@ -114,7 +114,6 @@ class WpcTest extends TestCase
             'api-version' => 1,
             'crypt-api-key-in-transfer' => true,
             'api-key' => 'wrong!',
-            'api-url' => 'http://wpc.example.com/',
         ];
 
         $this->expectException(InvalidApiKeyException::class);
