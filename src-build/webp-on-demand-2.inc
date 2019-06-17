@@ -2554,17 +2554,17 @@ class Cwebp extends AbstractConverter
     {
         $this->logLn('Locating cwebp binaries');
 
+        if (defined('WEBPCONVERT_CWEBP_PATH')) {
+            $this->logLn('WEBPCONVERT_CWEBP_PATH was defined, so using that path and ignoring any other');
+            //$this->logLn('Value: "' . getenv('WEBPCONVERT_CWEBP_PATH') . '"');
+            return [WEBPCONVERT_CWEBP_PATH];
+        }
         if (!empty(getenv('WEBPCONVERT_CWEBP_PATH'))) {
             $this->logLn(
                 'WEBPCONVERT_CWEBP_PATH environment variable was set, so using that path and ignoring any other'
             );
             //$this->logLn('Value: "' . getenv('WEBPCONVERT_CWEBP_PATH') . '"');
             return [getenv('WEBPCONVERT_CWEBP_PATH')];
-        }
-        if (defined('WEBPCONVERT_CWEBP_PATH')) {
-            $this->logLn('WEBPCONVERT_CWEBP_PATH was defined, so using that path and ignoring any other');
-            //$this->logLn('Value: "' . getenv('WEBPCONVERT_CWEBP_PATH') . '"');
-            return [WEBPCONVERT_CWEBP_PATH];
         }
 
         $binaries = [];
@@ -2810,8 +2810,11 @@ class Ewww extends AbstractConverter
         if (!empty($this->options['api-key'])) {
             return $this->options['api-key'];
         }
-        if (!empty(getenv('EWWW_API_KEY'))) {
-            return getenv('EWWW_API_KEY');
+        if (defined('WEBPCONVERT_EWWW_API_KEY')) {
+            return WEBPCONVERT_EWWW_API_KEY;
+        }
+        if (!empty(getenv('WEBPCONVERT_EWWW_API_KEY'))) {
+            return getenv('WEBPCONVERT_EWWW_API_KEY');
         }
         return false;
     }
@@ -3793,11 +3796,13 @@ class GraphicsMagick extends AbstractConverter
 
     private function getPath()
     {
-        if (empty(getenv('GRAPHICSMAGICK_PATH'))) {
-            return 'gm';
-        } else {
-            return getenv('GRAPHICSMAGICK_PATH');
+        if (defined('WEBPCONVERT_GRAPHICSMAGICK_PATH')) {
+            return WEBPCONVERT_GRAPHICSMAGICK_PATH;
         }
+        if (!empty(getenv('WEBPCONVERT_GRAPHICSMAGICK_PATH'))) {
+            return getenv('WEBPCONVERT_GRAPHICSMAGICK_PATH');
+        }
+        return 'gm';
     }
 
     public function isInstalled()
@@ -3965,16 +3970,13 @@ class ImageMagick extends AbstractConverter
 
     private function getPath()
     {
-        // Should we use "magick" or "convert" command?
-        // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
-        // Should we perhaps try both?
-        // For now, we just go with "convert"
-
-        if (!empty(getenv('IMAGEMAGICK_PATH'))) {
-            return getenv('IMAGEMAGICK_PATH');
-        } else {
-            return 'convert';
+        if (defined('WEBPCONVERT_IMAGEMAGICK_PATH')) {
+            return WEBPCONVERT_IMAGEMAGICK_PATH;
         }
+        if (!empty(getenv('WEBPCONVERT_IMAGEMAGICK_PATH'))) {
+            return getenv('WEBPCONVERT_IMAGEMAGICK_PATH');
+        }
+        return 'convert';
     }
 
     private function getVersion()
@@ -4874,8 +4876,11 @@ class Wpc extends AbstractConverter
                 return $this->options['api-key'];
             }
         }
-        if (!empty(getenv('WPC_API_KEY'))) {
-            return getenv('WPC_API_KEY');
+        if (defined('WEBPCONVERT_WPC_API_KEY')) {
+            return WEBPCONVERT_WPC_API_KEY;
+        }
+        if (!empty(getenv('WEBPCONVERT_WPC_API_KEY'))) {
+            return getenv('WEBPCONVERT_WPC_API_KEY');
         }
         return '';
     }
@@ -4890,8 +4895,11 @@ class Wpc extends AbstractConverter
         if (!empty($this->options['api-url'])) {
             return $this->options['api-url'];
         }
-        if (!empty(getenv('WPC_API_URL'))) {
-            return getenv('WPC_API_URL');
+        if (defined('WEBPCONVERT_WPC_API_URL')) {
+            return WEBPCONVERT_WPC_API_URL;
+        }
+        if (!empty(getenv('WEBPCONVERT_WPC_API_URL'))) {
+            return getenv('WEBPCONVERT_WPC_API_URL');
         }
         return '';
     }

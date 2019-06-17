@@ -80,15 +80,19 @@ Stack::convert($source, $destination, $options = [
 ], $logger=null);
 ```
 
-Note: As an alternative to setting the third party credentials in the options, you can set them through environment variables ("EWWW_API_KEY", "WPC_API_KEY", "WPC_API_URL"). Paths to binaries can also be set with environment variables (it is rarely needed to do this): "CWEBP_PATH", "GRAPHICSMAGICK_PATH" and IMAGEMAGICK_PATH"
+Note: As an alternative to setting the third party credentials in the options, you can set them through constants or environment variables ("WEBPCONVERT_EWWW_API_KEY", "WEBPCONVERT_WPC_API_KEY", "WEBPCONVERT_WPC_API_URL"). Paths to binaries can also be set like that (it is rarely needed to do this): "WEBPCONVERT_CWEBP_PATH", "WEBPCONVERT_GRAPHICSMAGICK_PATH" and WEBPCONVERT_IMAGEMAGICK_PATH"
 
 To set an environment variable in Apache, you can add a line like this in your `.htaccess` or vhost configuration:
 ```
 # Set ewww api key for WebP Convert
-SetEnv EWWW_API_KEY yourVerySecretApiKeyGoesHere
+SetEnv WEBPCONVERT_EWWW_API_KEY yourVerySecretApiKeyGoesHere
 
 # Set custom path to imagick for WebP Convert
-SetEnv IMAGEMAGICK_PATH /usr/local/bin/magick
+SetEnv WEBPCONVERT_IMAGEMAGICK_PATH /usr/local/bin/magick
+```
+To set a constant:
+```php
+define('WEBPCONVERT_IMAGEMAGICK_PATH', '/usr/local/bin/magick');
 ```
 
 

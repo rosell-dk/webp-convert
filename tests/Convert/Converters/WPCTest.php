@@ -29,11 +29,11 @@ class WpcTest extends TestCase
 
 /*    public function testApi0()
     {
-        if (!empty(getenv('WPC_API_URL_API0'))) {
+        if (!empty(getenv('WEBPCONVERT_WPC_API_URL_API0'))) {
             $source = $this->imageDir . '/test.png';
             Wpc::convert($source, $source . '.webp', [
                 'api-version' => 0,
-                'api-url' => getenv('WPC_API_URL_API0')
+                'api-url' => getenv('WEBPCONVERT_WPC_API_URL_API0')
             ]);
         }
     }
@@ -71,14 +71,14 @@ class WpcTest extends TestCase
 
     public function testApi0()
     {
-        if (empty(getenv('WPC_API_URL_API0'))) {
+        if (empty(getenv('WEBPCONVERT_WPC_API_URL_API0'))) {
             return;
         }
 
         $source = $this->imageDir . '/test.png';
         $options = [
             'api-version' => 0,
-            'api-url' => getenv('WPC_API_URL_API0'),
+            'api-url' => getenv('WEBPCONVERT_WPC_API_URL_API0'),
             'lossless' => true,
         ];
 
@@ -89,7 +89,7 @@ class WpcTest extends TestCase
 
     public function testApi1()
     {
-        if (empty(getenv('WPC_API_URL'))) {
+        if (empty(getenv('WEBPCONVERT_WPC_API_URL'))) {
             return;
         }
 
@@ -105,7 +105,7 @@ class WpcTest extends TestCase
 
     public function testWrongSecretButRightUrl()
     {
-        if (empty(getenv('WPC_API_URL'))) {
+        if (empty(getenv('WEBPCONVERT_WPC_API_URL'))) {
             return;
         }
 
@@ -113,7 +113,8 @@ class WpcTest extends TestCase
         $options = [
             'api-version' => 1,
             'crypt-api-key-in-transfer' => true,
-            'api-key' => 'wrong!'
+            'api-key' => 'wrong!',
+            'api-url' => 'http://wpc.example.com/',
         ];
 
         $this->expectException(InvalidApiKeyException::class);
@@ -178,17 +179,17 @@ class WpcTest extends TestCase
 
     public function testApi0()
     {
-        if (!empty(getenv('WPC_API_URL_API0'))) {
+        if (!empty(getenv('WEBPCONVERT_WPC_API_URL_API0'))) {
             ConverterTestHelper::runAllConvertTests($this, 'Wpc', [
                 'api-version' => 0,
-                'api-url' => getenv('WPC_API_URL_API0')
+                'api-url' => getenv('WEBPCONVERT_WPC_API_URL_API0')
             ]);
         }
     }
 
     public function testApi1()
     {
-        if (empty(getenv('WPC_API_URL')) || empty(getenv('WPC_API_KEY'))) {
+        if (empty(getenv('WEBPCONVERT_WPC_API_URL')) || empty(getenv('WEBPCONVERT_WPC_API_KEY'))) {
             return;
         }
 
@@ -216,7 +217,7 @@ class WpcTest extends TestCase
 /*
     public function testWrongSecretButRightUrl()
     {
-        if (empty(getenv('WPC_API_URL'))) {
+        if (empty(getenv('WEBPCONVERT_WPC_API_URL'))) {
             return;
         }
 
@@ -224,7 +225,7 @@ class WpcTest extends TestCase
 
         Wpc::convert($this->imageDir . '/test.png', $this->imageDir . '/test.webp', [
             'api-version' => 0,
-            'api-url' => getenv('WPC_API_URL'),
+            'api-url' => getenv('WEBPCONVERT_WPC_API_URL'),
             'secret' => 'purposely-wrong-secret!'
         ]);
     }

@@ -327,17 +327,17 @@ class Cwebp extends AbstractConverter
     {
         $this->logLn('Locating cwebp binaries');
 
+        if (defined('WEBPCONVERT_CWEBP_PATH')) {
+            $this->logLn('WEBPCONVERT_CWEBP_PATH was defined, so using that path and ignoring any other');
+            //$this->logLn('Value: "' . getenv('WEBPCONVERT_CWEBP_PATH') . '"');
+            return [WEBPCONVERT_CWEBP_PATH];
+        }
         if (!empty(getenv('WEBPCONVERT_CWEBP_PATH'))) {
             $this->logLn(
                 'WEBPCONVERT_CWEBP_PATH environment variable was set, so using that path and ignoring any other'
             );
             //$this->logLn('Value: "' . getenv('WEBPCONVERT_CWEBP_PATH') . '"');
             return [getenv('WEBPCONVERT_CWEBP_PATH')];
-        }
-        if (defined('WEBPCONVERT_CWEBP_PATH')) {
-            $this->logLn('WEBPCONVERT_CWEBP_PATH was defined, so using that path and ignoring any other');
-            //$this->logLn('Value: "' . getenv('WEBPCONVERT_CWEBP_PATH') . '"');
-            return [WEBPCONVERT_CWEBP_PATH];
         }
 
         $binaries = [];

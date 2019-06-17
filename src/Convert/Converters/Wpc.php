@@ -90,8 +90,11 @@ class Wpc extends AbstractConverter
                 return $this->options['api-key'];
             }
         }
-        if (!empty(getenv('WPC_API_KEY'))) {
-            return getenv('WPC_API_KEY');
+        if (defined('WEBPCONVERT_WPC_API_KEY')) {
+            return WEBPCONVERT_WPC_API_KEY;
+        }
+        if (!empty(getenv('WEBPCONVERT_WPC_API_KEY'))) {
+            return getenv('WEBPCONVERT_WPC_API_KEY');
         }
         return '';
     }
@@ -106,8 +109,11 @@ class Wpc extends AbstractConverter
         if (!empty($this->options['api-url'])) {
             return $this->options['api-url'];
         }
-        if (!empty(getenv('WPC_API_URL'))) {
-            return getenv('WPC_API_URL');
+        if (defined('WEBPCONVERT_WPC_API_URL')) {
+            return WEBPCONVERT_WPC_API_URL;
+        }
+        if (!empty(getenv('WEBPCONVERT_WPC_API_URL'))) {
+            return getenv('WEBPCONVERT_WPC_API_URL');
         }
         return '';
     }

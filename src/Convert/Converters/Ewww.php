@@ -53,8 +53,11 @@ class Ewww extends AbstractConverter
         if (!empty($this->options['api-key'])) {
             return $this->options['api-key'];
         }
-        if (!empty(getenv('EWWW_API_KEY'))) {
-            return getenv('EWWW_API_KEY');
+        if (defined('WEBPCONVERT_EWWW_API_KEY')) {
+            return WEBPCONVERT_EWWW_API_KEY;
+        }
+        if (!empty(getenv('WEBPCONVERT_EWWW_API_KEY'))) {
+            return getenv('WEBPCONVERT_EWWW_API_KEY');
         }
         return false;
     }

@@ -81,8 +81,8 @@ class EwwwTest extends TestCase
         $invalidKey = 'notvalidno';
         $this->assertFalse(Ewww::isWorkingKey($invalidKey));
 
-        if (!empty(getenv('EWWW_API_KEY'))) {
-            $realWorkingKey = getenv('EWWW_API_KEY');
+        if (!empty(getenv('WEBPCONVERT_EWWW_API_KEY'))) {
+            $realWorkingKey = getenv('WEBPCONVERT_EWWW_API_KEY');
             $this->assertTrue(Ewww::isWorkingKey($realWorkingKey));
         }
     }

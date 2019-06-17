@@ -35,11 +35,13 @@ class GraphicsMagick extends AbstractConverter
 
     private function getPath()
     {
-        if (empty(getenv('GRAPHICSMAGICK_PATH'))) {
-            return 'gm';
-        } else {
-            return getenv('GRAPHICSMAGICK_PATH');
+        if (defined('WEBPCONVERT_GRAPHICSMAGICK_PATH')) {
+            return WEBPCONVERT_GRAPHICSMAGICK_PATH;
         }
+        if (!empty(getenv('WEBPCONVERT_GRAPHICSMAGICK_PATH'))) {
+            return getenv('WEBPCONVERT_GRAPHICSMAGICK_PATH');
+        }
+        return 'gm';
     }
 
     public function isInstalled()

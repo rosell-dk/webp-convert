@@ -36,16 +36,13 @@ class ImageMagick extends AbstractConverter
 
     private function getPath()
     {
-        // Should we use "magick" or "convert" command?
-        // It seems they do the same. But which is best supported? Which is mostly available (whitelisted)?
-        // Should we perhaps try both?
-        // For now, we just go with "convert"
-
-        if (!empty(getenv('IMAGEMAGICK_PATH'))) {
-            return getenv('IMAGEMAGICK_PATH');
-        } else {
-            return 'convert';
+        if (defined('WEBPCONVERT_IMAGEMAGICK_PATH')) {
+            return WEBPCONVERT_IMAGEMAGICK_PATH;
         }
+        if (!empty(getenv('WEBPCONVERT_IMAGEMAGICK_PATH'))) {
+            return getenv('WEBPCONVERT_IMAGEMAGICK_PATH');
+        }
+        return 'convert';
     }
 
     private function getVersion()
