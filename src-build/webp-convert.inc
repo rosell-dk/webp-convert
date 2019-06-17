@@ -2635,7 +2635,7 @@ class Cwebp extends AbstractConverter
         if (defined('WEBPCONVERT_CWEBP_PATH')) {
             $this->logLn('WEBPCONVERT_CWEBP_PATH was defined, so using that path and ignoring any other');
             //$this->logLn('Value: "' . getenv('WEBPCONVERT_CWEBP_PATH') . '"');
-            return [WEBPCONVERT_CWEBP_PATH];
+            return [constant('WEBPCONVERT_CWEBP_PATH')];
         }
         if (!empty(getenv('WEBPCONVERT_CWEBP_PATH'))) {
             $this->logLn(
@@ -2661,7 +2661,7 @@ class Cwebp extends AbstractConverter
         // TODO: exec('whereis cwebp');
         if ($this->options['try-supplied-binary-for-os']) {
             $suppliedBinary = $this->getSuppliedBinaryPathForOS();
-            if ($suppliedBinary != false) {
+            if ($suppliedBinary !== false) {
                 $binaries[] = $suppliedBinary;
             }
         } else {
@@ -2889,7 +2889,7 @@ class Ewww extends AbstractConverter
             return $this->options['api-key'];
         }
         if (defined('WEBPCONVERT_EWWW_API_KEY')) {
-            return WEBPCONVERT_EWWW_API_KEY;
+            return constant('WEBPCONVERT_EWWW_API_KEY');
         }
         if (!empty(getenv('WEBPCONVERT_EWWW_API_KEY'))) {
             return getenv('WEBPCONVERT_EWWW_API_KEY');
@@ -3875,7 +3875,7 @@ class GraphicsMagick extends AbstractConverter
     private function getPath()
     {
         if (defined('WEBPCONVERT_GRAPHICSMAGICK_PATH')) {
-            return WEBPCONVERT_GRAPHICSMAGICK_PATH;
+            return constant('WEBPCONVERT_GRAPHICSMAGICK_PATH');
         }
         if (!empty(getenv('WEBPCONVERT_GRAPHICSMAGICK_PATH'))) {
             return getenv('WEBPCONVERT_GRAPHICSMAGICK_PATH');
@@ -4049,7 +4049,7 @@ class ImageMagick extends AbstractConverter
     private function getPath()
     {
         if (defined('WEBPCONVERT_IMAGEMAGICK_PATH')) {
-            return WEBPCONVERT_IMAGEMAGICK_PATH;
+            return constant('WEBPCONVERT_IMAGEMAGICK_PATH');
         }
         if (!empty(getenv('WEBPCONVERT_IMAGEMAGICK_PATH'))) {
             return getenv('WEBPCONVERT_IMAGEMAGICK_PATH');
@@ -4955,7 +4955,7 @@ class Wpc extends AbstractConverter
             }
         }
         if (defined('WEBPCONVERT_WPC_API_KEY')) {
-            return WEBPCONVERT_WPC_API_KEY;
+            return constant('WEBPCONVERT_WPC_API_KEY');
         }
         if (!empty(getenv('WEBPCONVERT_WPC_API_KEY'))) {
             return getenv('WEBPCONVERT_WPC_API_KEY');
@@ -4974,7 +4974,7 @@ class Wpc extends AbstractConverter
             return $this->options['api-url'];
         }
         if (defined('WEBPCONVERT_WPC_API_URL')) {
-            return WEBPCONVERT_WPC_API_URL;
+            return constant('WEBPCONVERT_WPC_API_URL');
         }
         if (!empty(getenv('WEBPCONVERT_WPC_API_URL'))) {
             return getenv('WEBPCONVERT_WPC_API_URL');

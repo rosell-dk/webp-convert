@@ -36,7 +36,7 @@ class GraphicsMagick extends AbstractConverter
     private function getPath()
     {
         if (defined('WEBPCONVERT_GRAPHICSMAGICK_PATH')) {
-            return WEBPCONVERT_GRAPHICSMAGICK_PATH;
+            return constant('WEBPCONVERT_GRAPHICSMAGICK_PATH');
         }
         if (!empty(getenv('WEBPCONVERT_GRAPHICSMAGICK_PATH'))) {
             return getenv('WEBPCONVERT_GRAPHICSMAGICK_PATH');

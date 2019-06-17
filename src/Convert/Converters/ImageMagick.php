@@ -37,7 +37,7 @@ class ImageMagick extends AbstractConverter
     private function getPath()
     {
         if (defined('WEBPCONVERT_IMAGEMAGICK_PATH')) {
-            return WEBPCONVERT_IMAGEMAGICK_PATH;
+            return constant('WEBPCONVERT_IMAGEMAGICK_PATH');
         }
         if (!empty(getenv('WEBPCONVERT_IMAGEMAGICK_PATH'))) {
             return getenv('WEBPCONVERT_IMAGEMAGICK_PATH');
