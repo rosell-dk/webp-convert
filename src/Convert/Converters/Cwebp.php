@@ -330,7 +330,7 @@ class Cwebp extends AbstractConverter
         if (defined('WEBPCONVERT_CWEBP_PATH')) {
             $this->logLn('WEBPCONVERT_CWEBP_PATH was defined, so using that path and ignoring any other');
             //$this->logLn('Value: "' . getenv('WEBPCONVERT_CWEBP_PATH') . '"');
-            return [WEBPCONVERT_CWEBP_PATH];
+            return [constant('WEBPCONVERT_CWEBP_PATH')];
         }
         if (!empty(getenv('WEBPCONVERT_CWEBP_PATH'))) {
             $this->logLn(
@@ -356,7 +356,7 @@ class Cwebp extends AbstractConverter
         // TODO: exec('whereis cwebp');
         if ($this->options['try-supplied-binary-for-os']) {
             $suppliedBinary = $this->getSuppliedBinaryPathForOS();
-            if ($suppliedBinary != false) {
+            if ($suppliedBinary !== false) {
                 $binaries[] = $suppliedBinary;
             }
         } else {
