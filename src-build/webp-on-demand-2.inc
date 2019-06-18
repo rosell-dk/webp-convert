@@ -2287,12 +2287,22 @@ class Cwebp extends AbstractConverter
     // (possible values, see here: https://stackoverflow.com/questions/738823/possible-values-for-php-os)
     // Got the precompiled binaries here: https://developers.google.com/speed/webp/docs/precompiled
     private static $suppliedBinariesInfo = [
-        'WINNT' => [ 'cwebp.exe', '49e9cb98db30bfa27936933e6fd94d407e0386802cb192800d9fd824f6476873'],
-        'Darwin' => [ 'cwebp-mac12', 'a06a3ee436e375c89dbc1b0b2e8bd7729a55139ae072ed3f7bd2e07de0ebb379'],
-        'SunOS' => [ 'cwebp-sol', '1febaffbb18e52dc2c524cda9eefd00c6db95bc388732868999c0f48deb73b4f'],
-        'FreeBSD' => [ 'cwebp-fbsd', 'e5cbea11c97fadffe221fdf57c093c19af2737e4bbd2cb3cd5e908de64286573'],
-        'Linux' => [ 'cwebp-linux', 'd6142e9da2f1cab541de10a31527c597225fff5644e66e31d62bb391c41bfbf4'] // 1.0.2
+        'WINNT' => [['cwebp.exe', '49e9cb98db30bfa27936933e6fd94d407e0386802cb192800d9fd824f6476873']],
+        'Darwin' => [['cwebp-mac12', 'a06a3ee436e375c89dbc1b0b2e8bd7729a55139ae072ed3f7bd2e07de0ebb379']],
+        'SunOS' => [['cwebp-sol', '1febaffbb18e52dc2c524cda9eefd00c6db95bc388732868999c0f48deb73b4f']],
+        'FreeBSD' => [['cwebp-fbsd', 'e5cbea11c97fadffe221fdf57c093c19af2737e4bbd2cb3cd5e908de64286573']],
+        'Linux' => [
+            // Dynamically linked executable.
+            // It seems it is slightly faster than the statically linked
+            ['cwebp-linux-1.0.2-shared', 'd6142e9da2f1cab541de10a31527c597225fff5644e66e31d62bb391c41bfbf4'],
 
+            // Statically linked executable
+            // It may be that it on some systems works, where the dynamically linked does not (see #196)
+            ['cwebp-linux-1.0.2-static', 'a67092563d9de0fbced7dde61b521d60d10c0ad613327a42a81845aefa612b29'],
+
+            // Old executable for systems where both of the above fails
+            ['cwebp-linux-0.6.1', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568'],
+        ]
     ];
 
     public function checkOperationality()
@@ -2505,7 +2515,7 @@ class Cwebp extends AbstractConverter
     /**
      *  Get path for supplied binary for current OS - and validate hash.
      *
-     *  @return  string|false  False if something is wrong, otherwise the path.
+     *  @return  array  Array of supplied binaries (which actually exists, and where hash validates)
      */
     private function getSuppliedBinaryPathForOS()
     {
@@ -2515,43 +2525,62 @@ class Cwebp extends AbstractConverter
         $options = $this->options;
         if (!isset(self::$suppliedBinariesInfo[PHP_OS])) {
             $this->logLn('No we dont - not for that OS');
-            return false;
+            return [];
         }
         $this->logLn('We do.');
 
-        $info = self::$suppliedBinariesInfo[PHP_OS];
-
-        $file = $info[0];
-        $hash = $info[1];
-
-        $binaryFile = __DIR__ . '/' . $options['rel-path-to-precompiled-binaries'] . '/' . $file;
-
-        // The file should exist, but may have been removed manually.
-        if (!file_exists($binaryFile)) {
-            $this->logLn('Supplied binary not found! It ought to be here:' . $binaryFile, 'italic');
-            return false;
+        $result = [];
+        $files = self::$suppliedBinariesInfo[PHP_OS];
+        if (count($files) > 0) {
+            $this->logLn('We in fact have ' . count($files));
         }
 
-        // File exists, now generate its hash
-        // hash_file() is normally available, but it is not always
-        // - https://stackoverflow.com/questions/17382712/php-5-3-20-undefined-function-hash
-        // If available, validate that hash is correct.
+        foreach ($files as $i => list($file, $hash)) {
+            //$file = $info[0];
+            //$hash = $info[1];
 
-        if (function_exists('hash_file')) {
-            $binaryHash = hash_file('sha256', $binaryFile);
+            $binaryFile = __DIR__ . '/' . $options['rel-path-to-precompiled-binaries'] . '/' . $file;
 
-            if ($binaryHash != $hash) {
-                $this->logLn(
-                    'Binary checksum of supplied binary is invalid! ' .
-                    'Did you transfer with FTP, but not in binary mode? ' .
-                    'File:' . $binaryFile . '. ' .
-                    'Expected checksum: ' . $hash . '. ' .
-                    'Actual checksum:' . $binaryHash . '.',
-                    'bold'
-                );
+            // Replace "/./" with "/" in path (we could alternatively use realpath)
+            //$binaryFile = preg_replace('#\/\.\/#', '/', $binaryFile);
+            // The file should exist, but may have been removed manually.
+            /*
+            if (!file_exists($binaryFile)) {
+                $this->logLn('Supplied binary not found! It ought to be here:' . $binaryFile, 'italic');
+                return false;
+            }*/
+
+            $realPathResult = realpath($binaryFile);
+            if ($realPathResult === false) {
+                $this->logLn('Supplied binary not found! It ought to be here:' . $binaryFile, 'italic');
+                continue;
             }
+            $binaryFile = $realPathResult;
+
+            // File exists, now generate its hash
+            // hash_file() is normally available, but it is not always
+            // - https://stackoverflow.com/questions/17382712/php-5-3-20-undefined-function-hash
+            // If available, validate that hash is correct.
+
+            if (function_exists('hash_file')) {
+                $binaryHash = hash_file('sha256', $binaryFile);
+
+                if ($binaryHash != $hash) {
+                    $this->logLn(
+                        'Binary checksum of supplied binary is invalid! ' .
+                        'Did you transfer with FTP, but not in binary mode? ' .
+                        'File:' . $binaryFile . '. ' .
+                        'Expected checksum: ' . $hash . '. ' .
+                        'Actual checksum:' . $binaryHash . '.',
+                        'bold'
+                    );
+                    continue;
+                }
+            }
+            $result[] = $binaryFile;
         }
-        return $binaryFile;
+
+        return $result;
     }
 
     private function discoverBinaries()
@@ -2586,8 +2615,8 @@ class Cwebp extends AbstractConverter
         }
         // TODO: exec('whereis cwebp');
         if ($this->options['try-supplied-binary-for-os']) {
-            $suppliedBinary = $this->getSuppliedBinaryPathForOS();
-            if ($suppliedBinary !== false) {
+            $suppliedBinaries = $this->getSuppliedBinaryPathForOS();
+            foreach ($suppliedBinaries as $suppliedBinary) {
                 $binaries[] = $suppliedBinary;
             }
         } else {
