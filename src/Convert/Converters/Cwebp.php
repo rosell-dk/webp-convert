@@ -60,7 +60,7 @@ class Cwebp extends AbstractConverter
         'Darwin' => [ 'cwebp-mac12', 'a06a3ee436e375c89dbc1b0b2e8bd7729a55139ae072ed3f7bd2e07de0ebb379'],
         'SunOS' => [ 'cwebp-sol', '1febaffbb18e52dc2c524cda9eefd00c6db95bc388732868999c0f48deb73b4f'],
         'FreeBSD' => [ 'cwebp-fbsd', 'e5cbea11c97fadffe221fdf57c093c19af2737e4bbd2cb3cd5e908de64286573'],
-        'Linux' => [ 'cwebp-linux2', 'd6142e9da2f1cab541de10a31527c597225fff5644e66e31d62bb391c41bfbf4'] // 1.0.2
+        'Linux' => [ 'cwebp-linux', 'd6142e9da2f1cab541de10a31527c597225fff5644e66e31d62bb391c41bfbf4'] // 1.0.2
 
     ];
 
