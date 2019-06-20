@@ -28,16 +28,20 @@ class PhpMerger
 
             // load dirs in defined order. No recursion.
             foreach ($def['dirs'] as $dir) {
-                $dirAbs = __DIR__  . '/' . $def['root'] . '/' . $dir;
+                $dirAbs = __DIR__  . '/' . $def['dir-root'] . '/' . $dir;
+                if (!is_dir($dirAbs)) {
+                    echo 'Dir not found: ' . $dirAbs;
+                    return false;
+                }
                 $files = glob($dirAbs . '/*.php');
                 foreach ($files as $file) {
                     // only require files that begins with uppercase (A-Z)
                     if (preg_match('/\/[A-Z][a-zA-Z]*\.php/', $file)) {
-                        $file = str_replace(__DIR__ . '/' . $def['root'], '', $file);
+                        $file = str_replace(__DIR__ . '/' . $def['dir-root'], '', $file);
                         $file = str_replace('./', '', $file);
 
                         //echo $file . "\n";
-                        self::add_to_queue($def['root'] . $file);
+                        self::add_to_queue($def['dir-root'] . $file);
                     }
                 }
             }

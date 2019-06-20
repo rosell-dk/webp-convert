@@ -15,7 +15,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\UnhandledException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFolderException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
+//use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
+use WebPConvert\Exceptions\InvalidInput\TargetNotFoundException;
 
 class ConverterTestHelper
 {
@@ -44,6 +45,16 @@ class ConverterTestHelper
         }
     }
 */
+    public static function getImageFolder()
+    {
+        return realpath(__DIR__ . '/../../images');
+    }
+
+    public static function getImagePath($image)
+    {
+        return self::getImageFolder() . '/' . $image;
+    }
+
     private static function callConvert($converterClassName, $source, $destination, $converterOptions)
     {
         return call_user_func(
@@ -66,7 +77,7 @@ class ConverterTestHelper
         $testCase->expectException(CreateDestinationFolderException::class);
 
         try {
-            $source = (__DIR__ . '/../../test.jpg');
+            $source = self::getImagePath('test.jpg');
             $destination = '/you-can-delete-me/';
             $result = self::callConvert($converterClassName, $source, $destination);
         } catch (ConverterNotOperationalException $e) {
@@ -104,7 +115,12 @@ class ConverterTestHelper
         $testCase->expectException(TargetNotFoundException::class);
 
         try {
-            $result = self::callConvert($converterClassName, __DIR__ . '/i-dont-exist.jpg', __DIR__ . '/i-dont-exist.webp', $converterOptions);
+            $result = self::callConvert(
+                $converterClassName,
+                __DIR__ . '/i-dont-exist.jpg',
+                __DIR__ . '/i-dont-exist.webp',
+                $converterOptions
+            );
         } catch (ConverterNotOperationalException $e) {
             // Converter not operational, and that is ok!
             // We shall pretend that the expected exception was thrown, by throwing it!
@@ -123,8 +139,8 @@ class ConverterTestHelper
     {
 
         try {
-            $source = (__DIR__ . '/../../' . $src);
-            $destination = (__DIR__ . '/../../' . $src . '.webp');
+            $source = self::getImagePath($src);
+            $destination = self::getImagePath($src . '.webp');
 
             $result = self::callConvert($converterClassName, $source, $destination, $converterOptions);
 

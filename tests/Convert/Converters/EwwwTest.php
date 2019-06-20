@@ -17,7 +17,15 @@ use WebPConvert\Tests\Convert\TestConverters\ExtendedConverters\EwwwExtended;
 class EwwwTest extends TestCase
 {
 
-    public $imageDir = __DIR__ . '/../../images/';
+    public static function getImageFolder()
+    {
+        return realpath(__DIR__ . '/../../images');
+    }
+
+    public static function getImagePath($image)
+    {
+        return self::getImageFolder() . '/' . $image;
+    }
 
     public function testConvert()
     {
@@ -30,7 +38,7 @@ class EwwwTest extends TestCase
     {
         $this->expectException(InvalidApiKeyException::class);
 
-        $source = $this->imageDir . '/test.png';
+        $source = self::getImagePath('test.png');
         Ewww::convert($source, $source . '.webp', [
             'api-key' => 'wrong-key!'
         ]);
@@ -42,7 +50,7 @@ class EwwwTest extends TestCase
 
         $wrongKeyRightLength = 'invalid-key-but-hasright-length';
 
-        $source = $this->imageDir . '/test.png';
+        $source = self::getImagePath('test.png');
         Ewww::convert($source, $source . '.webp', [
             'api-key' => $wrongKeyRightLength
         ]);
@@ -54,7 +62,7 @@ class EwwwTest extends TestCase
 
         $wrongKeyRightLength = 'invalid-key-but-hasright-length';
 
-        $source = $this->imageDir . '/test.png';
+        $source = self::getImagePath('test.png');
 
         $ee = EwwwExtended::createInstance($source, $source . '.webp', [
             'api-key' => $wrongKeyRightLength

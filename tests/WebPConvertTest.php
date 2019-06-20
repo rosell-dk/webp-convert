@@ -11,7 +11,8 @@ namespace WebPConvert\Tests;
 
 use WebPConvert\WebPConvert;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
+//use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
+use WebPConvert\Exceptions\InvalidInput\TargetNotFoundException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\FileSystemProblems\CreateDestinationFolderException;
 
 use PHPUnit\Framework\TestCase;

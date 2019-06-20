@@ -142,17 +142,16 @@ class Option
 
 namespace WebPConvert\Convert\Converters;
 
+use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
+use WebPConvert\Helpers\InputValidator;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Exceptions\WebPConvertException;
 use WebPConvert\Convert\Converters\BaseTraits\AutoQualityTrait;
 use WebPConvert\Convert\Converters\BaseTraits\DestinationPreparationTrait;
 use WebPConvert\Convert\Converters\BaseTraits\LoggerTrait;
 use WebPConvert\Convert\Converters\BaseTraits\OptionsTrait;
-use WebPConvert\Convert\Converters\BaseTraits\SourceValidationTrait;
 use WebPConvert\Convert\Converters\BaseTraits\WarningLoggerTrait;
+use WebPConvert\Exceptions\WebPConvertException;
 use WebPConvert\Loggers\BaseLogger;
-
-use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 
 /**
  * Base for all converter classes.
@@ -167,7 +166,6 @@ abstract class AbstractConverter
     use OptionsTrait;
     use WarningLoggerTrait;
     use DestinationPreparationTrait;
-    use SourceValidationTrait;
     use LoggerTrait;
 
     /**
@@ -250,6 +248,8 @@ abstract class AbstractConverter
      */
     public function __construct($source, $destination, $options = [], $logger = null)
     {
+        InputValidator::checkSourceAndDestination($source, $destination);
+
         $this->source = $source;
         $this->destination = $destination;
 
@@ -257,7 +257,7 @@ abstract class AbstractConverter
         $this->setProvidedOptions($options);
 
         if (!isset($this->options['_skip_input_check'])) {
-            $this->log('WebP Convert 2.0.0', 'italic');
+            $this->log('WebP Convert 2.0.5', 'italic');
             $this->logLn(' ignited.');
             $this->logLn('- PHP version: ' . phpversion());
             if (isset($_SERVER['SERVER_SOFTWARE'])) {
@@ -266,9 +266,6 @@ abstract class AbstractConverter
             $this->logLn('');
             $this->logLn(self::getConverterDisplayName() . ' converter ignited');
         }
-
-        $this->checkSourceExists();
-        $this->checkSourceMimeType();
     }
 
     /**
@@ -376,10 +373,6 @@ abstract class AbstractConverter
         $this->removeExistingDestinationIfExists();
 
         if (!isset($this->options['_skip_input_check'])) {
-            // Run basic input validations (if source exists and if file extension is valid)
-            $this->checkSourceExists();
-            $this->checkSourceMimeType();
-
             // Check that a file can be written to destination
             $this->checkDestinationWritable();
         }
@@ -1809,71 +1802,6 @@ trait OptionsTrait
     protected function getUnsupportedDefaultOptions()
     {
         return [];
-    }
-}
-
-?><?php
-
-namespace WebPConvert\Convert\Converters\BaseTraits;
-
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
-use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\InvalidImageTypeException;
-
-/**
- * Trait for handling options
- *
- * This trait is currently only used in the AbstractConverter class. It has been extracted into a
- * trait in order to bundle the methods concerning options.
- *
- * @package    WebPConvert
- * @author     Bjørn Rosell <it@rosell.dk>
- * @since      Class available since Release 2.0.0
- */
-trait SourceValidationTrait
-{
-
-    abstract protected function getMimeTypeOfSource();
-    abstract public function getSource();
-
-    /** @var array  Array of allowed mime types for source.  */
-    public static $allowedMimeTypes = ['image/jpeg', 'image/png'];
-
-    /**
-     * Check that source file exists.
-     *
-     * Note: As the input validations are only run one time in a stack,
-     * this method is not overridable
-     *
-     * @throws TargetNotFoundException
-     * @return void
-     */
-    private function checkSourceExists()
-    {
-        // Check if source exists
-        if (!@file_exists($this->getSource())) {
-            throw new TargetNotFoundException('File or directory not found: ' . $this->getSource());
-        }
-    }
-
-    /**
-     * Check that source has a valid mime type.
-     *
-     * Note: As the input validations are only run one time in a stack,
-     * this method is not overridable
-     *
-     * @throws InvalidImageTypeException  If mime type could not be detected or is unsupported
-     * @return void
-     */
-    private function checkSourceMimeType()
-    {
-        $fileMimeType = $this->getMimeTypeOfSource();
-        if (is_null($fileMimeType)) {
-            throw new InvalidImageTypeException('Image type could not be detected');
-        } elseif ($fileMimeType === false) {
-            throw new InvalidImageTypeException('File seems not to be an image.');
-        } elseif (!in_array($fileMimeType, self::$allowedMimeTypes)) {
-            throw new InvalidImageTypeException('Unsupported mime type: ' . $fileMimeType);
-        }
     }
 }
 
@@ -5668,6 +5596,174 @@ class ConverterFactory
 
 ?><?php
 
+namespace WebPConvert\Exceptions;
+
+use WebPConvert\Exceptions\WebPConvertException;
+
+class InvalidInputException extends WebPConvertException
+{
+    public $description = 'Invalid input';
+}
+
+?><?php
+
+namespace WebPConvert\Exceptions\InvalidInput;
+
+use WebPConvert\Exceptions\InvalidInputException;
+
+class InvalidImageTypeException extends InvalidInputException
+{
+    public $description = 'The converter does not handle the supplied image type';
+}
+
+?><?php
+
+namespace WebPConvert\Exceptions\InvalidInput;
+
+use WebPConvert\Exceptions\InvalidInputException;
+
+class TargetNotFoundException extends InvalidInputException
+{
+    public $description = 'The converter could not locate source file';
+}
+
+?><?php
+
+namespace WebPConvert\Helpers;
+
+use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
+use WebPConvert\Exceptions\InvalidInputException;
+use WebPConvert\Exceptions\InvalidInput\InvalidImageTypeException;
+
+/**
+ * Functions for sanitizing.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.6
+ */
+class InputValidator
+{
+
+    private static $allowedMimeTypes = ['image/jpeg', 'image/png'];
+
+    public static function checkMimeType($filePath)
+    {
+        // TODO: ImageMimeTypeGuesser::lenientGuess should cache result if called with an extra true arg
+        $fileMimeType = ImageMimeTypeGuesser::lenientGuess($filePath);
+        if (is_null($fileMimeType)) {
+            throw new InvalidImageTypeException('Image type could not be detected');
+        } elseif ($fileMimeType === false) {
+            throw new InvalidImageTypeException('File seems not to be an image.');
+        } elseif (!in_array($fileMimeType, self::$allowedMimeTypes)) {
+            throw new InvalidImageTypeException('Unsupported mime type: ' . $fileMimeType);
+        }
+    }
+
+    public static function checkSource($source)
+    {
+        PathChecker::checkSourcePath($source);
+        self::checkMimeType($source);
+    }
+
+    public static function checkDestination($destination)
+    {
+        PathChecker::checkDestinationPath($destination);
+    }
+
+    public static function checkSourceAndDestination($source, $destination)
+    {
+        self::checkSource($source);
+        self::checkDestination($destination);
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Helpers;
+
+use WebPConvert\Exceptions\InvalidInputException;
+use WebPConvert\Exceptions\InvalidInput\TargetNotFoundException;
+
+/**
+ * Functions for sanitizing.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.6
+ */
+class PathChecker
+{
+
+     /**
+      * Check absolute file path to prevent attacks.
+      *
+      * - Prevents non printable characters
+      * - Prevents stream wrappers
+      * - Prevents directory traversal
+      *
+      * Preventing non printable characters is especially done to prevent the NUL character, which can be used
+      * to bypass other tests. See https://st-g.de/2011/04/doing-filename-checks-securely-in-PHP.
+      *
+      * Preventeng stream wrappers is especially done to protect against Phar Deserialization.
+      * See https://blog.ripstech.com/2018/new-php-exploitation-technique/
+      *
+      * @param  string  $absFilePath
+      * @return string  sanitized file path
+      */
+    public static function checkAbsolutePath($absFilePath, $text = 'file')
+    {
+        // Prevent non printable characters
+        if (!ctype_print($absFilePath)) {
+            throw new InvalidInputException('Non-printable characters are not allowed in ' . $text);
+        }
+
+        // Prevent directory traversal
+        if (preg_match('#\.\.\/#', $absFilePath)) {
+            throw new InvalidInputException('Directory traversal is not allowed in ' . $text . ' path');
+        }
+
+        // Prevent stream wrappers ("phar://", "php://" and the like)
+        // https://www.php.net/manual/en/wrappers.phar.php
+        if (preg_match('#^\\w+://#', $absFilePath)) {
+            throw new InvalidInputException('Stream wrappers are not allowed in ' . $text . ' path');
+        }
+    }
+
+    public static function checkSourcePath($source)
+    {
+        if (empty($source)) {
+            throw new InvalidInputException('Source argument missing');
+        }
+        self::checkAbsolutePath($source, 'source');
+        if (@!file_exists($source)) {
+            throw new TargetNotFoundException('Source file was not found');
+        }
+        if (@is_dir($source)) {
+            throw new InvalidInputException('Source is a directory');
+        }
+    }
+
+    public static function checkDestinationPath($destination)
+    {
+        if (empty($destination)) {
+            throw new InvalidInputException('Destination argument missing');
+        }
+        self::checkAbsolutePath($destination, 'destination');
+        if (@is_dir($destination)) {
+            throw new InvalidInputException('Destination is a directory');
+        }
+    }
+
+    public static function checkSourceAndDestinationPaths($source, $destination)
+    {
+        self::checkSourcePath($source);
+        self::checkDestinationPath($destination);
+    }
+}
+
+?><?php
+
 namespace WebPConvert\Loggers;
 
 /**
@@ -5924,8 +6020,9 @@ class Header
 ?><?php
 namespace WebPConvert\Serve;
 
-use WebPConvert\WebPConvert;
+use WebPConvert\Helpers\InputValidator;
 use WebPConvert\Loggers\EchoLogger;
+use WebPConvert\WebPConvert;
 
 /**
  * Class for generating a HTML report of converting an image.
@@ -5938,6 +6035,7 @@ class Report
 {
     public static function convertAndReport($source, $destination, $options)
     {
+        InputValidator::checkSourceAndDestination($source, $destination);
         ?>
 <html>
     <head>
@@ -5951,8 +6049,8 @@ class Report
     </head>
     <body>
         <table>
-            <tr><td><i>source:</i></td><td><?php echo $source ?></td></tr>
-            <tr><td><i>destination:</i></td><td><?php echo $destination ?><td></tr>
+            <tr><td><i>source:</i></td><td><?php echo htmlentities($source) ?></td></tr>
+            <tr><td><i>destination:</i></td><td><?php echo htmlentities($destination) ?><td></tr>
         </table>
         <br>
         <?php
@@ -5980,6 +6078,7 @@ namespace WebPConvert\Serve;
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
+use WebPConvert\Helpers\InputValidator;
 use WebPConvert\Serve\Exceptions\ServeFailedException;
 use WebPConvert\Serve\Header;
 use WebPConvert\Serve\Report;
@@ -6047,6 +6146,7 @@ class ServeConvertedWebP
      */
     public static function serveOriginal($source, $serveImageOptions = [])
     {
+        InputValidator::checkSource($source);
         $contentType = ImageMimeTypeGuesser::lenientGuess($source);
         if (is_null($contentType)) {
             throw new ServeFailedException('Rejecting to serve original (mime type cannot be determined)');
@@ -6060,6 +6160,8 @@ class ServeConvertedWebP
     /**
      * Serve destination file.
      *
+     * TODO: SHould this really be public?
+     *
      * @param   string  $destination                   path to destination file
      * @param   array   $serveImageOptions (optional)  options for serving (such as which headers to add)
      *       Supported options:
@@ -6068,6 +6170,7 @@ class ServeConvertedWebP
      */
     public static function serveDestination($destination, $serveImageOptions = [])
     {
+        InputValidator::checkDestination($destination);
         ServeFile::serve($destination, 'image/webp', $serveImageOptions);
     }
 
@@ -6103,16 +6206,7 @@ class ServeConvertedWebP
      */
     public static function serve($source, $destination, $options = [], $serveLogger = null, $convertLogger = null)
     {
-
-        if (empty($source)) {
-            throw new ServeFailedException('Source argument missing');
-        }
-        if (empty($destination)) {
-            throw new ServeFailedException('Destination argument missing');
-        }
-        if (@!file_exists($source)) {
-            throw new ServeFailedException('Source file was not found');
-        }
+        InputValidator::checkSourceAndDestination($source, $destination);
 
         $options = self::processOptions($options);
 
@@ -6178,6 +6272,7 @@ class ServeConvertedWebP
 ?><?php
 namespace WebPConvert\Serve;
 
+use WebPConvert\Helpers\InputValidator;
 use WebPConvert\Options\Options;
 use WebPConvert\Options\StringOption;
 use WebPConvert\Serve\Header;
@@ -6245,7 +6340,6 @@ class ServeConvertedWebPWithErrorHandling
     {
         self::addHeadersPreventingCaching();
 
-        //Header::addLogHeader('Failure');
         Header::addLogHeader('Performing fail action: ' . $fail);
 
         switch ($fail) {
@@ -6312,9 +6406,10 @@ class ServeConvertedWebPWithErrorHandling
         $convertLogger = null,
         $serveClass = '\\WebPConvert\\Serve\\ServeConvertedWebP'
     ) {
-        $options = self::processOptions($options);
 
+        $options = self::processOptions($options);
         try {
+            InputValidator::checkSourceAndDestination($source, $destination);
             //ServeConvertedWebP::serve($source, $destination, $options, $serveLogger);
             call_user_func($serveClass . '::serve', $source, $destination, $options, $serveLogger, $convertLogger);
         } catch (\Exception $e) {

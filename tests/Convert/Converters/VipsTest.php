@@ -16,6 +16,16 @@ use PHPUnit\Framework\TestCase;
 class VipsTest extends TestCase
 {
 
+    public function getImageFolder()
+    {
+        return realpath(__DIR__ . '/../../images');
+    }
+
+    public function getImagePath($image)
+    {
+        return $this->getImageFolder() . '/' . $image;
+    }
+
     public function __construct()
     {
         //require_once('pretend.inc');
@@ -33,11 +43,10 @@ class VipsTest extends TestCase
         ConverterTestHelper::runAllConvertTests($this, 'Vips', $options);
     }
 
-    public static $imageDir = __DIR__ . '/../..';
 
     private function createVips($src, $options = [])
     {
-        $source = self::$imageDir . '/' . $src;
+        $source = $this->getImagePath($src);
         $this->assertTrue(file_exists($source), 'source does not exist:' . $source);
 
         return new Vips($source, $source . '.webp', $options);
@@ -101,7 +110,7 @@ class VipsTest extends TestCase
             return;
         }
 
-        $source = self::$imageDir . '/non-existing';
+        $source = $this->getImagePath('non-existing');
         $vips = new Vips($source, $source . '.webp', []);
         $vipsExposer = new VipsExposer($vips);
 

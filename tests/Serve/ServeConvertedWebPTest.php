@@ -3,6 +3,9 @@
 namespace WebPConvert\Tests\Serve;
 
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
+use WebPConvert\Exceptions\InvalidInputException;
+use WebPConvert\Exceptions\InvalidInput\InvalidImageTypeException;
+use WebPConvert\Exceptions\InvalidInput\TargetNotFoundException;
 use WebPConvert\Serve\ServeConvertedWebP;
 use WebPConvert\Serve\MockedHeader;
 use WebPConvert\Serve\Exceptions\ServeFailedException;
@@ -18,14 +21,22 @@ use PHPUnit\Framework\TestCase;
 class ServeConvertedWebPTest extends TestCase
 {
 
-    public static $imageFolder = __DIR__ . '/../images';
+    public function getImageFolder()
+    {
+        return realpath(__DIR__ . '/../images');
+    }
+
+    public function getImagePath($image)
+    {
+        return $this->getImageFolder() . '/' . $image;
+    }
 
     /**
      * @covers ::serveOriginal
      */
     public function testServeOriginal()
     {
-        $source = self::$imageFolder . '/test.png';
+        $source = $this->getImagePath('test.png');
         $this->assertTrue(file_exists($source), 'source file does not exist:' . $source);
 
         $destination = $source . '.webp';
@@ -58,9 +69,9 @@ class ServeConvertedWebPTest extends TestCase
      */
     public function testServeOriginalNotAnImage()
     {
-        $this->expectException(ServeFailedException::class);
+        $this->expectException(InvalidImageTypeException::class);
 
-        $source = self::$imageFolder . '/text.txt';
+        $source =$this->getImagePath('text.txt');
         $this->assertTrue(file_exists($source), 'source file does not exist');
 
         $contentType = ImageMimeTypeGuesser::lenientGuess($source);
@@ -86,9 +97,9 @@ class ServeConvertedWebPTest extends TestCase
      */
     public function testServeOriginalNotAnImage2()
     {
-        $this->expectException(ServeFailedException::class);
+        $this->expectException(InvalidImageTypeException::class);
 
-        $source = self::$imageFolder . '/text';
+        $source = $this->getImagePath('text');
         $this->assertTrue(file_exists($source), 'source file does not exist');
 
         $contentType = ImageMimeTypeGuesser::lenientGuess($source);
@@ -114,7 +125,7 @@ class ServeConvertedWebPTest extends TestCase
      */
     public function testServeReconvert()
     {
-        $source = self::$imageFolder . '/test.png';
+        $source = $this->getImagePath('test.png');
         $this->assertTrue(file_exists($source));
 
         $destination = $source . '.webp';
@@ -146,7 +157,7 @@ class ServeConvertedWebPTest extends TestCase
      */
     public function testServeServeOriginal()
     {
-        $source = self::$imageFolder . '/test.png';
+        $source = $this->getImagePath('test.png');
         $this->assertTrue(file_exists($source));
 
         $destination = $source . '.webp';
@@ -179,7 +190,7 @@ class ServeConvertedWebPTest extends TestCase
      */
     public function testServeDestination()
     {
-        $source = self::$imageFolder . '/test.png';
+        $source = $this->getImagePath('/test.png');
         $this->assertTrue(file_exists($source));
 
         // create fake webp at destination
@@ -214,7 +225,7 @@ class ServeConvertedWebPTest extends TestCase
      */
     public function testEmptySourceArg()
     {
-        $this->expectException(ServeFailedException::class);
+        $this->expectException(InvalidInputException::class);
 
         ob_start();
         $options = [
@@ -227,19 +238,20 @@ class ServeConvertedWebPTest extends TestCase
             ]
         ];
 
-        $this->assertEmpty('');
-        ServeConvertedWebP::serve('', self::$imageFolder . '/test.png.webp', $options);
+        $source = '';
+        $this->assertEmpty($source);
+        ServeConvertedWebP::serve($source, $this->getImagePath('test.png.webp'), $options);
         $result = ob_get_clean();
     }
 
     /**
      * @covers ::serve
      */
-    public function testInvalidDestinationArg()
+    public function testEmptyDestinationArg()
     {
-        $this->expectException(ServeFailedException::class);
+        $this->expectException(InvalidInputException::class);
 
-        $source = self::$imageFolder . '/test.png';
+        $source = $this->getImagePath('test.png');
         $this->assertTrue(file_exists($source));
 
         $destination = '';
@@ -263,9 +275,9 @@ class ServeConvertedWebPTest extends TestCase
      */
     public function testNoFileAtSource()
     {
-        $this->expectException(ServeFailedException::class);
+        $this->expectException(TargetNotFoundException::class);
 
-        $source = self::$imageFolder . '/i-do-not-exist.png';
+        $source = $this->getImagePath('i-do-not-exist.png');
         $this->assertFalse(file_exists($source));
 
         $destination = '';
@@ -289,7 +301,7 @@ class ServeConvertedWebPTest extends TestCase
      */
     public function testServeReport()
     {
-        $source = self::$imageFolder . '/test.png';
+        $source = $this->getImagePath('test.png');
         $this->assertTrue(file_exists($source));
         $destination = $source . '.webp';
 
@@ -318,7 +330,7 @@ class ServeConvertedWebPTest extends TestCase
 
     public function testSourceIsLighter()
     {
-        $source = self::$imageFolder . '/plaintext-with-jpg-extension.jpg';
+        $source = $this->getImagePath('plaintext-with-jpg-extension.jpg');
 
         // create fake webp at destination, which is larger than the fake jpg
         file_put_contents($source . '.webp', 'aotehu aotnehuatnoehutaoehu atonse uaoehu');
@@ -343,12 +355,12 @@ class ServeConvertedWebPTest extends TestCase
 
     public function testExistingOutDated()
     {
-        $source = self::$imageFolder . '/test.jpg';
+        $source = $this->getImagePath('test.jpg');
         $this->assertTrue(file_exists($source));
 
         $destination = $source . '.webp';
         @unlink($destination);
-        copy(self::$imageFolder . '/pre-converted/test.webp', $destination);
+        copy($this->getImagePath('pre-converted/test.webp'), $destination);
 
         // set modification date earlier than source
         touch($destination, filemtime($source) - 1000);
@@ -379,7 +391,7 @@ class ServeConvertedWebPTest extends TestCase
 
     public function testNoFileAtDestination()
     {
-        $source = self::$imageFolder . '/test.jpg';
+        $source = $this->getImagePath('test.jpg');
         $this->assertTrue(file_exists($source));
 
         $destination = $source . '.webp';

@@ -11,6 +11,16 @@ use PHPUnit\Framework\TestCase;
 class StackTest extends TestCase
 {
 
+    public static function getImageFolder()
+    {
+        return realpath(__DIR__ . '/../../images');
+    }
+
+    public static function getImagePath($image)
+    {
+        return self::getImageFolder() . '/' . $image;
+    }
+
     public function testConvert()
     {
         //ConverterTestHelper::runAllConvertTests($this, 'Stack');
@@ -21,8 +31,8 @@ class StackTest extends TestCase
         $this->expectException(ConverterNotFoundException::class);
 
         Stack::convert(
-            __DIR__ . '/../../test.jpg',
-            __DIR__ . '/../../test.webp',
+            self::getImagePath('test.jpg'),
+            self::getImagePath('test.webp'),
             [
                 'converters' => ['invalid-id']
             ]
@@ -32,8 +42,8 @@ class StackTest extends TestCase
     public function testCustomConverter()
     {
         Stack::convert(
-            __DIR__ . '/../../test.jpg',
-            __DIR__ . '/../../test.webp',
+            self::getImagePath('test.jpg'),
+            self::getImagePath('test.webp'),
             [
                 'converters' => [
                     '\\WebPConvert\\Tests\\Convert\\TestConverters\\SuccessGuaranteedConverter'

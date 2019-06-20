@@ -4,6 +4,7 @@ namespace WebPConvert\Serve;
 use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
+use WebPConvert\Helpers\InputValidator;
 use WebPConvert\Serve\Exceptions\ServeFailedException;
 use WebPConvert\Serve\Header;
 use WebPConvert\Serve\Report;
@@ -71,6 +72,7 @@ class ServeConvertedWebP
      */
     public static function serveOriginal($source, $serveImageOptions = [])
     {
+        InputValidator::checkSource($source);
         $contentType = ImageMimeTypeGuesser::lenientGuess($source);
         if (is_null($contentType)) {
             throw new ServeFailedException('Rejecting to serve original (mime type cannot be determined)');
@@ -84,6 +86,8 @@ class ServeConvertedWebP
     /**
      * Serve destination file.
      *
+     * TODO: SHould this really be public?
+     *
      * @param   string  $destination                   path to destination file
      * @param   array   $serveImageOptions (optional)  options for serving (such as which headers to add)
      *       Supported options:
@@ -92,6 +96,7 @@ class ServeConvertedWebP
      */
     public static function serveDestination($destination, $serveImageOptions = [])
     {
+        InputValidator::checkDestination($destination);
         ServeFile::serve($destination, 'image/webp', $serveImageOptions);
     }
 
@@ -127,16 +132,7 @@ class ServeConvertedWebP
      */
     public static function serve($source, $destination, $options = [], $serveLogger = null, $convertLogger = null)
     {
-
-        if (empty($source)) {
-            throw new ServeFailedException('Source argument missing');
-        }
-        if (empty($destination)) {
-            throw new ServeFailedException('Destination argument missing');
-        }
-        if (@!file_exists($source)) {
-            throw new ServeFailedException('Source file was not found');
-        }
+        InputValidator::checkSourceAndDestination($source, $destination);
 
         $options = self::processOptions($options);
 

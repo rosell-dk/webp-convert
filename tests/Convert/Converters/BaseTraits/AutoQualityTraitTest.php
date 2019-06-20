@@ -10,13 +10,21 @@ use PHPUnit\Framework\TestCase;
 class AutoQualityTraitTest extends TestCase
 {
 
-    private static $imgDir = __DIR__ . '/../../../images';
+    public static function getImageFolder()
+    {
+        return realpath(__DIR__ . '/../../../images');
+    }
+
+    public static function getImagePath($image)
+    {
+        return self::getImageFolder() . '/' . $image;
+    }
 
     public function testFixedQuality()
     {
         $converter = SuccessGuaranteedConverter::createInstance(
-            self::$imgDir . '/small-q61.jpg',
-            self::$imgDir . '/small-q61.jpg.webp',
+            self::getImagePath('small-q61.jpg'),
+            self::getImagePath('small-q61.jpg.webp'),
             [
                 'max-quality' => 80,
                 'quality' => 75,
@@ -55,8 +63,8 @@ class AutoQualityTraitTest extends TestCase
     public function testAutoQuality()
     {
         $converter = SuccessGuaranteedConverter::createInstance(
-            self::$imgDir . '/small-q61.jpg',
-            self::$imgDir . '/small-q61.jpg.webp',
+            self::getImagePath('small-q61.jpg'),
+            self::getImagePath('small-q61.jpg.webp'),
             [
                 'max-quality' => 80,
                 'quality' => 'auto',
@@ -75,8 +83,8 @@ class AutoQualityTraitTest extends TestCase
     public function testAutoQualityMaxQuality()
     {
         $converter = SuccessGuaranteedConverter::createInstance(
-            self::$imgDir . '/small-q61.jpg',
-            self::$imgDir . '/small-q61.jpg.webp',
+            self::getImagePath('small-q61.jpg'),
+            self::getImagePath('small-q61.jpg.webp'),
             [
                 'max-quality' => 60,
                 'quality' => 'auto',
@@ -96,8 +104,8 @@ class AutoQualityTraitTest extends TestCase
     public function testAutoQualityMaxQualityOnNonJpeg()
     {
         $converter = SuccessGuaranteedConverter::createInstance(
-            self::$imgDir . '/test.png',
-            self::$imgDir . '/test.png.webp',
+            self::getImagePath('test.png'),
+            self::getImagePath('test.png.webp'),
             [
                 'max-quality' => 60,
                 'quality' => 'auto',
@@ -135,8 +143,8 @@ class AutoQualityTraitTest extends TestCase
     public function testAutoQualityOnQualityDetectionFail2()
     {
         $converter = SuccessGuaranteedConverter::createInstance(
-            self::$imgDir . '/text-with-jpg-extension.jpg',
-            self::$imgDir . '/text-with-jpg-extension.jpg.webp',
+            self::getImagePath('text-with-jpg-extension.jpg'),
+            self::getImagePath('text-with-jpg-extension.jpg.webp'),
             [
                 'max-quality' => 70,
                 'quality' => 'auto',
@@ -144,7 +152,7 @@ class AutoQualityTraitTest extends TestCase
             ]
         );
 
-        $this->assertFalse(file_exists(self::$imgDir . '/non-existing.jpg'));
+        $this->assertFalse(file_exists(self::getImagePath('non-existing.jpg')));
 
         // We are using the lenient MimeType guesser.
         // So we get "image/jpeg" even though the file is not a jpeg file

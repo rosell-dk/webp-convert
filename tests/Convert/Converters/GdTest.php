@@ -12,6 +12,16 @@ use PHPUnit\Framework\TestCase;
 class GdTest extends TestCase
 {
 
+    public static function getImageFolder()
+    {
+        return realpath(__DIR__ . '/../../images');
+    }
+
+    public static function getImagePath($image)
+    {
+        return self::getImageFolder() . '/' . $image;
+    }
+
     public function __construct()
     {
 
@@ -25,7 +35,7 @@ class GdTest extends TestCase
 
     private function createGd($src)
     {
-        $source = self::$imageDir . '/' . $src;
+        $source = self::getImagePath($src);
         $this->assertTrue(file_exists($source), 'source does not exist:' . $source);
 
         return new Gd($source, $source . '.webp');
@@ -110,12 +120,10 @@ class GdTest extends TestCase
         $pretend['functionsNotExisting'] = [];
     }
 
-    public static $imageDir = __DIR__ . '/../../images';
-
     public function testSource()
     {
 
-        $source = self::$imageDir . '/test.png';
+        $source = self::getImagePath('test.png');
         $gd = new Gd($source, $source . '.webp');
 
         self::resetPretending();

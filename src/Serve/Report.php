@@ -1,8 +1,9 @@
 <?php
 namespace WebPConvert\Serve;
 
-use WebPConvert\WebPConvert;
+use WebPConvert\Helpers\InputValidator;
 use WebPConvert\Loggers\EchoLogger;
+use WebPConvert\WebPConvert;
 
 /**
  * Class for generating a HTML report of converting an image.
@@ -15,6 +16,7 @@ class Report
 {
     public static function convertAndReport($source, $destination, $options)
     {
+        InputValidator::checkSourceAndDestination($source, $destination);
         ?>
 <html>
     <head>
@@ -28,8 +30,8 @@ class Report
     </head>
     <body>
         <table>
-            <tr><td><i>source:</i></td><td><?php echo $source ?></td></tr>
-            <tr><td><i>destination:</i></td><td><?php echo $destination ?><td></tr>
+            <tr><td><i>source:</i></td><td><?php echo htmlentities($source) ?></td></tr>
+            <tr><td><i>destination:</i></td><td><?php echo htmlentities($destination) ?><td></tr>
         </table>
         <br>
         <?php

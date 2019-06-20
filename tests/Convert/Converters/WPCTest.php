@@ -24,8 +24,15 @@ use PHPUnit\Framework\TestCase;
 class WpcTest extends TestCase
 {
 
+    public function getImageFolder()
+    {
+        return realpath(__DIR__ . '/../../images');
+    }
 
-    public $imageDir = __DIR__ . '/../../images/';
+    public function getImagePath($image)
+    {
+        return $this->getImageFolder() . '/' . $image;
+    }
 
 /*    public function testApi0()
     {
@@ -75,7 +82,8 @@ class WpcTest extends TestCase
             return;
         }
 
-        $source = $this->imageDir . '/test.png';
+
+        $source = $this->getImagePath('test.png');
         $options = [
             'api-version' => 0,
             'api-url' => getenv('WEBPCONVERT_WPC_API_URL_API0'),
@@ -93,7 +101,7 @@ class WpcTest extends TestCase
             return;
         }
 
-        $source = $this->imageDir . '/test.png';
+        $source = $this->getImagePath('test.png');
         $options = [
             'api-version' => 1,
             'crypt-api-key-in-transfer' => true,
@@ -109,7 +117,7 @@ class WpcTest extends TestCase
             return;
         }
 
-        $source = $this->imageDir . '/test.png';
+        $source = $this->getImagePath('test.png');
         $options = [
             'api-version' => 1,
             'crypt-api-key-in-transfer' => true,
@@ -124,10 +132,14 @@ class WpcTest extends TestCase
     {
         $this->expectException(ConverterNotOperationalException::class);
 
-        Wpc::convert($this->imageDir . '/test.png', $this->imageDir . '/test.webp', [
-            'api-url' => 'badurl!',
-            'secret' => 'bad dog!',
-        ]);
+        Wpc::convert(
+            $this->getImagePath('test.png'),
+            $this->getImagePath('test.webp'),
+            [
+                'api-url' => 'badurl!',
+                'secret' => 'bad dog!',
+            ]
+        );
     }
 
     public function test404()
@@ -135,10 +147,14 @@ class WpcTest extends TestCase
         //$this->expectException(ConversionFailedException::class);
 
         try {
-            Wpc::convert($this->imageDir . '/test.png', $this->imageDir . '/test.webp', [
-                'api-url' => 'https://google.com/hello',
-                'secret' => 'bad dog!',
-            ]);
+            Wpc::convert(
+                $this->getImagePath('test.png'),
+                $this->getImagePath('test.webp'),
+                [
+                    'api-url' => 'https://google.com/hello',
+                    'secret' => 'bad dog!',
+                ]
+            );
             $this->fail('Expected an exception');
 
         } catch (ConversionFailedException $e) {
@@ -155,10 +171,14 @@ class WpcTest extends TestCase
         //$this->expectException(ConversionFailedException::class);
 
         try {
-            Wpc::convert($this->imageDir . '/test.png', $this->imageDir . '/test.webp', [
-                'api-url' => 'https://www.google.com/',
-                'secret' => 'bad dog!',
-            ]);
+            Wpc::convert(
+                $this->getImagePath('test.png'),
+                $this->getImagePath('test.webp'),
+                [
+                    'api-url' => 'https://www.google.com/',
+                    'secret' => 'bad dog!',
+                ]
+            );
             $this->fail('Expected an exception');
 
         } catch (ConversionFailedException $e) {

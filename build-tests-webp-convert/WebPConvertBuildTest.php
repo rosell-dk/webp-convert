@@ -15,11 +15,21 @@ use PHPUnit\Framework\TestCase;
 class WebPConvertBuildTest extends TestCase
 {
 
+    public static function getImageFolder()
+    {
+        return realpath(__DIR__ . '/../tests/images');
+    }
+
+    public static function getImagePath($image)
+    {
+        return self::getImageFolder() . '/' . $image;
+    }
+
     public function testWebPConvertBuildNotCompletelyBroken()
     {
         require __DIR__ . '/../src-build/webp-convert.inc';
 
-        $source = __DIR__ . '/../tests/images/png-without-extension';
+        $source = self::getImagePath('png-without-extension');
         $this->assertTrue(file_exists($source));
 
         ob_start();

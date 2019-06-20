@@ -5,17 +5,16 @@
 
 namespace WebPConvert\Convert\Converters;
 
+use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
+use WebPConvert\Helpers\InputValidator;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Exceptions\WebPConvertException;
 use WebPConvert\Convert\Converters\BaseTraits\AutoQualityTrait;
 use WebPConvert\Convert\Converters\BaseTraits\DestinationPreparationTrait;
 use WebPConvert\Convert\Converters\BaseTraits\LoggerTrait;
 use WebPConvert\Convert\Converters\BaseTraits\OptionsTrait;
-use WebPConvert\Convert\Converters\BaseTraits\SourceValidationTrait;
 use WebPConvert\Convert\Converters\BaseTraits\WarningLoggerTrait;
+use WebPConvert\Exceptions\WebPConvertException;
 use WebPConvert\Loggers\BaseLogger;
-
-use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 
 /**
  * Base for all converter classes.
@@ -30,7 +29,6 @@ abstract class AbstractConverter
     use OptionsTrait;
     use WarningLoggerTrait;
     use DestinationPreparationTrait;
-    use SourceValidationTrait;
     use LoggerTrait;
 
     /**
@@ -113,6 +111,8 @@ abstract class AbstractConverter
      */
     public function __construct($source, $destination, $options = [], $logger = null)
     {
+        InputValidator::checkSourceAndDestination($source, $destination);
+
         $this->source = $source;
         $this->destination = $destination;
 
@@ -129,9 +129,6 @@ abstract class AbstractConverter
             $this->logLn('');
             $this->logLn(self::getConverterDisplayName() . ' converter ignited');
         }
-
-        $this->checkSourceExists();
-        $this->checkSourceMimeType();
     }
 
     /**
@@ -239,10 +236,6 @@ abstract class AbstractConverter
         $this->removeExistingDestinationIfExists();
 
         if (!isset($this->options['_skip_input_check'])) {
-            // Run basic input validations (if source exists and if file extension is valid)
-            $this->checkSourceExists();
-            $this->checkSourceMimeType();
-
             // Check that a file can be written to destination
             $this->checkDestinationWritable();
         }

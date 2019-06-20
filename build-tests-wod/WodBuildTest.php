@@ -14,6 +14,17 @@ class WodBuildTest extends TestCase
 
     private static $buildDir = __DIR__ . '/../src-build';
 
+    public static function getImageFolder()
+    {
+        return realpath(__DIR__ . '/../tests/images');
+    }
+
+    public static function getImagePath($image)
+    {
+        return self::getImageFolder() . '/' . $image;
+    }
+
+
     public function autoloadingDisallowed($class) {
         throw new \Exception('no autoloading expected! ' . $class);
     }
@@ -38,7 +49,7 @@ class WodBuildTest extends TestCase
 
         spl_autoload_register([self::class, 'autoloaderLoad'], true, true);
 
-        $source = __DIR__ . '/../tests/images/png-without-extension';
+        $source = self::getImagePath('png-without-extension');
         $this->assertTrue(file_exists($source));
 
         ob_start();
@@ -101,7 +112,7 @@ class WodBuildTest extends TestCase
         require_once $wod1;
 
 
-        $source = __DIR__ . '/../tests/images/png-without-extension';
+        $source = self::getImagePath('png-without-extension');
         $this->assertTrue(file_exists($source));
 
         /*

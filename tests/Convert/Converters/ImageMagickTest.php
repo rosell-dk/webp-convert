@@ -17,7 +17,15 @@ use PHPUnit\Framework\TestCase;
 class ImageMagickTest extends TestCase
 {
 
-    public $imageDir = __DIR__ . '/../../images/';
+    public static function getImageFolder()
+    {
+        return realpath(__DIR__ . '/../../images');
+    }
+
+    public static function getImagePath($image)
+    {
+        return self::getImageFolder() . '/' . $image;
+    }
 
     public function testConvert()
     {
@@ -44,7 +52,7 @@ class ImageMagickTest extends TestCase
     }
 
     public function testWithNice() {
-        $source = $this->imageDir . '/test.png';
+        $source = self::getImagePath('test.png');
         $options = [
             'use-nice' => true,
             'encoding' => 'lossless',

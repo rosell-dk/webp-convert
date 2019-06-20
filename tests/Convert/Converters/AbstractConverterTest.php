@@ -12,14 +12,22 @@ use PHPUnit\Framework\TestCase;
 class AbstractConverterTest extends TestCase
 {
 
-    private static $imgDir = __DIR__ . '/../../images';
+    public static function getImageFolder()
+    {
+        return realpath(__DIR__ . '/../../images');
+    }
+
+    public static function getImagePath($image)
+    {
+        return self::getImageFolder() . '/' . $image;
+    }
 
 
     public function testConvert()
     {
         SuccessGuaranteedConverter::convert(
-            self::$imgDir . '/test.jpg',
-            self::$imgDir . '/test.webp'
+            self::getImagePath('test.jpg'),
+            self::getImagePath('test.webp')
         );
         $this->addToAssertionCount(1);
     }
@@ -31,13 +39,22 @@ class AbstractConverterTest extends TestCase
         //$this->assertEquals('image/png', ExposedConverter::exposedGetMimeType(self::$imgDir . '/test.png'));
         //$mimeTypeMaybeDetected = ExposedConverter::exposedGetMimeType(self::$imgDir . '/png-without-extension');
 
-        $successConverterJpeg = SuccessGuaranteedConverter::createInstance(self::$imgDir . '/test.jpg', '');
+        $successConverterJpeg = SuccessGuaranteedConverter::createInstance(
+            self::getImagePath('test.jpg'),
+            self::getImagePath('test.jpg.webp')
+        );
         $this->assertEquals('image/jpeg', $successConverterJpeg->getMimeTypeOfSource());
 
-        $successConverterPng = SuccessGuaranteedConverter::createInstance(self::$imgDir . '/test.png', '');
+        $successConverterPng = SuccessGuaranteedConverter::createInstance(
+            self::getImagePath('test.png'),
+            self::getImagePath('test.png.webp'),
+        );
         $this->assertEquals('image/png', $successConverterPng->getMimeTypeOfSource());
 
-        $successConverterPngMaybeDetected = SuccessGuaranteedConverter::createInstance(self::$imgDir . '/png-without-extension', '');
+        $successConverterPngMaybeDetected = SuccessGuaranteedConverter::createInstance(
+            self::getImagePath('png-without-extension'),
+            self::getImagePath('png-without-extension.webp'),
+        );
 
         $mimeTypeMaybeDetected = $successConverterPngMaybeDetected->getMimeTypeOfSource();
 
@@ -54,8 +71,8 @@ class AbstractConverterTest extends TestCase
     public function testDefaultOptions()
     {
         $converter = new SuccessGuaranteedConverter(
-            self::$imgDir . '/test.jpg',
-            self::$imgDir . '/test.webp'
+            self::getImagePath('test.jpg'),
+            self::getImagePath('test.jpg.webp')
         );
 
         $exposer = new AbstractConverterExposer($converter);
@@ -72,8 +89,8 @@ class AbstractConverterTest extends TestCase
     public function testOptionMerging()
     {
         $converter = new SuccessGuaranteedConverter(
-            self::$imgDir . '/test.jpg',
-            self::$imgDir . '/test.webp',
+            self::getImagePath('test.jpg'),
+            self::getImagePath('test.webp'),
             [
                 'quality' => 80
             ]

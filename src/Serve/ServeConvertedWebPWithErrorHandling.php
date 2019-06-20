@@ -1,6 +1,7 @@
 <?php
 namespace WebPConvert\Serve;
 
+use WebPConvert\Helpers\InputValidator;
 use WebPConvert\Options\Options;
 use WebPConvert\Options\StringOption;
 use WebPConvert\Serve\Header;
@@ -68,7 +69,6 @@ class ServeConvertedWebPWithErrorHandling
     {
         self::addHeadersPreventingCaching();
 
-        //Header::addLogHeader('Failure');
         Header::addLogHeader('Performing fail action: ' . $fail);
 
         switch ($fail) {
@@ -135,9 +135,10 @@ class ServeConvertedWebPWithErrorHandling
         $convertLogger = null,
         $serveClass = '\\WebPConvert\\Serve\\ServeConvertedWebP'
     ) {
-        $options = self::processOptions($options);
 
+        $options = self::processOptions($options);
         try {
+            InputValidator::checkSourceAndDestination($source, $destination);
             //ServeConvertedWebP::serve($source, $destination, $options, $serveLogger);
             call_user_func($serveClass . '::serve', $source, $destination, $options, $serveLogger, $convertLogger);
         } catch (\Exception $e) {

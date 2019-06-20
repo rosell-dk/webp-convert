@@ -24,7 +24,15 @@ use PHPUnit\Framework\TestCase;
 class CwebpTest extends TestCase
 {
 
-    public static $imageDir = __DIR__ . '/../..';
+    public static function getImageFolder()
+    {
+        return realpath(__DIR__ . '/../../images');
+    }
+
+    public static function getImagePath($image)
+    {
+        return self::getImageFolder() . '/' . $image;
+    }
 
     public function testConvert()
     {
@@ -33,7 +41,7 @@ class CwebpTest extends TestCase
 
     public function testSource()
     {
-        $source = self::$imageDir . '/test.png';
+        $source = self::getImagePath('test.png');
         $cwebp = new Cwebp($source, $source . '.webp');
         $cwebpExposer = new CwebpExposer($cwebp);
 
@@ -46,7 +54,7 @@ class CwebpTest extends TestCase
      */
     public function testCreateCommandLineOptions()
     {
-        $source = self::$imageDir . '/test.png';
+        $source = self::getImagePath('test.png');
         $options = [
             'quality' => 'auto',
             'method' => 3,
@@ -93,7 +101,7 @@ class CwebpTest extends TestCase
      */
     public function testCreateCommandLineOptions2()
     {
-        $source = self::$imageDir . '/test.png';
+        $source = self::getImagePath('test.png');
         $options = [
             'quality' => 70,
             'method' => 3,
@@ -124,7 +132,7 @@ class CwebpTest extends TestCase
      */
     public function testCreateCommandLineOptions3()
     {
-        $source = self::$imageDir . '/test.png';
+        $source = self::getImagePath('test.png');
         $options = [
             'encoding' => 'lossless',
             'near-lossless' => 75,
@@ -153,7 +161,7 @@ class CwebpTest extends TestCase
      */
     public function testCreateCommandLineOptions4()
     {
-        $source = self::$imageDir . '/test.png';
+        $source = self::getImagePath('test.png');
         $options = [
             'encoding' => 'lossless',
             'near-lossless' => 100,
@@ -182,7 +190,7 @@ class CwebpTest extends TestCase
      */
      public function testOperatinalityException()
      {
-         $source = self::$imageDir . '/test.png';
+         $source = self::getImagePath('test.png');
          $options = [
              'try-supplied-binary-for-os' => false,
              'try-common-system-paths' => false,
@@ -194,7 +202,7 @@ class CwebpTest extends TestCase
 
      public function testUsingSuppliedBinaryForOS()
      {
-         $source = self::$imageDir . '/test.png';
+         $source = self::getImagePath('test.png');
          $options = [
              'try-supplied-binary-for-os' => true,
              'try-common-system-paths' => false,
