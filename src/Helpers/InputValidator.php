@@ -3,6 +3,7 @@
 namespace WebPConvert\Helpers;
 
 use WebPConvert\Helpers\MimeType;
+use WebPConvert\Helpers\PathChecker;
 use WebPConvert\Exceptions\InvalidInputException;
 use WebPConvert\Exceptions\InvalidInput\InvalidImageTypeException;
 
@@ -16,16 +17,27 @@ use WebPConvert\Exceptions\InvalidInput\InvalidImageTypeException;
 class InputValidator
 {
 
-    private static $allowedMimeTypes = ['image/jpeg', 'image/png'];
+    private static $allowedMimeTypes = [
+        'image/jpeg',
+        'image/png'
+    ];
 
-    public static function checkMimeType($filePath)
+    /**
+     * Check mimetype and if file path is ok and exists
+     */
+    public static function checkMimeType($filePath, $allowedMimeTypes = null)
     {
+        if (is_null($allowedMimeTypes)) {
+            $allowedMimeTypes = self::$allowedMimeTypes;
+        }
+        // the following also tests that file path is ok and file exists
         $fileMimeType = MimeType::getMimeTypeDetectionResult($filePath);
+
         if (is_null($fileMimeType)) {
             throw new InvalidImageTypeException('Image type could not be detected');
         } elseif ($fileMimeType === false) {
             throw new InvalidImageTypeException('File seems not to be an image.');
-        } elseif (!in_array($fileMimeType, self::$allowedMimeTypes)) {
+        } elseif (!in_array($fileMimeType, $allowedMimeTypes)) {
             throw new InvalidImageTypeException('Unsupported mime type: ' . $fileMimeType);
         }
     }

@@ -4,18 +4,31 @@ namespace WebPConvert\Tests\Serve;
 
 use WebPConvert\Serve\ServeFile;
 use WebPConvert\Serve\MockedHeader;
-use WebPConvert\Serve\Exceptions\ServeFailedException;
+use WebPConvert\Exceptions\InvalidInpuException;
+use WebPConvert\Exceptions\InvalidInput\InvalidImageTypeException;
+use WebPConvert\Exceptions\InvalidInput\TargetNotFoundException;
+//use WebPConvert\Serve\Exceptions\ServeFailedException;
 
 use PHPUnit\Framework\TestCase;
 
 class ServeFileTest extends TestCase
 {
 
+    public function getImageFolder()
+    {
+        return realpath(__DIR__ . '/../images');
+    }
+
+    public function getImagePath($image)
+    {
+        return $this->getImageFolder() . '/' . $image;
+    }
+
     public function testServeDefaultOptions()
     {
         MockedHeader::reset();
 
-        $filename = __DIR__ . '/../images/plaintext-with-jpg-extension.jpg';
+        $filename = self::getImagePath('plaintext-with-jpg-extension.jpg');
         $this->assertTrue(file_exists($filename));
 
         ob_start();
@@ -49,7 +62,7 @@ class ServeFileTest extends TestCase
 
         $this->assertEquals(0, MockedHeader::getNumHeaders());
 
-        $filename = __DIR__ . '/../images/plaintext-with-jpg-extension.jpg';
+        $filename = self::getImagePath('plaintext-with-jpg-extension.jpg');
         $this->assertTrue(file_exists($filename));
 
         $options = [
@@ -73,7 +86,7 @@ class ServeFileTest extends TestCase
 
         $this->assertEquals(0, MockedHeader::getNumHeaders());
 
-        $filename = __DIR__ . '/../images/plaintext-with-jpg-extension.jpg';
+        $filename = self::getImagePath('plaintext-with-jpg-extension.jpg');
         $this->assertTrue(file_exists($filename));
 
         $options = [
@@ -119,7 +132,7 @@ class ServeFileTest extends TestCase
     public function testServeCustomCacheControl()
     {
         MockedHeader::reset();
-        $filename = __DIR__ . '/../images/plaintext-with-jpg-extension.jpg';
+        $filename = self::getImagePath('plaintext-with-jpg-extension.jpg');
         $this->assertTrue(file_exists($filename));
 
         $options = [
@@ -140,7 +153,7 @@ class ServeFileTest extends TestCase
     public function testServeCustomCacheControlNoMaxAge()
     {
         MockedHeader::reset();
-        $filename = __DIR__ . '/../images/plaintext-with-jpg-extension.jpg';
+        $filename = self::getImagePath('plaintext-with-jpg-extension.jpg');
         $this->assertTrue(file_exists($filename));
         $options = [
             'headers' => [
@@ -161,10 +174,10 @@ class ServeFileTest extends TestCase
     {
         MockedHeader::reset();
 
-        $filename = __DIR__ . '/i-dont-exist';
+        $filename = __DIR__ . '/i-dont-exist-no';
         $this->assertFalse(file_exists($filename));
 
-        $this->expectException(ServeFailedException::class);
+        $this->expectException(TargetNotFoundException::class);
 
         ob_start();
         ServeFile::serve($filename, 'image/webp', []);

@@ -360,6 +360,7 @@ class ServeConvertedWebPWithErrorHandling
 namespace WebPConvert\Serve;
 
 //use WebPConvert\Serve\Report;
+use WebPConvert\Helpers\InputValidator;
 use WebPConvert\Options\ArrayOption;
 use WebPConvert\Options\BooleanOption;
 use WebPConvert\Options\Options;
@@ -436,10 +437,19 @@ class ServeFile
      */
     public static function serve($filename, $contentType, $options = [])
     {
+        // Check mimetype - this also checks that path is secure and file exists
+        InputValidator::checkMimeType($filename, [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+            'image/gif'
+        ]);
+
+        /*
         if (!file_exists($filename)) {
             Header::addHeader('X-WebP-Convert-Error: Could not read file');
             throw new ServeFailedException('Could not read file');
-        }
+        }*/
 
         $options = self::processOptions($options);
 
@@ -593,6 +603,10 @@ class PathChecker
       */
     public static function checkAbsolutePath($absFilePath, $text = 'file')
     {
+        if (empty($absFilePath)) {
+            throw new InvalidInputException('Empty filepath for ' . $text);
+        }
+
         // Prevent non printable characters
         if (!ctype_print($absFilePath)) {
             throw new InvalidInputException('Non-printable characters are not allowed in ' . $text);
@@ -610,18 +624,28 @@ class PathChecker
         }
     }
 
+    public static function checkAbsolutePathAndExists($absFilePath, $text = 'file')
+    {
+        if (empty($absFilePath)) {
+            throw new TargetNotFoundException($text . ' argument missing');
+        }
+        self::checkAbsolutePath($absFilePath, $text);
+        if (@!file_exists($absFilePath)) {
+            throw new TargetNotFoundException($text . ' file was not found');
+        }
+        if (@is_dir($absFilePath)) {
+            throw new InvalidInputException($text . ' is a directory');
+        }
+    }
+
+    /**
+     *  Checks that source path is secure, file exists and it is not a dir.
+     *
+     *  To also check mime type, use InputValidator::checkSource
+     */
     public static function checkSourcePath($source)
     {
-        if (empty($source)) {
-            throw new InvalidInputException('Source argument missing');
-        }
-        self::checkAbsolutePath($source, 'source');
-        if (@!file_exists($source)) {
-            throw new TargetNotFoundException('Source file was not found');
-        }
-        if (@is_dir($source)) {
-            throw new InvalidInputException('Source is a directory');
-        }
+        self::checkAbsolutePathAndExists($source, 'source');
     }
 
     public static function checkDestinationPath($destination)
@@ -647,6 +671,7 @@ class PathChecker
 namespace WebPConvert\Helpers;
 
 use WebPConvert\Helpers\MimeType;
+use WebPConvert\Helpers\PathChecker;
 use WebPConvert\Exceptions\InvalidInputException;
 use WebPConvert\Exceptions\InvalidInput\InvalidImageTypeException;
 
@@ -660,16 +685,27 @@ use WebPConvert\Exceptions\InvalidInput\InvalidImageTypeException;
 class InputValidator
 {
 
-    private static $allowedMimeTypes = ['image/jpeg', 'image/png'];
+    private static $allowedMimeTypes = [
+        'image/jpeg',
+        'image/png'
+    ];
 
-    public static function checkMimeType($filePath)
+    /**
+     * Check mimetype and if file path is ok and exists
+     */
+    public static function checkMimeType($filePath, $allowedMimeTypes = null)
     {
+        if (is_null($allowedMimeTypes)) {
+            $allowedMimeTypes = self::$allowedMimeTypes;
+        }
+        // the following also tests that file path is ok and file exists
         $fileMimeType = MimeType::getMimeTypeDetectionResult($filePath);
+
         if (is_null($fileMimeType)) {
             throw new InvalidImageTypeException('Image type could not be detected');
         } elseif ($fileMimeType === false) {
             throw new InvalidImageTypeException('File seems not to be an image.');
-        } elseif (!in_array($fileMimeType, self::$allowedMimeTypes)) {
+        } elseif (!in_array($fileMimeType, $allowedMimeTypes)) {
             throw new InvalidImageTypeException('Unsupported mime type: ' . $fileMimeType);
         }
     }

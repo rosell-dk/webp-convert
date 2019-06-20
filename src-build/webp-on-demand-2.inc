@@ -5494,6 +5494,8 @@ class MimeType
      */
     public static function getMimeTypeDetectionResult($absFilePath)
     {
+        PathChecker::checkAbsolutePathAndExists($absFilePath);
+
         if (isset(self::$cachedDetections[$absFilePath])) {
             return self::$cachedDetections[$absFilePath];
         }

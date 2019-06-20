@@ -33,6 +33,10 @@ class PathChecker
       */
     public static function checkAbsolutePath($absFilePath, $text = 'file')
     {
+        if (empty($absFilePath)) {
+            throw new InvalidInputException('Empty filepath for ' . $text);
+        }
+
         // Prevent non printable characters
         if (!ctype_print($absFilePath)) {
             throw new InvalidInputException('Non-printable characters are not allowed in ' . $text);
@@ -50,18 +54,28 @@ class PathChecker
         }
     }
 
+    public static function checkAbsolutePathAndExists($absFilePath, $text = 'file')
+    {
+        if (empty($absFilePath)) {
+            throw new TargetNotFoundException($text . ' argument missing');
+        }
+        self::checkAbsolutePath($absFilePath, $text);
+        if (@!file_exists($absFilePath)) {
+            throw new TargetNotFoundException($text . ' file was not found');
+        }
+        if (@is_dir($absFilePath)) {
+            throw new InvalidInputException($text . ' is a directory');
+        }
+    }
+
+    /**
+     *  Checks that source path is secure, file exists and it is not a dir.
+     *
+     *  To also check mime type, use InputValidator::checkSource
+     */
     public static function checkSourcePath($source)
     {
-        if (empty($source)) {
-            throw new InvalidInputException('Source argument missing');
-        }
-        self::checkAbsolutePath($source, 'source');
-        if (@!file_exists($source)) {
-            throw new TargetNotFoundException('Source file was not found');
-        }
-        if (@is_dir($source)) {
-            throw new InvalidInputException('Source is a directory');
-        }
+        self::checkAbsolutePathAndExists($source, 'source');
     }
 
     public static function checkDestinationPath($destination)

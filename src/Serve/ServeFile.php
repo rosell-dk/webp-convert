@@ -2,6 +2,7 @@
 namespace WebPConvert\Serve;
 
 //use WebPConvert\Serve\Report;
+use WebPConvert\Helpers\InputValidator;
 use WebPConvert\Options\ArrayOption;
 use WebPConvert\Options\BooleanOption;
 use WebPConvert\Options\Options;
@@ -78,10 +79,19 @@ class ServeFile
      */
     public static function serve($filename, $contentType, $options = [])
     {
+        // Check mimetype - this also checks that path is secure and file exists
+        InputValidator::checkMimeType($filename, [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+            'image/gif'
+        ]);
+
+        /*
         if (!file_exists($filename)) {
             Header::addHeader('X-WebP-Convert-Error: Could not read file');
             throw new ServeFailedException('Could not read file');
-        }
+        }*/
 
         $options = self::processOptions($options);
 
