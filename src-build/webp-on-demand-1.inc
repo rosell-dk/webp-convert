@@ -2,10 +2,9 @@
 ?><?php
 namespace WebPConvert\Serve;
 
-use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
-
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Helpers\InputValidator;
+use WebPConvert\Helpers\MimeType;
 use WebPConvert\Serve\Exceptions\ServeFailedException;
 use WebPConvert\Serve\Header;
 use WebPConvert\Serve\Report;
@@ -74,7 +73,7 @@ class ServeConvertedWebP
     public static function serveOriginal($source, $serveImageOptions = [])
     {
         InputValidator::checkSource($source);
-        $contentType = ImageMimeTypeGuesser::lenientGuess($source);
+        $contentType = MimeType::getMimeTypeDetectionResult($source);
         if (is_null($contentType)) {
             throw new ServeFailedException('Rejecting to serve original (mime type cannot be determined)');
         } elseif ($contentType === false) {
@@ -647,7 +646,7 @@ class PathChecker
 
 namespace WebPConvert\Helpers;
 
-use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
+use WebPConvert\Helpers\MimeType;
 use WebPConvert\Exceptions\InvalidInputException;
 use WebPConvert\Exceptions\InvalidInput\InvalidImageTypeException;
 
@@ -665,8 +664,7 @@ class InputValidator
 
     public static function checkMimeType($filePath)
     {
-        // TODO: ImageMimeTypeGuesser::lenientGuess should cache result if called with an extra true arg
-        $fileMimeType = ImageMimeTypeGuesser::lenientGuess($filePath);
+        $fileMimeType = MimeType::getMimeTypeDetectionResult($filePath);
         if (is_null($fileMimeType)) {
             throw new InvalidImageTypeException('Image type could not be detected');
         } elseif ($fileMimeType === false) {

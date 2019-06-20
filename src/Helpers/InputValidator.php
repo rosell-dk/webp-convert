@@ -2,7 +2,7 @@
 
 namespace WebPConvert\Helpers;
 
-use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
+use WebPConvert\Helpers\MimeType;
 use WebPConvert\Exceptions\InvalidInputException;
 use WebPConvert\Exceptions\InvalidInput\InvalidImageTypeException;
 
@@ -20,8 +20,7 @@ class InputValidator
 
     public static function checkMimeType($filePath)
     {
-        // TODO: ImageMimeTypeGuesser::lenientGuess should cache result if called with an extra true arg
-        $fileMimeType = ImageMimeTypeGuesser::lenientGuess($filePath);
+        $fileMimeType = MimeType::getMimeTypeDetectionResult($filePath);
         if (is_null($fileMimeType)) {
             throw new InvalidImageTypeException('Image type could not be detected');
         } elseif ($fileMimeType === false) {

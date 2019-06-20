@@ -1,10 +1,9 @@
 <?php
 namespace WebPConvert\Serve;
 
-use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
-
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Helpers\InputValidator;
+use WebPConvert\Helpers\MimeType;
 use WebPConvert\Serve\Exceptions\ServeFailedException;
 use WebPConvert\Serve\Header;
 use WebPConvert\Serve\Report;
@@ -73,7 +72,7 @@ class ServeConvertedWebP
     public static function serveOriginal($source, $serveImageOptions = [])
     {
         InputValidator::checkSource($source);
-        $contentType = ImageMimeTypeGuesser::lenientGuess($source);
+        $contentType = MimeType::getMimeTypeDetectionResult($source);
         if (is_null($contentType)) {
             throw new ServeFailedException('Rejecting to serve original (mime type cannot be determined)');
         } elseif ($contentType === false) {

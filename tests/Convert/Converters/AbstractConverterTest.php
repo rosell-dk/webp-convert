@@ -47,13 +47,13 @@ class AbstractConverterTest extends TestCase
 
         $successConverterPng = SuccessGuaranteedConverter::createInstance(
             self::getImagePath('test.png'),
-            self::getImagePath('test.png.webp'),
+            self::getImagePath('test.png.webp')
         );
         $this->assertEquals('image/png', $successConverterPng->getMimeTypeOfSource());
 
         $successConverterPngMaybeDetected = SuccessGuaranteedConverter::createInstance(
             self::getImagePath('png-without-extension'),
-            self::getImagePath('png-without-extension.webp'),
+            self::getImagePath('png-without-extension.webp')
         );
 
         $mimeTypeMaybeDetected = $successConverterPngMaybeDetected->getMimeTypeOfSource();

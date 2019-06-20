@@ -5,8 +5,8 @@
 
 namespace WebPConvert\Convert\Converters;
 
-use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 use WebPConvert\Helpers\InputValidator;
+use WebPConvert\Helpers\MimeType;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Converters\BaseTraits\AutoQualityTrait;
 use WebPConvert\Convert\Converters\BaseTraits\DestinationPreparationTrait;
@@ -65,9 +65,6 @@ abstract class AbstractConverter
 
     /** @var string  Where to save the webp (complete path) */
     protected $destination;
-
-    /** @var string|false|null  Where to save the webp (complete path) */
-    private $sourceMimeType;
 
     /**
      * Check basis operationality
@@ -373,11 +370,6 @@ abstract class AbstractConverter
      */
     public function getMimeTypeOfSource()
     {
-        if (!isset($this->sourceMimeType)) {
-            // PS: Scrutinizer complains that ImageMimeTypeGuesser::lenientGuess could also return a boolean
-            // but this is not true! - it returns string|false|null, just as this method does.
-            $this->sourceMimeType = ImageMimeTypeGuesser::lenientGuess($this->source);
-        }
-        return $this->sourceMimeType;
+        return MimeType::getMimeTypeDetectionResult($this->source);
     }
 }

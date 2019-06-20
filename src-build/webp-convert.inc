@@ -142,8 +142,8 @@ class Option
 
 namespace WebPConvert\Convert\Converters;
 
-use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
 use WebPConvert\Helpers\InputValidator;
+use WebPConvert\Helpers\MimeType;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Converters\BaseTraits\AutoQualityTrait;
 use WebPConvert\Convert\Converters\BaseTraits\DestinationPreparationTrait;
@@ -202,9 +202,6 @@ abstract class AbstractConverter
 
     /** @var string  Where to save the webp (complete path) */
     protected $destination;
-
-    /** @var string|false|null  Where to save the webp (complete path) */
-    private $sourceMimeType;
 
     /**
      * Check basis operationality
@@ -510,12 +507,7 @@ abstract class AbstractConverter
      */
     public function getMimeTypeOfSource()
     {
-        if (!isset($this->sourceMimeType)) {
-            // PS: Scrutinizer complains that ImageMimeTypeGuesser::lenientGuess could also return a boolean
-            // but this is not true! - it returns string|false|null, just as this method does.
-            $this->sourceMimeType = ImageMimeTypeGuesser::lenientGuess($this->source);
-        }
-        return $this->sourceMimeType;
+        return MimeType::getMimeTypeDetectionResult($this->source);
     }
 }
 
@@ -5631,7 +5623,7 @@ class TargetNotFoundException extends InvalidInputException
 
 namespace WebPConvert\Helpers;
 
-use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
+use WebPConvert\Helpers\MimeType;
 use WebPConvert\Exceptions\InvalidInputException;
 use WebPConvert\Exceptions\InvalidInput\InvalidImageTypeException;
 
@@ -5649,8 +5641,7 @@ class InputValidator
 
     public static function checkMimeType($filePath)
     {
-        // TODO: ImageMimeTypeGuesser::lenientGuess should cache result if called with an extra true arg
-        $fileMimeType = ImageMimeTypeGuesser::lenientGuess($filePath);
+        $fileMimeType = MimeType::getMimeTypeDetectionResult($filePath);
         if (is_null($fileMimeType)) {
             throw new InvalidImageTypeException('Image type could not be detected');
         } elseif ($fileMimeType === false) {
@@ -5675,6 +5666,45 @@ class InputValidator
     {
         self::checkSource($source);
         self::checkDestination($destination);
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Helpers;
+
+use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
+
+use WebPConvert\Exceptions\InvalidInputException;
+use WebPConvert\Exceptions\InvalidInput\TargetNotFoundException;
+
+/**
+ * Get MimeType, results cached by path.
+ *
+ * @package    WebPConvert
+ * @author     Bjørn Rosell <it@rosell.dk>
+ * @since      Class available since Release 2.0.6
+ */
+class MimeType
+{
+    private static $cachedDetections;
+
+    /**
+     * Get mime type for image (best guess).
+     *
+     * It falls back to using file extension. If that fails too, false is returned
+     *
+     * @return  string|false|null mimetype (if it is an image, and type could be determined / guessed),
+     *    false (if it is not an image type that the server knowns about)
+     *    or null (if nothing can be determined)
+     */
+    public static function getMimeTypeDetectionResult($absFilePath)
+    {
+        if (isset(self::$cachedDetections[$absFilePath])) {
+            return self::$cachedDetections[$absFilePath];
+        }
+        $cachedDetections[$absFilePath] = ImageMimeTypeGuesser::lenientGuess($absFilePath);
+        return $cachedDetections[$absFilePath];
     }
 }
 
@@ -6075,10 +6105,9 @@ class Report
 ?><?php
 namespace WebPConvert\Serve;
 
-use ImageMimeTypeGuesser\ImageMimeTypeGuesser;
-
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Helpers\InputValidator;
+use WebPConvert\Helpers\MimeType;
 use WebPConvert\Serve\Exceptions\ServeFailedException;
 use WebPConvert\Serve\Header;
 use WebPConvert\Serve\Report;
@@ -6147,7 +6176,7 @@ class ServeConvertedWebP
     public static function serveOriginal($source, $serveImageOptions = [])
     {
         InputValidator::checkSource($source);
-        $contentType = ImageMimeTypeGuesser::lenientGuess($source);
+        $contentType = MimeType::getMimeTypeDetectionResult($source);
         if (is_null($contentType)) {
             throw new ServeFailedException('Rejecting to serve original (mime type cannot be determined)');
         } elseif ($contentType === false) {
