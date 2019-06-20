@@ -16,7 +16,7 @@ use WebPConvert\Exceptions\InvalidInput\TargetNotFoundException;
  */
 class MimeType
 {
-    private static $cachedDetections;
+    private static $cachedDetections = [];
 
     /**
      * Get mime type for image (best guess).
