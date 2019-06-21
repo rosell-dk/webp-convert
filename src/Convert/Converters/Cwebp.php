@@ -124,6 +124,14 @@ class Cwebp extends AbstractConverter
      */
     private static function escapeShellArgOnCommandLineOptions($commandLineOptions)
     {
+        if (!ctype_print($commandLineOptions)) {
+            throw new ConversionFailedException('Non-printable characters are not allowed in the extra command line options');
+        }
+
+        if (preg_match('#[^a-zA-Z0-9_\s\-]#', $commandLineOptions)) {
+            throw new ConversionFailedException('The extra command line options contains inacceptable characters');
+        }
+
         $cmdOptions = [];
         $arr = explode(' -', ' ' . $commandLineOptions);
         foreach ($arr as $cmdOption) {
