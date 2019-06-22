@@ -38,7 +38,7 @@ class Report
         try {
             $echoLogger = new EchoLogger();
             $options['log-call-arguments'] = true;
-            WebPConvert::convert($source, $destination, $options, $echoLogger);
+            WebPConvert::convert($source, $destination, $options['convert'], $echoLogger);
         } catch (\Exception $e) {
             $msg = $e->getMessage();
             echo '<b>' . $msg . '</b>';
