@@ -38,8 +38,14 @@ class PathChecker
         }
 
         // Prevent non printable characters
+        /*
         if (!ctype_print($absFilePath)) {
             throw new InvalidInputException('Non-printable characters are not allowed in ' . $text);
+        }*/
+
+        // Prevent control characters (at least the first 32 (#0 - #1f)
+        if (preg_match('#[\x{0}-\x{1f}]#', $absFilePath)) {
+            throw new InvalidInputException('Non-printable characters are not allowed');
         }
 
         // Prevent directory traversal

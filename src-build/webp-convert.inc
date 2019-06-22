@@ -2354,7 +2354,9 @@ class Cwebp extends AbstractConverter
     private static function escapeShellArgOnCommandLineOptions($commandLineOptions)
     {
         if (!ctype_print($commandLineOptions)) {
-            throw new ConversionFailedException('Non-printable characters are not allowed in the extra command line options');
+            throw new ConversionFailedException(
+                'Non-printable characters are not allowed in the extra command line options'
+            );
         }
 
         if (preg_match('#[^a-zA-Z0-9_\s\-]#', $commandLineOptions)) {
@@ -5781,8 +5783,14 @@ class PathChecker
         }
 
         // Prevent non printable characters
+        /*
         if (!ctype_print($absFilePath)) {
             throw new InvalidInputException('Non-printable characters are not allowed in ' . $text);
+        }*/
+
+        // Prevent control characters (at least the first 32 (#0 - #1f)
+        if (preg_match('#[\x{0}-\x{1f}]#', $absFilePath)) {
+            throw new InvalidInputException('Non-printable characters are not allowed');
         }
 
         // Prevent directory traversal
@@ -5856,7 +5864,6 @@ class Sanitize
     {
         return str_replace(chr(0), '', $string);
     }
-
 }
 
 ?><?php
@@ -5889,9 +5896,16 @@ class Validate
      */
     public static function noNonPrintable($string)
     {
-        if (!ctype_print($string)) {
+        // The first 32 characters (#0 - #1f) are control characters
+        if (preg_match('#[\x{0}-\x{1f}]#', $string)) {
             throw new ValidateException('Non-printable characters are not allowed');
         }
+        /*
+        https://shkspr.mobi/blog/2016/03/counting-invisible-strings/
+        We cannot use ctype_print as it matches "æ"
+        if (!ctype_print($string)) {
+            throw new ValidateException('Non-printable characters are not allowed');
+        }*/
     }
 
     /**
@@ -5937,16 +5951,20 @@ class Validate
         }
     }
 
-    public static function absPathLooksSaneExistsAndIsDir($path, $errorMsg = 'Path points to a file (it should point to a directory)')
-    {
+    public static function absPathLooksSaneExistsAndIsDir(
+        $path,
+        $errorMsg = 'Path points to a file (it should point to a directory)'
+    ) {
         self::absPathLooksSaneAndExists($path);
         if (!is_dir($path)) {
             throw new ValidateException($errorMsg);
         }
     }
 
-    public static function absPathLooksSaneExistsAndIsNotDir($path, $errorMsg = 'Path points to a directory (it should point to a file)')
-    {
+    public static function absPathLooksSaneExistsAndIsNotDir(
+        $path,
+        $errorMsg = 'Path points to a directory (it should point to a file)'
+    ) {
         self::absPathLooksSaneAndExists($path);
         if (@is_dir($path)) {
             throw new ValidateException($errorMsg);
