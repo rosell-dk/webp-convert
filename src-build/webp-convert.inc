@@ -254,7 +254,7 @@ abstract class AbstractConverter
         $this->setProvidedOptions($options);
 
         if (!isset($this->options['_skip_input_check'])) {
-            $this->log('WebP Convert 2.0.5', 'italic');
+            $this->log('WebP Convert 2.1.1', 'italic');
             $this->logLn(' ignited.');
             $this->logLn('- PHP version: ' . phpversion());
             if (isset($_SERVER['SERVER_SOFTWARE'])) {
@@ -2353,6 +2353,14 @@ class Cwebp extends AbstractConverter
      */
     private static function escapeShellArgOnCommandLineOptions($commandLineOptions)
     {
+        if (!ctype_print($commandLineOptions)) {
+            throw new ConversionFailedException('Non-printable characters are not allowed in the extra command line options');
+        }
+
+        if (preg_match('#[^a-zA-Z0-9_\s\-]#', $commandLineOptions)) {
+            throw new ConversionFailedException('The extra command line options contains inacceptable characters');
+        }
+
         $cmdOptions = [];
         $arr = explode(' -', ' ' . $commandLineOptions);
         foreach ($arr as $cmdOption) {
@@ -5599,6 +5607,17 @@ class InvalidInputException extends WebPConvertException
 
 ?><?php
 
+namespace WebPConvert\Exceptions;
+
+use WebPConvert\Exceptions\WebPConvertException;
+
+class ValidateException extends WebPConvertException
+{
+    public $description = 'Validation failed';
+}
+
+?><?php
+
 namespace WebPConvert\Exceptions\InvalidInput;
 
 use WebPConvert\Exceptions\InvalidInputException;
@@ -5817,6 +5836,145 @@ class PathChecker
     {
         self::checkSourcePath($source);
         self::checkDestinationPath($destination);
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Helpers;
+
+class Sanitize
+{
+
+    /**
+     *  The NUL character is a demon, because it can be used to bypass other tests
+     *  See https://st-g.de/2011/04/doing-filename-checks-securely-in-PHP.
+     *
+     *  @param  string  $string  string remove NUL characters in
+     */
+    public static function removeNUL($string)
+    {
+        return str_replace(chr(0), '', $string);
+    }
+
+}
+
+?><?php
+
+namespace WebPConvert\Helpers;
+
+use WebPConvert\Helpers\Sanitize;
+use WebPConvert\Exceptions\ValidateException;
+
+class Validate
+{
+
+    /**
+     *  The NUL character is a demon, because it can be used to bypass other tests
+     *  See https://st-g.de/2011/04/doing-filename-checks-securely-in-PHP.
+     *
+     *  @param  string  $string  string to test for NUL char
+     */
+    public static function noNUL($string)
+    {
+        if (strpos($string, chr(0)) !== false) {
+            throw new ValidateException('NUL character is not allowed');
+        }
+    }
+
+    /**
+     *  Non printable characters are seldom needed... This also prevents NUL
+     *
+     *  @param  string  $string  string to test for non-printable chars in
+     */
+    public static function noNonPrintable($string)
+    {
+        if (!ctype_print($string)) {
+            throw new ValidateException('Non-printable characters are not allowed');
+        }
+    }
+
+    /**
+     *
+     *  @param  mixed  $mixed  something that may not be empty
+     */
+    public static function notEmpty($mixed)
+    {
+        if (empty($mixed)) {
+            throw new ValidateException('May not be empty');
+        }
+    }
+
+    public static function noDirectoryTraversal($path)
+    {
+        if (preg_match('#\.\.\/#', Sanitize::removeNUL($path))) {
+            throw new ValidateException('Directory traversal is not allowed');
+        }
+    }
+
+    public static function noStreamWrappers($path)
+    {
+        // Prevent stream wrappers ("phar://", "php://" and the like)
+        // https://www.php.net/manual/en/wrappers.phar.php
+        if (preg_match('#^\\w+://#', Sanitize::removeNUL($path))) {
+            throw new ValidateException('Stream wrappers are not allowed');
+        }
+    }
+
+    public static function pathLooksSane($path)
+    {
+        self::notEmpty($path);
+        self::noNonPrintable($path);
+        self::noDirectoryTraversal($path);
+        self::noStreamWrappers($path);
+    }
+
+    public static function absPathLooksSaneAndExists($path)
+    {
+        self::pathLooksSane($path);
+        if (@!file_exists($path)) {
+            throw new ValidateException('Path does not exists');
+        }
+    }
+
+    public static function absPathLooksSaneExistsAndIsDir($path, $errorMsg = 'Path points to a file (it should point to a directory)')
+    {
+        self::absPathLooksSaneAndExists($path);
+        if (!is_dir($path)) {
+            throw new ValidateException($errorMsg);
+        }
+    }
+
+    public static function absPathLooksSaneExistsAndIsNotDir($path, $errorMsg = 'Path points to a directory (it should point to a file)')
+    {
+        self::absPathLooksSaneAndExists($path);
+        if (@is_dir($path)) {
+            throw new ValidateException($errorMsg);
+        }
+    }
+
+    public static function isString($string, $errorMsg = 'Not a string')
+    {
+        if (!is_string($string)) {
+            throw new ValidateException($errorMsg);
+        }
+    }
+
+    public static function pregMatch($pattern, $subject, $errorMsg = 'Does not match expected pattern')
+    {
+        if (!preg_match($pattern, $subject)) {
+            throw new ValidateException($errorMsg);
+        }
+    }
+
+    public static function isJSONArray($json)
+    {
+        self::noNUL($json);
+        self::isString($json);
+        self::notEmpty($json);
+        if ((strpos($json, '[') !== 0) || (!is_array(json_decode($json)))) {
+            throw new ValidateException('Not a JSON array');
+        }
     }
 }
 
@@ -6115,7 +6273,7 @@ class Report
         try {
             $echoLogger = new EchoLogger();
             $options['log-call-arguments'] = true;
-            WebPConvert::convert($source, $destination, $options, $echoLogger);
+            WebPConvert::convert($source, $destination, $options['convert'], $echoLogger);
         } catch (\Exception $e) {
             $msg = $e->getMessage();
             echo '<b>' . $msg . '</b>';
