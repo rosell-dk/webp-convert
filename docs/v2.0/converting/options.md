@@ -28,6 +28,22 @@ Supported by: cwebp
 ```
 This allows you to set any parameter available for cwebp in the same way as you would do when executing *cwebp*. You could ie set it to "-sharpness 5 -mt -crop 10 10 40 40". Read more about all the available parameters in [the docs](https://developers.google.com/speed/webp/docs/cwebp).<br><br>
 
+### `cwebp-try-common-system-paths`
+```
+Type:         boolean
+Default:      true
+Supported by: cwebp
+```
+If set, the converter will try to look for cwebp in locations such as `/usr/bin/cwebp`.
+
+### `cwebp-try-supplied-binary-for-os`
+```
+Type:         boolean
+Default:      true
+Supported by: cwebp
+```
+If set, the converter will try the precompiled cwebp binary that are located in `src/Convert/Converters/Binaries`, for the current OS. The binaries are hash-checked before executed.
+
 ### `default-quality`
 ```
 Type:          integer (0-100)
@@ -169,9 +185,6 @@ $options = [
     'gmagick-skip' => true,
 ];
 ```
-
-
-
 <br>
 
 ### `stack-converters`
