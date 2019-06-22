@@ -28,6 +28,14 @@ Supported by: cwebp
 ```
 This allows you to set any parameter available for cwebp in the same way as you would do when executing *cwebp*. You could ie set it to "-sharpness 5 -mt -crop 10 10 40 40". Read more about all the available parameters in [the docs](https://developers.google.com/speed/webp/docs/cwebp).<br><br>
 
+### `cwebp-rel-path-to-precompiled-binaries`
+```
+Type:         string
+Default:      './Binaries'
+Supported by: cwebp
+```
+Allows you to change where to look for the precompiled binaries. While this may look as a risk, it is completely safe, as the binaries are hash-checked before being executed. The option is needed when you are using two-file version of webp-on-demand.
+
 ### `cwebp-try-common-system-paths`
 ```
 Type:         boolean
