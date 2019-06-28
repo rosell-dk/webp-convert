@@ -483,7 +483,6 @@ class Cwebp extends AbstractConverter
 
         $returnCode = $this->executeBinary($binary, $commandOptions, $useNice);
         if ($returnCode == 0) {
-
             // It has happened that even with return code 0, there was no file at destination.
             if (!file_exists($this->destination)) {
                 $this->logLn('executing cweb returned success code - but no file was found at destination!');
