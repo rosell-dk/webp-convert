@@ -23,3 +23,6 @@ parameters:
         -
             message: '#SystemRequirementsNotMet#'
             path: %currentWorkingDirectory%/src/Convert/Converters/ConverterTraits/ExecTrait.php
+        -
+            message: '#Call to function is_callable\(\) with array.* always evaluate to false#'
+            path: %currentWorkingDirectory%/src/Convert/ConverterFactory.php
