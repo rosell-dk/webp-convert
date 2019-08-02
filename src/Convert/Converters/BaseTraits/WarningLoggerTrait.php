@@ -82,8 +82,7 @@ trait WarningLoggerTrait
         if (!is_null($this->previousErrorHandler)) {
             // If previousErrorHandler is this very error handler, exit to avoid recursion
             // (this could happen if ::activateWarningLogger() were called twice)
-            if (
-                is_array($this->previousErrorHandler) &&
+            if (is_array($this->previousErrorHandler) &&
                 isset($this->previousErrorHandler[0]) &&
                 ($this->previousErrorHandler[0] == $this)
             ) {
