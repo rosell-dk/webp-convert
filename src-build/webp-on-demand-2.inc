@@ -1755,10 +1755,17 @@ trait WarningLoggerTrait
         $this->logLn($msg, 'italic');
         $this->logLn('');
 
-        //echo 'previously defined handler:' . print_r($this->previousErrorHandler, true);
-
         if (!is_null($this->previousErrorHandler)) {
-            return call_user_func($this->previousErrorHandler, $errno, $errstr, $errfile, $errline);
+            // If previousErrorHandler is this very error handler, exit to avoid recursion
+            // (this could happen if ::activateWarningLogger() were called twice)
+            if (is_array($this->previousErrorHandler) &&
+                isset($this->previousErrorHandler[0]) &&
+                ($this->previousErrorHandler[0] == $this)
+            ) {
+                return false;
+            } else {
+                return call_user_func($this->previousErrorHandler, $errno, $errstr, $errfile, $errline);
+            }
         } else {
             return false;
         }
