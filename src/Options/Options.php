@@ -37,12 +37,21 @@ class Options
      * @param  Option[]  ...$options  Array of options objects to add
      * @return void
      */
+     public function addOptions()
+     {
+         $options = func_get_args();
+         foreach ($options as $option) {
+             $this->addOption($option);
+         }
+     }
+     /*
+     In some years, we can use the splat instead (requires PHP 5.6):
     public function addOptions(...$options)
     {
         foreach ($options as $option) {
             $this->addOption($option);
         }
-    }
+    }*/
 
     /**
      * Set the value of an option.

@@ -269,10 +269,17 @@ class Cwebp extends AbstractConverter
 
         // command-line-options
         if ($options['command-line-options']) {
+            /*
+            In some years, we can use the splat instead (requires PHP 5.6)
             array_push(
                 $cmdOptions,
                 ...self::escapeShellArgOnCommandLineOptions($options['command-line-options'])
             );
+            */
+            foreach (self::escapeShellArgOnCommandLineOptions($options['command-line-options']) as $cmdLineOption) {
+                array_push($cmdOptions, $cmdLineOption);
+            }
+
         }
 
         // Source file
