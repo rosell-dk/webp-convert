@@ -942,15 +942,24 @@ class Options
      *
      * Conveniently add several options in one call.
      *
-     * @param  Option[]  ...$options  Array of options objects to add
      * @return void
      */
+    public function addOptions()
+    {
+        $options = func_get_args();
+        foreach ($options as $option) {
+            $this->addOption($option);
+        }
+    }
+     /*
+     In some years, we can use the splat instead (requires PHP 5.6):
+     @param  Option[]  ...$options  Array of options objects to add
     public function addOptions(...$options)
     {
         foreach ($options as $option) {
             $this->addOption($option);
         }
-    }
+    }*/
 
     /**
      * Set the value of an option.
@@ -2505,10 +2514,16 @@ class Cwebp extends AbstractConverter
 
         // command-line-options
         if ($options['command-line-options']) {
+            /*
+            In some years, we can use the splat instead (requires PHP 5.6)
             array_push(
                 $cmdOptions,
                 ...self::escapeShellArgOnCommandLineOptions($options['command-line-options'])
             );
+            */
+            foreach (self::escapeShellArgOnCommandLineOptions($options['command-line-options']) as $cmdLineOption) {
+                array_push($cmdOptions, $cmdLineOption);
+            }
         }
 
         // Source file
@@ -5882,6 +5897,37 @@ class PathChecker
     {
         self::checkSourcePath($source);
         self::checkDestinationPath($destination);
+    }
+}
+
+?><?php
+
+namespace WebPConvert\Helpers;
+
+class Sanitize
+{
+
+    /**
+     *  The NUL character is a demon, because it can be used to bypass other tests
+     *  See https://st-g.de/2011/04/doing-filename-checks-securely-in-PHP.
+     *
+     *  @param  string  $string  string remove NUL characters in
+     */
+    public static function removeNUL($string)
+    {
+        return str_replace(chr(0), '', $string);
+    }
+
+    public static function removeStreamWrappers($string)
+    {
+        return preg_replace('#^\\w+://#', '', $string);
+    }
+
+    public static function path($string)
+    {
+        $string = self::removeNUL($string);
+        $string = self::removeStreamWrappers($string);
+        return $string;
     }
 }
 
