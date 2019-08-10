@@ -279,7 +279,6 @@ class Cwebp extends AbstractConverter
             foreach (self::escapeShellArgOnCommandLineOptions($options['command-line-options']) as $cmdLineOption) {
                 array_push($cmdOptions, $cmdLineOption);
             }
-
         }
 
         // Source file
