@@ -5,7 +5,7 @@ For your convenience, the library has been cooked down to two files: *webp-on-de
 ## Installing
 
 ### 1. Copy the latest build files into your website
-Copy *webp-on-demand-1.inc* and *webp-on-demand-2.inc* from the *build* folder into your website (in 2.0, they are located in "src-build"). They can be located wherever you like.
+The build files are distributed [here](https://github.com/rosell-dk/webp-convert-concat/tree/master/build). Open the "latest" folder and copy *webp-on-demand-1.inc* and *webp-on-demand-2.inc* into your website. They can be located wherever you like.
 
 ### 2. Create a *webp-on-demand.php*
 
@@ -30,12 +30,12 @@ use WebPConvert\WebPConvert;
 
 require 'webp-on-demand-1.inc';
 
-function autoloader($class) {
+function webpconvert_autoloader($class) {
     if (strpos($class, 'WebPConvert\\') === 0) {
         require_once __DIR__ . '/webp-on-demand-2.inc';
     }
 }
-spl_autoload_register('autoloader', true, true);
+spl_autoload_register('webpconvert_autoloader', true, true);
 
 $source = $_GET['source'];            // Absolute file path to source file. Comes from the .htaccess
 $destination = $source . '.webp';     // Store the converted images besides the original images (other options are available!)
@@ -54,5 +54,5 @@ WebPConvert::serveConverted($source, $destination, $options);
 
 Note that the procedure has changed in 2.0. In 1.x, the library supported a `require-for-conversion` option, but this option has been removed in 2.0. It was not really needed, as the example above illustrates.
 
-### 3. Continue the main install instructions from step 3
+### 3. Continue the regular install instructions from step 3
 [Click here to continue...](https://github.com/rosell-dk/webp-on-demand#3-add-redirect-rules)
