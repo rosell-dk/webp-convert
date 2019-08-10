@@ -15,4 +15,16 @@ class Sanitize
     {
         return str_replace(chr(0), '', $string);
     }
+
+    public static function removeStreamWrappers($string)
+    {
+        return preg_replace('#^\\w+://#', '', $string);
+    }
+
+    public static function path($string)
+    {
+        $string = self::removeNUL($string);
+        $string = self::removeStreamWrappers($string);
+        return $string;
+    }
 }

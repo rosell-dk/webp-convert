@@ -12,24 +12,7 @@
       "@composer validate --no-check-all --strict",
       "@phpstan-global"
     ],
-    "test": [
-      "@test-wod-build",
-      "@test-webp-convert-build",
-      "@test-src"
-    ],
-    "test-src-build": [
-        "@test-wod-build",
-        "@test-webp-convert-build"
-    ],
-    "test-wod-build": [
-      "phpunit --no-coverage build-tests-wod",
-      "phpunit --no-coverage --bootstrap tests/bootstrap-wod-test.php tests"
-    ],
-    "test-webp-convert-build": [
-      "phpunit --no-coverage build-tests-webp-convert",
-      "phpunit --no-coverage --bootstrap tests/bootstrap-webp-convert-test.php tests"
-    ],
-    "test-src": "phpunit --coverage-text",
+    "test": "phpunit --coverage-text",
     "phpunit": "phpunit --coverage-text",
     "test-no-cov": "phpunit --no-coverage",
     "cs-fix-all": [
