@@ -388,6 +388,10 @@ class Cwebp extends AbstractConverter
         $binaries = [];
         if ($this->options['try-common-system-paths']) {
             foreach (self::$cwebpDefaultPaths as $binary) {
+                // Note:
+                // These warnings are not really being supressed because we have a custom error handler.
+                // That does not respect error_handling()
+                // But I guess it is alright to get these warnings
                 if (@file_exists($binary)) {
                     $binaries[] = $binary;
                 }

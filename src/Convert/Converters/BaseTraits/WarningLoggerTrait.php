@@ -23,7 +23,7 @@ trait WarningLoggerTrait
      *  Handle warnings and notices during conversion by logging them and passing them on.
      *
      *  The function is a callback used with "set_error_handler".
-     *  It is declared public because it needs to be accessible from the point where the warning happened.
+     *  It is declared public because it needs to be accessible from the point where the warning is triggered.
      *
      *  @param  integer  $errno
      *  @param  string   $errstr
@@ -45,6 +45,21 @@ trait WarningLoggerTrait
 
         - Because we want to log all warnings and errors (also the ones that was suppressed with @)
         https://secure.php.net/manual/en/language.operators.errorcontrol.php
+
+        If we were to decide suppressing the ones with @, I could do this:
+
+        if (error_reporting() == 0) {
+            /// @ sign temporary disabled error reporting
+            return;
+        }
+        [https://stackoverflow.com/questions/7380782/error-suppression-operator-and-set-error-handler]
+
+        However, that would also disable the warnings on systems with error reporting set to E_NONE.
+        And I really want the conversion log file to contain these warnings on all systems.
+
+        If it was possible to suppress the warnings with @ without suppressing warnings on systems
+        with error reporting set to E_NONE, I would do that.
+
         */
 
         $errorTypes = [
