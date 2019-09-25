@@ -24,8 +24,8 @@ class Ewww extends AbstractConverter
     use CloudConverterTrait;
     use CurlTrait;
 
-    /** @var array  Array of invalid api keys discovered during conversions (only stored during the request)  */
-    public static $invalidApiKeysDiscoveredDuringConversion = [];
+    /** @var array  Array of invalid or exceeded api keys discovered during conversions (during the request)  */
+    public static $nonFunctionalApiKeysDiscoveredDuringConversion = [];
 
     protected function getUnsupportedDefaultOptions()
     {
@@ -182,10 +182,10 @@ class Ewww extends AbstractConverter
 
                 // Store the invalid key in array so it can be received once the Stack is completed
                 // (even when stack succeeds)
-                if (!in_array($options['api-key'], self::$invalidApiKeysDiscoveredDuringConversion)) {
-                    self::$invalidApiKeysDiscoveredDuringConversion[] = $options['api-key'];
+                if (!in_array($options['api-key'], self::$nonFunctionalApiKeysDiscoveredDuringConversion)) {
+                    self::$nonFunctionalApiKeysDiscoveredDuringConversion[] = $options['api-key'];
                 }
-                throw new InvalidApiKeyException('The api key is invalid!');
+                throw new InvalidApiKeyException('The api key is invalid (or exceeded)');
             }
 
             throw new ConversionFailedException(

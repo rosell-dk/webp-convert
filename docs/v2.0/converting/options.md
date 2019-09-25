@@ -84,7 +84,7 @@ Type:         boolean
 Default:      true
 Supported by: ewww
 ```
-Decides whether or not the ewww service should be invoked in order to check if the api key is valid. Doing this for every conversion is not optimal. However, it would be worse if the service was contacted repeatedly to do conversions with an invalid api key - as conversion requests carries a big upload with them. As this library cannot prevent such repeated failures (it is stateless), it per default does the additional check. However, your application can prevent it from happening by picking up invalid api keys discovered during conversion. Such failures are stored in `Ewww::$invalidApiKeysDiscoveredDuringConversion` (this is also set even though a converter later in the stack succeeds. Do not only read this value off in a catch clauses).
+Decides whether or not the ewww service should be invoked in order to check if the api key is valid. Doing this for every conversion is not optimal. However, it would be worse if the service was contacted repeatedly to do conversions with an invalid api key - as conversion requests carries a big upload with them. As this library cannot prevent such repeated failures (it is stateless), it per default does the additional check. However, your application can prevent it from happening by picking up invalid / exceeded api keys discovered during conversion. Such failures are stored in `Ewww::$nonFunctionalApiKeysDiscoveredDuringConversion` (this is also set even though a converter later in the stack succeeds. Do not only read this value off in a catch clauses).
 
 You should only set this option to *false* if you handle when the converter discovers invalid api keys during conversion.
 
