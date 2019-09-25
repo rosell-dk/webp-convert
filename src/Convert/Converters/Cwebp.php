@@ -61,6 +61,8 @@ class Cwebp extends AbstractConverter
         'SunOS' => [['cwebp-sol', '1febaffbb18e52dc2c524cda9eefd00c6db95bc388732868999c0f48deb73b4f']],
         'FreeBSD' => [['cwebp-fbsd', 'e5cbea11c97fadffe221fdf57c093c19af2737e4bbd2cb3cd5e908de64286573']],
         'Linux' => [
+            ['cwebp-linux-1.0.3-shared', 'a663215a46d347f63e1ca641c18527a1ae7a2c9a0ae85ca966a97477ea13dfe0'],
+
             // Dynamically linked executable.
             // It seems it is slightly faster than the statically linked
             ['cwebp-linux-1.0.2-shared', 'd6142e9da2f1cab541de10a31527c597225fff5644e66e31d62bb391c41bfbf4'],
@@ -69,7 +71,7 @@ class Cwebp extends AbstractConverter
             // It may be that it on some systems works, where the dynamically linked does not (see #196)
             ['cwebp-linux-1.0.2-static', 'a67092563d9de0fbced7dde61b521d60d10c0ad613327a42a81845aefa612b29'],
 
-            // Old executable for systems where both of the above fails
+            // Old executable for systems where all of the above fails
             ['cwebp-linux-0.6.1', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568'],
         ]
     ];
