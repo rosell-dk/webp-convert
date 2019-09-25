@@ -6,7 +6,6 @@
   "keywords": ["webp", "images", "cwebp", "imagick", "gd", "jpg2webp", "png2webp", "jpg", "png", "image conversion"],
   "scripts": {
     "ci": [
-      "@build",
       "@test",
       "@phpcs-all",
       "@composer validate --no-check-all --strict",
@@ -23,7 +22,6 @@
     "phpcs": "phpcs --standard=PSR2",
     "phpcs-all": "phpcs --standard=PSR2 src",
     "phpcbf": "phpcbf --standard=PSR2",
-    "build": "php build-scripts/build.php",
     "phpstan": "vendor/bin/phpstan analyse src --level=4",
     "phpstan-global": "~/.composer/vendor/bin/phpstan analyse src --level=4"
   },
