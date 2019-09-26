@@ -25,7 +25,7 @@ class Ewww extends AbstractConverter
     use CurlTrait;
 
     /** @var array  Array of invalid or exceeded api keys discovered during conversions (during the request)  */
-    public static $nonFunctionalApiKeysDiscoveredDuringConversion = [];
+    public static $nonFunctionalApiKeysDiscoveredDuringConversion;
 
     protected function getUnsupportedDefaultOptions()
     {
@@ -174,7 +174,10 @@ class Ewww extends AbstractConverter
             //echo curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
             curl_close($ch);
 
-            /* May ie return this: {"error":"invalid","t":"exceeded"} */
+            /*
+            For bogus or expired key it returns:  {"error":"invalid","t":"exceeded"}
+            For exceeded key it returns:          {"error":"exceeded"}
+            */
             $responseObj = json_decode($response);
             if (isset($responseObj->error)) {
                 $this->logLn('We received the following error response: ' . $responseObj->error);
@@ -182,10 +185,17 @@ class Ewww extends AbstractConverter
 
                 // Store the invalid key in array so it can be received once the Stack is completed
                 // (even when stack succeeds)
+                if (!isset(self::$nonFunctionalApiKeysDiscoveredDuringConversion)) {
+                    self::$nonFunctionalApiKeysDiscoveredDuringConversion = [];
+                }
                 if (!in_array($options['api-key'], self::$nonFunctionalApiKeysDiscoveredDuringConversion)) {
                     self::$nonFunctionalApiKeysDiscoveredDuringConversion[] = $options['api-key'];
                 }
-                throw new InvalidApiKeyException('The api key is invalid (or exceeded)');
+                if ($responseObj->error == "invalid") {
+                    throw new InvalidApiKeyException('The api key is invalid (or expired)');
+                } else {
+                    throw new InvalidApiKeyException('The quota is exceeded for the api-key');
+                }
             }
 
             throw new ConversionFailedException(
