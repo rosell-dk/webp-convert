@@ -91,6 +91,17 @@ class PathChecker
             throw new InvalidInputException('Destination argument missing');
         }
         self::checkAbsolutePath($destination, 'destination');
+
+        if (!preg_match('#\.webp$#i', $destination)) {
+            // Prevent overriding important files.
+            // Overriding an .htaccess file would lay down the website.
+            throw new InvalidInputException(
+                'Destination file must end with ".webp". ' .
+                'If you deliberately want to store the webp files with another extension, you must rename ' .
+                'the file after successful conversion'
+            );
+        }
+
         if (@is_dir($destination)) {
             throw new InvalidInputException('Destination is a directory');
         }
