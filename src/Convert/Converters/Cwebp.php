@@ -63,12 +63,12 @@ class Cwebp extends AbstractConverter
             ['cwebp-1.0.3-mac-10.14', '7332ed5f0d4091e2379b1eaa32a764f8c0d51b7926996a1dc8b4ef4e3c441a12'],
         ],
         'SunOS' => [
-            // Got this from ewww plugin, which unfortunately still uses the old 0.6.0 versions
+            // Got this from ewww Wordpress plugin, which unfortunately still uses the old 0.6.0 versions
             // Can you help me get a 1.0.3 version?
             ['cwebp-0.6.0-solaris', '1febaffbb18e52dc2c524cda9eefd00c6db95bc388732868999c0f48deb73b4f']
         ],
         'FreeBSD' => [
-            // Got this from ewww plugin, which unfortunately still uses the old 0.6.0 versions
+            // Got this from ewww Wordpress plugin, which unfortunately still uses the old 0.6.0 versions
             // Can you help me get a 1.0.3 version?
             ['cwebp-0.6.0-fbsd', 'e5cbea11c97fadffe221fdf57c093c19af2737e4bbd2cb3cd5e908de64286573']
         ],
@@ -81,10 +81,26 @@ class Cwebp extends AbstractConverter
             // It may be that it on some systems works, where the dynamically linked does not (see #196)
             ['cwebp-1.0.3-linux-x86-64-static', 'ab96f01b49336da8b976c498528080ff614112d5985da69943b48e0cb1c5228a'],
 
-            // Old executable for systems where both of the above fails
+            // Old executable for systems in case both of the above fails
             ['cwebp-0.6.1-linux-x86-64', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568'],
         ]
     ];
+
+    /**
+     *  Check all hashes of the precompiled binaries.
+     *
+     *  This isn't used when converting, but can be used as a startup check.
+     */
+    public function checkAllHashes()
+    {
+        foreach (self::$suppliedBinariesInfo as $os => $arr) {
+            foreach ($arr as $i => list($filename, $hash)) {
+                if ($hash != hash_file("sha256", __DIR__ . '/Binaries/' . $filename)) {
+                    throw new \Exception('Hash for ' . $filename . ' is incorrect!');
+                }
+            }
+        }
+    }
 
     public function checkOperationality()
     {
