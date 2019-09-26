@@ -49,9 +49,10 @@ class PathChecker
         }
 
         // Prevent directory traversal
+        /* Disabled. We DO allow it again (#203)
         if (preg_match('#\.\.\/#', $absFilePath)) {
             throw new InvalidInputException('Directory traversal is not allowed in ' . $text . ' path');
-        }
+        }*/
 
         // Prevent stream wrappers ("phar://", "php://" and the like)
         // https://www.php.net/manual/en/wrappers.phar.php
