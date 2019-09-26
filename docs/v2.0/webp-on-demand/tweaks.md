@@ -95,6 +95,20 @@ Add the following to the *.htaccess* to make it route to existing converted imag
 ```
 *edit:* Removed the QSD flag from the RewriteRule because it is not supported in Apache < 2.4 (and it [triggers error](https://github.com/rosell-dk/webp-express/issues/155))
 
+Note however that DOCUMENT_ROOT can be unreliable.
+
+If you store the webp images in the same folder as the originals and append ".webp" (rather than replace the file extension), you can do this instead:
+
+```
+# Redirect to existing converted image (under appropriate circumstances)
+RewriteCond %{HTTP_ACCEPT} image/webp
+RewriteCond %{REQUEST_FILENAME}.webp -f
+RewriteRule ^/?(.+)\.(jpe?g|png)$ $1.$2.webp [T=image/webp,L]
+```
+
+
+RewriteCond %{REQUEST_FILENAME}.webp -f
+
 ### Redirect with CDN support
 If you are using a CDN, and want to redirect to existing images with the .htaccess, it is a good idea to add a "Vary Accept" header. This instructs the CDN that the response varies with the *Accept* header (we do not need to do that when routing to webp-on-demand.php, because the script takes care of adding this header, when appropriate.)
 
