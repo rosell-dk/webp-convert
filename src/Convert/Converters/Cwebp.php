@@ -56,23 +56,33 @@ class Cwebp extends AbstractConverter
     // (possible values, see here: https://stackoverflow.com/questions/738823/possible-values-for-php-os)
     // Got the precompiled binaries here: https://developers.google.com/speed/webp/docs/precompiled
     private static $suppliedBinariesInfo = [
-        'WINNT' => [['cwebp.exe', '49e9cb98db30bfa27936933e6fd94d407e0386802cb192800d9fd824f6476873']],
-        'Darwin' => [['cwebp-mac12', 'a06a3ee436e375c89dbc1b0b2e8bd7729a55139ae072ed3f7bd2e07de0ebb379']],
-        'SunOS' => [['cwebp-sol', '1febaffbb18e52dc2c524cda9eefd00c6db95bc388732868999c0f48deb73b4f']],
-        'FreeBSD' => [['cwebp-fbsd', 'e5cbea11c97fadffe221fdf57c093c19af2737e4bbd2cb3cd5e908de64286573']],
+        'WINNT' => [
+            ['cwebp-1.0.3-windows-x64.exe', 'b3aaab03ca587e887f11f6ae612293d034ee04f4f7f6bc7a175321bb47a10169'],
+        ],
+        'Darwin' => [
+            ['cwebp-1.0.3-mac-10.14', '7332ed5f0d4091e2379b1eaa32a764f8c0d51b7926996a1dc8b4ef4e3c441a12'],
+        ],
+        'SunOS' => [
+            // Got this from ewww plugin, which unfortunately still uses the old 0.6.0 versions
+            // Can you help me get a 1.0.3 version?
+            ['cwebp-0.6.0-solaris', '1febaffbb18e52dc2c524cda9eefd00c6db95bc388732868999c0f48deb73b4f']
+        ],
+        'FreeBSD' => [
+            // Got this from ewww plugin, which unfortunately still uses the old 0.6.0 versions
+            // Can you help me get a 1.0.3 version?
+            ['cwebp-0.6.0-fbsd', 'e5cbea11c97fadffe221fdf57c093c19af2737e4bbd2cb3cd5e908de64286573']
+        ],
         'Linux' => [
-            ['cwebp-linux-1.0.3-shared', 'a663215a46d347f63e1ca641c18527a1ae7a2c9a0ae85ca966a97477ea13dfe0'],
-
             // Dynamically linked executable.
             // It seems it is slightly faster than the statically linked
-            ['cwebp-linux-1.0.2-shared', 'd6142e9da2f1cab541de10a31527c597225fff5644e66e31d62bb391c41bfbf4'],
+            ['cwebp-1.0.3-linux-x86-64', 'a663215a46d347f63e1ca641c18527a1ae7a2c9a0ae85ca966a97477ea13dfe0'],
 
             // Statically linked executable
             // It may be that it on some systems works, where the dynamically linked does not (see #196)
-            ['cwebp-linux-1.0.2-static', 'a67092563d9de0fbced7dde61b521d60d10c0ad613327a42a81845aefa612b29'],
+            ['cwebp-1.0.3-linux-x86-64-static', 'ab96f01b49336da8b976c498528080ff614112d5985da69943b48e0cb1c5228a'],
 
-            // Old executable for systems where all of the above fails
-            ['cwebp-linux-0.6.1', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568'],
+            // Old executable for systems where both of the above fails
+            ['cwebp-0.6.1-linux-x86-64', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568'],
         ]
     ];
 
@@ -390,10 +400,6 @@ class Cwebp extends AbstractConverter
         $binaries = [];
         if ($this->options['try-common-system-paths']) {
             foreach (self::$cwebpDefaultPaths as $binary) {
-                // Note:
-                // These warnings are not really being supressed because we have a custom error handler.
-                // That does not respect error_handling()
-                // But I guess it is alright to get these warnings
                 if (@file_exists($binary)) {
                     $binaries[] = $binary;
                 }
