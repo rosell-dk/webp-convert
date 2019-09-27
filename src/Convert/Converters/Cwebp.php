@@ -194,7 +194,7 @@ class Cwebp extends AbstractConverter
      *
      * The "-near_lossless" param is not supported on older versions of cwebp, so skip on those.
      *
-     * @param  string $version  Version of cwebp.
+     * @param  string $version  Version of cwebp (ie "1.0.3")
      * @return string
      */
     private function createCommandLineOptions($version)
@@ -446,9 +446,10 @@ class Cwebp extends AbstractConverter
     }
 
     /**
-     *  Check versions for binaries, and return array (indexed by the binary, value being the version of the binary).
+     *  Check versions for an array of binaries.
      *
-     *  @return  array
+     *  @return  array  the "detected" key holds working binaries and their version numbers, the
+     *                  the "failed" key holds failed binaries and their error codes.
      */
     private function detectVersions($binaries)
     {
@@ -468,9 +469,63 @@ class Cwebp extends AbstractConverter
     }
 
     /**
-     * @return  boolean  success or not.
+     *  Detect versions of all cwebps that are of relevance (according to configuration).
+     *
+     *  @return  array  the "detected" key holds working binaries and their version numbers, the
+     *                  the "failed" key holds failed binaries and their error codes.
      */
-    private function tryBinary($binary, $version, $useNice)
+    private function getCwebpVersions()
+    {
+        // TODO: Check out if exec('whereis cwebp'); would be a good idea
+
+        if (defined('WEBPCONVERT_CWEBP_PATH')) {
+            $this->logLn('WEBPCONVERT_CWEBP_PATH was defined, so using that path and ignoring any other');
+            return $this->detectVersions([constant('WEBPCONVERT_CWEBP_PATH')]);
+        }
+        if (!empty(getenv('WEBPCONVERT_CWEBP_PATH'))) {
+            $this->logLn(
+                'WEBPCONVERT_CWEBP_PATH environment variable was set, so using that path and ignoring any other'
+            );
+            return $this->detectVersions([getenv('WEBPCONVERT_CWEBP_PATH')]);
+        }
+
+        $versions = [];
+        if ($this->options['try-cwebp']) {
+            $this->logLn(
+                'Detecting version of cwebp command (it may not be available, but we try nonetheless)'
+            );
+            $versions = $this->detectVersions(['cwebp']);
+        }
+        if ($this->options['try-common-system-paths']) {
+            // Note:
+            // We used to do a file_exists($binary) check.
+            // That was not a good idea because it could trigger open_basedir errors. The open_basedir
+            // restriction does not operate on the exec command. So note to self: Do not do that again.
+            $this->logLn(
+                'Detecting versions of the cwebp binaries in common system paths ' .
+                '(some may not be found, that is to be expected)'
+            );
+            $versions = array_merge_recursive($versions, $this->detectVersions(self::$cwebpDefaultPaths));
+        }
+        if ($this->options['try-supplied-binary-for-os']) {
+            $versions = array_merge_recursive(
+                $versions,
+                $this->detectVersions($this->getSuppliedBinaryPathForOS())
+            );
+        }
+        return $versions;
+    }
+
+    /**
+     * Try executing a cwebp binary (or command, like: "cwebp")
+     *
+     * @param  string  $binary
+     * @param  string  $version  Version of cwebp (ie "1.0.3")
+     * @param  boolean $useNice  Whether to use "nice" command or not
+     *
+     * @return boolean  success or not.
+     */
+    private function tryCwebpBinary($binary, $version, $useNice)
     {
 
         //$this->logLn('Trying binary: ' . $binary);
@@ -494,84 +549,57 @@ class Cwebp extends AbstractConverter
         }
     }
 
-    protected function doActualConvert()
+    /**
+     *  Helper for composing an error message when no converters are working.
+     *
+     *  @param  array  $versions  The array which we get from calling ::getCwebpVersions()
+     *  @return string  An informative and to the point error message.
+     */
+    private function composeMeaningfullErrorMessageNoVersionsWorking($versions)
     {
-        // TODO: Check out if exec('whereis cwebp'); would be a good idea
 
-        if (defined('WEBPCONVERT_CWEBP_PATH')) {
-            $this->logLn('WEBPCONVERT_CWEBP_PATH was defined, so using that path and ignoring any other');
-            $versions = $this->detectVersions([constant('WEBPCONVERT_CWEBP_PATH')]);
-        } elseif (!empty(getenv('WEBPCONVERT_CWEBP_PATH'))) {
-            $this->logLn(
-                'WEBPCONVERT_CWEBP_PATH environment variable was set, so using that path and ignoring any other'
-            );
-            $versions = $this->detectVersions([getenv('WEBPCONVERT_CWEBP_PATH')]);
-        } else {
-            $versions = [];
-            if ($this->options['try-cwebp']) {
-                $this->logLn(
-                    'Detecting version of cwebp command (it may not be available, but we try nonetheless)'
-                );
-                $versions = $this->detectVersions(['cwebp']);
+        $uniqueFailCodes = array_unique(array_values($versions['failed']));
+        $justOne = (count($versions['failed']) == 1);
+
+        if (count($uniqueFailCodes) == 1) {
+            if ($uniqueFailCodes[0] == 127) {
+                return 'No cwebp binaries located. Check the conversion log for details.';
             }
-            if ($this->options['try-common-system-paths']) {
-                // Note:
-                // We used to do a file_exists($binary) check.
-                // That was not a good idea because it could trigger open_basedir errors. The open_basedir
-                // restriction does not operate on the exec command. So note to self: Do not do that again.
-                $this->logLn(
-                    'Detecting versions of the cwebp binaries in common system paths ' .
-                    '(some may not be found, that is to be expected)'
-                );
-                $versions = array_merge_recursive($versions, $this->detectVersions(self::$cwebpDefaultPaths));
-            }
-            if ($this->options['try-supplied-binary-for-os']) {
-                $versions = array_merge_recursive(
-                    $versions,
-                    $this->detectVersions($this->getSuppliedBinaryPathForOS())
-                );
+        }
+        // If there are more failures than 127, the 127 failures are unintesting.
+        // It is to be expected that some of the common system paths does not contain a cwebp.
+        $uniqueFailCodesBesides127 = array_diff($uniqueFailCodes, [127]);
+
+        if (count($uniqueFailCodesBesides127) == 1) {
+            if ($uniqueFailCodesBesides127[0] == 126) {
+                return 'No cwebp binaries could be executed (permission denied for ' . $this->who() . ').';
             }
         }
 
+        $errorMsg = '';
+        if ($justOne) {
+            $errorMsg .= 'The cwebp file found cannot be can be executed ';
+        } else {
+            $errorMsg .= 'None of the cwebp files can be executed ';
+        }
+        if (count($uniqueFailCodesBesides127) == 1) {
+            $errorMsg .= '(failure code: ' . $uniqueFailCodesBesides127[0] . ')';
+        } else {
+            $errorMsg .= '(failure codes: ' . implode(', ', $uniqueFailCodesBesides127) . ')';
+        }
+        return $errorMsg;
+    }
+
+    protected function doActualConvert()
+    {
+        $versions = $this->getCwebpVersions();
         $binaryVersions = $versions['detected'];
         if (count($binaryVersions) == 0) {
             // No working cwebp binaries found.
-            // Now compose a meaningful exception message.
 
-            $uniqueFailCodes = array_unique(array_values($versions['failed']));
-            $justOne = (count($versions['failed']) == 1);
-
-            if (count($uniqueFailCodes) == 1) {
-                if ($uniqueFailCodes[0] == 127) {
-                    throw new SystemRequirementsNotMetException(
-                        'No cwebp binaries located. Check the conversion log for details.'
-                    );
-                }
-            }
-            // If there are more failures than 127, the 127 failures are unintesting.
-            // It is to be expected that some of the common system paths does not contain a cwebp.
-            $uniqueFailCodesBesides127 = array_diff($uniqueFailCodes, [127]);
-
-            if (count($uniqueFailCodesBesides127) == 1) {
-                if ($uniqueFailCodesBesides127[0] == 126) {
-                    throw new SystemRequirementsNotMetException(
-                        'No cwebp binaries could be executed (permission denied for ' . $this->who() . ').'
-                    );
-                }
-            }
-
-            $errorMsg = '';
-            if ($justOne) {
-                $errorMsg .= 'The cwebp file found cannot be can be executed ';
-            } else {
-                $errorMsg .= 'None of the cwebp files can be executed ';
-            }
-            if (count($uniqueFailCodesBesides127) == 1) {
-                $errorMsg .= '(failure code: ' . $uniqueFailCodesBesides127[0] . ')';
-            } else {
-                $errorMsg .= '(failure codes: ' . implode(', ', $uniqueFailCodesBesides127) . ')';
-            }
-            throw new SystemRequirementsNotMetException($errorMsg);
+            throw new SystemRequirementsNotMetException(
+                $this->composeMeaningfullErrorMessageNoVersionsWorking($versions)
+            );
         }
 
         // Sort binaries so those with highest numbers comes first
@@ -590,7 +618,7 @@ class Cwebp extends AbstractConverter
         $useNice = (($this->options['use-nice']) && self::hasNiceSupport());
         $success = false;
         foreach ($binaryVersions as $binary => $version) {
-            if ($this->tryBinary($binary, $version, $useNice)) {
+            if ($this->tryCwebpBinary($binary, $version, $useNice)) {
                 $success = true;
                 break;
             }
