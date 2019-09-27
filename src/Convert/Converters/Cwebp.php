@@ -403,7 +403,7 @@ class Cwebp extends AbstractConverter
     {
         exec('whoami', $whoOutput, $whoReturnCode);
         if (($whoReturnCode == 0) && (isset($whoOutput[0]))) {
-            return $whoOutput[0];
+            return 'user: "' . $whoOutput[0] . '"';
         } else {
             return 'the user that the command was run with';
         }
@@ -558,7 +558,8 @@ class Cwebp extends AbstractConverter
     private function composeMeaningfullErrorMessageNoVersionsWorking($versions)
     {
 
-        $uniqueFailCodes = array_unique(array_values($versions['failed']));
+        // PS: array_values() is used to reindex
+        $uniqueFailCodes = array_values(array_unique(array_values($versions['failed'])));
         $justOne = (count($versions['failed']) == 1);
 
         if (count($uniqueFailCodes) == 1) {
@@ -568,7 +569,7 @@ class Cwebp extends AbstractConverter
         }
         // If there are more failures than 127, the 127 failures are unintesting.
         // It is to be expected that some of the common system paths does not contain a cwebp.
-        $uniqueFailCodesBesides127 = array_diff($uniqueFailCodes, [127]);
+        $uniqueFailCodesBesides127 = array_values(array_diff($uniqueFailCodes, [127]));
 
         if (count($uniqueFailCodesBesides127) == 1) {
             if ($uniqueFailCodesBesides127[0] == 126) {
