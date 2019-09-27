@@ -44,6 +44,14 @@ Supported by: cwebp
 ```
 If set, the converter will try to look for cwebp in locations such as `/usr/bin/cwebp`.
 
+### `cwebp-try-cwebp`
+```
+Type:         boolean
+Default:      true
+Supported by: cwebp
+```
+If set, the converter will try the a pure "cwebp" command (without specifying a path).
+
 ### `cwebp-try-supplied-binary-for-os`
 ```
 Type:         boolean

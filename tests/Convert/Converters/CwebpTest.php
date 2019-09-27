@@ -192,6 +192,7 @@ class CwebpTest extends TestCase
      {
          $source = self::getImagePath('test.png');
          $options = [
+             'try-cwebp' => false,
              'try-supplied-binary-for-os' => false,
              'try-common-system-paths' => false,
          ];
