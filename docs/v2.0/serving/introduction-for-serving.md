@@ -37,6 +37,9 @@ WebPConvert::serveConverted($source, $destination, [
         'cache-control-header' => 'public, max-age=31536000',
     ],
 
+    // redirect tweak
+    'redirect-to-self-instead-of-serving' => false,  // if true, a redirect will be issues rather than serving
+
     'convert' => [
         // options for converting goes here
         'quality' => 'auto',
@@ -137,6 +140,17 @@ X-WebP-Convert-Log: Source file was not found
 X-WebP-Convert-Log: Performing fail action: original
 X-WebP-Convert-Log: Performing fail action: throw
 ```
+
+## The redirect tweak (will be available in 2.3.0)
+There are cases where serving the image directly with PHP isn't optimal.
+
+One case is WP Engine. Even though webp-convert adds a Vary:Accept header, the header is not present in the response on WP Engine. It is somehow overwritten by the caching machinery and set to Vary:Accept-Encoding, Cookie.
+
+If however rules have been set up to redirect images directly to existing webps, one can overcome the problem by redirecting the image request back to itself rather than serving the webp directly.
+
+You can achieve this by setting the *redirect-to-self-instead-of-serving* option to true.
+
+Beware of risk of an endless redirect loop. Such loop will happen if the redirection to existing webp rules aren't set up correctly. To prevent this, it is recommended that you only set the option to true after checking that the destination file does not exist. But note that this check does not completely prevent such loops occurring when redirection to existing rules are missing - as the 302 redirect could get cached (it does that on WP Engine). So bottom line: Only use this feature when you have server rules set up for redirecting images to their corresponding webp images (for client that supports webp) - *and you are certain that these rules works*.
 
 ## More info
 
