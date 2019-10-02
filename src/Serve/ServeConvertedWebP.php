@@ -50,7 +50,6 @@ class ServeConvertedWebP
             new BooleanOption('show-report', false),
             new BooleanOption('suppress-warnings', true),
             new BooleanOption('redirect-to-self-instead-of-serving', false),
-            //new BooleanOption('redirect-to-self-instead-of-serving-destination', false),
             new ArrayOption('serve-image', []),
             new SensitiveArrayOption('convert', [])
         );
@@ -183,8 +182,12 @@ class ServeConvertedWebP
         }
 
         if ($options['redirect-to-self-instead-of-serving']) {
-            Header::addLogHeader('Redirecting to self! (hope you got redirection to existing webps set up, otherwise you will get a loop!)', $serveLogger);
-            header('Location: ?fresh' , 302);
+            Header::addLogHeader(
+                'Redirecting to self! ' .
+                    '(hope you got redirection to existing webps set up, otherwise you will get a loop!)',
+                $serveLogger
+            );
+            header('Location: ?fresh', 302);
             return;
         }
 
@@ -197,14 +200,7 @@ class ServeConvertedWebP
                 self::serveOriginal($source, $options['serve-image']);
         }
 
-        /*if ($options['redirect-to-self-instead-of-serving-destination']) {
-            Header::addLogHeader('Redirecting to self! (hope you got redirection to existing webps set up, otherwise you will get a loop!)', $serveLogger);
-            header('Location: ?fresh' , 302);
-        } else {*/
-            Header::addLogHeader('Serving converted file', $serveLogger);
-            self::serveDestination($destination, $options['serve-image']);
-        //}
-
-
+        Header::addLogHeader('Serving converted file', $serveLogger);
+        self::serveDestination($destination, $options['serve-image']);
     }
 }
