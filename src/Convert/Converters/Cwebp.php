@@ -38,7 +38,8 @@ class Cwebp extends AbstractConverter
             new StringOption('command-line-options', ''),
             new SensitiveStringOption('rel-path-to-precompiled-binaries', './Binaries'),
             new BooleanOption('try-cwebp', true),
-            new BooleanOption('try-common-system-paths', true),
+            new BooleanOption('try-common-system-paths', false),
+            new BooleanOption('try-discovering-cwebp', true),
             new BooleanOption('try-supplied-binary-for-os', true)
         );
     }
@@ -399,6 +400,65 @@ class Cwebp extends AbstractConverter
         return $result;
     }
 
+    /**
+     * Discover installed binaries using "whereis -b cwebp"
+     *
+     * @return array  Array of cwebp paths discovered (possibly empty)
+     */
+    private function discoverBinariesUsingWhereIsCwebp()
+    {
+        // This method was added due to #226.
+        exec('whereis -b cwebp', $output, $returnCode);
+        if (($returnCode == 0) && (isset($output[0]))) {
+            $result = $output[0];
+            // Ie: "cwebp: /usr/bin/cwebp /usr/local/bin/cwebp"
+            if (preg_match('#^cwebp:\s(.*)$#', $result, $matches)) {
+                $paths = explode(' ', $matches[1]);
+                $this->logLn(
+                    'Discovered ' . count($paths) . ' ' .
+                    'installed versions of cwebp using "whereis -b cwebp" command. Result: "' . $result . '"'
+                );
+                return $paths;
+            }
+        }
+        return [];
+    }
+
+    /**
+     * Discover installed binaries using "which -a cwebp"
+     *
+     * @return array  Array of cwebp paths discovered (possibly empty)
+     */
+    private function discoverBinariesUsingWhichCwebp()
+    {
+        // As suggested by @cantoute here:
+        // https://wordpress.org/support/topic/sh-1-usr-local-bin-cwebp-not-found/
+        exec('which -a cwebp', $output, $returnCode);
+        if ($returnCode == 0) {
+            $paths = $output;
+            $this->logLn(
+                'Discovered ' . count($paths) . ' ' .
+                'installed versions of cwebp using "which -a cwebp" command. Result: "' . implode('", "', $paths) . '"'
+            );
+            return $paths;
+        }
+        return [];
+    }
+
+    private function discoverBinaries()
+    {
+        $paths = $this->discoverBinariesUsingWhereIsCwebp();
+        if (count($paths) > 0) {
+            return $paths;
+        }
+
+        $paths = $this->discoverBinariesUsingWhichCwebp();
+        if (count($paths) > 0) {
+            return $paths;
+        }
+        return [];
+    }
+
     private function who()
     {
         exec('whoami', $whoOutput, $whoReturnCode);
@@ -476,8 +536,6 @@ class Cwebp extends AbstractConverter
      */
     private function getCwebpVersions()
     {
-        // TODO: Check out if exec('whereis cwebp'); would be a good idea
-
         if (defined('WEBPCONVERT_CWEBP_PATH')) {
             $this->logLn('WEBPCONVERT_CWEBP_PATH was defined, so using that path and ignoring any other');
             return $this->detectVersions([constant('WEBPCONVERT_CWEBP_PATH')]);
@@ -492,20 +550,29 @@ class Cwebp extends AbstractConverter
         $versions = [];
         if ($this->options['try-cwebp']) {
             $this->logLn(
-                'Detecting version of cwebp command (it may not be available, but we try nonetheless)'
+                'Detecting version of plain cwebp command (it may not be available, but we try nonetheless)'
             );
             $versions = $this->detectVersions(['cwebp']);
         }
+        if ($this->options['try-discovering-cwebp']) {
+            $versions = array_replace_recursive($versions, $this->detectVersions($this->discoverBinaries()));
+        }
         if ($this->options['try-common-system-paths']) {
+            // Brute-force trying common system paths
             // Note:
-            // We used to do a file_exists($binary) check.
-            // That was not a good idea because it could trigger open_basedir errors. The open_basedir
-            // restriction does not operate on the exec command. So note to self: Do not do that again.
+            //    We used to do a file_exists($binary) check.
+            //    That was not a good idea because it could trigger open_basedir errors. The open_basedir
+            //    restriction does not operate on the exec command. So note to self: Do not do that again.
+            //    BUT. Could we actually disable those errors? ie:
+            //    WarningLoggerTrait::shutUp = true;
+            //    if (@file_exists(...)) {...}
+            //    WarningLoggerTrait::shutUp = false;
+
             $this->logLn(
-                'Detecting versions of the cwebp binaries in common system paths ' .
+                'Brute force trying version detecting cwebp binaries in common system paths ' .
                 '(some may not be found, that is to be expected)'
             );
-            $versions = array_merge_recursive($versions, $this->detectVersions(self::$cwebpDefaultPaths));
+            $versions = array_replace_recursive($versions, $this->detectVersions(self::$cwebpDefaultPaths));
         }
         if ($this->options['try-supplied-binary-for-os']) {
             $versions = array_merge_recursive(

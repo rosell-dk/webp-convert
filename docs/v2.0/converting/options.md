@@ -42,7 +42,7 @@ Type:         boolean
 Default:      true
 Supported by: cwebp
 ```
-If set, the converter will try to look for cwebp in locations such as `/usr/bin/cwebp`.
+If set, the converter will try to look for cwebp in locations such as `/usr/bin/cwebp`. It is a limited list. It might find something that isn't found using `try-discovering-cwebp` if these common paths are not within PATH or neither `which` or `whereis` are available.
 
 ### `cwebp-try-cwebp`
 ```
@@ -50,7 +50,16 @@ Type:         boolean
 Default:      true
 Supported by: cwebp
 ```
-If set, the converter will try the a pure "cwebp" command (without specifying a path).
+If set, the converter will try the a plain "cwebp" command (without specifying a path).
+
+### `try-discovering-cwebp`
+```
+Type:         boolean
+Default:      true
+Supported by: cwebp
+```
+If set, the converter will try to discover installed cwebp binaries using the `whereis -b cwebp` and `which -a cwebp` commands. These commands will find cwebp binaries residing in PATH. They might find cwebp binaries which are not found by enabling `cwebp-try-common-system-paths`
+
 
 ### `cwebp-try-supplied-binary-for-os`
 ```

@@ -195,6 +195,7 @@ class CwebpTest extends TestCase
              'try-cwebp' => false,
              'try-supplied-binary-for-os' => false,
              'try-common-system-paths' => false,
+             'try-discovering-cwebp' => false,
          ];
          $this->expectException(ConverterNotOperationalException::class);
          //$cwebp = new Cwebp($source, $source . '.webp', $options);
@@ -205,8 +206,30 @@ class CwebpTest extends TestCase
      {
          $source = self::getImagePath('test.png');
          $options = [
+             'try-cwebp' => false,
              'try-supplied-binary-for-os' => true,
              'try-common-system-paths' => false,
+             'try-discovering-cwebp' => false,
+         ];
+         //$this->expectException(ConverterNotOperationalException::class);
+         //$cwebp = new Cwebp($source, $source . '.webp', $options);
+         try {
+             Cwebp::convert($source, $source . '.webp', $options);
+         } catch (ConversionFailedException $e) {
+             // this is ok.
+             // - but other exceptions are not!
+         }
+         $this->addToAssertionCount(1);
+     }
+
+     public function testUsingCommonSystemPaths()
+     {
+         $source = self::getImagePath('test.png');
+         $options = [
+             'try-cwebp' => false,
+             'try-supplied-binary-for-os' => false,
+             'try-common-system-paths' => true,
+             'try-discovering-cwebp' => false,
          ];
          //$this->expectException(ConverterNotOperationalException::class);
          //$cwebp = new Cwebp($source, $source . '.webp', $options);
