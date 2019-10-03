@@ -3,6 +3,7 @@
 namespace WebPConvert\Convert\Converters;
 
 use WebPConvert\Convert\Converters\AbstractConverter;
+use WebPConvert\Convert\Converters\BaseTraits\WarningLoggerTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
@@ -109,7 +110,11 @@ class Cwebp extends AbstractConverter
         $this->checkOperationalityExecTrait();
 
         $options = $this->options;
-        if (!$options['try-supplied-binary-for-os'] && !$options['try-common-system-paths'] && !$options['try-cwebp']) {
+        if (!$options['try-supplied-binary-for-os'] &&
+            !$options['try-common-system-paths'] &&
+            !$options['try-cwebp'] &&
+            !$option['try-discovering-cwebp']
+        ) {
             throw new ConverterNotOperationalException(
                 'Configured to neither try pure cwebp command, ' .
                 'nor look for cweb binaries in common system locations and ' .
@@ -396,8 +401,76 @@ class Cwebp extends AbstractConverter
             }
             $result[] = $binaryFile;
         }
-
         return $result;
+    }
+
+    /**
+     * A fileExist function that actually works! (it requires exec(), though).
+     *
+     * A warning-free fileExists method that works even when open_basedir is in effect.
+     * For performance reasons, the file_exists method will be tried first. If that issues a warning,
+     * we fall back to using exec().
+     *
+     */
+    private function fileExists($path)
+    {
+        // There is a challenges here:
+        // We want to suppress warnings, but at the same time we want to know that it happened.
+        // We achieve this by registering an error handler (that is done automatically for all converters
+        // in WarningLoggerTrait).
+
+        // Disable warnings. This does not disable the warning counter (in WarningLoggerTrait).
+        $this->disableWarningsTemporarily();
+
+        // Reset warning count. This way we will be able to determine if a warning occured after
+        // the file_exists() call (by checking warning count)
+        $this->resetWarningCount();
+        $found = @file_exists($path);
+        $this->reenableWarnings();
+
+        if ($found) {
+            return true;
+        }
+
+        if ($this->getWarningCount() == 0) {
+            // no warnings were issued. So no open_basedir restriction in effect that messes
+            // things up. We can safely conclude that the file does not exist.
+            return false;
+        }
+
+        // The path was not found with file_exists, but on the other hand:
+        // a warning was issued, which probably means we got a open_basedir restriction in effect warning.
+        // So the file COULD exist.
+
+        // Lets try to find out by executing "ls path/to/cwebp"
+        exec('ls ' . $path, $output, $returnCode);
+        if (($returnCode == 0) && (isset($output[0]))) {
+            return true;
+        }
+
+        // We assume that "ls" command is general available!
+        // As that failed, we can conclude the file does not exist.
+        return false;
+    }
+
+
+    /**
+     * Discover binaries by looking in common system paths.
+     *
+     * We try a small set of common system paths, such as "/usr/bin/cwebp", filtering out
+     * non-existing paths.
+     *
+     * @return array Cwebp binaries found in common system locations
+     */
+    private function discoverCwebpsInCommonSystemPaths()
+    {
+        $binaries = [];
+        foreach (self::$cwebpDefaultPaths as $binary) {
+            if ($this->fileExists($binary)) {
+                $binaries[] = $binary;
+            }
+        }
+        return $binaries;
     }
 
     /**
@@ -555,24 +628,19 @@ class Cwebp extends AbstractConverter
             $versions = $this->detectVersions(['cwebp']);
         }
         if ($this->options['try-discovering-cwebp']) {
+            $this->logLn(
+                'Detecting versions of of cwebp discovered using "whereis cwebp" command'
+            );
             $versions = array_replace_recursive($versions, $this->detectVersions($this->discoverBinaries()));
         }
         if ($this->options['try-common-system-paths']) {
-            // Brute-force trying common system paths
-            // Note:
-            //    We used to do a file_exists($binary) check.
-            //    That was not a good idea because it could trigger open_basedir errors. The open_basedir
-            //    restriction does not operate on the exec command. So note to self: Do not do that again.
-            //    BUT. Could we actually disable those errors? ie:
-            //    WarningLoggerTrait::shutUp = true;
-            //    if (@file_exists(...)) {...}
-            //    WarningLoggerTrait::shutUp = false;
-
             $this->logLn(
-                'Brute force trying version detecting cwebp binaries in common system paths ' .
-                '(some may not be found, that is to be expected)'
+                'Detecting versions of cwebp binaries found in common system paths'
             );
-            $versions = array_replace_recursive($versions, $this->detectVersions(self::$cwebpDefaultPaths));
+            $versions = array_replace_recursive(
+                $versions,
+                $this->detectVersions($this->discoverCwebpsInCommonSystemPaths())
+            );
         }
         if ($this->options['try-supplied-binary-for-os']) {
             $versions = array_merge_recursive(

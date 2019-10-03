@@ -19,6 +19,12 @@ trait WarningLoggerTrait
     /** @var string|array|null  Previous error handler (stored in order to be able pass warnings on) */
     private $previousErrorHandler;
 
+    /** @var boolean  Suppress ALL warnings? (both from log and from bubbling up) */
+    private $suppressWarnings;
+
+    /** @var int  Count number of warnings */
+    private $warningCounter;
+
     /**
      *  Handle warnings and notices during conversion by logging them and passing them on.
      *
@@ -59,8 +65,12 @@ trait WarningLoggerTrait
 
         If it was possible to suppress the warnings with @ without suppressing warnings on systems
         with error reporting set to E_NONE, I would do that.
-
         */
+
+        $this->warningCounter++;
+        if ($this->suppressWarnings) {
+            return;
+        }
 
         $errorTypes = [
             E_WARNING =>             "Warning",
@@ -119,6 +129,8 @@ trait WarningLoggerTrait
      */
     protected function activateWarningLogger()
     {
+        $this->suppressWarnings = false;
+        $this->warningCounter = 0;
         $this->previousErrorHandler = set_error_handler(
             array($this, "warningHandler"),
             E_WARNING | E_USER_WARNING | E_NOTICE | E_USER_NOTICE
@@ -135,5 +147,25 @@ trait WarningLoggerTrait
     protected function deactivateWarningLogger()
     {
         restore_error_handler();
+    }
+
+    protected function disableWarningsTemporarily()
+    {
+        $this->suppressWarnings = true;
+    }
+
+    protected function reenableWarnings()
+    {
+        $this->suppressWarnings = false;
+    }
+
+    protected function getWarningCount()
+    {
+        return $this->warningCounter;
+    }
+
+    protected function resetWarningCount()
+    {
+        $this->warningCounter = 0;
     }
 }
