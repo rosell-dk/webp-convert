@@ -36,7 +36,7 @@ trait WarningLoggerTrait
      *  @param  string   $errfile
      *  @param  integer  $errline
      *
-     *  @return false|null
+     *  @return false|null|void
      */
     public function warningHandler($errno, $errstr, $errfile, $errline)
     {
