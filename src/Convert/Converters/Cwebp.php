@@ -113,7 +113,7 @@ class Cwebp extends AbstractConverter
         if (!$options['try-supplied-binary-for-os'] &&
             !$options['try-common-system-paths'] &&
             !$options['try-cwebp'] &&
-            !$option['try-discovering-cwebp']
+            !$options['try-discovering-cwebp']
         ) {
             throw new ConverterNotOperationalException(
                 'Configured to neither try pure cwebp command, ' .
