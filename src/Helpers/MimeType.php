@@ -34,7 +34,7 @@ class MimeType
         if (isset(self::$cachedDetections[$absFilePath])) {
             return self::$cachedDetections[$absFilePath];
         }
-        $cachedDetections[$absFilePath] = ImageMimeTypeGuesser::lenientGuess($absFilePath);
-        return $cachedDetections[$absFilePath];
+        self::$cachedDetections[$absFilePath] = ImageMimeTypeGuesser::lenientGuess($absFilePath);
+        return self::$cachedDetections[$absFilePath];
     }
 }
