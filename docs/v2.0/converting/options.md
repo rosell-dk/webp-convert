@@ -58,7 +58,7 @@ Type:         boolean
 Default:      true
 Supported by: cwebp
 ```
-If set, the converter will try to discover installed cwebp binaries using the `whereis -b cwebp` and `which -a cwebp` commands. These commands will find cwebp binaries residing in PATH. They might find cwebp binaries which are not found by enabling `cwebp-try-common-system-paths`
+If set, the converter will try to discover installed cwebp binaries using the `which -a cwebp` command, or in case that fails, the `whereis -b cwebp` command. These commands will find cwebp binaries residing in PATH. They might find cwebp binaries which are not found by enabling `cwebp-try-common-system-paths`
 
 
 ### `cwebp-try-supplied-binary-for-os`
