@@ -552,7 +552,7 @@ class Cwebp extends AbstractConverter
             $binaries = array_merge($binaries, $moreBinaries);
         }
 
-        return $binaries = array_values(array_unique($binaries));
+        return array_values(array_unique($binaries));
     }
 
     /**

@@ -17,6 +17,14 @@ class FileExists
     /**
      * A warning handler that registers that a warning has occured and suppresses it.
      *
+     * The function is a callback used with "set_error_handler".
+     * It is declared public because it needs to be accessible from the point where the warning is triggered.
+     *
+     * @param  integer  $errno
+     * @param  string   $errstr
+     * @param  string   $errfile
+     * @param  integer  $errline
+     *
      * @return void
      */
     public static function warningHandler($errno, $errstr, $errfile, $errline)
@@ -38,7 +46,7 @@ class FileExists
         // There is a challenges here:
         // We want to suppress warnings, but at the same time we want to know that it happened.
         // We achieve this by registering an error handler
-        $previousErrorHandler = set_error_handler(
+        set_error_handler(
             array('WebPConvert\Helpers\FileExists', "warningHandler"),
             E_WARNING | E_USER_WARNING | E_NOTICE | E_USER_NOTICE
         );
