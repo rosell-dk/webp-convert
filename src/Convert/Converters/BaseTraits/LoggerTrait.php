@@ -36,7 +36,7 @@ trait LoggerTrait
      * @param  string  $style  (optional) Ie "italic" or "bold"
      * @return void
      */
-    protected function logLn($msg, $style = '')
+    public function logLn($msg, $style = '')
     {
         if (isset($this->logger)) {
             $this->logger->logLn($msg, $style);
