@@ -14,7 +14,7 @@ namespace WebPConvert\Convert\Converters\BaseTraits;
  */
 trait WarningLoggerTrait
 {
-    abstract protected function logLn($msg, $style = '');
+    abstract public function logLn($msg, $style = '');
 
     /** @var string|array|null  Previous error handler (stored in order to be able pass warnings on) */
     private $previousErrorHandler;
