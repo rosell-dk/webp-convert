@@ -260,6 +260,11 @@ class Gd extends AbstractConverter
     protected function trySettingAlphaBlending($image)
     {
         if (function_exists('imagealphablending')) {
+            // TODO: Should we set second parameter to false instead?
+            // As here: https://www.texelate.co.uk/blog/retaining-png-transparency-with-php-gd
+            // (PS: I have backed up some local changes - to Gd.php, which includes changing that param
+            // to false. But I didn't finish up back then and now I forgot, so need to retest before
+            // changing anything...
             if (!imagealphablending($image, true)) {
                 $this->logLn('Warning: imagealphablending() failed');
                 return false;
