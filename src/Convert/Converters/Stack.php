@@ -199,6 +199,8 @@ class Stack extends AbstractConverter
                 //throw new ConverterNotOperationalException('...');
                 return;
             } catch (ConverterNotOperationalException $e) {
+                $this->logLn($e->getMessage());                
+            } catch (ConversionSkippedException $e) {
                 $this->logLn($e->getMessage());
             } catch (ConversionFailedException $e) {
                 $this->logLn($e->getMessage(), 'italic');
@@ -210,10 +212,7 @@ class Stack extends AbstractConverter
                 }
                 //$this->logLn($e->getTraceAsString());
                 $anyRuntimeErrors = true;
-            } catch (ConversionSkippedException $e) {
-                $this->logLn($e->getMessage());
             }
-
             $this->logLn($converterId . ' failed in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
         }
 

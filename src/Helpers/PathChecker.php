@@ -29,7 +29,7 @@ class PathChecker
       * See https://blog.ripstech.com/2018/new-php-exploitation-technique/
       *
       * @param  string  $absFilePath
-      * @return string  sanitized file path
+      * @return void
       */
     public static function checkAbsolutePath($absFilePath, $text = 'file')
     {

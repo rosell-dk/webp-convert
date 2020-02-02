@@ -107,10 +107,10 @@ class Ewww extends AbstractConverter
                     break;
                 case 'exceeded':
                     throw new ConverterNotOperationalException('Quota has exceeded');
-                    break;
+                    //break;
                 case 'invalid':
                     throw new InvalidApiKeyException('Api key is invalid');
-                    break;
+                    //break;
             }
         }
     }

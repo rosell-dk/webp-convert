@@ -443,6 +443,7 @@ class Cwebp extends AbstractConverter
             }
             return $returnCode;
         }
+        return '';  // Will not happen. Just so phpstan doesn't complain
     }
 
     /**

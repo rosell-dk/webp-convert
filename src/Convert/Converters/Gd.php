@@ -189,34 +189,32 @@ class Gd extends AbstractConverter
      */
     private function createImageResource()
     {
-        // In case of failure, image will be false
-
         $mimeType = $this->getMimeTypeOfSource();
 
-        if ($mimeType == 'image/png') {
-            $image = imagecreatefrompng($this->source);
-            if ($image === false) {
-                throw new ConversionFailedException(
-                    'Gd failed when trying to load/create image (imagecreatefrompng() failed)'
-                );
-            }
-            return $image;
+        switch ($mimeType) {
+            case 'image/png':
+                $image = imagecreatefrompng($this->source);
+                if ($image === false) {
+                    throw new ConversionFailedException(
+                        'Gd failed when trying to load/create image (imagecreatefrompng() failed)'
+                    );
+                }
+                return $image;
+
+            case 'image/jpeg':
+                $image = imagecreatefromjpeg($this->source);
+                if ($image === false) {
+                    throw new ConversionFailedException(
+                        'Gd failed when trying to load/create image (imagecreatefromjpeg() failed)'
+                    );
+                }
+                return $image;
+
         }
 
-        if ($mimeType == 'image/jpeg') {
-            $image = imagecreatefromjpeg($this->source);
-            if ($image === false) {
-                throw new ConversionFailedException(
-                    'Gd failed when trying to load/create image (imagecreatefromjpeg() failed)'
-                );
-            }
-            return $image;
-        }
-
-        /*
         throw new InvalidInputException(
             'Unsupported mime type:' . $mimeType
-        );*/
+        );
     }
 
     /**
@@ -382,7 +380,7 @@ class Gd extends AbstractConverter
                         'An error was produced during conversion',
                         $this->errorMessageWhileCreating
                     );
-                    break;
+                    //break;
             }
         }
 

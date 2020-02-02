@@ -106,7 +106,7 @@ abstract class AbstractConverter
      * @param   array   $options (optional)  options for conversion
      * @param   BaseLogger $logger (optional)
      */
-    public function __construct($source, $destination, $options = [], $logger = null)
+    public final function __construct($source, $destination, $options = [], $logger = null)
     {
         InputValidator::checkSourceAndDestination($source, $destination);
 
@@ -152,7 +152,7 @@ abstract class AbstractConverter
      * Set destination.
      *
      * @param   string  $destination         path to destination
-     * @return string  The destination.
+     * @return  void
      */
     public function setDestination($destination)
     {
@@ -199,7 +199,6 @@ abstract class AbstractConverter
      */
     public static function createInstance($source, $destination, $options = [], $logger = null)
     {
-
         return new static($source, $destination, $options, $logger);
     }
 

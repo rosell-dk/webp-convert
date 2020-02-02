@@ -93,7 +93,7 @@ class ServeConvertedWebPWithErrorHandling
 
             case 'throw':
                 throw $e;
-                break;
+                //break;  commented out as phpstan complains. But do something else complain now?
 
             case 'report-as-image':
                 // TODO: Implement or discard ?

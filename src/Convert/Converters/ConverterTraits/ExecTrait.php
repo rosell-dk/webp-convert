@@ -37,6 +37,7 @@ trait ExecTrait
             }
             return false;
         }
+        return false; // to satisfy phpstan
     }
 
     /**
