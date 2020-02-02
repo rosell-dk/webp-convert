@@ -209,12 +209,9 @@ class Gd extends AbstractConverter
                     );
                 }
                 return $image;
-
         }
 
-        throw new InvalidInputException(
-            'Unsupported mime type:' . $mimeType
-        );
+        throw new InvalidInputException('Unsupported mime type');
     }
 
     /**
