@@ -199,7 +199,7 @@ class Stack extends AbstractConverter
                 //throw new ConverterNotOperationalException('...');
                 return;
             } catch (ConverterNotOperationalException $e) {
-                $this->logLn($e->getMessage());                
+                $this->logLn($e->getMessage());
             } catch (ConversionSkippedException $e) {
                 $this->logLn($e->getMessage());
             } catch (ConversionFailedException $e) {
