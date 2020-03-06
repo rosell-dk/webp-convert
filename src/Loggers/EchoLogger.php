@@ -18,7 +18,7 @@ class EchoLogger extends BaseLogger
      * @param  string  $msg     message to log
      * @param  string  $style   style (null | bold | italic)
      * @return void
-    */
+     */
     public function log($msg, $style = '')
     {
         $msg = htmlspecialchars($msg);
@@ -35,7 +35,7 @@ class EchoLogger extends BaseLogger
      * Handle ln by echoing a <br> tag.
      *
      * @return void
-    */
+     */
     public function ln()
     {
         echo '<br>';

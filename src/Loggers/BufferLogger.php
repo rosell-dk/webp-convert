@@ -21,7 +21,7 @@ class BufferLogger extends BaseLogger
      * @param  string  $msg     message to log
      * @param  string  $style   style (null | bold | italic)
      * @return void
-    */
+     */
     public function log($msg, $style = '')
     {
         $this->entries[] = [$msg, $style];

@@ -43,8 +43,8 @@ trait EncodingAutoTrait
     private function convertTwoAndSelectSmallest()
     {
         $destination = $this->getDestination();
-        $destinationLossless =  $destination . '.lossless.webp';
-        $destinationLossy =  $destination . '.lossy.webp';
+        $destinationLossless = $destination . '.lossless.webp';
+        $destinationLossy = $destination . '.lossy.webp';
 
         $this->logLn(
             'Encoding is set to auto - converting to both lossless and lossy and selecting the smallest file'

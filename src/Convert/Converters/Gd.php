@@ -130,14 +130,14 @@ class Gd extends AbstractConverter
                 return false;
             }
 
-             //change the RGB values if you need, but leave alpha at 127
+            //change the RGB values if you need, but leave alpha at 127
             $transparent = imagecolorallocatealpha($dst, 255, 255, 255, 127);
 
             if ($transparent === false) {
                 return false;
             }
 
-             //simpler than flood fill
+            //simpler than flood fill
             if (imagefilledrectangle($dst, 0, 0, imagesx($image), imagesy($image), $transparent) === false) {
                 return false;
             }

@@ -206,11 +206,11 @@ abstract class AbstractConverter
     {
         $sourceSize = filesize($source);
         $destSize = filesize($destination);
-        $this->log(round(($sourceSize - $destSize)/$sourceSize * 100) . '% ');
+        $this->log(round(($sourceSize - $destSize) / $sourceSize * 100) . '% ');
         if ($sourceSize < 10000) {
-            $this->logLn('(went from ' . strval($sourceSize) . ' bytes to '. strval($destSize) . ' bytes)');
+            $this->logLn('(went from ' . strval($sourceSize) . ' bytes to ' . strval($destSize) . ' bytes)');
         } else {
-            $this->logLn('(went from ' . round($sourceSize/1024) . ' kb to ' . round($destSize/1024) . ' kb)');
+            $this->logLn('(went from ' . round($sourceSize / 1024) . ' kb to ' . round($destSize / 1024) . ' kb)');
         }
     }
 

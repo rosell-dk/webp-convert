@@ -15,22 +15,22 @@ use WebPConvert\Exceptions\InvalidInput\TargetNotFoundException;
 class PathChecker
 {
 
-     /**
-      * Check absolute file path to prevent attacks.
-      *
-      * - Prevents non printable characters
-      * - Prevents stream wrappers
-      * - Prevents directory traversal
-      *
-      * Preventing non printable characters is especially done to prevent the NUL character, which can be used
-      * to bypass other tests. See https://st-g.de/2011/04/doing-filename-checks-securely-in-PHP.
-      *
-      * Preventeng stream wrappers is especially done to protect against Phar Deserialization.
-      * See https://blog.ripstech.com/2018/new-php-exploitation-technique/
-      *
-      * @param  string  $absFilePath
-      * @return void
-      */
+    /**
+     * Check absolute file path to prevent attacks.
+     *
+     * - Prevents non printable characters
+     * - Prevents stream wrappers
+     * - Prevents directory traversal
+     *
+     * Preventing non printable characters is especially done to prevent the NUL character, which can be used
+     * to bypass other tests. See https://st-g.de/2011/04/doing-filename-checks-securely-in-PHP.
+     *
+     * Preventeng stream wrappers is especially done to protect against Phar Deserialization.
+     * See https://blog.ripstech.com/2018/new-php-exploitation-technique/
+     *
+     * @param  string  $absFilePath
+     * @return void
+     */
     public static function checkAbsolutePath($absFilePath, $text = 'file')
     {
         if (empty($absFilePath)) {

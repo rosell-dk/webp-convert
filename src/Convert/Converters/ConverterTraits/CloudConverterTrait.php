@@ -40,9 +40,9 @@ trait CloudConverterTrait
         if ($sizeInIni < $fileSize) {
             throw new ConversionFailedException(
                 'File is larger than your ' . $iniSettingId . ' (set in your php.ini). File size:' .
-                    round($fileSize/1024) . ' kb. ' .
+                    round($fileSize / 1024) . ' kb. ' .
                     $iniSettingId . ' in php.ini: ' . ini_get($iniSettingId) .
-                    ' (parsed as ' . round($sizeInIni/1024) . ' kb)'
+                    ' (parsed as ' . round($sizeInIni / 1024) . ' kb)'
             );
         }
     }
