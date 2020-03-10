@@ -47,7 +47,7 @@ class ImageMagick extends AbstractConverter
 
     private function getVersion()
     {
-        exec($this->getPath() . ' -version', $output, $returnCode);
+        exec($this->getPath() . ' -version 2>&1', $output, $returnCode);
         if (($returnCode == 0) && isset($output[0])) {
             return $output[0];
         } else {
@@ -57,15 +57,14 @@ class ImageMagick extends AbstractConverter
 
     public function isInstalled()
     {
-        exec($this->getPath() . ' -version', $output, $returnCode);
+        exec($this->getPath() . ' -version 2>&1', $output, $returnCode);
         return ($returnCode == 0);
     }
 
     // Check if webp delegate is installed
     public function isWebPDelegateInstalled()
     {
-
-        exec('convert -list delegate', $output, $returnCode);
+        exec('convert -list delegate 2>&1', $output, $returnCode);
         foreach ($output as $line) {
             if (preg_match('#webp\\s*=#i', $line)) {
                 return true;
@@ -73,7 +72,7 @@ class ImageMagick extends AbstractConverter
         }
 
         // try other command
-        exec('convert -list configure', $output, $returnCode);
+        exec('convert -list configure 2>&1', $output, $returnCode);
         foreach ($output as $line) {
             if (preg_match('#DELEGATE.*webp#i', $line)) {
                 return true;
@@ -153,7 +152,7 @@ class ImageMagick extends AbstractConverter
     {
         $this->logLn($this->getVersion());
 
-        $command = $this->getPath() . ' ' . $this->createCommandLineOptions();
+        $command = $this->getPath() . ' ' . $this->createCommandLineOptions() . ' 2>&1';
 
         $useNice = (($this->options['use-nice']) && self::hasNiceSupport()) ? true : false;
         if ($useNice) {
