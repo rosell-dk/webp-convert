@@ -102,6 +102,7 @@ This library is used as the engine to provide webp conversions to a handful of p
 - [Wordpress](https://github.com/rosell-dk/webp-express)
 - [Contao](https://github.com/postyou/contao-webp-bundle)
 - [Kirby](https://github.com/S1SYPHOS/kirby-webp)
+- [October CMS](https://github.com/OFFLINE-GmbH/oc-responsive-images-plugin/)
 
 ### Other projects using WebP Convert
 
