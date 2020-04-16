@@ -700,15 +700,13 @@ class Cwebp extends AbstractConverter
         }
 
         // cwebp sets file permissions to 664 but instead ..
-        // .. $destination's parent folder's permissions should be used (except executable bits)
-        // (or perhaps the current umask instead? https://www.php.net/umask)
+        // .. $this->source file permissions should be used
 
         if ($success) {
-            $destinationParent = dirname($this->destination);
-            $fileStatistics = stat($destinationParent);
+            $fileStatistics = stat($this->source);
             if ($fileStatistics !== false) {
-                // Apply same permissions as parent folder but strip off the executable bits
-                $permissions = $fileStatistics['mode'] & 0000666;
+                // Apply same permissions as source file
+                $permissions = $fileStatistics['mode'];
                 chmod($this->destination, $permissions);
             }
         } else {
