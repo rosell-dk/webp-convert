@@ -14,23 +14,6 @@ Then install the dev tools with composer:
 composer install
 ```
 
-## The builds
-For those old-schoolers that prefers one packaged file containing all the code - easily uploaded via ftp - we are maintaining `build/webp-convert.inc`.
-
-It is an aggregation of all the php files needed, with base classes on top. It also includes the files in vendor/rosell-dk/image-mime-type-guesser.
-
-We also maintain `build/webp-on-demand-1.inc` (which only consists of a few classes) and `build/webp-on-demand-2.inc` (which is loaded by webp-on-demand-2, when a conversion is needed, and contains the rest of the library).
-
-Whenever code is changed in `src` - or at least, whenever a new release is released, we must rebuild these files. This can be done like this:
-
-```
-composer build
-```
-
-This runs `build-scripts/build-webp-on-demand.php`.
-That file needs maintaining when new base classes arrives, new folders, or new dependencies.
-
-
 ## Unit Testing
 To run all the unit tests do this:
 ```
@@ -76,3 +59,15 @@ Install phpdox and run it in the project root:
 ```
 phpdox
 ```
+
+## Committing
+Before committing, first make sure to:
+- run `composer ci`
+
+## Releasing
+Before releasing:
+- Make sure that travis build is successful
+
+When releasing:
+- update the [webp-convert-concat](https://github.com/rosell-dk/webp-convert-concat) library
+- consider updating the require in the composer file in libraries that uses webp-convert (ie `webp-convert-cloud-service` and `webp-express`)
