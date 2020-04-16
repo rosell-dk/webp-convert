@@ -134,7 +134,7 @@ class Stack extends AbstractConverter
         $defaultConverterOptions = [];
 
         foreach ($this->options2->getOptionsMap() as $id => $option) {
-            if ($option->isValueExplicitlySet() && ! ($option instanceof GhostOption)) {
+            if ($option->isValueExplicitlySet() && !($option instanceof GhostOption)) {
                 //$this->logLn('hi' . $id);
                 $defaultConverterOptions[$id] = $option->getValue();
             }

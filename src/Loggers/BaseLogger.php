@@ -20,7 +20,7 @@ abstract class BaseLogger
      * @param  string  $msg     message to log
      * @param  string  $style   style (null | bold | italic)
      * @return void
-    */
+     */
     abstract public function log($msg, $style = '');
 
     /**
@@ -35,7 +35,7 @@ abstract class BaseLogger
      * @param  string  $msg     message to log
      * @param  string  $style   style (null | bold | italic)
      * @return void
-    */
+     */
     public function logLn($msg, $style = '')
     {
         $this->log($msg, $style);

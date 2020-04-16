@@ -36,7 +36,7 @@ class WebPConvert
      *
      * @throws  \WebPConvert\Convert\Exceptions\ConversionFailedException   in case conversion fails
      * @return  void
-    */
+     */
     public static function convert($source, $destination, $options = [], $logger = null)
     {
         Stack::convert($source, $destination, $options, $logger);

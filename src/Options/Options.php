@@ -43,7 +43,8 @@ class Options
             $this->addOption($option);
         }
     }
-     /*
+
+    /*
      In some years, we can use the splat instead (requires PHP 5.6):
      @param  Option[]  ...$options  Array of options objects to add
     public function addOptions(...$options)

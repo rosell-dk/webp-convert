@@ -277,7 +277,7 @@ class Cwebp extends AbstractConverter
                 // otherwise encoding=auto would not work as expected
 
                 if ($options['encoding'] == 'lossless') {
-                    $cmdOptions[] ='-near_lossless ' . $options['near-lossless'];
+                    $cmdOptions[] = '-near_lossless ' . $options['near-lossless'];
                 } else {
                     $this->logLn(
                         'The near-lossless option ignored for lossy'
@@ -427,7 +427,7 @@ class Cwebp extends AbstractConverter
         } else {
             $this->log('. Result: ');
             if ($returnCode == 127) {
-                $this->logLn('*Exec failed* (the cwebp binary was not found at path: ' . $binary. ')');
+                $this->logLn('*Exec failed* (the cwebp binary was not found at path: ' . $binary . ')');
             } else {
                 if ($returnCode == 126) {
                     $this->logLn(
@@ -443,7 +443,7 @@ class Cwebp extends AbstractConverter
             }
             return $returnCode;
         }
-        return '';  // Will not happen. Just so phpstan doesn't complain
+        return ''; // Will not happen. Just so phpstan doesn't complain
     }
 
     /**
@@ -486,7 +486,7 @@ class Cwebp extends AbstractConverter
         if ($this->options[$optionName]) {
             $this->logLn(
                 'Discovering binaries ' . $description . ' ' .
-                 '(to skip this step, disable the "' . $optionName . '" option)'
+                '(to skip this step, disable the "' . $optionName . '" option)'
             );
         } else {
             $this->logLn(
@@ -683,7 +683,7 @@ class Cwebp extends AbstractConverter
             'Binaries ordered by version number.'
         );
         foreach ($binaryVersions as $binary => $version) {
-            $this->logLn('- ' . $binary . ': (version: ' . $version .')');
+            $this->logLn('- ' . $binary . ': (version: ' . $version . ')');
         }
 
         // Execute!

@@ -68,7 +68,7 @@ class Wpc extends AbstractConverter
             ['.', '/']
         );
 
-        for ($i=0; $i<22; $i++) {
+        for ($i = 0; $i < 22; $i++) {
             $salt .= $validCharsForSalt[array_rand($validCharsForSalt)];
         }
         return $salt;
