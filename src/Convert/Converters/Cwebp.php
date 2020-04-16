@@ -123,7 +123,7 @@ class Cwebp extends AbstractConverter
     {
         //$version = $this->detectVersion($binary);
 
-        $command = ($useNice ? 'nice ' : '') . $binary . ' ' . $commandOptions;
+        $command = ($useNice ? 'nice ' : '') . $binary . ' ' . $commandOptions . ' 2>&1';
 
         //$logger->logLn('command options:' . $commandOptions);
         $this->logLn('Trying to convert by executing the following command:');
@@ -401,7 +401,7 @@ class Cwebp extends AbstractConverter
 
     private function who()
     {
-        exec('whoami', $whoOutput, $whoReturnCode);
+        exec('whoami 2>&1', $whoOutput, $whoReturnCode);
         if (($whoReturnCode == 0) && (isset($whoOutput[0]))) {
             return 'user: "' . $whoOutput[0] . '"';
         } else {
@@ -415,7 +415,7 @@ class Cwebp extends AbstractConverter
      */
     private function detectVersion($binary)
     {
-        $command = $binary . ' -version';
+        $command = $binary . ' -version 2>&1';
         $this->log('- Executing: ' . $command);
         exec($command, $output, $returnCode);
 
