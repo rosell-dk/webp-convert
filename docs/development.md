@@ -66,6 +66,7 @@ Before committing, first make sure to:
 
 ## Releasing
 Before releasing:
+- Update the version number in `Converters/AbstractConverter.php` (search for "WebP Convert")
 - Make sure that travis build is successful
 
 When releasing:
