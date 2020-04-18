@@ -705,8 +705,8 @@ class Cwebp extends AbstractConverter
         if ($success) {
             $fileStatistics = stat($this->source);
             if ($fileStatistics !== false) {
-                // Apply same permissions as source file
-                $permissions = $fileStatistics['mode'];
+                // Apply same permissions as source file, but strip off the executable bits
+                $permissions = $fileStatistics['mode'] & 0000666;
                 chmod($this->destination, $permissions);
             }
         } else {
