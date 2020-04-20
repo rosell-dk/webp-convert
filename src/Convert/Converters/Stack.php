@@ -25,6 +25,8 @@ use WebPConvert\Options\SensitiveArrayOption;
 class Stack extends AbstractConverter
 {
 
+    protected $converterUsed;
+
     protected function getUnsupportedDefaultOptions()
     {
         return [
@@ -196,6 +198,7 @@ class Stack extends AbstractConverter
                 //self::runConverterWithTiming($converterId, $source, $destination, $converterOptions, false, $logger);
 
                 $this->logLn($converterId . ' succeeded :)');
+                $this->converterUsed = $converterId;
                 //throw new ConverterNotOperationalException('...');
                 return;
             } catch (ConverterNotOperationalException $e) {
@@ -229,5 +232,10 @@ class Stack extends AbstractConverter
             // All converters threw a SystemRequirementsNotMetException
             throw new ConverterNotOperationalException('None of the converters in the stack are operational');
         }
+    }
+
+    public function getConverterUsed(): ?string
+    {
+        return $this->converterUsed;
     }
 }
