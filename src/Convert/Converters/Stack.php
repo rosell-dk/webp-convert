@@ -234,7 +234,7 @@ class Stack extends AbstractConverter
         }
     }
 
-    public function getConverterUsed(): ?string
+    public function getConverterUsed()
     {
         return $this->converterUsed;
     }
