@@ -55,10 +55,10 @@ class Cwebp extends AbstractConverter
     // 2: Set permission to 775. 755 causes unzipping to fail on some hosts
     private static $suppliedBinariesInfo = [
         'WINNT' => [
-            ['cwebp-103-windows-x64.exe', 'b3aaab03ca587e887f11f6ae612293d034ee04f4f7f6bc7a175321bb47a10169'],
+            ['cwebp-110-windows-x64.exe', '442682869402f92ad2c8b3186c02b0ea6d6da68d2f908df38bf905b3411eb9fb'],
         ],
         'Darwin' => [
-            ['cwebp-103-mac-10_14', '7332ed5f0d4091e2379b1eaa32a764f8c0d51b7926996a1dc8b4ef4e3c441a12'],
+            ['cwebp-110-mac-10_15', 'bfce742da09b959f9f2929ba808fed9ade25c8025530434b6a47d217a6d2ceb5'],
         ],
         'SunOS' => [
             // Got this from ewww Wordpress plugin, which unfortunately still uses the old 0.6.0 versions
@@ -73,7 +73,7 @@ class Cwebp extends AbstractConverter
         'Linux' => [
             // Dynamically linked executable.
             // It seems it is slightly faster than the statically linked
-            ['cwebp-103-linux-x86-64', 'a663215a46d347f63e1ca641c18527a1ae7a2c9a0ae85ca966a97477ea13dfe0'],
+            ['cwebp-110-linux-x86-64', '1603b07b592876dd9fdaa62b44aead800234c9474ff26dc7dd01bc0f4785c9c6'],
 
             // Statically linked executable
             // It may be that it on some systems works, where the dynamically linked does not (see #196)
@@ -89,12 +89,18 @@ class Cwebp extends AbstractConverter
      *
      *  This isn't used when converting, but can be used as a startup check.
      */
-    public function checkAllHashes()
+    public static function checkAllHashes()
     {
         foreach (self::$suppliedBinariesInfo as $os => $arr) {
-            foreach ($arr as $i => list($filename, $hash)) {
-                if ($hash != hash_file("sha256", __DIR__ . '/Binaries/' . $filename)) {
-                    throw new \Exception('Hash for ' . $filename . ' is incorrect!');
+            foreach ($arr as $i => list($filename, $expectedHash)) {
+                $actualHash = hash_file("sha256", __DIR__ . '/Binaries/' . $filename);
+                if ($expectedHash != $actualHash) {
+                    throw new \Exception(
+                      'Hash for ' . $filename . ' is incorrect! ' .
+                      'Checksum is: ' . $actualHash . ', ' .
+                      ', but expected: ' . $expectedHash .
+                      '. Did you transfer with FTP, but not in binary mode? '
+                    );
                 }
             }
         }
