@@ -96,10 +96,10 @@ class Cwebp extends AbstractConverter
                 $actualHash = hash_file("sha256", __DIR__ . '/Binaries/' . $filename);
                 if ($expectedHash != $actualHash) {
                     throw new \Exception(
-                      'Hash for ' . $filename . ' is incorrect! ' .
-                      'Checksum is: ' . $actualHash . ', ' .
-                      ', but expected: ' . $expectedHash .
-                      '. Did you transfer with FTP, but not in binary mode? '
+                        'Hash for ' . $filename . ' is incorrect! ' .
+                        'Checksum is: ' . $actualHash . ', ' .
+                        ', but expected: ' . $expectedHash .
+                        '. Did you transfer with FTP, but not in binary mode? '
                     );
                 }
             }
