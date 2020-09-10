@@ -6,7 +6,7 @@ parameters:
         - '#Caught class ImagickException not found.#'
         - '# on an unknown class Imagick.#'
         - '# on an unknown class Gmagick.#'
-        - '#Call to an undefined method Gmagick::getImageBlob().#'
+        - '#Call to an undefined method Gmagick::getImageBlob\(\).#'
         -
             message: '#Strict comparison using === between int and false will always evaluate to false.#'
             path: %currentWorkingDirectory%/src/Convert/Converters/Gd.php
