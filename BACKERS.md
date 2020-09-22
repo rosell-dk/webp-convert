@@ -8,27 +8,25 @@ How is it financed then? Well, it isn't exactly. However, some people choose to 
 To become a backer yourself, visit [my page at patreon](https://www.patreon.com/rosell)
 
 
-**Persons currently backing the project via patreon - Thanks!**
+## Active backers via Patron
 
-- Max Kreminsky
-- Mathieu Gollain-Dupont
-
-
-**Persons who contributed with coffee within the last 30 days:**
-
-| Name                   | Date           | Message      |
-| ---------------------- | -------------- | ------------ |
-| Anon                   | 2020-08-18     | - |
-| Eder Ribeiro           | 2020-08-08     | Hello Bjørn I believe that it is a fantastic solution and that it deserves maximum support to keep getting better! If you can, check out my configuration tip, https://github.com/rosell-dk/webp-express/issues/433 |
-| Christian              | 2020-08-05     | Merci pour votre plugin. Exceptionnel et gratuit. |
+| Name                   | Since date     |
+| ---------------------- | -------------- |
+| Max Kreminsky          | 2019-08-02     |
+| [Mathieu Gollain-Dupont](https://www.linkedin.com/in/mathieu-gollain-dupont-9938a4a/) | 2020-08-26     |
+| Nodeflame              | 2019-10-31     |
+| Ruben Solvang          | 2020-01-08     |
 
 
-**Persons who contributed with extra generously amounts of coffee / lifetime backing (>50$) - thanks!:**
+Hi-scores:
 
-| Name                   | Amount     |  Message  |
-| ---------------------- | -----------| --------- |
-| Justin - BigScoots     | $105       | Such an amazing plugin for so many reasons, thank you! |
-| Sebastian              | $99        | WebP for Wordpress – what a great plugin! Thank you!   |
-| Tammy Lee              | $90        |  |
-| Max Kreminsky          | $65        |  |
-| Steven Sullivan        | $51        | Thank you for such a wonderful plugin. |
+| Name                     | Life time contribution   |
+| ------------------------ | ------------------------ |
+| Tammy Valgardson         | $90                      |        
+| Max Kreminsky            | $65                      |        
+| Ruben Solvang            | $14                      |        
+| Dmitry Verzjikovsky      | $5                       |        
+
+## Former backers - I'm still grateful :)
+- Dmitry Verzjikovsky
+- Tammy Valgardson

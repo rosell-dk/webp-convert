@@ -115,10 +115,13 @@ Bread on the table don't come for free, even though this library does, and alway
 - [Become a backer or sponsor on Patreon](https://www.patreon.com/rosell).
 - [Buy me a Coffee](https://ko-fi.com/rosell)
 
+## Supporters ==
 *Persons currently backing the project via patreon - Thanks!*
 
 - Max Kreminsky
+- Nodeflame
 - [Mathieu Gollain-Dupont](https://www.linkedin.com/in/mathieu-gollain-dupont-9938a4a/)
+- Ruben Solvang
 
 *Persons who contributed with coffee within the last 30 days:*
 
