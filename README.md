@@ -18,7 +18,7 @@ The library can convert using the following methods:
 - *gmagick* (using [Gmagick PHP extension](https://www.php.net/manual/en/book.gmagick.php))
 - *imagemagick* (executing [imagemagick](https://imagemagick.org/index.php) binary using an `exec` call)
 - *graphicsmagick* (executing [graphicsmagick](http://www.graphicsmagick.org/) binary using an `exec` call)
-- *ffmpeg* (executing [ffmpeg](https://ffmpeg.org/) binary using an `exec` call)
+- **NEW in 2.4.0:** *ffmpeg* (executing [ffmpeg](https://ffmpeg.org/) binary using an `exec` call)
 - *wpc* (using [WebPConvert Cloud Service](https://github.com/rosell-dk/webp-convert-cloud-service/) - an open source webp converter for PHP - based on this library)
 - *ewwww* (using the [ewww](https://ewww.io/plans/) cloud converter (1 USD startup and then free webp conversion))
 - *gd* (using the [Gd PHP extension](https://www.php.net/manual/en/book.image.php))
