@@ -34,6 +34,10 @@ class Ewww extends AbstractConverter
             'auto-filter',
             'encoding',
             'low-memory',
+            'method',
+            'near-lossless',
+            'preset',
+            'size-in-percentage',
             'use-nice'
         ];
     }
