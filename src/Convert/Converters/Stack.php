@@ -66,7 +66,7 @@ class Stack extends AbstractConverter
     public static function getAvailableConverters()
     {
         return [
-            'cwebp', 'vips', 'imagick', 'gmagick', 'imagemagick', 'graphicsmagick', 'wpc', 'ewww', 'gd'
+            'cwebp', 'vips', 'imagick', 'gmagick', 'imagemagick', 'graphicsmagick', 'wpc', 'ffmpeg', 'ewww', 'gd'
         ];
     }
 

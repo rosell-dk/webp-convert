@@ -73,7 +73,7 @@ If set, the converter will try the precompiled cwebp binary that are located in 
 ```
 Type:          integer (0-100)
 Default:       75 for jpegs and 85 for pngs
-Supported by:  all (cwebp, ewww, gd, gmagick, graphicsmagick, imagick, imagemagick, vips)
+Supported by:  all (cwebp, ewww, gd, ffmpeg, gmagick, graphicsmagick, imagick, imagemagick, vips)
 ```
 Read about this option in the ["auto quality" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality).<br><br>
 
@@ -81,7 +81,7 @@ Read about this option in the ["auto quality" section in the introduction](https
 ```
 Type:          string  ("lossy" | "lossless" | "auto")
 Default:       "auto"
-Supported by:  cwebp, vips, imagick, gmagick, imagemagick and graphicsmagick  (gd always uses lossy encoding, ewww uses lossless for pngs and lossy for jpegs)
+Supported by:  cwebp, vips, ffmpeg, imagick, gmagick, imagemagick and graphicsmagick  (gd always uses lossy encoding, ewww uses lossless for pngs and lossy for jpegs)
 ```
 Read about this option in the ["lossy/lossless" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-selecting-between-losslesslossy-encoding).<br><br>
 
@@ -134,7 +134,7 @@ Reduce memory usage of lossy encoding at the cost of ~30% longer encoding time a
 ```
 Type:          integer (0-100)
 Default:       85
-Supported by:  all (cwebp, ewww, gd, gmagick, graphicsmagick, imagick, imagemagick, vips)
+Supported by:  all (cwebp, ewww, ffmpeg, gd, gmagick, graphicsmagick, imagick, imagemagick, vips)
 ```
 Read about this option in the ["auto quality" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality).<br><br>
 
@@ -142,7 +142,7 @@ Read about this option in the ["auto quality" section in the introduction](https
 ```
 Type:          string ("all" | "none" | "exif" | "icc" | "xmp")
 Default:       'none'
-Supported by:  'none' is supported by all. 'all' is supported by all, except *gd*. The rest is only supported by *cwebp*
+Supported by:  'none' is supported by all. 'all' is supported by all, except *gd* and *ffmpeg*. The rest is only supported by *cwebp*
 ```
 Only *cwebp* supports all values. *gd* will always remove all metadata. The rest can either strip all or keep all (they will keep all, unless the option is set to *none*).<br><br>
 
@@ -150,9 +150,9 @@ Only *cwebp* supports all values. *gd* will always remove all metadata. The rest
 ```
 Type:          integer (0-6)
 Default:       6
-Supported by:  cwebp, imagick, gmagick, imagemagick and graphicsmagick
+Supported by:  cwebp, imagick, gmagick, imagemagick, graphicsmagick and ffmpeg
 ```
-This parameter controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. 0 is fastest. 6 results in best quality.<br><br>
+This parameter controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. 0 is fastest. 6 results in best quality. In ffmpeg, this value is used for the "compression_level" option (same thing)<br><br>
 
 ### `near-lossless`
 ```
@@ -175,7 +175,7 @@ Read about this option in the [introduction](https://github.com/rosell-dk/webp-c
 ```
 Type:          string ('none', 'default', 'photo', 'picture', 'drawing',  'icon' or 'text')
 Default:       "none"
-Supported by:  cwebp, vips
+Supported by:  cwebp, vips, ffmpeg
 ```
 Using a preset will set many of the other options to suit a particular type of source material. It even overrides them. It does however not override the quality option. "none" means that no preset will be set<br><br>
 
@@ -183,7 +183,7 @@ Using a preset will set many of the other options to suit a particular type of s
 ```
 Type:          integer (0-100) | "auto"
 Default:       "auto" for jpegs and 85 for pngs
-Supported by:  all (cwebp, ewww, gd, gmagick, graphicsmagick, imagick, imagemagick, vips)
+Supported by:  all (cwebp, ewww, gd, gmagick, graphicsmagick, imagick, imagemagick, vips, ffmpeg)
 ```
 Quality for lossy encoding. Read about the "auto" option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality).<br><br>
 
@@ -291,7 +291,7 @@ Shuffle the converters in the stack. This can for example be used to balance loa
 ```
 Type:          boolean
 Default:       false
-Supported by:  cwebp, graphicsmagick, imagemagick
+Supported by:  cwebp, graphicsmagick, imagemagick, ffmpeg
 ```
 This option only applies to converters which are using exec() to execute a binary directly on the host. If *use-nice* is set, it will be examined if the [`nice`]( https://en.wikipedia.org/wiki/Nice_(Unix)) command is available on the host. If it is, the binary is executed using *nice*. This assigns low priority to the process and will save system resources - but result in slower conversion.<br><br>
 

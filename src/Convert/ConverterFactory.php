@@ -25,6 +25,9 @@ class ConverterFactory
     public static function converterIdToClassname($converterId)
     {
         switch ($converterId) {
+            case 'ffmpeg':
+                $classNameShort = 'FFMpeg';
+                break;
             case 'imagickbinary':
                 $classNameShort = 'ImagickBinary';
                 break;
