@@ -102,7 +102,7 @@ class FFMpeg extends AbstractConverter
         // preset. Appears first in the list as recommended in the cwebp docs
         if (!is_null($this->options['preset'])) {
             if ($this->options['preset'] != 'none') {
-                $cmdOptions[] = '-preset ' . $this->options['preset'];
+                $commandArguments[] = '-preset ' . $this->options['preset'];
             }
         }
 
