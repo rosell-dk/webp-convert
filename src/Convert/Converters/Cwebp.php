@@ -433,7 +433,10 @@ class Cwebp extends AbstractConverter
         } else {
             $this->log('. Result: ');
             if ($returnCode == 127) {
-                $this->logLn('*Exec failed* (the cwebp binary was not found at path: ' . $binary . ', or it had missing library dependencies)');
+                $this->logLn(
+                    '*Exec failed* (the cwebp binary was not found at path: ' . $binary .
+                    ', or it had missing library dependencies)'
+                );
             } else {
                 if ($returnCode == 126) {
                     $this->logLn(
