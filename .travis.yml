@@ -45,8 +45,8 @@ sudo: false
 matrix:
   fast_finish: true
   include:
-    - name: "Very new setup (PHP 7.4, Xenial)"
-      php: 7.4
+    - name: "Very new setup (PHP 8.0, Xenial)"
+      php: 8.0
       #dist: trusty
       dist: xenial
       #dist: bionic
@@ -59,7 +59,21 @@ matrix:
       - INSTALLIMAGEMAGICK=0        # imagemagick.org is currently down... - so installation cannot download gzip
       #- IMAGEMAGICK_VERSION="7.0.8-43"
 
-    - name: "Rather new setup (PHP 7.3, Xenial)"
+    - name: "New setup (PHP 7.4, Xenial)"
+      php: 7.4
+      #dist: trusty
+      dist: xenial
+      #dist: bionic
+      env:
+      - UPLOADCOVERAGE=0
+      - PHPSTAN=0
+      - INSTALLVIPS=1
+      #- VIPS_VERSION="8.6.3"
+      - VIPS_VERSION="8.7.4"
+      - INSTALLIMAGEMAGICK=0        # imagemagick.org is currently down... - so installation cannot download gzip
+      #- IMAGEMAGICK_VERSION="7.0.8-43"
+
+    - name: "Not so new setup (PHP 7.3, Xenial)"
       php: 7.3
       #dist: trusty
       dist: xenial
@@ -125,6 +139,8 @@ before_install:
   #    it is because the libgraphicsmagick1-dev package is not installed
   #    But is that needed when we are building ?
   #- echo '' | pecl install gmagick-beta
+  
+  - phpenv config-rm xdebug.ini || true
 
 before_script:
   #- echo $PATH
