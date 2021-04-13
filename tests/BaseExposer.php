@@ -46,7 +46,7 @@ class BaseExposer {
         return $this->bindDynamicFunctionToObjectAndCallIt($cb, $class, ...$args);
     }
 
-    protected function callPrivateFunctionByRef($functionNameToCall, $class = null, &$arg1)
+    protected function callPrivateFunctionByRef($functionNameToCall, $class = null, &$arg1 = null)
     {
         self::$currentlyCalling = $functionNameToCall;
         $cb = function(&$arg1) {

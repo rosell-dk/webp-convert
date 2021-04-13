@@ -26,11 +26,6 @@ class VipsTest extends TestCase
         return $this->getImageFolder() . '/' . $image;
     }
 
-    public function __construct()
-    {
-        //require_once('pretend.inc');
-    }
-
     public function testConvert()
     {
         $options = [];
