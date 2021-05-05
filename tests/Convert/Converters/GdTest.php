@@ -22,14 +22,8 @@ class GdTest extends TestCase
         return self::getImageFolder() . '/' . $image;
     }
 
-    public function __construct()
-    {
-
-    }
-
     public function testConvert()
     {
-
         ConverterTestHelper::runAllConvertTests($this, 'Gd');
     }
 

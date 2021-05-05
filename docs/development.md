@@ -14,6 +14,11 @@ Then install the dev tools with composer:
 composer install
 ```
 
+If you don't have composer yet:
+- Get it ([download phar](https://getcomposer.org/composer.phar) and move it to /usr/local/bin/composer)
+- PS: PHPUnit requires php-xml, php-mbstring and php-curl. To install: `sudo apt install php-xml php-mbstring curl php-curl`
+
+
 ## Unit Testing
 To run all the unit tests do this:
 ```
