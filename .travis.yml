@@ -45,11 +45,12 @@ sudo: false
 matrix:
   fast_finish: true
   include:
-    - name: "Very new setup (PHP 8.0, Bionic)"
+    - name: "Pretty new setup (PHP 8.0, Xenial)"
       php: 8.0
       #dist: trusty
       #dist: focal
-      dist: bionic
+      #dist: bionic
+      dist: xenial
       env:
       - UPLOADCOVERAGE=0
       - PHPSTAN=1
@@ -72,7 +73,7 @@ matrix:
       - INSTALLIMAGEMAGICK=0        # imagemagick.org is currently down... - so installation cannot download gzip
       #- IMAGEMAGICK_VERSION="7.0.8-43"
 
-    - name: "Olderer setup (PHP 7.3, Xenial) - with coverage upload"
+    - name: "Older setup (PHP 7.3, Xenial) - with coverage upload"
       php: 7.3.24
       #dist: trusty
       dist: xenial
