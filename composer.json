@@ -54,7 +54,7 @@
     }
   ],
   "require": {
-      "php": "^5.6 | ^7.0",
+      "php": "^5.6 | ^7.0 | ^8.0",
       "rosell-dk/image-mime-type-guesser": "^0.3"
   },
   "suggest": {
