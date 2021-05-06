@@ -45,7 +45,7 @@ sudo: false
 matrix:
   fast_finish: true
   include:
-    - name: "Pretty new setup (PHP 8.0, Xenial)"
+    - name: "PHP 8.0, Xenial"
       php: 8.0
       #dist: trusty
       #dist: focal
@@ -56,8 +56,9 @@ matrix:
       - PHPSTAN=1
       - INSTALLVIPS=1
       #- VIPS_VERSION="8.6.3"
-      - VIPS_VERSION="8.7.4"
-      - INSTALLIMAGEMAGICK=0        # imagemagick.org is currently down... - so installation cannot download gzip
+      - VIPS_VERSION="8.10.6"
+      - INSTALLIMAGEMAGICK=1
+      - IMAGEMAGICK_VERSION="7.0.11-11"
       - XDEBUG_MODE=coverage
       - PHPUNIT_VERSION="^9.3"
       - COMPOSER_TEST_SCRIPT="test"
@@ -76,6 +77,21 @@ matrix:
       - PHPUNIT_VERSION="^8.0"
       - COMPOSER_TEST_SCRIPT="test-41"
 
+    - name: "PHP 5.6, Trusty"
+      php: 5.6
+      dist: trusty
+      #dist: xenial
+      #dist: bionic
+      env:
+      - UPLOADCOVERAGE=0
+      - PHPSTAN=0
+      - INSTALLVIPS=0
+      #- VIPS_VERSION="8.7.4"
+      - INSTALLIMAGEMAGICK=0        # imagemagick.org is currently down... - so installation cannot download gzip
+      - PHPUNIT_VERSION="5.7.27"
+      - COMPOSER_TEST_SCRIPT="test-41"
+
+    #allow_failures:
 
 before_install:
   # VIPS
