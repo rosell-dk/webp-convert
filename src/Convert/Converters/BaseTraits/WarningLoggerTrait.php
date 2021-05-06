@@ -31,14 +31,18 @@ trait WarningLoggerTrait
      *  The function is a callback used with "set_error_handler".
      *  It is declared public because it needs to be accessible from the point where the warning is triggered.
      *
+     *  PS: The fifth parameter ($errcontext) of an error handler is deprecated since PHP 7.2, however we have
+     *      it here to avoid calling another error handler with too few parameters (see #266)
+     *
      *  @param  integer  $errno
      *  @param  string   $errstr
      *  @param  string   $errfile
      *  @param  integer  $errline
+     *  @param  array    $errcontext
      *
      *  @return false|null|void
      */
-    public function warningHandler($errno, $errstr, $errfile, $errline)
+    public function warningHandler($errno, $errstr, $errfile, $errline, $errcontext = null)
     {
         /*
         We do NOT do the following (even though it is generally recommended):
@@ -113,7 +117,7 @@ trait WarningLoggerTrait
             ) {
                 return false;
             } else {
-                return call_user_func($this->previousErrorHandler, $errno, $errstr, $errfile, $errline);
+                return call_user_func($this->previousErrorHandler, $errno, $errstr, $errfile, $errline, $errcontext);
             }
         } else {
             return false;
