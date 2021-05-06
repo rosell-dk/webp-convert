@@ -58,7 +58,7 @@ trait CurlTrait
      * Init curl.
      *
      * @throws  SystemRequirementsNotMetException  if curl could not be initialized
-     * @return  resource|CurlHandle  curl handle (from PHP8: CurlHandle)
+     * @return  resource|\CurlHandle  curl handle (from PHP8: CurlHandle)
      */
     protected static function initCurl()
     {
