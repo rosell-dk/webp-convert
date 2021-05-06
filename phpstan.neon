@@ -22,3 +22,5 @@ parameters:
         - '#.+invalid typehint type GdImage#'
         - '#.+invalid type GdImage#'
         - '#.+never returns GdImage so it can be removed from the return typehint.#'
+        - '#.+never returns GdImage so it can be removed from the return typehint.#'
+        - '#Method WebPConvert\\Convert\\Converters\\Gd::createImageResource\(\) never returns resource so it can be removed from the return typehint.#'
