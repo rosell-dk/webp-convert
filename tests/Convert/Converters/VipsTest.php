@@ -198,17 +198,25 @@ class VipsTest extends TestCase
         //
         reset_pretending();
 
-        // Exit if vips is not operational
-        if (!$this->isVipsOperational()) {
-            $this->markTestSkipped('vips is not operational');
-            return;
-        }
+        $source = $this->getImagePath('i-do-not-exist.jpg');
 
-        $source = self::$imageDir . '/i-do-not-exist.jpg';
         $this->assertFalse(file_exists($source));
 
         $options = [];
+
+        // Next must fail with a TargetNotFoundException
+        $this->expectException(TargetNotFoundException::class);
+
         $vips = new Vips($source, $source . '.webp', $options);
+
+        // Exit if vips is not operational
+        /*
+        if (!$this->isVipsOperational()) {
+            $this->markTestSkipped('vips is not operational');
+            return;
+        }*/
+
+        /*
         $vipsExposer = new VipsExposer($vips);
 
         // this should fail!
@@ -217,7 +225,7 @@ class VipsTest extends TestCase
             $this->fail('exception was expected');
         } catch (ConversionFailedException $e) {
             $this->assertRegExp('#not found#', $e->getMessage());
-        }
+        }*/
 
     }
 /*
