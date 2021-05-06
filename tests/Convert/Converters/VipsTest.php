@@ -5,6 +5,7 @@ namespace WebPConvert\Tests\Convert\Converters;
 use WebPConvert\Convert\Converters\Vips;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
+use WebPConvert\Exceptions\InvalidInput\TargetNotFoundException;
 use WebPConvert\Tests\Convert\Exposers\VipsExposer;
 
 use PHPUnit\Framework\TestCase;
@@ -101,19 +102,26 @@ class VipsTest extends TestCase
 
     public function testCreateImageResource1()
     {
+
+        $source = $this->getImagePath('non-existing');
+
+        // Next must fail with a TargetNotFoundException
+        $this->expectException(TargetNotFoundException::class);
+
+        $vips = new Vips($source, $source . '.webp', []);
+
         // Exit if vips is not operational
         if (!$this->isVipsOperational()) {
             return;
         }
 
-        $source = $this->getImagePath('non-existing');
-        $vips = new Vips($source, $source . '.webp', []);
+        /*
         $vipsExposer = new VipsExposer($vips);
 
         // It must fail because it should not be able to create resource when file does not exist
         $this->expectException(ConversionFailedException::class);
 
-        $vipsExposer->createImageResource();
+        $vipsExposer->createImageResource();*/
     }
 
     public function testNotOperational1()
