@@ -55,6 +55,7 @@ class VipsTest extends TestCase
     private function isVipsOperational()
     {
         try {
+            $vips = $this->createVips('test.png');
             $vips->checkOperationality();
             $vips->checkConvertability();
         } catch (\Exception $e) {
