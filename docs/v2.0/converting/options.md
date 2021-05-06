@@ -150,9 +150,9 @@ Only *cwebp* supports all values. *gd* will always remove all metadata. The rest
 ```
 Type:          integer (0-6)
 Default:       6
-Supported by:  cwebp, imagick, gmagick, imagemagick, graphicsmagick and ffmpeg
+Supported by:  cwebp, imagick, gmagick, imagemagick, graphicsmagick, ffmpeg and vips
 ```
-This parameter controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. 0 is fastest. 6 results in best quality. In ffmpeg, this value is used for the "compression_level" option (same thing)<br><br>
+This parameter controls the trade off between encoding speed and the compressed file size and quality. Possible values range from 0 to 6. 0 is fastest. 6 results in best quality. PS: "method" is not a very descriptive name, but this is what its called in libwebp, which is why we also choose it for webpconvert. In ffmpeg, they renamed it "compression_level", in vips, they call it "reduction_effort". Both better names, but as said, use "method" with webpconvert<br><br>
 
 ### `near-lossless`
 ```
