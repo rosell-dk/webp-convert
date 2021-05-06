@@ -36,7 +36,7 @@ class Vips extends AbstractConverter
 
         $this->options2->addOptions(
             new BooleanOption('smart-subsample', false),
-            new IntegerOption('reduction_effort', 4, 0, 6),
+            new IntegerOption('reduction_effort', 4, 0, 6)
         );
     }
 
@@ -65,19 +65,24 @@ class Vips extends AbstractConverter
             );
         }
 
+        if (!function_exists('vips_error_buffer')) {
+            throw new SystemRequirementsNotMetException(
+                'Vips extension seems to be installed, however something is not right: ' .
+                'the function "vips_error_buffer" is not available.'
+            );
+        }
 
-        vips_error_buffer(); // clear error buffer
-        $result = vips_call('webpsave', null);
+
+        /** @scrutinizer ignore-call */ vips_error_buffer(); // clear error buffer
+        $result = /** @scrutinizer ignore-call */ vips_call('webpsave', null);
         if ($result == -1) {
             $message = vips_error_buffer();
-            echo $message;
             if (strpos($message, 'VipsOperation: class "webpsave" not found') === 0) {
                 throw new SystemRequirementsNotMetException(
                     'Vips has not been compiled with webp support.'
                 );
             }
         }
-
     }
 
     /**
@@ -198,7 +203,7 @@ class Vips extends AbstractConverter
      */
     private function webpsave($im, $options)
     {
-        vips_error_buffer(); // clear error buffer
+        /** @scrutinizer ignore-call */ vips_error_buffer(); // clear error buffer
         $result = /** @scrutinizer ignore-call */ vips_call('webpsave', $im, $this->destination, $options);
 
         //trigger_error('test-warning', E_USER_WARNING);
