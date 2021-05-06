@@ -25,6 +25,7 @@ class Vips extends AbstractConverter
     protected function getUnsupportedDefaultOptions()
     {
         return [
+            'auto-filter',
             'size-in-percentage',
             'use-nice'
         ];
@@ -35,8 +36,7 @@ class Vips extends AbstractConverter
         parent::createOptions();
 
         $this->options2->addOptions(
-            new BooleanOption('smart-subsample', false),
-            new IntegerOption('reduction_effort', 4, 0, 6)
+            new BooleanOption('smart-subsample', false)
         );
     }
 
@@ -186,6 +186,9 @@ class Vips extends AbstractConverter
                 // We have chosen same option syntax as cwebp
                 $options['Q'] = $this->options['near-lossless'];
             }
+        }
+        if ($this->options['method'] !== 4) {
+            $options['reduction_effort'] = $this->options['method'];
         }
 
         return $options;
