@@ -34,7 +34,8 @@ class Vips extends AbstractConverter
         parent::createOptions();
 
         $this->options2->addOptions(
-            new BooleanOption('smart-subsample', false)
+            new BooleanOption('smart-subsample', false),
+            new IntegerOption('reduction_effort', 4, 0, 6),
         );
     }
 
@@ -190,7 +191,7 @@ class Vips extends AbstractConverter
             } elseif (preg_match("#(.*)\\sunsupported$#", $message, $matches)) {
                 // Actually, I am not quite sure if this ever happens.
                 // I got a "near_lossless unsupported" error message in a build, but perhaps it rather a warning
-                if (in_array($matches[1], ['lossless', 'alpha_q', 'near_lossless', 'smart_subsample'])) {
+                if (in_array($matches[1], ['lossless', 'alpha_q', 'near_lossless', 'smart_subsample', 'reduction_effort'])) {
                     $nameOfPropertyNotFound = $matches[1];
                 }
             }
