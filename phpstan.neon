@@ -7,31 +7,10 @@ parameters:
         - '# on an unknown class Imagick.#'
         - '# on an unknown class Gmagick.#'
         - '#Call to an undefined method Gmagick::getImageBlob\(\).#'
-        -
-            message: '#Strict comparison using === between int and false will always evaluate to false.#'
-            path: %currentWorkingDirectory%/src/Convert/Converters/Gd.php
-        -
-            message: '#Strict comparison using === between CurlHandle and false will always evaluate to false.#'
-            path: %currentWorkingDirectory%/src/Convert/Converters/Gd.php
-        -
-            message: '#Strict comparison using === between resource and false will always evaluate to false.#'
-            path: %currentWorkingDirectory%/src/Convert/Converters/Ewww.php
-        -
-            message: '#Strict comparison using === between CurlHandle and false will always evaluate to false.#'
-            path: %currentWorkingDirectory%/src/Convert/Converters/Ewww.php
-        -
-            message: '#Strict comparison using === between resource and false will always evaluate to false.#'
-            path: %currentWorkingDirectory%/src/Convert/Converters/ConverterTraits/CurlTrait.php
-        -
-            message: '#Strict comparison using === between CurlHandle and false will always evaluate to false.#'
-            path: %currentWorkingDirectory%/src/Convert/Converters/ConverterTraits/CurlTrait.php
-        -
-            message: '#Strict comparison using === between resource and false will always evaluate to false.#'
-            path: %currentWorkingDirectory%/src/Convert/BaseConverters/AbstractCloudCurlConverter.php
-        -
-            message: '#Strict comparison using === between CurlHandle and false will always evaluate to false.#'
-            path: %currentWorkingDirectory%/src/Convert/BaseConverters/AbstractCloudCurlConverter.php
-
+        - '#Strict comparison using === between resource and false will always evaluate to false.#'
+        - '#Strict comparison using === between CurlHandle and false will always evaluate to false.#'
+        - '#Return typehint of method WebPConvert\\Convert\\Converters\\Ewww::initCurl\(\) has invalid type CurlHandle.#'
+        - '#Return typehint of method WebPConvert\\Convert\\Converters\\Wpc::initCurl\(\) has invalid type CurlHandle.#'
         - '#Function vips_call invoked with 4 parameters, 2 required.#'
         - '#Function vips_.* not found.#'
         -
@@ -40,3 +19,6 @@ parameters:
         -
             message: '#Call to function is_callable\(\) with array.* always evaluate to false#'
             path: %currentWorkingDirectory%/src/Convert/ConverterFactory.php
+        - '#.+invalid typehint type GdImage#'
+        - '#.+invalid type GdImage#'
+        - '#.+never returns GdImage so it can be removed from the return typehint.#'
