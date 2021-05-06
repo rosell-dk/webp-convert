@@ -7,3 +7,4 @@ composer.phar
 .idea
 /build
 coverage.clover
+.phpunit.result.cache
