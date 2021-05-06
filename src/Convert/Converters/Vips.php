@@ -7,6 +7,7 @@ use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Options\BooleanOption;
+use WebPConvert\Options\IntegerOption;
 
 //require '/home/rosell/.composer/vendor/autoload.php';
 
