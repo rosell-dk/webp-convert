@@ -58,7 +58,8 @@ matrix:
       #- VIPS_VERSION="8.6.3"
       - VIPS_VERSION="8.7.4"
       - INSTALLIMAGEMAGICK=0        # imagemagick.org is currently down... - so installation cannot download gzip
-
+      - XDEBUG_MODE=coverage
+      
     - name: "Rather standard setup (PHP 7.4, Xenial)"
       php: 7.4.0    # Sidestep problem with code coverage in xdebug by specifying 7.4.0 (see https://travis-ci.community/t/warning-xdebug-mode-coverage-has-to-be-set-in-php-ini/10919/6
       #dist: trusty
