@@ -58,8 +58,26 @@ class Vips extends AbstractConverter
             );
         }
 
-        // TODO: Should we also test if webp is available? (It seems not to be neccessary - it seems
-        // that webp be well intergrated part of vips)
+        if (!function_exists('vips_call')) {
+            throw new SystemRequirementsNotMetException(
+                'Vips extension seems to be installed, however something is not right: ' .
+                'the function "vips_call" is not available.'
+            );
+        }
+
+
+        vips_error_buffer(); // clear error buffer
+        $result = vips_call('webpsave', null);
+        if ($result == -1) {
+            $message = vips_error_buffer();
+            echo $message;
+            if (strpos($message, 'VipsOperation: class "webpsave" not found') === 0) {
+                throw new SystemRequirementsNotMetException(
+                    'Vips has not been compiled with webp support.'
+                );
+            }
+        }
+
     }
 
     /**
@@ -180,6 +198,7 @@ class Vips extends AbstractConverter
      */
     private function webpsave($im, $options)
     {
+        vips_error_buffer(); // clear error buffer
         $result = /** @scrutinizer ignore-call */ vips_call('webpsave', $im, $this->destination, $options);
 
         //trigger_error('test-warning', E_USER_WARNING);
@@ -192,7 +211,13 @@ class Vips extends AbstractConverter
             } elseif (preg_match("#(.*)\\sunsupported$#", $message, $matches)) {
                 // Actually, I am not quite sure if this ever happens.
                 // I got a "near_lossless unsupported" error message in a build, but perhaps it rather a warning
-                if (in_array($matches[1], ['lossless', 'alpha_q', 'near_lossless', 'smart_subsample', 'reduction_effort'])) {
+                if (in_array($matches[1], [
+                    'lossless',
+                    'alpha_q',
+                    'near_lossless',
+                    'smart_subsample',
+                    'reduction_effort'
+                ])) {
                     $nameOfPropertyNotFound = $matches[1];
                 }
             }
