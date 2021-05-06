@@ -60,6 +60,7 @@ matrix:
       - INSTALLIMAGEMAGICK=0        # imagemagick.org is currently down... - so installation cannot download gzip
       - XDEBUG_MODE=coverage
       - PHPUNIT_VERSION="^9.3"
+      - COMPOSER_TEST_SCRIPT="test"
 
     - name: "PHP 7.2, Xenial"
       php: 7.2
@@ -73,6 +74,7 @@ matrix:
       - INSTALLIMAGICK=1
       - IMAGEMAGICK_VERSION="7.0.8-43"
       - PHPUNIT_VERSION="^8.0"
+      - COMPOSER_TEST_SCRIPT="test-41"
 
 
 before_install:
@@ -106,11 +108,10 @@ before_script:
   - (composer self-update; true)
   - composer require "phpunit/phpunit:${PHPUNIT_VERSION}" --dev
   - composer install
-  #- if [[ $PHPSTAN == 1 ]]; then composer require --dev phpstan/phpstan:"^0.11.5"; fi
   - if [[ $PHPSTAN == 1 ]]; then composer require --dev phpstan/phpstan:"^0.12.8"; fi
 
 script:
-  - composer test
+  - composer ${COMPOSER_TEST_SCRIPT}
   - if [[ $PHPSTAN == 1 ]]; then vendor/bin/phpstan analyse src --level=4; fi
 
 after_script:

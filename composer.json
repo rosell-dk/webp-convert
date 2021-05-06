@@ -12,6 +12,7 @@
       "@phpstan-global"
     ],
     "test": "phpunit --coverage-text",
+    "test41": "phpunit --coverage-text --configuration 'phpunit-41.xml.dist'",
     "phpunit": "phpunit --coverage-text",
     "test-no-cov": "phpunit --no-coverage",
     "cs-fix-all": [
