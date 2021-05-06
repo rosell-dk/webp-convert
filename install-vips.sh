@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if ! [[ $VIPS_VERSION ]]; then
-    export VIPS_VERSION="8.7.4"
+    export VIPS_VERSION="8.10.6"
 fi;
 
 export PATH=$HOME/vips/bin:$PATH
