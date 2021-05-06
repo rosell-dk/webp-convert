@@ -25,7 +25,7 @@ class GdExposer extends AbstractConverterExposer {
 
     public function makeTrueColorUsingWorkaround(&$image)
     {
-        return $this->callPrivateFunctionByRef('makeTrueColorUsingWorkaround', null, $image);
+        return $this->callPrivateFunctionByRef('makeTrueColorUsingWorkaround', $image);
 
 //        return $this->callPrivateFunction('makeTrueColorUsingWorkaround', null, $image);
     /*
@@ -43,17 +43,17 @@ class GdExposer extends AbstractConverterExposer {
 
     public function trySettingAlphaBlending(&$image)
     {
-        return $this->callPrivateFunctionByRef('trySettingAlphaBlending', null, $image);
+        return $this->callPrivateFunctionByRef('trySettingAlphaBlending', $image);
     }
 
     public function tryToMakeTrueColorIfNot(&$image)
     {
-        return $this->callPrivateFunctionByRef('tryToMakeTrueColorIfNot', null, $image);
+        return $this->callPrivateFunctionByRef('tryToMakeTrueColorIfNot', $image);
     }
 
     public function tryConverting(&$image)
     {
-        return $this->callPrivateFunctionByRef('tryConverting', null, $image);
+        return $this->callPrivateFunctionByRef('tryConverting', $image);
     }
 
 
