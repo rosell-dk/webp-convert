@@ -150,8 +150,6 @@ class Vips extends AbstractConverter
         // v ?.?.?:  https://jcupitt.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave
         // near_lossless option is described here: https://github.com/libvips/libvips/pull/430
 
-        // Note that "method" is currently not supported (27 may 2019)
-
         $options = [
             "Q" => $this->getCalculatedQuality(),
             'lossless' => ($this->options['encoding'] == 'lossless'),
