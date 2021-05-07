@@ -129,6 +129,9 @@ class Cwebp extends AbstractConverter
     {
         //$version = $this->detectVersion($binary);
 
+        // Redirect stderr to same place as stdout with "2>&1"
+        // https://www.brianstorti.com/understanding-shell-script-idiom-redirect/
+
         $command = ($useNice ? 'nice ' : '') . $binary . ' ' . $commandOptions . ' 2>&1';
 
         //$logger->logLn('command options:' . $commandOptions);
@@ -329,10 +332,6 @@ class Cwebp extends AbstractConverter
 
         // Output
         $cmdOptions[] = '-o ' . escapeshellarg($this->destination);
-
-        // Redirect stderr to same place as stdout
-        // https://www.brianstorti.com/understanding-shell-script-idiom-redirect/
-        $cmdOptions[] = '2>&1';
 
         $commandOptions = implode(' ', $cmdOptions);
         //$this->logLn('command line options:' . $commandOptions);
