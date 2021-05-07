@@ -26,7 +26,6 @@ class GraphicsMagick extends AbstractConverter
     protected function getUnsupportedDefaultOptions()
     {
         return [
-            'auto-filter',
             'near-lossless',
             'size-in-percentage',
         ];
@@ -144,6 +143,10 @@ class GraphicsMagick extends AbstractConverter
             $commandArguments[] = '-define webp:lossless=true';
         } else {
             $commandArguments[] = '-define webp:lossless=false';
+        }
+
+        if ($options['auto-filter'] === true) {
+            $commandArguments[] = '-define webp:auto-filter=true';
         }
 
         if ($options['alpha-quality'] !== 100) {

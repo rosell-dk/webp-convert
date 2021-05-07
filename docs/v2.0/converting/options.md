@@ -16,7 +16,7 @@ Quality of alpha channel. Only relevant for lossy encoding and only relevant for
 ```
 Type:         boolean
 Default:      false
-Supported by: cwebp, vips, imagick, gmagick and imagemagick
+Supported by: cwebp, vips, imagick, gmagick, imagemagick and graphicsmagick
 ```
 Turns auto-filter on. This algorithm will spend additional time optimizing the filtering strength to reach a well-balanced quality. Unfortunately, it is extremely expensive in terms of computation. It takes about 5-10 times longer to do a conversion. A 1MB picture which perhaps typically takes about 2 seconds to convert, will takes about 15 seconds to convert with auto-filter. So in most cases, you will want to leave this at its default, which is off.<br><br>
 
