@@ -98,6 +98,7 @@ The library can be used to create a *WebP On Demand* solution, which automatical
 This library is used as the engine to provide webp conversions to a handful of platforms. Hopefully this list will be growing over time. Currently there are plugins / extensions / modules / whatever the term is for the following CMS'es (ordered by [market share](https://w3techs.com/technologies/overview/content_management/all)):
 
 - [Wordpress](https://github.com/rosell-dk/webp-express)
+- [Drupal 7](https://github.com/HDDen/Webp-Drupal-7)
 - [Contao](https://github.com/postyou/contao-webp-bundle)
 - [Kirby](https://github.com/S1SYPHOS/kirby-webp)
 - [October CMS](https://github.com/OFFLINE-GmbH/oc-responsive-images-plugin/)
