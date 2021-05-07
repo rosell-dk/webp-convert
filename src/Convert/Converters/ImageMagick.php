@@ -121,6 +121,18 @@ class ImageMagick extends AbstractConverter
         } else {
             $commandArguments[] = '-quality ' . escapeshellarg($this->getCalculatedQuality());
         }
+        if (!is_null($this->options['preset'])) {
+            if ($this->options['preset'] != 'none') {
+                $imageHint = $this->options['preset'];
+                switch ($imageHint) {
+                    case 'drawing':
+                    case 'icon':
+                    case 'text':
+                        $imageHint = 'graph';
+                }
+                $commandArguments[] = '-define webp:image-hint=' . escapeshellarg($imageHint);
+            }
+        }
         if ($this->options['encoding'] == 'lossless') {
             $commandArguments[] = '-define webp:lossless=true';
         }

@@ -173,11 +173,11 @@ Read about this option in the [introduction](https://github.com/rosell-dk/webp-c
 
 ### `preset`
 ```
-Type:          string ('none', 'default', 'photo', 'picture', 'drawing',  'icon' or 'text')
+Type:          string ('none', 'default', 'photo', 'picture', 'drawing', 'icon' or 'text')
 Default:       "none"
-Supported by:  cwebp, vips, ffmpeg
+Supported by:  cwebp, vips, imagemagick, ffmpeg
 ```
-Using a preset will set many of the other options to suit a particular type of source material. It even overrides them. It does however not override the quality option. "none" means that no preset will be set<br><br>
+Using a preset will set many of the other options to suit a particular type of source material. It even overrides them. It does however not override the quality option. "none" means that no preset will be set. PS: The imagemagick family only partly supports this setting, as they have grouped three of the options ("drawing", "icon" and "text") into "graph". So if you for example set "preset" to "icon" with the imagemagick converter, imagemagick will be executed like this: "-define webp:image-hint='graph'".<br><br>
 
 ### `quality`
 ```
