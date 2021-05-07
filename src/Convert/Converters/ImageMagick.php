@@ -26,7 +26,6 @@ class ImageMagick extends AbstractConverter
     {
         return [
             'near-lossless',
-            'preset',
             'size-in-percentage',
         ];
     }
