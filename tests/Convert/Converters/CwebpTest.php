@@ -116,7 +116,7 @@ class CwebpTest extends TestCase
         $commandLineOptions = $cwebpExposer->createCommandLineOptions();
 
         // Preset
-        $this->assertRegExp('#-preset picture#', $commandLineOptions);
+        $this->assertRegExp("#-preset 'picture'#", $commandLineOptions);
 
         // Size
         $fileSizeInBytes = floor($options['size-in-percentage']/100 * filesize($source));
