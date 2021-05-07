@@ -237,7 +237,7 @@ class Cwebp extends AbstractConverter
         // preset. Appears first in the list as recommended in the docs
         if (!is_null($options['preset'])) {
             if ($options['preset'] != 'none') {
-                $cmdOptions[] = '-preset ' . $options['preset'];
+                $cmdOptions[] = '-preset ' . escapeshellarg($options['preset']);
             }
         }
 
