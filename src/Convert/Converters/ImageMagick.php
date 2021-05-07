@@ -112,6 +112,9 @@ class ImageMagick extends AbstractConverter
         // PS: Available webp options for imagemagick are documented here:
         // https://imagemagick.org/script/webp.php
 
+        // We should perhaps implement low-memory. Its already in cwebp, it
+        // could perhaps be promoted to a general option
+
         $commandArguments = [];
         if ($this->isQualityDetectionRequiredButFailing()) {
             // quality:auto was specified, but could not be determined.
