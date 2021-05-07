@@ -29,7 +29,6 @@ class GraphicsMagick extends AbstractConverter
             'auto-filter',
             'near-lossless',
             'preset',
-            'sharp-yuv',
             'size-in-percentage',
         ];
     }
@@ -96,6 +95,10 @@ class GraphicsMagick extends AbstractConverter
      */
     private function createCommandLineOptions()
     {
+        // I cannot find any documentation on available webp options for graphicsmagick :(
+        // Checking for new supported options is currently done by searching for "webp" in the
+        // news page: http://www.graphicsmagick.org/NEWS.html
+
         $commandArguments = [];
 
         /*
@@ -131,6 +134,10 @@ class GraphicsMagick extends AbstractConverter
 
         if ($this->options['low-memory']) {
             $commandArguments[] = '-define webp:low-memory=true';
+        }
+
+        if ($this->options['sharp-yuv'] === true) {
+            $commandArguments[] = '-define webp:use-sharp-yuv=true';
         }
 
         if ($this->options['metadata'] == 'none') {
