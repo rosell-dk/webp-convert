@@ -136,6 +136,9 @@ class ImageMagick extends AbstractConverter
         if ($this->options['alpha-quality'] !== 100) {
             $commandArguments[] = '-define webp:alpha-quality=' . strval($this->options['alpha-quality']);
         }
+        if ($this->options['sharp-yuv'] === true) {
+            $commandArguments[] = '-define webp:use-sharp-yuv=1';
+        }
 
         // Unfortunately, near-lossless does not seem to be supported.
         // it does have a "preprocessing" option, which may be doing something similar

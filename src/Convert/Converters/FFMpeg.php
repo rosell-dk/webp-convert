@@ -31,6 +31,7 @@ class FFMpeg extends AbstractConverter
             'low-memory',
             'near-lossless',
             'preset',
+            'sharp-yuv',
             'size-in-percentage',
             'use-nice'
         ];

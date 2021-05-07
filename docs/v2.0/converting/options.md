@@ -187,6 +187,14 @@ Supported by:  all (cwebp, ewww, gd, gmagick, graphicsmagick, imagick, imagemagi
 ```
 Quality for lossy encoding. Read about the "auto" option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality).<br><br>
 
+### `sharp-yuv`
+```
+Type:          boolean
+Default:       true for png, false for jpeg
+Supported by:  cwebp, imagemagick
+```
+Use more accurate and sharper RGB->YUV conversion if needed. Note that this process is slower than the default 'fast' RGB->YUV conversion. The benefits of using this option is exemplified [here](https://www.ctrl.blog/entry/webp-sharp-yuv.html).
+
 ### `size-in-percentage`
 ```
 Type:          integer (0-100) | null

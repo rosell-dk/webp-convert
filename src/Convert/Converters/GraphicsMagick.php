@@ -29,6 +29,7 @@ class GraphicsMagick extends AbstractConverter
             'auto-filter',
             'near-lossless',
             'preset',
+            'sharp-yuv',
             'size-in-percentage',
         ];
     }

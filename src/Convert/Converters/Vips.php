@@ -26,6 +26,7 @@ class Vips extends AbstractConverter
     {
         return [
             'auto-filter',
+            'sharp-yuv',
             'size-in-percentage',
             'use-nice'
         ];

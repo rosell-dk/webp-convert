@@ -71,6 +71,7 @@ trait OptionsTrait
             new StringOption('preset', 'none', ['none', 'default', 'photo', 'picture', 'drawing', 'icon', 'text']),
             new QualityOption('quality', ($isPng ? 85 : 'auto')),
             new IntegerOrNullOption('size-in-percentage', null, 0, 100),
+            new BooleanOption('sharp-yuv', ($isPng ? true : false)),
             new BooleanOption('skip', false),
             new BooleanOption('use-nice', false),
             new ArrayOption('jpeg', []),

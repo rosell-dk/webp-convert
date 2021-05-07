@@ -36,6 +36,7 @@ class Stack extends AbstractConverter
             'method',
             'near-lossless',
             'preset',
+            'sharp-yuv',
             'size-in-percentage',
             'use-nice',
             'skip',

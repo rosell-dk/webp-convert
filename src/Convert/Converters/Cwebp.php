@@ -292,8 +292,14 @@ class Cwebp extends AbstractConverter
             }
         }
 
+        // Autofilter
         if ($options['auto-filter'] === true) {
             $cmdOptions[] = '-af';
+        }
+
+        // Autofilter
+        if ($options['sharp-yuv'] === true) {
+            $cmdOptions[] = '-sharp_yuv';
         }
 
         // Built-in method option
