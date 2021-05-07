@@ -25,7 +25,6 @@ class Imagick extends AbstractConverter
     {
         return [
             'near-lossless',
-            'sharp-yuv',
             'size-in-percentage',
             'use-nice'
         ];
@@ -137,6 +136,10 @@ class Imagick extends AbstractConverter
 
         if ($options['auto-filter'] === true) {
             $im->setOption('webp:auto-filter', 'true');
+        }
+
+        if ($options['sharp-yuv'] === true) {
+            $im->setOption('webp:use-sharp-yuv', 'true');
         }
 
         if ($options['metadata'] == 'none') {

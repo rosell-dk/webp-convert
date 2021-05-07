@@ -25,7 +25,6 @@ class Gmagick extends AbstractConverter
         return [
             'near-lossless',
             'size-in-percentage',
-            'sharp-yuv',
             'use-nice'
         ];
     }
@@ -137,6 +136,11 @@ class Gmagick extends AbstractConverter
             if ($options['auto-filter'] === true) {
                 $im->setimageoption('webp', 'auto-filter', 'true');
             }
+
+            if ($options['sharp-yuv'] === true) {
+                $im->setimageoption('webp', 'use-sharp-yuv', 'true');
+            }
+
         }
 
         /*
