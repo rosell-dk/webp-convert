@@ -128,6 +128,11 @@ class ImageMagick extends AbstractConverter
                     case 'icon':
                     case 'text':
                         $imageHint = 'graph';
+                        $this->logLn(
+                            'Note: the preset was mapped to "graph" because imagemagick does not support "drawing",
+                          "icon" and "text", but grouped these into one option: "graph".
+                        '
+                        );
                 }
                 $commandArguments[] = '-define webp:image-hint=' . escapeshellarg($imageHint);
             }

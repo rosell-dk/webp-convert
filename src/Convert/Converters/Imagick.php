@@ -25,7 +25,6 @@ class Imagick extends AbstractConverter
     {
         return [
             'near-lossless',
-            'preset',
             'sharp-yuv',
             'size-in-percentage',
             'use-nice'
@@ -113,6 +112,24 @@ class Imagick extends AbstractConverter
         //$im->readImage($this->source);
 
         $im->setImageFormat('WEBP');
+
+        if (!is_null($options['preset'])) {
+            if ($options['preset'] != 'none') {
+                $imageHint = $options['preset'];
+                switch ($imageHint) {
+                    case 'drawing':
+                    case 'icon':
+                    case 'text':
+                        $imageHint = 'graph';
+                        $this->logLn(
+                            'Note: the preset was mapped to "graph" because imagemagick does not support "drawing",
+                          "icon" and "text", but grouped these into one option: "graph".
+                        '
+                        );
+                }
+                $im->setOption('webp:image-hint', $imageHint);
+            }
+        }
 
         $im->setOption('webp:method', $options['method']);
         $im->setOption('webp:lossless', $options['encoding'] == 'lossless' ? 'true' : 'false');
