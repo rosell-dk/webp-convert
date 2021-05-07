@@ -122,9 +122,8 @@ class Imagick extends AbstractConverter
                     case 'text':
                         $imageHint = 'graph';
                         $this->logLn(
-                            'Note: the preset was mapped to "graph" because imagemagick does not support "drawing",
-                          "icon" and "text", but grouped these into one option: "graph".
-                        '
+                            'The "preset" value was mapped to "graph" because imagick does not support "drawing",' .
+                            ' "icon" and "text", but grouped these into one option: "graph".'
                         );
                 }
                 $im->setOption('webp:image-hint', $imageHint);
