@@ -55,6 +55,9 @@ class Cwebp extends AbstractConverter
     // 2: Set permission to 775. 755 causes unzipping to fail on some hosts
     private static $suppliedBinariesInfo = [
         'WINNT' => [
+            ['cwebp-120-windows-x64.exe', '2849fd06012a9eb311b02a4f8918ae4b16775693bc21e95f4cc6a382eac299f9'],
+
+            // Keep the 1.1.0 version a while, in case some may have problems with the 1.2.0 version
             ['cwebp-110-windows-x64.exe', '442682869402f92ad2c8b3186c02b0ea6d6da68d2f908df38bf905b3411eb9fb'],
         ],
         'Darwin' => [
@@ -71,15 +74,20 @@ class Cwebp extends AbstractConverter
             ['cwebp-060-fbsd', 'e5cbea11c97fadffe221fdf57c093c19af2737e4bbd2cb3cd5e908de64286573']
         ],
         'Linux' => [
-            // Dynamically linked executable.
-            // It seems it is slightly faster than the statically linked
+
+            // PS: Some experience the following error with 1.20:
+            // /lib/x86_64-linux-gnu/libm.so.6: version `GLIBC_2.29' not found
+            // (see #278)
+            ['cwebp-120-linux-x86-64', 'f1b7dc03e95535a6b65852de07c0404be4dba078af48369f434ee39b2abf8f4e'],
+
+            // As some experience the an error with 1.20 (see #278), we keep the 1.10
             ['cwebp-110-linux-x86-64', '1603b07b592876dd9fdaa62b44aead800234c9474ff26dc7dd01bc0f4785c9c6'],
 
             // Statically linked executable
             // It may be that it on some systems works, where the dynamically linked does not (see #196)
             ['cwebp-103-linux-x86-64-static', 'ab96f01b49336da8b976c498528080ff614112d5985da69943b48e0cb1c5228a'],
 
-            // Old executable for systems in case both of the above fails
+            // Old executable for systems in case all of the above fails
             ['cwebp-061-linux-x86-64', '916623e5e9183237c851374d969aebdb96e0edc0692ab7937b95ea67dc3b2568'],
         ]
     ];
