@@ -146,8 +146,7 @@ class Options
     public function getDefinitions()
     {
         $defs = [];
-        foreach ($this->options as $option)
-        {
+        foreach ($this->options as $option) {
             $defs[] = $option->getDefinition();
         }
         return $defs;

@@ -39,5 +39,4 @@ class SensitiveStringOption extends StringOption
         $obj['sensitive'] = true;
         return $obj;
     }
-
 }

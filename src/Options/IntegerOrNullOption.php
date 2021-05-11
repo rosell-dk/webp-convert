@@ -49,5 +49,4 @@ class IntegerOrNullOption extends IntegerOption
         $obj['max'] = $this->maxValue;
         return $obj;
     }
-
 }
