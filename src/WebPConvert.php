@@ -90,12 +90,15 @@ class WebPConvert
     public static function getConverterOptionDefinitions()
     {
         //$ids = self::getConverterIds();
-        $ids = ['cwebp'];
+        $ids = ['ewww'];
+        $result = [];
         foreach ($ids as $id) {
             $converterClassName = ConverterFactory::converterIdToClassname($id);
-            $uniqueOptions = call_user_func([$converterClassName, 'getUniqueOptions']);
+            //$uniqueOptions = call_user_func([$converterClassName, 'getOptionDefinitions']);
+            //$result[$id] = $uniqueOptions;
+            $optionDefinitions = call_user_func([$converterClassName, 'getOptionDefinitions']);
+            $result[$id] = $optionDefinitions;
         }
-        return $uniqueOptions;
-        //
+        return $result;
     }
 }

@@ -142,4 +142,14 @@ class Options
             $option->check();
         }
     }
+
+    public function getDefinitions()
+    {
+        $defs = [];
+        foreach ($this->options as $option)
+        {
+            $defs[] = $option->getDefinition();
+        }
+        return $defs;
+    }
 }

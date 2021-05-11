@@ -15,6 +15,7 @@ use WebPConvert\Options\Exceptions\InvalidOptionValueException;
 class StringOption extends Option
 {
 
+    protected $typeId = 'string';
     public $allowedValues;
 
     public function __construct($id, $defaultValue, $allowedValues = null)
@@ -39,5 +40,12 @@ class StringOption extends Option
     public function getValueForPrint()
     {
         return '"' . $this->getValue() . '"';
+    }
+
+    public function getDefinition()
+    {
+        $obj = parent::getDefinition();
+        $obj['allowed'] = $this->allowedValues;
+        return $obj;
     }
 }

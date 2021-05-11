@@ -27,6 +27,19 @@ class Ewww extends AbstractConverter
     /** @var array  Array of invalid or exceeded api keys discovered during conversions (during the request)  */
     public static $nonFunctionalApiKeysDiscoveredDuringConversion;
 
+    /**
+    *  Get the options unique for this converter
+     *
+     *  @return  array  Array of options
+     */
+    public static function getUniqueOptions()
+    {
+        return [
+            new SensitiveStringOption('api-key', ''),
+            new BooleanOption('check-key-status-before-converting', true)
+        ];
+    }
+
     protected function getUnsupportedDefaultOptions()
     {
         return [
@@ -47,10 +60,7 @@ class Ewww extends AbstractConverter
     {
         parent::createOptions();
 
-        $this->options2->addOptions(
-            new SensitiveStringOption('api-key', ''),
-            new BooleanOption('check-key-status-before-converting', true)
-        );
+        $this->options2->addOptions(... self::getUniqueOptions());
     }
 
     /**

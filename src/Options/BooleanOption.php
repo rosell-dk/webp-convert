@@ -15,6 +15,8 @@ use WebPConvert\Options\Exceptions\InvalidOptionValueException;
 class BooleanOption extends Option
 {
 
+    protected $typeId = 'boolean';
+
     public function check()
     {
         $this->checkType('boolean');

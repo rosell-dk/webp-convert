@@ -26,6 +26,10 @@ class Option
     /** @var boolean  Whether the value has been explicitly set */
     protected $isExplicitlySet = false;
 
+    /** @var string  An option must supply a type id */
+    protected $typeId;
+
+
     /**
      * Constructor.
      *
@@ -138,6 +142,7 @@ class Option
     {
         return [
             'id' => $this->id,
+            'type' => $this->typeId,
             'default' => $this->defaultValue
         ];
     }

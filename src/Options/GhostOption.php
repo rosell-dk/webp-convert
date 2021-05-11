@@ -15,6 +15,8 @@ use WebPConvert\Options\Exceptions\InvalidOptionValueException;
 class GhostOption extends Option
 {
 
+    protected $typeId = 'ghost';
+
     public function getValueForPrint()
     {
         return '(not defined for this converter)';

@@ -32,4 +32,12 @@ class SensitiveStringOption extends StringOption
         }
         return '*****';
     }
+
+    public function getDefinition()
+    {
+        $obj = parent::getDefinition();
+        $obj['sensitive'] = true;
+        return $obj;
+    }
+
 }

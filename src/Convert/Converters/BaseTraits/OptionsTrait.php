@@ -283,4 +283,25 @@ trait OptionsTrait
     {
         return [];
     }
+
+    //abstract protected static function getUniqueOptions();
+
+    public static function getOptionDefinitions($imageType = 'png')
+    {
+        $options = new Options();
+        //$options->addOptions(... self::getGeneralOptions($imageType));
+        $options->addOptions(... self::getUniqueOptions($imageType));
+
+        return $options->getDefinitions();
+    }
+
+/*
+    public static function getUniqueOptions($imageType = 'png')
+    {
+        $options = new Options();
+//        $options->addOptions(... self::getGeneralOptions($imageType));
+//        $options->addOptions(... self::getUniqueOptions($imageType));
+
+        return $options->getDefinitions();
+    }*/
 }
