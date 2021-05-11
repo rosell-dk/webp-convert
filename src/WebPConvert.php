@@ -100,8 +100,11 @@ class WebPConvert
      *
      *  @return  array  Array of options definitions - ready to be json encoded, or whatever
      */
-    public static function getConverterOptionDefinitions($imageType = 'png', $returnGeneral = true, $returnGeneralSupport = true)
-    {
+    public static function getConverterOptionDefinitions(
+        $imageType = 'png',
+        $returnGeneral = true,
+        $returnGeneralSupport = true
+    ) {
 
         $ids = self::getConverterIds();
         $result = [];
