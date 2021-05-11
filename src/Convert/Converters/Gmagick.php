@@ -140,7 +140,6 @@ class Gmagick extends AbstractConverter
             if ($options['sharp-yuv'] === true) {
                 $im->setimageoption('webp', 'use-sharp-yuv', 'true');
             }
-
         }
 
         /*

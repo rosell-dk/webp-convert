@@ -5,6 +5,7 @@ namespace WebPConvert;
 //use WebPConvert\Convert\Converters\ConverterHelper;
 use WebPConvert\Convert\Converters\Stack;
 //use WebPConvert\Serve\ServeExistingOrHandOver;
+use WebPConvert\Convert\ConverterFactory;
 use WebPConvert\Serve\ServeConvertedWebP;
 use WebPConvert\Serve\ServeConvertedWebPWithErrorHandling;
 
@@ -73,5 +74,28 @@ class WebPConvert
         } else {
             ServeConvertedWebP::serve($source, $destination, $options, $serveLogger, $convertLogger);
         }
+    }
+
+    /**
+     *  Get ids of all converters available in webp-convert.
+     *  @return  array  Array of ids.
+     */
+    public static function getConverterIds()
+    {
+        $all = Stack::getAvailableConverters();
+        $all[] = 'stack';
+        return $all;
+    }
+
+    public static function getConverterOptionDefinitions()
+    {
+        //$ids = self::getConverterIds();
+        $ids = ['cwebp'];
+        foreach ($ids as $id) {
+            $converterClassName = ConverterFactory::converterIdToClassname($id);
+            $uniqueOptions = call_user_func([$converterClassName, 'getUniqueOptions']);
+        }
+        return $uniqueOptions;
+        //
     }
 }

@@ -43,21 +43,18 @@ trait OptionsTrait
     /** @var Options  */
     protected $options2;
 
-
     /**
-     *  Create options.
+     *  Get the "general" options (options that are standard in the meaning that they
+     *  are generally available (unless specifically marked as unsupported by a given converter)
      *
-     *  The options created here will be available to all converters.
-     *  Individual converters may add options by overriding this method.
+     *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
      *
-     *  @return void
+     *  @return  array  Array of options
      */
-    protected function createOptions()
+    public static function getGeneralOptions($imageType)
     {
-        $isPng = ($this->getMimeTypeOfSource() == 'image/png');
-
-        $this->options2 = new Options();
-        $this->options2->addOptions(
+        $isPng = ($imageType == 'png');
+        return [
             new IntegerOption('alpha-quality', 85, 0, 100),
             new BooleanOption('auto-filter', false),
             new IntegerOption('default-quality', ($isPng ? 85 : 75), 0, 100),
@@ -76,7 +73,23 @@ trait OptionsTrait
             new BooleanOption('use-nice', false),
             new ArrayOption('jpeg', []),
             new ArrayOption('png', [])
-        );
+        ];
+    }
+
+    /**
+     *  Create options.
+     *
+     *  The options created here will be available to all converters.
+     *  Individual converters may add options by overriding this method.
+     *
+     *  @return void
+     */
+    protected function createOptions()
+    {
+        $imageType = ($this->getMimeTypeOfSource() == 'image/png' ? 'png' : 'jpeg');
+
+        $this->options2 = new Options();
+        $this->options2->addOptions(... self::getGeneralOptions($imageType));
     }
 
     /**

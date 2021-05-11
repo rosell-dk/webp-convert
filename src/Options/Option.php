@@ -132,4 +132,13 @@ class Option
     {
         return print_r($this->getValue(), true);
     }
+
+
+    public function getDefinition()
+    {
+        return [
+            'id' => $this->id,
+            'default' => $this->defaultValue
+        ];
+    }
 }

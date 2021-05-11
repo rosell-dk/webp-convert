@@ -32,18 +32,27 @@ class Cwebp extends AbstractConverter
         return [];
     }
 
-    protected function createOptions()
+    /**
+    *  Get the options unique for this converter
+     *
+     *  @return  array  Array of options
+     */
+    public static function getUniqueOptions()
     {
-        parent::createOptions();
-
-        $this->options2->addOptions(
+        return [
             new StringOption('command-line-options', ''),
             new SensitiveStringOption('rel-path-to-precompiled-binaries', './Binaries'),
             new BooleanOption('try-cwebp', true),
             new BooleanOption('try-common-system-paths', true),
             new BooleanOption('try-discovering-cwebp', true),
             new BooleanOption('try-supplied-binary-for-os', true)
-        );
+        ];
+    }
+
+    protected function createOptions()
+    {
+        parent::createOptions();
+        $this->options2->addOptions(... self::getUniqueOptions());
     }
 
     // OS-specific binaries included in this library, along with hashes
