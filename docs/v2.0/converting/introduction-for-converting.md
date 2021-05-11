@@ -175,7 +175,7 @@ $options = [
         'quality' => 'auto',      /* Set to same as jpeg (requires imagick or gmagick extension, not necessarily compiled with webp) */
         'max-quality' => 80,      /* Only relevant if quality is set to "auto" */
         'default-quality' => 75,  /* Fallback quality if quality detection isnt working */
-        'sharp-yuv' => false,
+        'sharp-yuv' => true,
     ]
 ];
 ```
