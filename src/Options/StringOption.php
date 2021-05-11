@@ -16,7 +16,8 @@ class StringOption extends Option
 {
 
     protected $typeId = 'string';
-    public $allowedValues;
+    protected $allowedValues;
+    protected $allowedValueTypes = ['string'];
 
     public function __construct($id, $defaultValue, $allowedValues = null)
     {
@@ -45,7 +46,8 @@ class StringOption extends Option
     public function getDefinition()
     {
         $obj = parent::getDefinition();
-        $obj['allowed'] = $this->allowedValues;
+        $obj['sensitive'] = false;
+        $obj['options'] = $this->allowedValues;
         return $obj;
     }
 }

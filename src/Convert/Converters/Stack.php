@@ -46,17 +46,15 @@ class Stack extends AbstractConverter
         ];
     }
 
-    protected function createOptions()
+    public function getUniqueOptions($imageType)
     {
-        parent::createOptions();
-
-        $this->options2->addOptions(
+        return [
             new SensitiveArrayOption('converters', self::getAvailableConverters()),
             new SensitiveArrayOption('converter-options', []),
             new BooleanOption('shuffle', false),
             new ArrayOption('preferred-converters', []),
             new SensitiveArrayOption('extra-converters', [])
-        );
+        ];
     }
 
     /**

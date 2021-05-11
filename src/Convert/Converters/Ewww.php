@@ -27,12 +27,7 @@ class Ewww extends AbstractConverter
     /** @var array  Array of invalid or exceeded api keys discovered during conversions (during the request)  */
     public static $nonFunctionalApiKeysDiscoveredDuringConversion;
 
-    /**
-    *  Get the options unique for this converter
-     *
-     *  @return  array  Array of options
-     */
-    public static function getUniqueOptions()
+    public function getUniqueOptions($imageType)
     {
         return [
             new SensitiveStringOption('api-key', ''),
@@ -54,13 +49,6 @@ class Ewww extends AbstractConverter
             'size-in-percentage',
             'use-nice'
         ];
-    }
-
-    protected function createOptions()
-    {
-        parent::createOptions();
-
-        $this->options2->addOptions(... self::getUniqueOptions());
     }
 
     /**

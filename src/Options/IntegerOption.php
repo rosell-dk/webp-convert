@@ -15,6 +15,7 @@ use WebPConvert\Options\Exceptions\InvalidOptionValueException;
 class IntegerOption extends Option
 {
     protected $typeId = 'integer';
+    protected $allowedValueTypes = ['integer'];
     protected $minValue;
     protected $maxValue;
 

@@ -29,6 +29,9 @@ class Option
     /** @var string  An option must supply a type id */
     protected $typeId;
 
+    /** @var array  Type constraints for the value */
+    protected $allowedValueTypes = [];
+
 
     /**
      * Constructor.
@@ -143,7 +146,8 @@ class Option
         return [
             'id' => $this->id,
             'type' => $this->typeId,
-            'default' => $this->defaultValue
+            'allowed-value-types' => $this->allowedValueTypes,
+            'default' => $this->defaultValue,
         ];
     }
 }

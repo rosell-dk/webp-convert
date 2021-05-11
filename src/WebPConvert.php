@@ -78,6 +78,7 @@ class WebPConvert
 
     /**
      *  Get ids of all converters available in webp-convert.
+     *
      *  @return  array  Array of ids.
      */
     public static function getConverterIds()
@@ -87,16 +88,27 @@ class WebPConvert
         return $all;
     }
 
-    public static function getConverterOptionDefinitions()
+    /**
+     *  Get option definitions for all converters
+     *
+     *  Added in order to give GUI's a way to automatically adjust their setting screens.
+     *
+     *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
+     *  @param   bool     $returnGeneral              Whether the general setting definitions should be returned
+     *  @param   bool     $returnGeneralSupport       Whether the ids of supported/unsupported general options
+     *                                                should be returned
+     *
+     *  @return  array  Array of options definitions - ready to be json encoded, or whatever
+     */
+    public static function getConverterOptionDefinitions($imageType = 'png', $returnGeneral = true, $returnGeneralSupport = true)
     {
-        //$ids = self::getConverterIds();
-        $ids = ['ewww'];
+
+        $ids = self::getConverterIds();
         $result = [];
         foreach ($ids as $id) {
-            $converterClassName = ConverterFactory::converterIdToClassname($id);
-            //$uniqueOptions = call_user_func([$converterClassName, 'getOptionDefinitions']);
-            //$result[$id] = $uniqueOptions;
-            $optionDefinitions = call_user_func([$converterClassName, 'getOptionDefinitions']);
+            $c = ConverterFactory::makeConverter($id, '', '');
+            $optionDefinitions = $c->getOptionDefinitions($imageType, $returnGeneral, $returnGeneralSupport);
+
             $result[$id] = $optionDefinitions;
         }
         return $result;

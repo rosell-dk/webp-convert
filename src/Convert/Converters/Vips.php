@@ -32,13 +32,16 @@ class Vips extends AbstractConverter
         ];
     }
 
-    protected function createOptions()
+    /**
+    *  Get the options unique for this converter
+     *
+     *  @return  array  Array of options
+     */
+    public function getUniqueOptions($imageType)
     {
-        parent::createOptions();
-
-        $this->options2->addOptions(
+        return [
             new BooleanOption('smart-subsample', false)
-        );
+        ];
     }
 
     /**

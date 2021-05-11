@@ -29,4 +29,11 @@ class SensitiveArrayOption extends ArrayOption
         }
         //return '*****';
     }
+
+    public function getDefinition()
+    {
+        $obj = parent::getDefinition();
+        $obj['sensitive'] = true;
+        return $obj;
+    }
 }

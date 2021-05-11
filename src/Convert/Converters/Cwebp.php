@@ -37,7 +37,7 @@ class Cwebp extends AbstractConverter
      *
      *  @return  array  Array of options
      */
-    public static function getUniqueOptions()
+    public function getUniqueOptions($imageType)
     {
         return [
             new StringOption('command-line-options', ''),
@@ -47,12 +47,6 @@ class Cwebp extends AbstractConverter
             new BooleanOption('try-discovering-cwebp', true),
             new BooleanOption('try-supplied-binary-for-os', true)
         ];
-    }
-
-    protected function createOptions()
-    {
-        parent::createOptions();
-        $this->options2->addOptions(... self::getUniqueOptions());
     }
 
     // OS-specific binaries included in this library, along with hashes

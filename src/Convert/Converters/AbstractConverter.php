@@ -106,8 +106,11 @@ abstract class AbstractConverter
      * @param   array   $options (optional)  options for conversion
      * @param   BaseLogger $logger (optional)
      */
-    final public function __construct($source, $destination, $options = [], $logger = null)
+    final public function __construct($source = '', $destination = '', $options = [], $logger = null)
     {
+        if ($source == '') {
+            return;
+        }
         InputValidator::checkSourceAndDestination($source, $destination);
 
         $this->source = $source;

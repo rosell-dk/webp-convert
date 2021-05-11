@@ -51,7 +51,7 @@ trait OptionsTrait
      *
      *  @return  array  Array of options
      */
-    public static function getGeneralOptions($imageType)
+    public function getGeneralOptions($imageType)
     {
         $isPng = ($imageType == 'png');
         return [
@@ -77,19 +77,33 @@ trait OptionsTrait
     }
 
     /**
+     *  Get the unique options for a converter
+     *
+     *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
+     *
+     *  @return  array  Array of options
+     */
+    public function getUniqueOptions($imageType)
+    {
+        return [];
+    }
+
+
+    /**
      *  Create options.
      *
      *  The options created here will be available to all converters.
      *  Individual converters may add options by overriding this method.
      *
+     *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
+     *
      *  @return void
      */
-    protected function createOptions()
+    protected function createOptions($imageType = 'png')
     {
-        $imageType = ($this->getMimeTypeOfSource() == 'image/png' ? 'png' : 'jpeg');
-
         $this->options2 = new Options();
-        $this->options2->addOptions(... self::getGeneralOptions($imageType));
+        $this->options2->addOptions(... $this->getGeneralOptions($imageType));
+        $this->options2->addOptions(... $this->getUniqueOptions($imageType));
     }
 
     /**
@@ -105,7 +119,8 @@ trait OptionsTrait
      */
     public function setProvidedOptions($providedOptions = [])
     {
-        $this->createOptions();
+        $imageType = ($this->getMimeTypeOfSource() == 'image/png' ? 'png' : 'jpeg');
+        $this->createOptions($imageType);
 
         $this->providedOptions = $providedOptions;
 
@@ -284,15 +299,89 @@ trait OptionsTrait
         return [];
     }
 
-    //abstract protected static function getUniqueOptions();
-
-    public static function getOptionDefinitions($imageType = 'png')
+    /**
+     *  Get unique option definitions.
+     *
+     *  Gets definitions of the converters "unique" options (that is, those options that
+     *  are not general). It was added in order to give GUI's a way to automatically adjust
+     *  their setting screens.
+     *
+     *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
+     *
+     *  @return  array  Array of options definitions - ready to be json encoded, or whatever
+     */
+    public function getUniqueOptionDefinitions($imageType = 'png')
     {
-        $options = new Options();
-        //$options->addOptions(... self::getGeneralOptions($imageType));
-        $options->addOptions(... self::getUniqueOptions($imageType));
+        $uniqueOptions = new Options();
+        $uniqueOptions->addOptions(... $this->getUniqueOptions($imageType));
+        return $uniqueOptions->getDefinitions();
+    }
 
-        return $options->getDefinitions();
+    public function getSupportedGeneralOptions($imageType = 'png')
+    {
+        $unsupportedGeneral = $this->getUnsupportedDefaultOptions();
+        $generalOptionsArr = $this->getGeneralOptions($imageType);
+        $supportedIds = [];
+        foreach ($generalOptionsArr as $i => $option) {
+            if (in_array($option->getId(), $unsupportedGeneral)) {
+                unset($generalOptionsArr[$i]);
+            }
+        }
+        return $generalOptionsArr;
+    }
+
+    /**
+     *  Get general option definitions.
+     *
+     *  Gets definitions of the converters "general" options. (that is, those options that
+     *  It was added in order to give GUI's a way to automatically adjust their setting screens.
+     *
+     *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
+     *
+     *  @return  array  Array of options definitions - ready to be json encoded, or whatever
+     */
+    public function getSupportedGeneralOptionDefinitions($imageType = 'png')
+    {
+        $generalOptions = new Options();
+        $generalOptions->addOptions(... $this->getSupportedGeneralOptions($imageType));
+        return $generalOptions->getDefinitions();
+    }
+
+    public function getSupportedGeneralOptionIds()
+    {
+        $supportedGeneralOptions = $this->getSupportedGeneralOptions();
+        $supportedGeneralIds = [];
+        foreach ($supportedGeneralOptions as $option) {
+            $supportedGeneralIds[] = $option->getId();
+        }
+        return $supportedGeneralIds;
+    }
+
+    /**
+     *  Get option definitions.
+     *
+     *  Added in order to give GUI's a way to automatically adjust their setting screens.
+     *
+     *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
+     *  @param   bool     $returnGeneral              Whether the general setting definitions should be returned
+     *  @param   bool     $returnGeneralSupport       Whether the ids of supported/unsupported general options
+     *                                                should be returned
+     *
+     *  @return  array  Array of options definitions - ready to be json encoded, or whatever
+     */
+    public function getOptionDefinitions($imageType = 'png', $returnGeneral = true, $returnGeneralSupport = true)
+    {
+        $result = [
+            'unique' => $this->getUniqueOptionDefinitions($imageType),
+        ];
+        if ($returnGeneral) {
+            $result['general'] = $this->getSupportedGeneralOptionDefinitions($imageType);
+        }
+        if ($returnGeneralSupport) {
+            $result['supported-general'] = $this->getSupportedGeneralOptionIds();
+            $result['unsupported-general'] = $this->getUnsupportedDefaultOptions();
+        }
+        return $result;
     }
 
 /*

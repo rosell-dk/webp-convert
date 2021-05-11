@@ -16,6 +16,7 @@ class BooleanOption extends Option
 {
 
     protected $typeId = 'boolean';
+    protected $allowedValueTypes = ['boolean'];
 
     public function check()
     {
