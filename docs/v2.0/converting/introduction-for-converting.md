@@ -1,7 +1,5 @@
 # Introduction to converting with WebPConvert
 
-**NOTE: This document only applies to the upcoming 2.0 version**
-
 The library is able to convert images to webp using a variety of methods (*gd*, *imagick*, *vips* etc.), which we call "converters". A converter is called like this:
 
 ```php
@@ -135,7 +133,7 @@ As an example, the following PNG (231 kb) will be compressed to 156 kb when conv
 
 Unless you changed the `near-lossless` option described below, the choice is actually between lossy and *near-lossless*.
 
-Note that *gd* and *ewww* doesn't support this feature. *gd* can only produce lossy, and will simply do that. *ewww* can not be configured to use a certain encoding, but automatically chooses *lossless* encoding for PNGs and lossy for JPEGs.
+Note that *gd* and *ewww* does not support this feature. *gd* can only produce lossy, and will simply do that. *ewww* can not be configured to use a certain encoding, but automatically chooses *lossless* encoding for PNGs and lossy for JPEGs.
 
 ### Near-lossless
 *cwebp* and *vips* supports "near-lossless" mode. Near lossless produces a webp with lossless encoding but adjusts pixel values to help compressibility. The result is a smaller file. The price is described as a minimal impact on the visual quality.
@@ -155,6 +153,8 @@ Btw, the image above gets compressed to 68 kb with alpha quality set to 100. Sur
 
 You can read more about the alpha-quality option [here](https://developers.google.com/speed/webp/docs/cwebp)
 
+### Sharp YUV
+libwebp has an overlooked option which improves accuracy for RGB to YUV mapping at the price for longer conversion time. You can control it with the new 'sharp-yuv' option (introduced in webp-convert 2.6.0). Read an appraisal of the option [here](https://www.ctrl.blog/entry/webp-sharp-yuv.html).
 
 ### PNG og JPEG-specific options.
 
@@ -168,12 +168,14 @@ $options = [
         'encoding' => 'auto',    /* Try both lossy and lossless and pick smallest */
         'near-lossless' => 60,   /* The level of near-lossless image preprocessing (when trying lossless) */
         'quality' => 85,         /* Quality when trying lossy. It is set high because pngs is often selected to ensure high quality */
+        'sharp-yuv' => true,
     ],
     'jpeg' => [
         'encoding' => 'auto',     /* If you are worried about the longer conversion time, you could set it to "lossy" instead (lossy will often be smaller than lossless for jpegs) */
         'quality' => 'auto',      /* Set to same as jpeg (requires imagick or gmagick extension, not necessarily compiled with webp) */
         'max-quality' => 80,      /* Only relevant if quality is set to "auto" */
         'default-quality' => 75,  /* Fallback quality if quality detection isnt working */
+        'sharp-yuv' => false,
     ]
 ];
 ```
