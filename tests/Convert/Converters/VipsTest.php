@@ -68,8 +68,9 @@ class VipsTest extends TestCase
     public function testCreateParamsForVipsWebPSave1()
     {
         $options = [
+            'method' => 3,
             'encoding' => 'lossless',
-            'smart-subsample' => true,
+            'smart-subsample' => true,  // note: deprecated
             'near-lossless' => 90,
             'preset' => 'picture',      // In vips, this has the constant: 1
         ];
@@ -78,6 +79,8 @@ class VipsTest extends TestCase
         $vipsParams = $vipsExposer->createParamsForVipsWebPSave();
 
         // Check some options that are straightforwardly copied
+
+        $this->assertSame($options['method'], $vipsParams['reduction_effort']);
         $this->assertSame(true, $vipsParams['lossless']);
         $this->assertSame($options['smart-subsample'], $vipsParams['smart_subsample']);
         $this->assertSame(1, $vipsParams['preset']);
@@ -89,16 +92,19 @@ class VipsTest extends TestCase
     public function testCreateParamsForVipsWebPSave2()
     {
         $options = [
-            'alpha-quality' => 100
+            'alpha-quality' => 100,
+            'sharp-yuv' => true,
         ];
         $vipsExposer = $this->createVipsExposer('test.png', $options);
 
         $vipsParams = $vipsExposer->createParamsForVipsWebPSave();
 
+        $this->assertSame($options['sharp-yuv'], isset($vipsParams['smart_subsample']));
+
         // Some options are only set if they differ from default
-        $this->assertFalse(isset($vipsParams['smart_subsample']));
         $this->assertFalse(isset($vipsParams['alpha_q']));
     }
+
 
     public function testCreateImageResource1()
     {

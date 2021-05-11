@@ -26,7 +26,6 @@ class Vips extends AbstractConverter
     {
         return [
             'auto-filter',
-            'sharp-yuv',
             'size-in-percentage',
             'use-nice'
         ];
@@ -40,7 +39,7 @@ class Vips extends AbstractConverter
     public function getUniqueOptions($imageType)
     {
         return [
-            new BooleanOption('smart-subsample', false)
+            new BooleanOption('smart-subsample', false)   // PS: Deprecated option!
         ];
     }
 
@@ -162,8 +161,18 @@ class Vips extends AbstractConverter
         // Only set the following options if they differ from the default of vipslib
         // This ensures we do not get warning if that property isn't supported
         if ($this->options['smart-subsample'] !== false) {
+            // PS: The smart-subsample option is now deprecated, as it turned out
+            // it was corresponding to the "sharp-yuv" option (see #280)
             $options['smart_subsample'] = $this->options['smart-subsample'];
+            $this->logLn(
+                '*Note: the "smart-subsample" option is now deprecated. It turned out it corresponded to ' .
+                'the general option "sharp-yuv". You should use "sharp-yuv" instead.*'
+            );
         }
+        if ($this->options['sharp-yuv'] !== false) {
+            $options['smart_subsample'] = $this->options['sharp-yuv'];
+        }
+
         if ($this->options['alpha-quality'] !== 100) {
             $options['alpha_q'] = $this->options['alpha-quality'];
         }

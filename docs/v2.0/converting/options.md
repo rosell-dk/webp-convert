@@ -191,7 +191,7 @@ Quality for lossy encoding. Read about the "auto" option in the [introduction](h
 ```
 Type:          boolean
 Default:       true for png, false for jpeg
-Supported by:  cwebp, gmagick, graphicsmagick, imagick, imagemagick
+Supported by:  cwebp, vips, gmagick, graphicsmagick, imagick, imagemagick
 ```
 Use more accurate and sharper RGB->YUV conversion if needed. Note that this process is slower than the default 'fast' RGB->YUV conversion. The benefits of using this option is exemplified [here](https://www.ctrl.blog/entry/webp-sharp-yuv.html).
 
@@ -303,13 +303,13 @@ Supported by:  cwebp, graphicsmagick, imagemagick, ffmpeg
 ```
 This option only applies to converters which are using exec() to execute a binary directly on the host. If *use-nice* is set, it will be examined if the [`nice`]( https://en.wikipedia.org/wiki/Nice_(Unix)) command is available on the host. If it is, the binary is executed using *nice*. This assigns low priority to the process and will save system resources - but result in slower conversion.<br><br>
 
-### `vips-smart-subsample`
+### `vips-smart-subsample` (DEPRECATED)
 ```
 Type:          boolean
 Default:       false
 Supported by:  vips
 ```
-This feature seems not to be part of *libwebp* but intrinsic to vips. According to the [vips docs](https://jcupitt.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave), it enables high quality chroma subsampling.<br><br>
+This feature seemed not to be part of *libwebp* but intrinsic to vips. However, we were wrong - the feature is the same as 'sharp-yuv'. Use that instead.<br><br>
 
 ### `wpc-api-key`
 ```
