@@ -150,10 +150,11 @@ class Vips extends AbstractConverter
     private function createParamsForVipsWebPSave()
     {
         // webpsave options are described here:
-        // v 8.8.0:  https://libvips.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave
-        // v ?.?.?:  https://jcupitt.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave
+        // https://libvips.github.io/libvips/API/current/VipsForeignSave.html#vips-webpsave
         // near_lossless option is described here: https://github.com/libvips/libvips/pull/430
 
+        // NOTE: When a new option becomes available, we MUST remember to add
+        //       it to the array of possibly unsupported options in webpsave() !
         $options = [
             "Q" => $this->getCalculatedQuality(),
             'lossless' => ($this->options['encoding'] == 'lossless'),
@@ -238,6 +239,7 @@ class Vips extends AbstractConverter
                     'near_lossless',
                     'smart_subsample',
                     'reduction_effort',
+                    'preset'
                 ])) {
                     $nameOfPropertyNotFound = $matches[1];
                 }
