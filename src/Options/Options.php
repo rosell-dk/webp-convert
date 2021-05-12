@@ -143,11 +143,13 @@ class Options
         }
     }
 
-    public function getDefinitions()
+    public function getDefinitions($deprecatedToo = false)
     {
         $defs = [];
         foreach ($this->options as $option) {
-            $defs[] = $option->getDefinition();
+            if ($deprecatedToo || !($option->isDeprecated())) {
+                $defs[] = $option->getDefinition();
+            }
         }
         return $defs;
     }

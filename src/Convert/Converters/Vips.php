@@ -38,8 +38,10 @@ class Vips extends AbstractConverter
      */
     public function getUniqueOptions($imageType)
     {
+        $ssOption = new BooleanOption('smart-subsample', false);
+        $ssOption->markDeprecated();
         return [
-            new BooleanOption('smart-subsample', false)   // PS: Deprecated option!
+            $ssOption
         ];
     }
 

@@ -23,7 +23,7 @@ class Option
     /** @var mixed  The value of the option */
     protected $value;
 
-    /** @var boolean  Whether the value has been explicitly set */
+    /** @var boolean  Whether the value has been set (if not, getValue() will return the default value) */
     protected $isExplicitlySet = false;
 
     /** @var string  An option must supply a type id */
@@ -31,6 +31,9 @@ class Option
 
     /** @var array  Type constraints for the value */
     protected $allowedValueTypes = [];
+
+    /** @var boolean  Whether the option has been deprecated */
+    protected $deprecated = false;
 
 
     /**
@@ -135,6 +138,16 @@ class Option
         }
     }
 
+    public function markDeprecated()
+    {
+        $this->deprecated = true;
+    }
+
+    public function isDeprecated()
+    {
+        return $this->deprecated;
+    }
+
     public function getValueForPrint()
     {
         return print_r($this->getValue(), true);
@@ -143,11 +156,15 @@ class Option
 
     public function getDefinition()
     {
-        return [
-            'id' => $this->id,
-            'type' => $this->typeId,
-            'allowed-value-types' => $this->allowedValueTypes,
-            'default' => $this->defaultValue,
+        $obj = [
+          'id' => $this->id,
+          'type' => $this->typeId,
+          'allowed-value-types' => $this->allowedValueTypes,
+          'default' => $this->defaultValue,
         ];
+        if ($this->deprecated) {
+            $obj['deprecated'] = true;
+        }
+        return $obj;
     }
 }
