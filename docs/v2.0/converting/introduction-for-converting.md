@@ -101,10 +101,10 @@ define('WEBPCONVERT_IMAGEMAGICK_PATH', '/usr/local/bin/magick');
 
 What should we have done instead? We should have converted with a quality around 50. Of course, quality is still low - we cannot fix that - but it will not be less, *and the converted file will be much smaller*.
 
-As unnecessary large conversions are rarely desirable, this library per default converts jpeg files with the same quality level as the source. This functionality requires that either *imagemagick*, *graphicsmagick* or *imagick* is installed (not necessarily compiled with webp support). When they are, all converters will have the "auto" quality functionality. Otherwise, only *wpc* will support it (provided that one of these libraries is installed on the server of the cloud service).
+As unnecessary large conversions are rarely desirable, this library per default limits the quality setting so it does not exceed that of the source. This functionality requires that either *imagemagick*, *graphicsmagick* or *imagick* is installed (not necessarily compiled with webp support). When they are, all converters will have the "auto-limit" functionality. Otherwise, only *wpc* will support it (provided that one of these libraries is installed on the server of the cloud service).
 
 How much can be gained? A lot!
-The following low quality (q=50) jpeg weighs 54 kb. If this is converted to webp with quality=80, the size of the converted file is 52kb - almost no reduction! With auto, the quality of the webp will be set to 50, and the size will be 34kb. Visually, the results are indistinguable.
+The following low quality (q=50) jpeg weighs 54 kb. If this is converted to webp with quality=80, the size of the converted file is 52kb - almost no reduction! With auto-limit, the quality of the webp will be set to 50, and the size will be 34kb. Visually, the results are indistinguable.
 
 ![A low quality jpeg](https://raw.githubusercontent.com/rosell-dk/webp-convert/master/docs/v2.0/converting/architecture-q50-w600.jpg)
 
@@ -114,7 +114,7 @@ The following low quality (q=50) jpeg weighs 54 kb. If this is converted to webp
 The size of a webp file grows enormously with the quality setting. For the web however, a quality above 75 is rarely needed. For this reason the library has a per default sets the quality to 75 for jpegs.
 
 So, how much can be gained? A lot!
-The following excessively high quality jpeg (q=100) weighs 146 kb. Converting it to webp with q=100 results in a 99kb image (this would happen if we had the auto feature, but not the max-quality feature). Converting it to q=85 results in a 40kb image.
+The following excessively high quality jpeg (q=100) weighs 146 kb. Converting it to webp with quality=100 results in a 99kb image. Converting it to quality=85 results in a 40kb image.
 
 ![A (too) high quality jpeg](https://raw.githubusercontent.com/rosell-dk/webp-convert/master/docs/v2.0/converting/mouse-q100.jpg)
 
