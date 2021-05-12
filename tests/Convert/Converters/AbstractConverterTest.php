@@ -79,7 +79,8 @@ class AbstractConverterTest extends TestCase
 
         $defaultOptions = $exposer->getOptions();
 
-        $this->assertSame('auto', $defaultOptions['quality']);
+        //$this->assertSame('auto', $defaultOptions['quality']);
+        $this->assertSame(75, $defaultOptions['quality']);
         $this->assertSame(85, $defaultOptions['max-quality']);
         $this->assertSame(75, $defaultOptions['default-quality']);
         $this->assertSame('none', $defaultOptions['metadata']);

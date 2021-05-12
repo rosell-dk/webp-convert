@@ -34,7 +34,7 @@ trait OptionsTrait
     abstract public function logLn($msg, $style = '');
     abstract protected function getMimeTypeOfSource();
 
-    /** @var array  Provided conversion options */
+    /** @var array  Provided conversion options (array of simple objects)*/
     public $providedOptions;
 
     /** @var array  Calculated conversion options (merge of default options and provided options)*/
@@ -54,19 +54,27 @@ trait OptionsTrait
     public function getGeneralOptions($imageType)
     {
         $isPng = ($imageType == 'png');
+
+        $defaultQualityOption = new IntegerOption('default-quality', ($isPng ? 85 : 75), 0, 100);
+        $defaultQualityOption->markDeprecated();
+
+        $maxQualityOption = new IntegerOption('max-quality', 85, 0, 100);
+        $maxQualityOption->markDeprecated();
+
         return [
             new IntegerOption('alpha-quality', 85, 0, 100),
+            new BooleanOption('auto-limit', true),
             new BooleanOption('auto-filter', false),
-            new IntegerOption('default-quality', ($isPng ? 85 : 75), 0, 100),
+            $defaultQualityOption,
             new StringOption('encoding', 'auto', ['lossy', 'lossless', 'auto']),
             new BooleanOption('low-memory', false),
             new BooleanOption('log-call-arguments', false),
-            new IntegerOption('max-quality', 85, 0, 100),
+            $maxQualityOption,
             new MetadataOption('metadata', 'none'),
             new IntegerOption('method', 6, 0, 6),
             new IntegerOption('near-lossless', 60, 0, 100),
             new StringOption('preset', 'none', ['none', 'default', 'photo', 'picture', 'drawing', 'icon', 'text']),
-            new QualityOption('quality', ($isPng ? 85 : 'auto')),
+            new QualityOption('quality', ($isPng ? 85 : 75)),
             new IntegerOrNullOption('size-in-percentage', null, 0, 100),
             new BooleanOption('sharp-yuv', true),
             new BooleanOption('skip', false),

@@ -20,6 +20,14 @@ Supported by: cwebp, vips, imagick, gmagick, imagemagick and graphicsmagick
 ```
 Turns auto-filter on. This algorithm will spend additional time optimizing the filtering strength to reach a well-balanced quality. Unfortunately, it is extremely expensive in terms of computation. It takes about 5-10 times longer to do a conversion. A 1MB picture which perhaps typically takes about 2 seconds to convert, will takes about 15 seconds to convert with auto-filter. So in most cases, you will want to leave this at its default, which is off.<br><br>
 
+### `auto-limit`
+```
+Type:         boolean
+Default:      true
+Supported by: all
+```
+Limits the quality to be no more than that of the jpeg. The option is only relevant when converting jpegs to lossy webp. To be functional, webp-convert needs to be able to detect the quality of the jpeg, which requires ImageMagick or GraphicsMagick. Read about the option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality).
+
 ### `cwebp-command-line-options`
 ```
 Type:         string
@@ -69,13 +77,13 @@ Supported by: cwebp
 ```
 If set, the converter will try the precompiled cwebp binary that are located in `src/Convert/Converters/Binaries`, for the current OS. The binaries are hash-checked before executed.
 
-### `default-quality`
+### `default-quality` (DEPRECATED)
 ```
 Type:          integer (0-100)
 Default:       75 for jpegs and 85 for pngs
 Supported by:  all (cwebp, ewww, gd, ffmpeg, gmagick, graphicsmagick, imagick, imagemagick, vips)
 ```
-Read about this option in the ["auto quality" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality).<br><br>
+This option has been deprecated. See why [here](https://github.com/rosell-dk/webp-convert/issues/281). It was used to determine the quality in case auto limiting was not available.<br><br>
 
 ### `encoding`
 ```
@@ -130,13 +138,13 @@ Supported by:  cwebp, imagick, imagemagick and graphicsmagick
 ```
 Reduce memory usage of lossy encoding at the cost of ~30% longer encoding time and marginally larger output size. Read more in [the docs](https://developers.google.com/speed/webp/docs/cwebp).<br><br>
 
-### `max-quality`
+### `max-quality` (DEPRECATED)
 ```
 Type:          integer (0-100)
 Default:       85
 Supported by:  all (cwebp, ewww, ffmpeg, gd, gmagick, graphicsmagick, imagick, imagemagick, vips)
 ```
-Read about this option in the ["auto quality" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality).<br><br>
+This option has been deprecated. See why [here](https://github.com/rosell-dk/webp-convert/issues/281)<br><br>
 
 ### `metadata`
 ```
@@ -181,11 +189,11 @@ Using a preset will set many of the other options to suit a particular type of s
 
 ### `quality`
 ```
-Type:          integer (0-100) | "auto"
-Default:       "auto" for jpegs and 85 for pngs
+Type:          integer (0-100) | "auto"  ("auto" is now deprecated - use the "auto-limit" option instead)
+Default:       75 for jpegs and 85 for pngs
 Supported by:  all (cwebp, ewww, gd, gmagick, graphicsmagick, imagick, imagemagick, vips, ffmpeg)
 ```
-Quality for lossy encoding. Read about the "auto" option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality).<br><br>
+Quality for lossy encoding.<br><br>
 
 ### `sharp-yuv`
 ```

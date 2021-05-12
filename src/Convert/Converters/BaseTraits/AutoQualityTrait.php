@@ -92,33 +92,71 @@ trait AutoQualityTrait
         $options = $this->options;
         $source = $this->source;
 
+        /*
+        Mapping from old options to new options:
+        quality: "auto", max-quality: 85, default-quality: 75
+        becomes: quality: 85, auto-limit: true
+
+        quality: 80
+        becomes: quality: 80, auto-limit: false
+        */
         $q = $options['quality'];
         if ($q == 'auto') {
+            $q = $options['quality'] = $options['max-quality'];
+            $this->logLn(
+                '*Setting "quality" to "auto" is deprecated. ' .
+                'Instead, set "quality" to a number (0-100) and "auto-limit" to true. '
+            );
+            $this->logLn(
+                '*"quality" has been set to: ' . $options['max-quality'] . ' (took the value of "max-quality").*'
+            );
+            if (!$this->options2->getOptionById('auto-limit')->isValueExplicitlySet()) {
+                $options['auto-limit'] = true;
+                $this->logLn(
+                    '*"auto-limit" has been set to: true."*'
+                );
+            } else {
+                $this->logLn(
+                    '*PS: "auto-limit" is set to false, as it was set explicitly to false in the options."*'
+                );
+            }
+        }
+
+        if ($options['auto-limit']) {
             if (($this->/** @scrutinizer ignore-call */getMimeTypeOfSource() == 'image/jpeg')) {
+                $this->logLn('Running auto-limit');
+                $this->logLn(
+                    'Quality setting: ' . $q . '. '
+                );
                 $q = JpegQualityDetector::detectQualityOfJpg($source);
                 if (is_null($q)) {
-                    $q = $options['default-quality'];
+                    $q = $options['quality'];
                     $this->/** @scrutinizer ignore-call */logLn(
-                        'Quality of source could not be established (Imagick or GraphicsMagick is required)' .
-                        ' - Using default instead (' . $options['default-quality'] . ').'
+                        'Quality of source image could not be established (Imagick or GraphicsMagick is required). ' .
+                        'Sorry, no auto-limit functionality for you. Using supplied quality (' . $q . ').'
                     );
 
                     $this->qualityCouldNotBeDetected = true;
                 } else {
-                    if ($q > $options['max-quality']) {
+                    $this->logLn(
+                        'Quality of jpeg: ' . $q . '. '
+                    );
+                    if ($q < $options['quality']) {
                         $this->logLn(
-                            'Quality of source is ' . $q . '. ' .
-                            'This is higher than max-quality, so using max-quality instead (' .
-                                $options['max-quality'] . ')'
+                            'Auto-limit result: ' . $q . ' ' .
+                            '(limiting applied).'
                         );
                     } else {
-                        $this->logLn('Quality set to same as source: ' . $q);
+                        $q = $options['quality'];
+                        $this->logLn(
+                            'Auto-limit result: ' . $q . ' ' .
+                            '(no limiting needed this time).'
+                        );
                     }
                 }
                 $q = min($q, $options['max-quality']);
             } else {
-                //$q = $options['default-quality'];
-                $q = min($options['default-quality'], $options['max-quality']);
+                $this->logLn('Bypassing auto-limit (it is only active for jpegs)');
                 $this->logLn('Quality: ' . $q . '. ');
             }
         } else {
@@ -127,7 +165,7 @@ trait AutoQualityTrait
             );
             if (($this->getMimeTypeOfSource() == 'image/jpeg')) {
                 $this->logLn(
-                    'Consider setting quality to "auto" instead. It is generally a better idea'
+                    'Consider enabling "auto-limit" option. This will prevent unnecessary high quality'
                 );
             }
         }

@@ -47,7 +47,6 @@ I recommend leave the converters array at the default unless you have strong rea
 ### Example:
 
 ```php
-<?php
 use WebPConvert\Convert\Converters\Stack;
 
 Stack::convert($source, $destination, $options = [    
@@ -96,13 +95,13 @@ define('WEBPCONVERT_IMAGEMAGICK_PATH', '/usr/local/bin/magick');
 
 ## Configuring the options
 
-### Auto quality
+### Preventing unnecessarily high quality setting for low quality jpegs
 **Q:** What do you get if you convert a low quality jpeg (ie q=50) into a high quality webp (ie q=90) ?\
 **A:** You maintain the low quality, but you get a large file`
 
 What should we have done instead? We should have converted with a quality around 50. Of course, quality is still low - we cannot fix that - but it will not be less, *and the converted file will be much smaller*.
 
-As unnecessary large conversions are rarely desirable, this library per default converts jpeg files with the same quality level as the source. This functionality requires that either *imagemagick*, *graphicsmagick* or *imagick* is installed (not necessarily compiled with webp support). When they are, all converters will have the "auto" quality functionality. The *wpc* cloud converter supports auto quality if these are installed on the server that *wpc* is installed on.
+As unnecessary large conversions are rarely desirable, this library per default converts jpeg files with the same quality level as the source. This functionality requires that either *imagemagick*, *graphicsmagick* or *imagick* is installed (not necessarily compiled with webp support). When they are, all converters will have the "auto" quality functionality. Otherwise, only *wpc* will support it (provided that one of these libraries is installed on the server of the cloud service).
 
 How much can be gained? A lot!
 The following low quality (q=50) jpeg weighs 54 kb. If this is converted to webp with quality=80, the size of the converted file is 52kb - almost no reduction! With auto, the quality of the webp will be set to 50, and the size will be 34kb. Visually, the results are indistinguable.
@@ -112,9 +111,7 @@ The following low quality (q=50) jpeg weighs 54 kb. If this is converted to webp
 **Q:** What do you get if you convert an excessively high quality jpeg into an excessively high quality webp?\
 **A:** An excessively big file
 
-The size of a webp file grows enormously with the quality setting. For the web however, a quality above 80 is rarely needed. For this reason the library has a per default limits the quality to the value of the *max-quality* option (default: 85).
-
-In case quality detection is unavailable, the quality gets the value of the *default-quality* option (default is 70 for JPEGs and 85 for PNGs).
+The size of a webp file grows enormously with the quality setting. For the web however, a quality above 75 is rarely needed. For this reason the library has a per default sets the quality to 75 for jpegs.
 
 So, how much can be gained? A lot!
 The following excessively high quality jpeg (q=100) weighs 146 kb. Converting it to webp with q=100 results in a 99kb image (this would happen if we had the auto feature, but not the max-quality feature). Converting it to q=85 results in a 40kb image.
@@ -160,7 +157,7 @@ libwebp has an overlooked option which improves accuracy for RGB to YUV mapping 
 
 To have options depending on the image type of the source, you can use the `png` and `jpeg` keys.
 
-The following options mimics the default behaviour:
+The following options mimics the default behaviour (version 2.0 - 2.5):
 
 ```php
 $options = [
@@ -179,8 +176,28 @@ $options = [
     ]
 ];
 ```
+PS: From version 2.6 on, you should use the new "auto-limit" option instead of setting quality to "auto".
 
-You can use it for any option, also the converter specific options.
+The following options mimics the default behaviour (version 2.6 and forth):
+
+```php
+$options = [
+    'png' => [
+        'encoding' => 'auto',    /* Try both lossy and lossless and pick smallest */
+        'near-lossless' => 60,   /* The level of near-lossless image preprocessing (when trying lossless) */
+        'quality' => 85,         /* Quality when trying lossy. It is set high because pngs is often selected to ensure high quality */
+        'sharp-yuv' => true,
+    ],
+    'jpeg' => [
+        'encoding' => 'auto',     /* If you are worried about the longer conversion time, you could set it to "lossy" instead (lossy will often be smaller than lossless for jpegs) */
+        'quality' => 75,          /* Quality when trying lossy. It is set a bit lower for jpeg than png */
+        'auto-limit' => true,     /* Prevents using a higher quality than that of the source (requires imagick or gmagick extension, not necessarily compiled with webp) */
+        'sharp-yuv' => true,
+    ]
+];
+```
+
+The *png* and *jpeg* options can hold any other option - also the converter specific options.
 A use case could for example be to use different converters for png and jpeg:
 
 ```php
@@ -200,11 +217,25 @@ $options = [
 
 Here is a quick overview of the few ones discussed here.
 
+### Version 2.0 - 2.5
+
 | Option            | Default (jpeg)     | Default (png)       | Description                                                                        |
 | ----------------- | ------------------ | ------------------- | ---------------------------------------------------------------------------------- |
 | quality           | "auto"             | 85                  | See the "Auto quality" section above. |
 | max-quality       | 85                 | 85                  | Only relevant for jpegs and when quality is set to "auto".                         |
 | default-quality   | 75                 | 85                  |                                                                                    |
+| metadata          | "none"             | "none"              | Valid values: "all", "none", "exif", "icc", "xmp".<br><br>Note: Currently only *cwebp* supports all values. *gd* will always remove all metadata. *ewww*, *imagick* and *gmagick* can either strip all, or keep all (they will keep all, unless metadata is set to *none*)       |
+| encoding          | "auto"             | "auto"              | See the "Auto selecting between lossless/lossy encoding" section above   |
+| jpeg              | -                  | -                   | Array of options which will be merged into the other options when source is a JPEG |
+| png               | -                  | -                   | Array of options which will be merged into the other options when source is a PNG  |
+| skip              | false              | false               | If true, conversion will be skipped (ie for skipping png conversion for some converters) |
+
+### Version > 2.6
+
+| Option            | Default (jpeg)     | Default (png)       | Description                                                                        |
+| ----------------- | ------------------ | ------------------- | ---------------------------------------------------------------------------------- |
+| quality           | 75                 | 85                  | Quality for lossy encoding |
+| auto-limit        | true               | true                | Only relevant for jpegs and lossy encoding |
 | metadata          | "none"             | "none"              | Valid values: "all", "none", "exif", "icc", "xmp".<br><br>Note: Currently only *cwebp* supports all values. *gd* will always remove all metadata. *ewww*, *imagick* and *gmagick* can either strip all, or keep all (they will keep all, unless metadata is set to *none*)       |
 | encoding          | "auto"             | "auto"              | See the "Auto selecting between lossless/lossy encoding" section above   |
 | jpeg              | -                  | -                   | Array of options which will be merged into the other options when source is a JPEG |

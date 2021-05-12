@@ -25,6 +25,17 @@ The library can convert using the following methods:
 
 In addition to converting, the library also has a method for *serving* converted images, and we have instructions here on how to set up a solution for automatically serving webp images to browsers that supports webp.
 
+## 2.6.0 is coming up
+Changes:
+- Introduced "auto-limit" option which replaces setting "quality" to "auto"
+- Made available converter options accessible - primarily in order to give GUI's a way to automatically adjust their setting screens
+- Added "sharp-yuv" option and made it default on for png (in doubt if it should be default on for jpeg too). [Its great](https://www.ctrl.blog/entry/webp-sharp-yuv.html), use it! Works in most converters.
+- Bumped cwebp binaries to 1.2.0
+- vips now supports "method" option and "preset" option
+- graphicsmagick now supports "auto-filter" potion
+- vips, imagick, imagemagick, graphicsmagick and gmagick now supports "preset" option.
+
+
 ## Installation
 Require the library with *Composer*, like this:
 

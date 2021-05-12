@@ -26,14 +26,13 @@ class AutoQualityTraitTest extends TestCase
             self::getImagePath('small-q61.jpg'),
             self::getImagePath('small-q61.jpg.webp'),
             [
-                'max-quality' => 80,
-                'quality' => 75,
-                'default-quality' => 70,
+                'quality' => 77,
+                'auto-limit' => false,
             ]
         );
 
         $result = $converter->getCalculatedQuality();
-        $this->assertSame(75, $result);
+        $this->assertSame(77, $result);
 
         $this->assertFalse($converter->isQualityDetectionRequiredButFailing());
 
@@ -61,6 +60,25 @@ class AutoQualityTraitTest extends TestCase
     }*/
 
     public function testAutoQuality()
+    {
+        $converter = SuccessGuaranteedConverter::createInstance(
+            self::getImagePath('small-q61.jpg'),
+            self::getImagePath('small-q61.jpg.webp'),
+            [
+                'quality' => 61,
+                'auto-limit' => true,
+            ]
+        );
+
+        $result = $converter->getCalculatedQuality();
+
+        // "Cheating" a bit here...
+        // - If quality detection fails, it will be 61 (because default-quality is set to 61)
+        // - If quality detection succeeds, it will also be 61
+        $this->assertSame(61, $result);
+    }
+
+    public function testAutoQualityDeprecatedOptions()
     {
         $converter = SuccessGuaranteedConverter::createInstance(
             self::getImagePath('small-q61.jpg'),
@@ -140,7 +158,7 @@ class AutoQualityTraitTest extends TestCase
         //$this->assertTrue($converter->isQualityDetectionRequiredButFailing());
     }
 */
-    public function testAutoQualityOnQualityDetectionFail2()
+    public function testAutoQualityOnQualityDetectionFail2DeprecatedOptions()
     {
         $converter = SuccessGuaranteedConverter::createInstance(
             self::getImagePath('text-with-jpg-extension.jpg'),
@@ -166,7 +184,7 @@ class AutoQualityTraitTest extends TestCase
         // Test that it is still the same (testing caching)
         $this->assertTrue($converter->isQualityDetectionRequiredButFailing());
 
-        $this->assertSame(60, $converter->getCalculatedQuality());
+        $this->assertSame(70, $converter->getCalculatedQuality());
     }
 
 }
