@@ -10,6 +10,8 @@ use WebPConvert\Serve\ServeConvertedWebP;
 use WebPConvert\Serve\MockedHeader;
 use WebPConvert\Serve\Exceptions\ServeFailedException;
 
+use WebPConvert\Tests\CompatibleTestCase;
+
 use ServeConvertedWebPExposer;
 
 use PHPUnit\Framework\TestCase;
@@ -18,7 +20,7 @@ use PHPUnit\Framework\TestCase;
  * @coversDefaultClass WebPConvert\Serve\ServeConvertedWebP
  * @covers WebPConvert\Serve\ServeConvertedWebP
  */
-class ServeConvertedWebPTest extends TestCase
+class ServeConvertedWebPTest extends CompatibleTestCase
 {
 
     public function getImageFolder()
@@ -350,7 +352,7 @@ class ServeConvertedWebPTest extends TestCase
         $result = ob_get_clean();
 
         // the source file contains "text", so the next assert asserts that source was served
-        $this->assertRegExp('#text#', $result);
+        $this->assertMatchesRegularExpression2('#text#', $result);
     }
 
     public function testExistingOutDated()
@@ -386,7 +388,7 @@ class ServeConvertedWebPTest extends TestCase
         // So testing that we got this back is the same as testing that a "conversion" was
         // done and the converted file was served. It is btw smaller than the source.
 
-        $this->assertRegExp('#we-pretend-this-is-a-valid-webp!#', $result);
+        $this->assertMatchesRegularExpression2('#we-pretend-this-is-a-valid-webp!#', $result);
     }
 
     public function testNoFileAtDestination()
@@ -413,7 +415,7 @@ class ServeConvertedWebPTest extends TestCase
         // So testing that we got this back is the same as testing that a "convert" was
         // done and the converted file was served. It is btw smaller than the source.
 
-        $this->assertRegExp('#we-pretend-this-is-a-valid-webp!#', $result);
+        $this->assertMatchesRegularExpression2('#we-pretend-this-is-a-valid-webp!#', $result);
     }
 
 }

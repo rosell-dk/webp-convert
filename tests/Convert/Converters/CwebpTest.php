@@ -13,6 +13,7 @@ use WebPConvert\Convert\Converters\Cwebp;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 
+use WebPConvert\Tests\CompatibleTestCase;
 use WebPConvert\Tests\Convert\Exposers\CwebpExposer;
 
 use PHPUnit\Framework\TestCase;
@@ -21,7 +22,7 @@ use PHPUnit\Framework\TestCase;
  * @coversDefaultClass WebPConvert\Convert\Converters\Cwebp
  * @covers WebPConvert\Convert\Converters\Cwebp
  */
-class CwebpTest extends TestCase
+class CwebpTest extends CompatibleTestCase
 {
 
     public static function getImageFolder()
@@ -49,6 +50,7 @@ class CwebpTest extends TestCase
         $this->assertTrue(file_exists($source), 'source does not exist');
     }
 
+
     /**
      * @covers ::createCommandLineOptions
      */
@@ -69,31 +71,31 @@ class CwebpTest extends TestCase
         //$this->assertEquals('e', $commandLineOption); // use this to quickly see it...
 
         // Per default we have no preset set
-        $this->assertNotRegExp('#-preset#', $commandLineOptions);
+        $this->assertDoesNotMatchRegularExpression2('#-preset#', $commandLineOptions);
 
         // Metadata is per default none
-        $this->assertRegExp('#-metadata none#', $commandLineOptions);
+        $this->assertMatchesRegularExpression2('#-metadata none#', $commandLineOptions);
 
         // We passed the method option and set it to 3
-        $this->assertRegExp('#-m 3#', $commandLineOptions);
+        $this->assertMatchesRegularExpression2('#-m 3#', $commandLineOptions);
 
         // There must be an output option, and it must be quoted
-        $this->assertRegExp('#-o \'#', $commandLineOptions);
+        $this->assertMatchesRegularExpression2('#-o \'#', $commandLineOptions);
 
         // There must be a quality option, and it must be digits
-        $this->assertRegExp('#-q \\d+#', $commandLineOptions);
+        $this->assertMatchesRegularExpression2('#-q \\d+#', $commandLineOptions);
 
         // -sharpness '5'
-        $this->assertRegExp('#-sharpness \'5\'#', $commandLineOptions);
+        $this->assertMatchesRegularExpression2('#-sharpness \'5\'#', $commandLineOptions);
 
         // Extra command line option with multiple values. Each are escapeshellarg'ed
-        $this->assertRegExp('#-crop \'10\' \'10\' \'40\' \'40\'#', $commandLineOptions);
+        $this->assertMatchesRegularExpression2('#-crop \'10\' \'10\' \'40\' \'40\'#', $commandLineOptions);
 
         // Command line option (flag)
-        $this->assertRegExp('#-low_memory#', $commandLineOptions);
+        $this->assertMatchesRegularExpression2('#-low_memory#', $commandLineOptions);
 
         // -sharpness '5'
-        $this->assertRegExp('#-sharpness \'5\'#', $commandLineOptions);
+        $this->assertMatchesRegularExpression2('#-sharpness \'5\'#', $commandLineOptions);
     }
 
     /**
@@ -116,15 +118,15 @@ class CwebpTest extends TestCase
         $commandLineOptions = $cwebpExposer->createCommandLineOptions();
 
         // Preset
-        $this->assertRegExp("#-preset 'picture'#", $commandLineOptions);
+        $this->assertMatchesRegularExpression2("#-preset 'picture'#", $commandLineOptions);
 
         // Size
         $fileSizeInBytes = floor($options['size-in-percentage']/100 * filesize($source));
         $this->assertEquals(1714, $fileSizeInBytes);
-        $this->assertRegExp('#-size ' . $fileSizeInBytes . '#', $commandLineOptions);
+        $this->assertMatchesRegularExpression2('#-size ' . $fileSizeInBytes . '#', $commandLineOptions);
 
         // There must be no quality option, because -size overrules it.
-        $this->assertNotRegExp('#-q \\d+#', $commandLineOptions);
+        $this->assertDoesNotMatchRegularExpression2('#-q \\d+#', $commandLineOptions);
     }
 
     /**
@@ -144,16 +146,16 @@ class CwebpTest extends TestCase
         $commandLineOptions = $cwebpExposer->createCommandLineOptions();
 
         // near-lossless
-        $this->assertRegExp('#-near_lossless 75#', $commandLineOptions);
+        $this->assertMatchesRegularExpression2('#-near_lossless 75#', $commandLineOptions);
 
         // There must be no -lossless option, because -near-lossless overrules it.
-        $this->assertNotRegExp('#-lossless#', $commandLineOptions);
+        $this->assertDoesNotMatchRegularExpression2('#-lossless#', $commandLineOptions);
 
         // auto-filter
-        $this->assertRegExp('#-af#', $commandLineOptions);
+        $this->assertMatchesRegularExpression2('#-af#', $commandLineOptions);
 
         // no low-memory
-        $this->assertNotRegExp('#-low_memory#', $commandLineOptions);
+        $this->assertDoesNotMatchRegularExpression2('#-low_memory#', $commandLineOptions);
     }
 
     /**
@@ -173,16 +175,16 @@ class CwebpTest extends TestCase
         $commandLineOptions = $cwebpExposer->createCommandLineOptions();
 
         // lossless
-        $this->assertRegExp('#-lossless#', $commandLineOptions);
+        $this->assertMatchesRegularExpression2('#-lossless#', $commandLineOptions);
 
         // There must be no -near_lossless option, because -lossless overrules it.
-        $this->assertNotRegExp('#-near_lossless#', $commandLineOptions);
+        $this->assertDoesNotMatchRegularExpression2('#-near_lossless#', $commandLineOptions);
 
         // low-memory
-        $this->assertRegExp('#-low_memory#', $commandLineOptions);
+        $this->assertMatchesRegularExpression2('#-low_memory#', $commandLineOptions);
 
         // No auto-filter
-        $this->assertNotRegExp('#-af#', $commandLineOptions);
+        $this->assertDoesNotMatchRegularExpression2('#-af#', $commandLineOptions);
     }
 
     /**

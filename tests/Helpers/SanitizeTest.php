@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
  * @coversDefaultClass WebPConvert\Helpers\Sanitize
  * @covers WebPConvert\Helpers\Sanitize
  */
-class SanityCheckTest extends TestCase
+class SanitizeTest extends TestCase
 {
 
     /**

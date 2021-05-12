@@ -15,13 +15,15 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\InvalidApiKeyException;
 use WebPConvert\Loggers\BufferLogger;
 
+use WebPConvert\Tests\CompatibleTestCase;
+
 use PHPUnit\Framework\TestCase;
 
 /**
  * @coversDefaultClass WebPConvert\Convert\Converters\Wpc
  * @covers WebPConvert\Convert\Converters\Wpc
  */
-class WpcTest extends TestCase
+class WPCTest extends CompatibleTestCase
 {
 
     public function getImageFolder()
@@ -161,7 +163,7 @@ class WpcTest extends TestCase
             // this is expected!
             $this->addToAssertionCount(1);
 
-            $this->assertRegExp('#we got a 404 response#', $e->getMessage());
+            $this->assertMatchesRegularExpression2('#we got a 404 response#', $e->getMessage());
         }
 
     }
@@ -185,7 +187,7 @@ class WpcTest extends TestCase
             // this is expected!
             $this->addToAssertionCount(1);
 
-            $this->assertRegExp('#We did not receive an image#', $e->getMessage());
+            $this->assertMatchesRegularExpression2('#We did not receive an image#', $e->getMessage());
         }
     }
 
