@@ -237,17 +237,37 @@ class Vips extends AbstractConverter
                     'alpha_q',
                     'near_lossless',
                     'smart_subsample',
-                    'reduction_effort'
+                    'reduction_effort',
                 ])) {
                     $nameOfPropertyNotFound = $matches[1];
                 }
             }
 
             if ($nameOfPropertyNotFound != '') {
-                $this->logLn(
-                    'Your version of vipslib does not support the "' . $nameOfPropertyNotFound . '" property. ' .
-                    'The option is ignored.'
-                );
+                $msg = 'Your version of vipslib does not support the "' . $nameOfPropertyNotFound . '" property';
+
+                switch ($nameOfPropertyNotFound) {
+                    case 'alpha_q':
+                        $msg .= ' (It was introduced in vips 8.4)';
+                        break;
+                    case 'near_lossless':
+                        $msg .= ' (It was introduced in vips 8.4)';
+                        break;
+                    case 'smart_subsample':
+                        $msg .= ' (its the vips equalent to the "sharp-yuv" option. It was introduced in vips 8.4)';
+                        break;
+                    case 'reduction_effort':
+                        $msg .= ' (its the vips equalent to the "method" option. It was introduced in vips 8.8.0)';
+                        break;
+                    case 'preset':
+                        $msg .= ' (It was introduced in vips 8.4)';
+                        break;
+                }
+                $msg .= '. The option is ignored.';
+
+
+                $this->logLn($msg);
+
                 unset($options[$nameOfPropertyNotFound]);
                 $this->webpsave($im, $options);
             } else {
