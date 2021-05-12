@@ -90,7 +90,7 @@ class Option
     }
 
     /**
-     * Get to know if value has been explicitly set.
+     * Get to know if value has been set.
      *
      * @return  boolean  Whether or not the value has been set explicitly
      */

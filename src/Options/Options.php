@@ -94,23 +94,48 @@ class Options
     /**
      * Get the value of an option in the collection - by id.
      *
+     * @deprecated  Use getOptionValue() instead
      * @param  string  $id      Id of the option to get
      * @throws  OptionNotFoundException  if the option is not in the collection
      * @return mixed  The value of the option
      */
     public function getOption($id)
     {
+        return $this->getOptionValue($id);
+    }
+
+    /**
+     * Get the Option in the collection by id.
+     *
+     * @param  string  $id      Id of the option to get
+     * @throws  OptionNotFoundException  if the option is not in the collection
+     * @return mixed  The value of the option
+     */
+    public function getOptionById($id)
+    {
         if (!isset($this->options[$id])) {
             throw new OptionNotFoundException(
                 'There is no option called "' . $id . '" in the collection.'
             );
         }
-        $option = $this->options[$id];
+        return $this->options[$id];
+    }
+
+    /**
+     * Get the value of an option in the collection - by id.
+     *
+     * @param  string  $id      Id of the option to get
+     * @throws  OptionNotFoundException  if the option is not in the collection
+     * @return mixed  The value of the option
+     */
+    public function getOptionValue($id)
+    {
+        $option = $this->getOptionById($id);
         return $option->getValue();
     }
 
     /**
-     * Return map of option objects.
+     * Return map of Option objects.
      *
      * @return array  map of option objects
      */
@@ -120,7 +145,7 @@ class Options
     }
 
     /**
-     * Return flat associative array of options.
+     * Return flat associative array of options (simple objects).
      *
      * @return array  associative array of options
      */
