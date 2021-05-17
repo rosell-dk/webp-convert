@@ -311,9 +311,11 @@ class Cwebp extends AbstractConverter
             $cmdOptions[] = '-af';
         }
 
-        // Autofilter
-        if ($options['sharp-yuv'] === true) {
-            $cmdOptions[] = '-sharp_yuv';
+        // SharpYUV
+        if ($versionNum >= 0.6) {  // #284
+          if ($options['sharp-yuv'] === true) {
+              $cmdOptions[] = '-sharp_yuv';
+          }
         }
 
         // Built-in method option
