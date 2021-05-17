@@ -147,9 +147,21 @@ class Cwebp extends AbstractConverter
 
         //$logger->logLn('command options:' . $commandOptions);
         $this->logLn('Trying to convert by executing the following command:');
+        $beginExecuteBinaryTime = 0;
+        if (function_exists('microtime')) {
+            $beginExecuteBinaryTime = microtime(true);
+        }
         $this->logLn($command);
         exec($command, $output, $returnCode);
         $this->logExecOutput($output);
+        if (function_exists('microtime')) {
+            $endExecuteBinaryTime = microtime(true);
+            $seconds = ($endExecuteBinaryTime - $beginExecuteBinaryTime);
+            $this->logLn(
+                'Executing cwebp binary took: ' . round(($seconds * 1000)) . ' microseconds'
+            );
+            $this->logLn('');
+        }
         /*
         if ($returnCode == 255) {
             if (isset($output[0])) {
@@ -313,9 +325,9 @@ class Cwebp extends AbstractConverter
 
         // SharpYUV
         if ($versionNum >= 0.6) {  // #284
-          if ($options['sharp-yuv'] === true) {
-              $cmdOptions[] = '-sharp_yuv';
-          }
+            if ($options['sharp-yuv'] === true) {
+                $cmdOptions[] = '-sharp_yuv';
+            }
         }
 
         // Built-in method option
@@ -528,6 +540,12 @@ class Cwebp extends AbstractConverter
         $this->logLn(
             'Looking for cwebp binaries.'
         );
+
+        $beginDiscoveryTime = 0;
+        if (function_exists('microtime')) {
+            $beginDiscoveryTime = microtime(true);
+        }
+
         $binaries = [];
 
         if (defined('WEBPCONVERT_CWEBP_PATH')) {
@@ -581,6 +599,16 @@ class Cwebp extends AbstractConverter
             $moreBinaries = $this->getSuppliedBinaryPathForOS();
             $this->logBinariesFound($moreBinaries);
             $binaries = array_merge($binaries, $moreBinaries);
+        }
+
+        $endDiscoveryTime = 0;
+        if (function_exists('microtime')) {
+            $endDiscoveryTime = microtime(true);
+            $seconds = ($endDiscoveryTime - $beginDiscoveryTime);
+            $this->logLn(
+                'Discovering cwebp binaries took: ' . round(($seconds * 1000)) . ' microseconds'
+            );
+            $this->logLn('');
         }
 
         return array_values(array_unique($binaries));
@@ -693,7 +721,18 @@ class Cwebp extends AbstractConverter
         $this->logLn(
             'Detecting versions of the cwebp binaries found'
         );
+        $beginDetectionTime = 0;
+        if (function_exists('microtime')) {
+            $beginDetectionTime = microtime(true);
+        }
         $versions = $this->detectVersions($binaries);
+        if (function_exists('microtime')) {
+            $endDetectionTime = microtime(true);
+            $seconds = ($endDetectionTime - $beginDetectionTime);
+            $this->logLn(
+                'Detecting versions took: ' . round(($seconds * 1000)) . ' microseconds'
+            );
+        }
 
         $binaryVersions = $versions['detected'];
         if (count($binaryVersions) == 0) {
@@ -715,7 +754,8 @@ class Cwebp extends AbstractConverter
 
         // Execute!
         $this->logLn(
-            'Trying the first of these. If that should fail (it should not), the next will be tried and so on.'
+            'Starting conversion, using the first of these. If that should fail (it should not), ' .
+            'the next will be tried and so on.'
         );
         $useNice = (($this->options['use-nice']) && self::hasNiceSupport());
         $success = false;
