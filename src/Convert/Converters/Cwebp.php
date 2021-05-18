@@ -416,6 +416,14 @@ class Cwebp extends AbstractConverter
             // If available, validate that hash is correct.
 
             if (function_exists('hash_file')) {
+                $this->logLn(
+                    'Checking checksum for supplied binary: ' . $file
+                );
+                $beginHashCheckTime = 0;
+                if (function_exists('microtime')) {
+                    $beginHashCheckTime = microtime(true);
+                }
+
                 $binaryHash = hash_file('sha256', $binaryFile);
 
                 if ($binaryHash != $hash) {
@@ -428,6 +436,15 @@ class Cwebp extends AbstractConverter
                         'bold'
                     );
                     continue;
+                }
+
+                $endHashCheckTime = 0;
+                if (function_exists('microtime')) {
+                    $endHashCheckTime = microtime(true);
+                    $seconds = ($endHashCheckTime - $beginHashCheckTime);
+                    $this->logLn(
+                        'Checksum test took: ' . round(($seconds * 1000)) . ' microseconds'
+                    );
                 }
             }
             $result[] = $binaryFile;
