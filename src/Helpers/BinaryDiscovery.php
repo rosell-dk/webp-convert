@@ -19,7 +19,8 @@ class BinaryDiscovery
         '/usr/bin',
         '/usr/local/bin',
         '/usr/gnu/bin',
-        '/usr/syno/bin'
+        '/usr/syno/bin',
+        '/bin',
     ];
 
     /**
