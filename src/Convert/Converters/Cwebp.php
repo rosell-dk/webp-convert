@@ -82,7 +82,7 @@ class Cwebp extends AbstractConverter
             // PS: Some experience the following error with 1.20:
             // /lib/x86_64-linux-gnu/libm.so.6: version `GLIBC_2.29' not found
             // (see #278)
-            
+
             ['cwebp-120-linux-x86-64', 'f1b7dc03e95535a6b65852de07c0404be4dba078af48369f434ee39b2abf8f4e', '1.2.0'],
 
             // As some experience the an error with 1.20 (see #278), we keep the 1.10
@@ -256,6 +256,8 @@ class Cwebp extends AbstractConverter
         // Comma-separated list of existing metadata to copy from input to output
         if ($versionNum >= 0.3) {
             $cmdOptions[] = '-metadata ' . $options['metadata'];
+        } else {
+            $this->logLn('Ignoring metadata option (requires cwebp 0.3)', 'italic');
         }
 
         // preset. Appears first in the list as recommended in the docs
@@ -297,15 +299,10 @@ class Cwebp extends AbstractConverter
         // Near-lossles
         if ($options['near-lossless'] !== 100) {
             if ($versionNum < 0.5) {
-                $this->logLn(
-                    'The near-lossless option is not supported on this (rather old) version of cwebp' .
-                        '- skipping it.',
-                    'italic'
-                );
+                $this->logLn('Ignoring near-lossless option (requires cwebp 0.5)', 'italic');
             } else {
                 // We only let near_lossless have effect when encoding is set to "lossless"
                 // otherwise encoding=auto would not work as expected
-
                 if ($options['encoding'] == 'lossless') {
                     $cmdOptions[] = '-near_lossless ' . $options['near-lossless'];
                 } else {
@@ -322,11 +319,14 @@ class Cwebp extends AbstractConverter
         }
 
         // SharpYUV
-        if ($versionNum >= 0.6) {  // #284
-            if ($options['sharp-yuv'] === true) {
+        if ($options['sharp-yuv'] === true) {
+            if ($versionNum >= 0.6) {  // #284
                 $cmdOptions[] = '-sharp_yuv';
+            } else {
+                $this->logLn('Ignoring sharp-yuv option (requires cwebp 0.6)', 'italic');
             }
         }
+
 
         // Built-in method option
         $cmdOptions[] = '-m ' . strval($options['method']);
