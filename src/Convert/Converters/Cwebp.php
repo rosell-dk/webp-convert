@@ -45,7 +45,8 @@ class Cwebp extends AbstractConverter
             new BooleanOption('try-cwebp', true),
             new BooleanOption('try-common-system-paths', true),
             new BooleanOption('try-discovering-cwebp', true),
-            new BooleanOption('try-supplied-binary-for-os', true)
+            new BooleanOption('try-supplied-binary-for-os', true),
+            new StringOption('skip-these-precompiled-binaries', '')
         ];
     }
 
@@ -81,6 +82,7 @@ class Cwebp extends AbstractConverter
             // PS: Some experience the following error with 1.20:
             // /lib/x86_64-linux-gnu/libm.so.6: version `GLIBC_2.29' not found
             // (see #278)
+            
             ['cwebp-120-linux-x86-64', 'f1b7dc03e95535a6b65852de07c0404be4dba078af48369f434ee39b2abf8f4e', '1.2.0'],
 
             // As some experience the an error with 1.20 (see #278), we keep the 1.10
@@ -371,10 +373,7 @@ class Cwebp extends AbstractConverter
             $this->logLn(
                 'Checking checksum for supplied binary: ' . $binaryFile
             );
-            $beginHashCheckTime = 0;
-            if (function_exists('microtime')) {
-                $beginHashCheckTime = microtime(true);
-            }
+            $startHashCheckTime = self::startTimer();
 
             $binaryHash = hash_file('sha256', $binaryFile);
 
@@ -391,14 +390,7 @@ class Cwebp extends AbstractConverter
                 ;
             }
 
-            $endHashCheckTime = 0;
-            if (function_exists('microtime')) {
-                $endHashCheckTime = microtime(true);
-                $seconds = ($endHashCheckTime - $beginHashCheckTime);
-                $this->logLn(
-                    'Checksum test took: ' . round(($seconds * 1000)) . ' microseconds'
-                );
-            }
+            $this->logTimeSpent($startHashCheckTime, 'Checksum test took: ');
         }
         return true;
     }
@@ -431,6 +423,10 @@ class Cwebp extends AbstractConverter
             $this->logLn('We do. We in fact have ' . count($files));
         }
 
+        $skipThese = explode(',', $this->options['skip-these-precompiled-binaries']);
+
+        //$this->logLn('However, skipping' . print_r($skipThese, true));
+
         foreach ($files as $i => list($file, $hash, $version)) {
             //$file = $info[0];
             //$hash = $info[1];
@@ -445,6 +441,11 @@ class Cwebp extends AbstractConverter
                 $this->logLn('Supplied binary not found! It ought to be here:' . $binaryFile, 'italic');
                 return false;
             }*/
+            if (in_array($file, $skipThese)) {
+                $this->logLn('Skipped: ' . $file . ' (was told to in the "skip-these-precompiled-binaries" option)');
+                continue;
+            }
+
 
             $realPathResult = realpath($binaryFile);
             if ($realPathResult === false) {
@@ -453,7 +454,7 @@ class Cwebp extends AbstractConverter
             }
             $binaryFile = $realPathResult;
             $filesFound[] = $realPathResult;
-            $info[] = [$realPathResult, $hash, $version];
+            $info[] = [$realPathResult, $hash, $version, $file];
         }
         return [$filesFound, $info];
     }
@@ -670,9 +671,7 @@ class Cwebp extends AbstractConverter
             //$binaries = array_merge($binaries, $moreBinaries);
         }
 
-        if (function_exists('microtime')) {
-            $this->logTimeSpent($startDiscoveryTime, 'Discovering cwebp binaries took: ');
-        }
+        $this->logTimeSpent($startDiscoveryTime, 'Discovering cwebp binaries took: ');
         $this->logLn('');
 
         return [array_values(array_unique($binaries)), $suppliedBinariesInfo];
@@ -795,9 +794,6 @@ class Cwebp extends AbstractConverter
                 (count($suppliedBinaries) > 0 ? ' (except supplied binaries)' : '.')
             );
             $startDetectionTime = self::startTimer();
-            if (function_exists('microtime')) {
-                $beginDetectionTime = microtime(true);
-            }
             $versions = $this->detectVersions($foundBinaries);
             $detectedVersions = $versions['detected'];
 
@@ -806,11 +802,13 @@ class Cwebp extends AbstractConverter
 
         //$suppliedVersions = [];
         $suppliedBinariesHash = [];
+        $suppliedBinariesFilename = [];
 
         $binaryVersions = $detectedVersions;
-        foreach ($suppliedBinariesInfo[1] as list($path, $hash, $version)) {
+        foreach ($suppliedBinariesInfo[1] as list($path, $hash, $version, $filename)) {
             $binaryVersions[$path] = $version;
             $suppliedBinariesHash[$path] = $hash;
+            $suppliedBinariesFilename[$path] = $filename;
         }
 
         //$binaryVersions = array_merge($detectedVersions, $suppliedBinariesInfo);
@@ -853,6 +851,13 @@ class Cwebp extends AbstractConverter
             if ($this->tryCwebpBinary($binary, $version, $useNice)) {
                 $success = true;
                 break;
+            } else {
+                if (isset($suppliedBinariesFilename[$binary])) {
+                    $this->logLn(
+                        'Note: You can prevent trying this precompiled binary, by setting the ' .
+                        '"skip-these-precompiled-binaries" option to "' . $suppliedBinariesFilename[$binary] . '"'
+                    );
+                }
             }
         }
 

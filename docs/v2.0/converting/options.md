@@ -77,6 +77,15 @@ Supported by: cwebp
 ```
 If set, the converter will try the precompiled cwebp binary that are located in `src/Convert/Converters/Binaries`, for the current OS. The binaries are hash-checked before executed.
 
+### `cwebp-skip-these-precompiled-binaries`
+```
+Type:         string
+Default:      ''
+Supported by: cwebp
+```
+The precompiled binaries from google have dependencies, and they are different. This means that some of them works  on some systems, others on others. For this reason, several precompiled binaries are shipped with the library - we want it to simply work on as many systems as possible. Of course, the binary with the highest version number is tried first. But if it doesn't work, time has been wasted running an executable that doesn't work, and validating the hash before running it. To avoid this, use this option to bypass precompiled binaries that you know doesn't work on your current system. You pass in the filenames (comma separated), ie "cwebp-120-linux-x86-64,cwebp-110-linux-x86-64". In order to see if time is wasted on a supplied binary, that doesn't work, check the conversion log. You can also get info about the filenames of the binaries in the conversion log. Instructions on viewing the conversion log are available [here](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#insights-to-the-process).
+
+
 ### `default-quality` (DEPRECATED)
 ```
 Type:          integer (0-100)
