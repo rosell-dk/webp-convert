@@ -26,7 +26,8 @@ Type:         boolean
 Default:      true
 Supported by: all
 ```
-Limits the quality to be no more than that of the jpeg. The option is only relevant when converting jpegs to lossy webp. To be functional, webp-convert needs to be able to detect the quality of the jpeg, which requires ImageMagick or GraphicsMagick. Read about the option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality).
+Limits the quality to be no more than that of the jpeg. The option is only relevant when converting jpegs to lossy webp. To be functional, webp-convert needs to be able to detect the quality of the jpeg, which requires ImageMagick or GraphicsMagick. Read about the option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality). In 2.7.0, it will become possible to adjust the limit with a new option. I'm currently debating with myself how this should work. Your comments and opinions would be appreciated - [here](https://github.com/rosell-dk/webp-convert/issues/289)
+
 
 ### `cwebp-command-line-options`
 ```
@@ -58,7 +59,7 @@ Type:         boolean
 Default:      true
 Supported by: cwebp
 ```
-If set, the converter will try the a plain "cwebp" command (without specifying a path).
+If set, the converter will try executing cwebp with a plain "cwebp" command (without specifying a path).
 
 ### `try-discovering-cwebp`
 ```
@@ -84,7 +85,6 @@ Default:      ''
 Supported by: cwebp
 ```
 The precompiled binaries from google have dependencies, and they are different. This means that some of them works  on some systems, others on others. For this reason, several precompiled binaries are shipped with the library - we want it to simply work on as many systems as possible. Of course, the binary with the highest version number is tried first. But if it doesn't work, time has been wasted running an executable that doesn't work, and validating the hash before running it. To avoid this, use this option to bypass precompiled binaries that you know doesn't work on your current system. You pass in the filenames (comma separated), ie "cwebp-120-linux-x86-64,cwebp-110-linux-x86-64". In order to see if time is wasted on a supplied binary, that doesn't work, check the conversion log. You can also get info about the filenames of the binaries in the conversion log. Instructions on viewing the conversion log are available [here](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#insights-to-the-process).
-
 
 ### `default-quality` (DEPRECATED)
 ```
