@@ -35,6 +35,9 @@ class Option
     /** @var boolean  Whether the option has been deprecated */
     protected $deprecated = false;
 
+    /** @var string  Help text */
+    protected $helpText = '';
+
 
     /**
      * Constructor.
@@ -154,6 +157,8 @@ class Option
     }
 
 
+    /*  POST-PONED till 2.7.0
+
     public function getDefinition()
     {
         $obj = [
@@ -161,10 +166,11 @@ class Option
           'type' => $this->typeId,
           'allowed-value-types' => $this->allowedValueTypes,
           'default' => $this->defaultValue,
+          'help-text' => $this->helpText,
         ];
         if ($this->deprecated) {
             $obj['deprecated'] = true;
         }
         return $obj;
-    }
+    }*/
 }
