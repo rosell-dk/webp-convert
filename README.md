@@ -129,7 +129,7 @@ Bread on the table don't come for free, even though this library does, and alway
 - [Become a backer or sponsor on Patreon](https://www.patreon.com/rosell).
 - [Buy me a Coffee](https://ko-fi.com/rosell)
 
-## Supporters ==
+## Supporters
 *Persons currently backing the project via patreon - Thanks!*
 
 - Max Kreminsky
