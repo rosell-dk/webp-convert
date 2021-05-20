@@ -156,6 +156,26 @@ class Option
         return print_r($this->getValue(), true);
     }
 
+    /**
+     * Set help text for the option
+     *
+     * @param  string  $helpText  The help text
+     * @return  void
+     */
+    public function setHelpText($helpText)
+    {
+        $this->helpText = $helpText;
+    }
+
+    /**
+     * Get help text for the option
+     *
+     * @return  string  $helpText  The help text
+     */
+    public function getHelpText()
+    {
+        return $this->helpText;
+    }
 
     /*  POST-PONED till 2.7.0
 

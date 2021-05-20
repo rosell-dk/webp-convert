@@ -41,4 +41,10 @@ class IntegerOrNullOption extends IntegerOption
         }
         return parent::getValueForPrint();
     }
+
+    public function getDefinition()
+    {
+        $obj = parent::getDefinition();
+        return $obj;
+    }
 }

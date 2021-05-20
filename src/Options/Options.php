@@ -168,7 +168,19 @@ class Options
         }
     }
 
-
+    /**
+     * Set help texts on multiple options
+     *
+     * @param  object  $helpTexts      Hash of helptexts indexed by option id
+     */
+    public function setHelpTexts($helpTexts)
+    {
+        foreach ($this->options as $option) {
+            if (array_key_exists($option->getId(), $helpTexts)) {
+                $option->setHelpText($helpTexts[$option->getId()]);
+            }
+        }
+    }
 
 /*  POST-PONED till 2.7.0
     public function getDefinitions($deprecatedToo = false)

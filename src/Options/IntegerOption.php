@@ -65,4 +65,12 @@ class IntegerOption extends Option
         $this->checkType('integer');
         $this->checkMinMax();
     }
+
+    public function getDefinition()
+    {
+        $obj = parent::getDefinition();
+        $obj['min'] = $this->minValue;
+        $obj['max'] = $this->maxValue;
+        return $obj;
+    }
 }

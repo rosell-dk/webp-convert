@@ -31,11 +31,11 @@ class ArrayOption extends Option
             return parent::getValueForPrint();
         }
     }
-/*
+
     public function getDefinition()
     {
         $obj = parent::getDefinition();
         $obj['sensitive'] = false;
         return $obj;
-    }*/
+    }
 }
