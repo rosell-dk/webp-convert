@@ -177,8 +177,6 @@ class Option
         return $this->helpText;
     }
 
-    /*  POST-PONED till 2.7.0
-
     public function getDefinition()
     {
         $obj = [
@@ -192,5 +190,5 @@ class Option
             $obj['deprecated'] = true;
         }
         return $obj;
-    }*/
+    }
 }

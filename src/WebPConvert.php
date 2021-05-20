@@ -100,7 +100,6 @@ class WebPConvert
      *
      *  @return  array  Array of options definitions - ready to be json encoded, or whatever
      */
-     /*  POST-PONED till 2.7.0
     public static function getConverterOptionDefinitions(
         $imageType = 'png',
         $returnGeneral = true,
@@ -116,5 +115,5 @@ class WebPConvert
             $result[$id] = $optionDefinitions;
         }
         return $result;
-    }*/
+    }
 }

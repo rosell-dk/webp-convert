@@ -182,7 +182,6 @@ class Options
         }
     }
 
-/*  POST-PONED till 2.7.0
     public function getDefinitions($deprecatedToo = false)
     {
         $defs = [];
@@ -192,5 +191,5 @@ class Options
             }
         }
         return $defs;
-    }*/
+    }
 }
