@@ -73,7 +73,7 @@ class Cwebp extends AbstractConverter
     /**
     *  Get help texts for the options for this converter
      *
-     *  @return  object  Hash of helptexts indexed by option id
+     *  @return  array  Hash of helptexts indexed by option id
      */
     public function getOptionRules($imageType)
     {

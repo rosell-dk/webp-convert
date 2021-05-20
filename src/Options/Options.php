@@ -171,7 +171,7 @@ class Options
     /**
      * Set help texts on multiple options
      *
-     * @param  object  $helpTexts      Hash of helptexts indexed by option id
+     * @param  array  $helpTexts      Hash of helptexts indexed by option id
      */
     public function setHelpTexts($helpTexts)
     {
