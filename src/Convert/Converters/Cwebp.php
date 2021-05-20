@@ -40,15 +40,18 @@ class Cwebp extends AbstractConverter
     public function getUniqueOptions($imageType)
     {
         return [
-            new StringOption('command-line-options', ''),
-            new SensitiveStringOption('rel-path-to-precompiled-binaries', './Binaries'),
             new BooleanOption('try-cwebp', true),
             new BooleanOption('try-common-system-paths', true),
             new BooleanOption('try-discovering-cwebp', true),
             new BooleanOption('try-supplied-binary-for-os', true),
+            new StringOption('command-line-options', ''),
+            new SensitiveStringOption('rel-path-to-precompiled-binaries', './Binaries'),
             new StringOption('skip-these-precompiled-binaries', '')
         ];
     }
+
+
+
 
     // OS-specific binaries included in this library, along with hashes
     // If other binaries are going to be added, notice that the first argument is what PHP_OS returns.

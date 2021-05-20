@@ -64,6 +64,7 @@ trait OptionsTrait
         return [
             new IntegerOption('alpha-quality', 85, 0, 100),
             new BooleanOption('auto-limit', true),
+            //new IntegerOption('auto-limit-adjustment', 5, -100, 100),
             new BooleanOption('auto-filter', false),
             $defaultQualityOption,
             new StringOption('encoding', 'auto', ['lossy', 'lossless', 'auto']),
@@ -305,91 +306,6 @@ trait OptionsTrait
     protected function getUnsupportedDefaultOptions()
     {
         return [];
-    }
-
-    /**
-     *  Get unique option definitions.
-     *
-     *  Gets definitions of the converters "unique" options (that is, those options that
-     *  are not general). It was added in order to give GUI's a way to automatically adjust
-     *  their setting screens.
-     *
-     *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
-     *
-     *  @return  array  Array of options definitions - ready to be json encoded, or whatever
-     */
-    public function getUniqueOptionDefinitions($imageType = 'png')
-    {
-        $uniqueOptions = new Options();
-        $uniqueOptions->addOptions(... $this->getUniqueOptions($imageType));
-        return $uniqueOptions->getDefinitions();
-    }
-
-    public function getSupportedGeneralOptions($imageType = 'png')
-    {
-        $unsupportedGeneral = $this->getUnsupportedDefaultOptions();
-        $generalOptionsArr = $this->getGeneralOptions($imageType);
-        $supportedIds = [];
-        foreach ($generalOptionsArr as $i => $option) {
-            if (in_array($option->getId(), $unsupportedGeneral)) {
-                unset($generalOptionsArr[$i]);
-            }
-        }
-        return $generalOptionsArr;
-    }
-
-    /**
-     *  Get general option definitions.
-     *
-     *  Gets definitions of the converters "general" options. (that is, those options that
-     *  It was added in order to give GUI's a way to automatically adjust their setting screens.
-     *
-     *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
-     *
-     *  @return  array  Array of options definitions - ready to be json encoded, or whatever
-     */
-    public function getSupportedGeneralOptionDefinitions($imageType = 'png')
-    {
-        $generalOptions = new Options();
-        $generalOptions->addOptions(... $this->getSupportedGeneralOptions($imageType));
-        return $generalOptions->getDefinitions();
-    }
-
-    public function getSupportedGeneralOptionIds()
-    {
-        $supportedGeneralOptions = $this->getSupportedGeneralOptions();
-        $supportedGeneralIds = [];
-        foreach ($supportedGeneralOptions as $option) {
-            $supportedGeneralIds[] = $option->getId();
-        }
-        return $supportedGeneralIds;
-    }
-
-    /**
-     *  Get option definitions.
-     *
-     *  Added in order to give GUI's a way to automatically adjust their setting screens.
-     *
-     *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
-     *  @param   bool     $returnGeneral              Whether the general setting definitions should be returned
-     *  @param   bool     $returnGeneralSupport       Whether the ids of supported/unsupported general options
-     *                                                should be returned
-     *
-     *  @return  array  Array of options definitions - ready to be json encoded, or whatever
-     */
-    public function getOptionDefinitions($imageType = 'png', $returnGeneral = true, $returnGeneralSupport = true)
-    {
-        $result = [
-            'unique' => $this->getUniqueOptionDefinitions($imageType),
-        ];
-        if ($returnGeneral) {
-            $result['general'] = $this->getSupportedGeneralOptionDefinitions($imageType);
-        }
-        if ($returnGeneralSupport) {
-            $result['supported-general'] = $this->getSupportedGeneralOptionIds();
-            $result['unsupported-general'] = $this->getUnsupportedDefaultOptions();
-        }
-        return $result;
     }
 
 /*

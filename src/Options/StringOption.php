@@ -42,12 +42,4 @@ class StringOption extends Option
     {
         return '"' . $this->getValue() . '"';
     }
-
-    public function getDefinition()
-    {
-        $obj = parent::getDefinition();
-        $obj['sensitive'] = false;
-        $obj['options'] = $this->allowedValues;
-        return $obj;
-    }
 }
