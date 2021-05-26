@@ -16,6 +16,7 @@ use WebPConvert\Options\MetadataOption;
 use WebPConvert\Options\Options;
 use WebPConvert\Options\StringOption;
 use WebPConvert\Options\QualityOption;
+use WebPConvert\Options\OptionFactory;
 
 /**
  * Trait for handling options
@@ -61,6 +62,37 @@ trait OptionsTrait
         $maxQualityOption = new IntegerOption('max-quality', 85, 0, 100);
         $maxQualityOption->markDeprecated();
 
+        return OptionFactory::createOptions([
+            ['encoding', 'string', ['default' => 'auto', 'allowedValues' => ['lossy', 'lossless', 'auto']]],
+            ['quality', 'int', ['default' => ($isPng ? 85 : 75), 'min' => 0, 'max' => 100]],
+            ['auto-limit', 'boolean', ['default' => true]],
+            ['near-lossless', 'int', ['default' => 60, 'min' => 0, 'max' => 100]],
+            ['alpha-quality', 'int', ['default' => 85, 'min' => 0, 'max' => 100]],
+            ['metadata', 'string', ['default' => 'none']],
+            ['method', 'int', ['default' => 6, 'min' => 0, 'max' => 6]],
+            ['sharp-yuv', 'boolean', ['default' => true]],
+            ['auto-filter', 'boolean', ['default' => false]],
+            ['low-memory', 'boolean', ['default' => false]],
+            ['preset', 'string', [
+                'default' => 'none',
+                'allowedValues' => ['none', 'default', 'photo', 'picture', 'drawing', 'icon', 'text']]
+            ],
+            ['size-in-percentage', 'int', ['default' => null, 'min' => 0, 'max' => 100, 'allow-null' => true]],
+            ['skip', 'boolean', ['default' => false]],
+            ['log-call-arguments', 'boolean', ['default' => false]],
+            ['default-quality', 'int', [
+                'default' => ($isPng ? 85 : 75),
+                'min' => 0,
+                'max' => 100,
+                'deprecated' => true]
+            ],
+            ['max-quality', 'int', ['default' => 85, 'min' => 0, 'max' => 100, 'deprecated' => true]],
+            // TODO: use-nice should not be a "general" option
+            ['use-nice', 'boolean', ['default' => false]],
+            ['jpeg', 'array', ['default' => []]],
+            ['png', 'array', ['default' => []]],
+        ]);
+/*
         return [
             new IntegerOption('alpha-quality', 85, 0, 100),
             new BooleanOption('auto-limit', true),
@@ -82,6 +114,47 @@ trait OptionsTrait
             new BooleanOption('use-nice', false),
             new ArrayOption('jpeg', []),
             new ArrayOption('png', [])
+        ];*/
+    }
+
+    /**
+     *  Get ui definitions for the unique options of this converter
+     *
+     *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
+     *
+     *  @return  array  Hash of objects indexed by option id
+     */
+    public function getUIForGeneralOptions($imageType)
+    {
+        return [
+            'alpha-quality' => [
+                'type' => 'input',
+                'label' => 'Alpha quality',
+                'help-text' => 'Quality of alpha channel. ' .
+                    'Only relevant for lossy encoding and only relevant for images' .
+                    'with transparency',
+                "display-condition" => [
+                    'type' => 'not-equals',
+                    'arg1' => [
+                        'type' => 'option-value',
+                        'option-id' => 'encoding'
+                    ],
+                    'arg2' => 'lossy'
+                ],
+            ],
+            'encoding' => [
+                'type' => 'select',
+                'label' => 'Encoding',
+                'options' => ['auto', 'lossy', 'lossless'],
+                'optionLabels' => [
+                    'auto' => 'Auto',
+                    'lossy' => 'Lossy',
+                    'lossless' => 'Lossless'
+                ],
+                'help-text' => 'Set encoding for the webp. ' .
+                    'If you choose "auto", webp-convert will ' .
+                    'convert to both lossy and lossless and pick the smallest result',
+            ],
         ];
     }
 
@@ -324,6 +397,13 @@ trait OptionsTrait
         $uniqueOptions = new Options();
         $uniqueOptions->addOptions(... $this->getUniqueOptions($imageType));
         return $uniqueOptions->getDefinitions();
+    }
+
+    public function getGeneralOptionDefinitions($imageType = 'png')
+    {
+        $generalOptions = new Options();
+        $generalOptions->addOptions(... $this->getGeneralOptions($imageType));
+        return $generalOptions->getDefinitions();
     }
 
     public function getSupportedGeneralOptions($imageType = 'png')

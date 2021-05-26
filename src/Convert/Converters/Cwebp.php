@@ -51,6 +51,30 @@ class Cwebp extends AbstractConverter
     }
 
     /**
+    *  Get ui definitions for the unique options of this converter
+     *
+     *  @return  array  Hash of objects indexed by option id
+     */
+    public function getUIForUniqueOptions($imageType)
+    {
+        return [
+            'try-cwebp' => [
+              'type' => 'checkbox',
+              'label' => 'Try plain cwebp command',
+              'help-text' => 'If set, the converter will try executing cwebp with a plain "cwebp"' .
+                  ' command (without specifying a path).'
+            ],
+            /*
+            'try-common-system-paths' => '',
+            'try-discovering-cwebp' => '',
+            'try-supplied-binary-for-os' => '',
+            'command-line-options' => '',
+            'rel-path-to-precompiled-binaries' => '',
+            'skip-these-precompiled-binaries' => '',*/
+        ];
+    }
+
+    /**
     *  Get help texts for the options for this converter
      *
      *  @return  array  Hash of helptexts indexed by option id

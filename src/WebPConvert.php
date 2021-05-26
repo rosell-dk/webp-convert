@@ -108,9 +108,17 @@ class WebPConvert
 
         $ids = self::getConverterIds();
         $result = [];
+
+        $ewww = ConverterFactory::makeConverter('ewww', '', '');
+
+        $result['general'] = $ewww->getGeneralOptionDefinitions();
+        //getUIForGeneralOptions
+        //$generalOption->addOptions(... $this->getGeneralOptions($imageType));
+
         foreach ($ids as $id) {
             $c = ConverterFactory::makeConverter($id, '', '');
-            $optionDefinitions = $c->getOptionDefinitions($imageType, $returnGeneral, $returnGeneralSupport);
+            //$optionDefinitions = $c->getOptionDefinitions($imageType, $returnGeneral, $returnGeneralSupport);
+            $optionDefinitions = $c->getUniqueOptionDefinitions($imageType);
 
             $result[$id] = $optionDefinitions;
         }
