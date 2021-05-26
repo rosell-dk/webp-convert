@@ -105,7 +105,7 @@ Type:          string  ("lossy" | "lossless" | "auto")
 Default:       "auto"
 Supported by:  cwebp, vips, ffmpeg, imagick, gmagick, imagemagick and graphicsmagick  (gd always uses lossy encoding, ewww uses lossless for pngs and lossy for jpegs)
 ```
-Read about this option in the ["lossy/lossless" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-selecting-between-losslesslossy-encoding).<br><br>
+Set encoding for the webp. If you choose "auto", webp-convert will convert to both lossy and lossless and pick the smallest result. Read more about this option in the ["lossy/lossless" section in the introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-selecting-between-losslesslossy-encoding).<br><br>
 
 ### `ewww-api-key`
 ```
