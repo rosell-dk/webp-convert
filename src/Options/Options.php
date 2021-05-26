@@ -182,6 +182,19 @@ class Options
         }
     }
 
+    /**
+     * Set ui definitions on multiple options
+     *
+     * @param  array  $uis      Hash of ui definitions indexed by option id
+     */
+    public function setUI($uis)
+    {
+        foreach ($this->options as $option) {
+            if (array_key_exists($option->getId(), $uis)) {
+                $option->setUI($uis[$option->getId()]);
+            }
+        }
+    }
     public function getDefinitions($deprecatedToo = false)
     {
         $defs = [];

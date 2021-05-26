@@ -2,16 +2,11 @@
 
 namespace WebPConvert\Options;
 
-use WebPConvert\Options\Option;
-use WebPConvert\Options\Exceptions\InvalidOptionValueException;
-
 use WebPConvert\Options\ArrayOption;
 use WebPConvert\Options\BooleanOption;
-use WebPConvert\Options\GhostOption;
 use WebPConvert\Options\IntegerOption;
 use WebPConvert\Options\IntegerOrNullOption;
 use WebPConvert\Options\MetadataOption;
-use WebPConvert\Options\Options;
 use WebPConvert\Options\StringOption;
 use WebPConvert\Options\QualityOption;
 
@@ -35,13 +30,17 @@ class OptionFactory
                 if (isset($def['allow-null']) && $def['allow-null']) {
                     $option = new IntegerOrNullOption($optionName, $def['default'], $minValue, $maxValue);
                 } else {
-                    $option = new IntegerOption($optionName, $def['default'], $minValue, $maxValue);
+                    if ($optionName == 'quality') {
+                        $option = new QualityOption($optionName, $def['default']);
+                    } else {
+                        $option = new IntegerOption($optionName, $def['default'], $minValue, $maxValue);
+                    }
                 }
                 break;
 
             case 'string':
                 if ($optionName == 'metadata') {
-                    $option = new MetadataOption($optionName, $def['default']);                  
+                    $option = new MetadataOption($optionName, $def['default']);
                 } else {
                     $allowedValues = (isset($def['allowedValues']) ? $def['allowedValues'] : null);
                     $option = new StringOption($optionName, $def['default'], $allowedValues);
@@ -50,6 +49,10 @@ class OptionFactory
 
             case 'boolean':
                 $option = new BooleanOption($optionName, $def['default']);
+                break;
+
+            case 'array':
+                $option = new ArrayOption($optionName, $def['default']);
                 break;
         }
 

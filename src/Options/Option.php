@@ -38,6 +38,8 @@ class Option
     /** @var string  Help text */
     protected $helpText = '';
 
+    /** @var array  UI Def */
+    protected $ui;
 
     /**
      * Constructor.
@@ -177,6 +179,27 @@ class Option
         return $this->helpText;
     }
 
+    /**
+     * Set ui definition for the option
+     *
+     * @param  array  $ui  The UI def
+     * @return  void
+     */
+    public function setUI($ui)
+    {
+        $this->ui = $ui;
+    }
+
+    /**
+     * Get ui definition for the option
+     *
+     * @return  array  $ui  The UI def
+     */
+    public function getUI()
+    {
+        return $this->ui;
+    }
+
     public function getDefinition()
     {
         $obj = [
@@ -184,7 +207,7 @@ class Option
           'type' => $this->typeId,
           'allowed-value-types' => $this->allowedValueTypes,
           'default' => $this->defaultValue,
-          'help-text' => $this->helpText,
+          'ui' => $this->ui,
         ];
         if ($this->deprecated) {
             $obj['deprecated'] = true;

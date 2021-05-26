@@ -7,15 +7,8 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Options\Exceptions\InvalidOptionValueException;
 use WebPConvert\Options\Exceptions\InvalidOptionTypeException;
 
-use WebPConvert\Options\ArrayOption;
-use WebPConvert\Options\BooleanOption;
 use WebPConvert\Options\GhostOption;
-use WebPConvert\Options\IntegerOption;
-use WebPConvert\Options\IntegerOrNullOption;
-use WebPConvert\Options\MetadataOption;
 use WebPConvert\Options\Options;
-use WebPConvert\Options\StringOption;
-use WebPConvert\Options\QualityOption;
 use WebPConvert\Options\OptionFactory;
 
 /**
@@ -56,12 +49,6 @@ trait OptionsTrait
     {
         $isPng = ($imageType == 'png');
 
-        $defaultQualityOption = new IntegerOption('default-quality', ($isPng ? 85 : 75), 0, 100);
-        $defaultQualityOption->markDeprecated();
-
-        $maxQualityOption = new IntegerOption('max-quality', 85, 0, 100);
-        $maxQualityOption->markDeprecated();
-
         return OptionFactory::createOptions([
             ['encoding', 'string', ['default' => 'auto', 'allowedValues' => ['lossy', 'lossless', 'auto']]],
             ['quality', 'int', ['default' => ($isPng ? 85 : 75), 'min' => 0, 'max' => 100]],
@@ -93,6 +80,12 @@ trait OptionsTrait
             ['png', 'array', ['default' => []]],
         ]);
 /*
+        $defaultQualityOption = new IntegerOption('default-quality', ($isPng ? 85 : 75), 0, 100);
+        $defaultQualityOption->markDeprecated();
+
+        $maxQualityOption = new IntegerOption('max-quality', 85, 0, 100);
+        $maxQualityOption->markDeprecated();
+
         return [
             new IntegerOption('alpha-quality', 85, 0, 100),
             new BooleanOption('auto-limit', true),
@@ -403,6 +396,7 @@ trait OptionsTrait
     {
         $generalOptions = new Options();
         $generalOptions->addOptions(... $this->getGeneralOptions($imageType));
+        $generalOptions->setUI($this->getUIForGeneralOptions($imageType));
         return $generalOptions->getDefinitions();
     }
 
