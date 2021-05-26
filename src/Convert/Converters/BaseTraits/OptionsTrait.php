@@ -128,11 +128,13 @@ trait OptionsTrait
                     'with transparency',
                 "display-condition" => [
                     'type' => 'not-equals',
-                    'arg1' => [
-                        'type' => 'option-value',
-                        'option-id' => 'encoding'
+                    'args' => [
+                        [
+                            'type' => 'option-value',
+                            'args' => ['encoding']
+                        ],
+                        'lossy'
                     ],
-                    'arg2' => 'lossy'
                 ],
             ],
             'encoding' => [
