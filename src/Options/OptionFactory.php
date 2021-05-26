@@ -40,8 +40,12 @@ class OptionFactory
                 break;
 
             case 'string':
-                $allowedValues = (isset($def['allowedValues']) ? $def['allowedValues'] : null);
-                $option = new StringOption($optionName, $def['default'], $allowedValues);
+                if ($optionName == 'metadata') {
+                    $option = new MetadataOption($optionName, $def['default']);                  
+                } else {
+                    $allowedValues = (isset($def['allowedValues']) ? $def['allowedValues'] : null);
+                    $option = new StringOption($optionName, $def['default'], $allowedValues);
+                }
                 break;
 
             case 'boolean':
