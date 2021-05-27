@@ -83,8 +83,8 @@ trait OptionsTrait
             ['encoding', 'string', ['default' => 'auto', 'allowedValues' => ['lossy', 'lossless', 'auto']]],
             ['quality', 'int', ['default' => ($isPng ? 85 : 75), 'min' => 0, 'max' => 100]],
             ['auto-limit', 'boolean', ['default' => true]],
-            ['near-lossless', 'int', ['default' => 60, 'min' => 0, 'max' => 100]],
             ['alpha-quality', 'int', ['default' => 85, 'min' => 0, 'max' => 100]],
+            ['near-lossless', 'int', ['default' => 60, 'min' => 0, 'max' => 100]],
             ['metadata', 'string', ['default' => 'none']],
             ['method', 'int', ['default' => 6, 'min' => 0, 'max' => 6]],
             ['sharp-yuv', 'boolean', ['default' => true]],
@@ -132,14 +132,29 @@ trait OptionsTrait
                     'Read more [here](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/' .
                     'converting/introduction-for-converting.md#alpha-quality)',
                 'display' => [
-                    'function' => 'notEquals',
+                    'function' => 'and',
                     'args' => [
                         [
-                            'function' => 'state',
-                            'args' => ['option', 'encoding']
+                            'function' => 'notEquals',
+                            'args' => [
+                                [
+                                    'function' => 'state',
+                                    'args' => ['option', 'encoding']
+                                ],
+                                'lossless'
+                            ]
                         ],
-                        'lossy'
-                    ],
+                        [
+                            'function' => 'notEquals',
+                            'args' => [
+                                [
+                                    'function' => 'state',
+                                    'args' => ['imageType']
+                                ],
+                                'jpeg'
+                            ]
+                        ]
+                    ]
                 ],
             ],
             'encoding' => [
@@ -209,6 +224,41 @@ trait OptionsTrait
                     ],
                 ],
             ],
+            'metadata' => [
+                'component' => 'multi-select',
+                'label' => 'Metadata',
+                'help-text' =>
+                    'Determines which metadata that should be copied over to the webp. ' .
+                    'Setting it to "all" preserves all metadata, setting it to "none" strips all metadata. ' .
+                    '*cwebp* can take a comma-separated list of which kinds of metadata that should be copied ' .
+                    '(ie "exif,icc"). *gd* will always remove all metadata and *ffmpeg* will always keep all ' .
+                    'metadata. The rest can either strip all or keep all (they will keep all, unless the option ' .
+                    'is set to *none*)',
+                'options' => ['all', 'none', 'exif', 'icc', 'xmp'],
+                'optionLabels' => [
+                    'all' => 'All',
+                    'none' => 'None',
+                    'exif' => 'Exif',
+                    'icc' => 'ICC',
+                    'xmp' => 'XMP'
+                ]
+            ],
+            /*            {
+              "id": "metadata",
+              "type": "string",
+              "default": 'exif',
+              "ui": {
+                "component": "multi-select",
+                "label": "Metadata",
+                "options": ['all', 'none', 'exif', 'icc', 'xmp'],
+                "optionLabels": {
+                  'all': 'All',
+                  'none': 'None',
+                  'exif': 'Exif',
+                  'icc': 'ICC',
+                  'xmp': 'XMP'
+                }
+              },*/
         ];
     }
 
