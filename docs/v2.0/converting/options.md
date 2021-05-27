@@ -214,7 +214,7 @@ Type:          boolean
 Default:       true
 Supported by:  cwebp, vips, gmagick, graphicsmagick, imagick, imagemagick
 ```
-Use more accurate and sharper RGB->YUV conversion if needed. Note that this process is slower than the default 'fast' RGB->YUV conversion. The benefits of using this option is exemplified [here](https://www.ctrl.blog/entry/webp-sharp-yuv.html).
+Better RGB->YUV color conversion (sharper and more accurate) at the expense of a little extra conversion time. Read more [here](https://www.ctrl.blog/entry/webp-sharp-yuv.html).
 
 ### `size-in-percentage`
 ```
