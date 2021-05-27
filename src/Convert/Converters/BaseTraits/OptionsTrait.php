@@ -243,7 +243,22 @@ trait OptionsTrait
                     'xmp' => 'XMP'
                 ]
             ],
-            /*            {
+            'method' => [
+                'component' => 'input',
+                'label' => 'Reduction effort (0-6)',
+                'help-text' =>
+                    'Controls the trade off between encoding speed and the compressed file size and quality. ' .
+                    'Possible values range from 0 to 6. 0 is fastest. 6 results in best quality and compression. ' .
+                    'PS: The option corresponds to the "method" option in libwebp',
+            ],
+            'sharp-yuv' => [
+                'component' => 'checkbox',
+                'label' => 'Sharp YUV',
+                'help-text' =>
+                    'Better RGB->YUV color conversion (sharper and more accurate) at the expense of a little extra ' .
+                    'conversion time. Read more [here](https://www.ctrl.blog/entry/webp-sharp-yuv.html).',
+            ],
+              /*            {
               "id": "metadata",
               "type": "string",
               "default": 'exif',
