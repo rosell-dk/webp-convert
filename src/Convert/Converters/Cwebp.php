@@ -374,8 +374,10 @@ class Cwebp extends AbstractConverter
             if ($versionNum < 0.5) {
                 $this->logLn('Ignoring near-lossless option (requires cwebp 0.5)', 'italic');
             } else {
-                // We only let near_lossless have effect when encoding is set to "lossless"
-                // otherwise encoding=auto would not work as expected
+                // The "-near_lossless" flag triggers lossless encoding. We don't want that to happen,
+                // we want the "encoding" option to be respected, and we need it to be in order for
+                // encoding=auto to work.
+                // So: Only set when "encoding" is set to "lossless"
                 if ($options['encoding'] == 'lossless') {
                     $cmdOptions[] = '-near_lossless ' . $options['near-lossless'];
                 } else {
