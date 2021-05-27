@@ -109,7 +109,6 @@ trait OptionsTrait
             ['jpeg', 'array', ['default' => []]],
             ['png', 'array', ['default' => []]],
         ]);
-
     }
 
     /**
