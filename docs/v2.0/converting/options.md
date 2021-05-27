@@ -161,11 +161,11 @@ This option has been deprecated. See why [here](https://github.com/rosell-dk/web
 
 ### `metadata`
 ```
-Type:          string ("all" | "none" | "exif" | "icc" | "xmp")
+Type:          string ("all" | "none" | "exif" | "icc" | "xmp" | "exif,icc" | "exif,xmp" | "icc,xmp")
 Default:       'none'
-Supported by:  'none' is supported by all. 'all' is supported by all, except *gd* and *ffmpeg*. The rest is only supported by *cwebp*
+Supported by:  Only *cwebp* supports "exif", "icc" and "xmp". *gd* cannot copy metadata. *ffmpeg* always copies metadata. The rest supports "all" and "none" (ewww, gmagick, graphicsmagick, imagick, imagemagick, vips)
 ```
-Only *cwebp* supports all values. *gd* will always remove all metadata. The rest can either strip all or keep all (they will keep all, unless the option is set to *none*).<br><br>
+Determines which metadata that should be copied over to the webp. Setting it to "all" preserves all metadata, setting it to "none" strips all metadata. *cwebp* can take a comma-separated list of which kinds of metadata that should be copied (ie "exif,icc"). *gd* will always remove all metadata and *ffmpeg* will always keep all metadata. The rest can either strip all or keep all (they will keep all, unless the option is set to *none*).<br><br>
 
 ### `method`
 ```
