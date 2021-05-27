@@ -124,9 +124,13 @@ trait OptionsTrait
             'alpha-quality' => [
                 'component' => 'input',
                 'label' => 'Alpha quality',
-                'help-text' => 'Quality of alpha channel. ' .
-                    'Only relevant for lossy encoding and only relevant for images' .
-                    'with transparency',
+                'help-text' =>
+                    'Quality of alpha channel. ' .
+                    'Often, there is no need for high quality transparency layer and in some cases you ' .
+                    'can tweak this all the way down to 10 and save a lot in file size. The option only ' .
+                    'has effect with lossy encoding, and of course only on images with transparency. ' .
+                    'Read more [here](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/' .
+                    'converting/introduction-for-converting.md#alpha-quality)',
                 'display' => [
                     'function' => 'notEquals',
                     'args' => [
@@ -168,11 +172,13 @@ trait OptionsTrait
             ],
             'auto-limit' => [
                 'component' => 'checkbox',
-                'label' => 'Auto limit',
-                'help-text' => 'Limit the quality to be no more than that of the jpeg. ' .
-                    'The option is only relevant when converting jpegs to lossy webp. ' .
-                    'To be functional, webp-convert needs to be able to detect the quality of the jpeg, ' .
-                    'which requires ImageMagick or GraphicsMagick.',
+                'label' => 'Auto-limit',
+                'help-text' =>
+                    'Enable this option to prevent an unnecessarily high quality setting for low ' .
+                    'quality jpegs. You really should enable this. Read more about the feature [here]' .
+                    '(https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/intro' .
+                    'duction-for-converting.md#preventing-unnecessarily-high-quality-setting-for-low-' .
+                    'quality-jpegs).',
                 'display' => [
                     'function' => 'notEquals',
                     'args' => [
@@ -189,11 +195,8 @@ trait OptionsTrait
                 'label' => '"Near lossless" quality',
                 'help-text' =>
                     'This option allows you to get impressively better compression for lossless encoding, with ' .
-                    'minimal impact on visual quality. The result is still lossless (lossless encoding). ' .
-                    'What libwebp does is that it preprocesses the image before encoding it, in order to make ' .
-                    'it better suited for compression. The range is 0 (no preprocessing) to 100 (maximum ' .
-                    'preprocessing). A good compromise would be around 60. The option is ignored when encoding ' .
-                    'is set to lossy. Read more [here](https://github.com/rosell-dk/webp-convert/blob/master/docs' .
+                    'minimal impact on visual quality. The range is 0 (no preprocessing) to 100 (maximum ' .
+                    'preprocessing). Read more [here](https://github.com/rosell-dk/webp-convert/blob/master/docs' .
                     '/v2.0/converting/introduction-for-converting.md#near-lossless).',
                 'display' => [
                     'function' => 'notEquals',

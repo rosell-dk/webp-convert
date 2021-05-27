@@ -148,7 +148,7 @@ As unnecessary large conversions are rarely desirable, this library per default 
 
 Btw, the image above gets compressed to 68 kb with alpha quality set to 100. Surprisingly, it gets slightly larger (70 kb) with alpha quality set to 85. Setting alpha quality to 50 gets it down to merely 35 kb - about half - while still looking great.
 
-You can read more about the alpha-quality option [here](https://developers.google.com/speed/webp/docs/cwebp)
+You can read more about the alpha-quality option [here](https://developers.google.com/speed/webp/docs/cwebp) and [here](https://www.smashingmagazine.com/2018/07/converting-images-to-webp/)
 
 ### Sharp YUV
 libwebp has an overlooked option which improves accuracy for RGB to YUV mapping at the price for longer conversion time. You can control it with the new 'sharp-yuv' option (introduced in webp-convert 2.6.0). Read an appraisal of the option [here](https://www.ctrl.blog/entry/webp-sharp-yuv.html).
