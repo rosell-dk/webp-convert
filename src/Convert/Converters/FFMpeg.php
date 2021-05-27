@@ -29,6 +29,7 @@ class FFMpeg extends AbstractConverter
             'auto-filter',
             'encoding',
             'low-memory',
+            'metadata',
             'near-lossless',
             'preset',
             'sharp-yuv',
