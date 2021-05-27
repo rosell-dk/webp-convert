@@ -49,6 +49,36 @@ trait OptionsTrait
     {
         $isPng = ($imageType == 'png');
 
+        /*
+        $defaultQualityOption = new IntegerOption('default-quality', ($isPng ? 85 : 75), 0, 100);
+        $defaultQualityOption->markDeprecated();
+
+        $maxQualityOption = new IntegerOption('max-quality', 85, 0, 100);
+        $maxQualityOption->markDeprecated();
+
+        return [
+            new IntegerOption('alpha-quality', 85, 0, 100),
+            new BooleanOption('auto-limit', true),
+            //new IntegerOption('auto-limit-adjustment', 5, -100, 100),
+            new BooleanOption('auto-filter', false),
+            $defaultQualityOption,
+            new StringOption('encoding', 'auto', ['lossy', 'lossless', 'auto']),
+            new BooleanOption('low-memory', false),
+            new BooleanOption('log-call-arguments', false),
+            $maxQualityOption,
+            new MetadataOption('metadata', 'none'),
+            new IntegerOption('method', 6, 0, 6),
+            new IntegerOption('near-lossless', 60, 0, 100),
+            new StringOption('preset', 'none', ['none', 'default', 'photo', 'picture', 'drawing', 'icon', 'text']),
+            new QualityOption('quality', ($isPng ? 85 : 75)),
+            new IntegerOrNullOption('size-in-percentage', null, 0, 100),
+            new BooleanOption('sharp-yuv', true),
+            new BooleanOption('skip', false),
+            new BooleanOption('use-nice', false),
+            new ArrayOption('jpeg', []),
+            new ArrayOption('png', [])
+        ];*/
+
         return OptionFactory::createOptions([
             ['encoding', 'string', ['default' => 'auto', 'allowedValues' => ['lossy', 'lossless', 'auto']]],
             ['quality', 'int', ['default' => ($isPng ? 85 : 75), 'min' => 0, 'max' => 100]],
@@ -79,35 +109,7 @@ trait OptionsTrait
             ['jpeg', 'array', ['default' => []]],
             ['png', 'array', ['default' => []]],
         ]);
-/*
-        $defaultQualityOption = new IntegerOption('default-quality', ($isPng ? 85 : 75), 0, 100);
-        $defaultQualityOption->markDeprecated();
 
-        $maxQualityOption = new IntegerOption('max-quality', 85, 0, 100);
-        $maxQualityOption->markDeprecated();
-
-        return [
-            new IntegerOption('alpha-quality', 85, 0, 100),
-            new BooleanOption('auto-limit', true),
-            //new IntegerOption('auto-limit-adjustment', 5, -100, 100),
-            new BooleanOption('auto-filter', false),
-            $defaultQualityOption,
-            new StringOption('encoding', 'auto', ['lossy', 'lossless', 'auto']),
-            new BooleanOption('low-memory', false),
-            new BooleanOption('log-call-arguments', false),
-            $maxQualityOption,
-            new MetadataOption('metadata', 'none'),
-            new IntegerOption('method', 6, 0, 6),
-            new IntegerOption('near-lossless', 60, 0, 100),
-            new StringOption('preset', 'none', ['none', 'default', 'photo', 'picture', 'drawing', 'icon', 'text']),
-            new QualityOption('quality', ($isPng ? 85 : 75)),
-            new IntegerOrNullOption('size-in-percentage', null, 0, 100),
-            new BooleanOption('sharp-yuv', true),
-            new BooleanOption('skip', false),
-            new BooleanOption('use-nice', false),
-            new ArrayOption('jpeg', []),
-            new ArrayOption('png', [])
-        ];*/
     }
 
     /**
@@ -121,24 +123,24 @@ trait OptionsTrait
     {
         return [
             'alpha-quality' => [
-                'type' => 'input',
+                'component' => 'input',
                 'label' => 'Alpha quality',
                 'help-text' => 'Quality of alpha channel. ' .
                     'Only relevant for lossy encoding and only relevant for images' .
                     'with transparency',
-                "display-condition" => [
-                    'type' => 'not-equals',
+                'display' => [
+                    'function' => 'notEquals',
                     'args' => [
                         [
-                            'type' => 'option-value',
-                            'args' => ['encoding']
+                            'function' => 'state',
+                            'args' => ['option', 'encoding']
                         ],
                         'lossy'
                     ],
                 ],
             ],
             'encoding' => [
-                'type' => 'select',
+                'component' => 'select',
                 'label' => 'Encoding',
                 'options' => ['auto', 'lossy', 'lossless'],
                 'optionLabels' => [
@@ -149,6 +151,61 @@ trait OptionsTrait
                 'help-text' => 'Set encoding for the webp. ' .
                     'If you choose "auto", webp-convert will ' .
                     'convert to both lossy and lossless and pick the smallest result',
+            ],
+            'quality' => [
+                'component' => 'input',
+                'label' => 'Quality (Lossy)',
+                'help-text' => 'Quality for lossy encoding. ',
+                'display' => [
+                    'function' => 'notEquals',
+                    'args' => [
+                        [
+                            'function' => 'state',
+                            'args' => ['option', 'encoding']
+                        ],
+                        'lossless'
+                    ],
+                ],
+            ],
+            'auto-limit' => [
+                'component' => 'checkbox',
+                'label' => 'Auto limit',
+                'help-text' => 'Limit the quality to be no more than that of the jpeg. ' .
+                    'The option is only relevant when converting jpegs to lossy webp. ' .
+                    'To be functional, webp-convert needs to be able to detect the quality of the jpeg, ' .
+                    'which requires ImageMagick or GraphicsMagick.',
+                'display' => [
+                    'function' => 'notEquals',
+                    'args' => [
+                        [
+                            'function' => 'state',
+                            'args' => ['option', 'encoding']
+                        ],
+                        'lossless'
+                    ],
+                ],
+            ],
+            'near-lossless' => [
+                'component' => 'input',
+                'label' => '"Near lossless" quality',
+                'help-text' =>
+                    'This option allows you to get impressively better compression for lossless encoding, with ' .
+                    'minimal impact on visual quality. The result is still lossless (lossless encoding). ' .
+                    'What libwebp does is that it preprocesses the image before encoding it, in order to make ' .
+                    'it better suited for compression. The range is 0 (no preprocessing) to 100 (maximum ' .
+                    'preprocessing). A good compromise would be around 60. The option is ignored when encoding ' .
+                    'is set to lossy. Read more [here](https://github.com/rosell-dk/webp-convert/blob/master/docs' .
+                    '/v2.0/converting/introduction-for-converting.md#near-lossless).',
+                'display' => [
+                    'function' => 'notEquals',
+                    'args' => [
+                        [
+                            'function' => 'state',
+                            'args' => ['option', 'encoding']
+                        ],
+                        'lossy'
+                    ],
+                ],
             ],
         ];
     }
