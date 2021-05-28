@@ -149,7 +149,7 @@ Type:          boolean
 Default:       false
 Supported by:  cwebp, imagick, imagemagick and graphicsmagick
 ```
-Reduce memory usage of lossy encoding at the cost of ~30% longer encoding time and marginally larger output size. Read more in [the docs](https://developers.google.com/speed/webp/docs/cwebp).<br><br>
+Reduce memory usage of lossy encoding at the cost of ~30% longer encoding time and marginally larger output size. Only effective when the *method* option is 3 or more. Read more in [the docs](https://developers.google.com/speed/webp/docs/cwebp).<br><br>
 
 ### `max-quality` (DEPRECATED)
 ```
