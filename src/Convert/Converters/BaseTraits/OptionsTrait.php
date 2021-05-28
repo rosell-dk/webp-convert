@@ -97,6 +97,12 @@ trait OptionsTrait
             ['size-in-percentage', 'int', ['default' => null, 'min' => 0, 'max' => 100, 'allow-null' => true]],
             ['skip', 'boolean', ['default' => false]],
             ['log-call-arguments', 'boolean', ['default' => false]],
+            // TODO: use-nice should not be a "general" option
+            ['use-nice', 'boolean', ['default' => false]],
+            ['jpeg', 'array', ['default' => []]],
+            ['png', 'array', ['default' => []]],
+
+            // Deprecated options
             ['default-quality', 'int', [
                 'default' => ($isPng ? 85 : 75),
                 'min' => 0,
@@ -104,10 +110,6 @@ trait OptionsTrait
                 'deprecated' => true]
             ],
             ['max-quality', 'int', ['default' => 85, 'min' => 0, 'max' => 100, 'deprecated' => true]],
-            // TODO: use-nice should not be a "general" option
-            ['use-nice', 'boolean', ['default' => false]],
-            ['jpeg', 'array', ['default' => []]],
-            ['png', 'array', ['default' => []]],
         ]);
     }
 
@@ -128,9 +130,14 @@ trait OptionsTrait
                     'Quality of alpha channel. ' .
                     'Often, there is no need for high quality transparency layer and in some cases you ' .
                     'can tweak this all the way down to 10 and save a lot in file size. The option only ' .
-                    'has effect with lossy encoding, and of course only on images with transparency. ' .
-                    'Read more [here](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/' .
-                    'converting/introduction-for-converting.md#alpha-quality)',
+                    'has effect with lossy encoding, and of course only on images with transparency.',
+                'links' => [
+                    [
+                      'Guide',
+                      'https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/' .
+                          'converting/introduction-for-converting.md#alpha-quality'
+                    ],
+                ],
                 'display' => [
                     'function' => 'and',
                     'args' => [
@@ -169,6 +176,13 @@ trait OptionsTrait
                 'help-text' => 'Set encoding for the webp. ' .
                     'If you choose "auto", webp-convert will ' .
                     'convert to both lossy and lossless and pick the smallest result',
+                'links' => [
+                    [
+                      'Guide',
+                      'https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/' .
+                          'converting/introduction-for-converting.md#auto-selecting-between-losslesslossy-encoding'
+                    ],
+                ],
             ],
             'quality' => [
                 'component' => 'input',
@@ -190,10 +204,15 @@ trait OptionsTrait
                 'label' => 'Auto-limit',
                 'help-text' =>
                     'Enable this option to prevent an unnecessarily high quality setting for low ' .
-                    'quality jpegs. You really should enable this. Read more about the feature [here]' .
-                    '(https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/intro' .
-                    'duction-for-converting.md#preventing-unnecessarily-high-quality-setting-for-low-' .
-                    'quality-jpegs).',
+                    'quality jpegs. You really should enable this.',
+                'links' => [
+                    [
+                      'Guide',
+                      'https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/' .
+                          'converting/introduction-for-converting.md' .
+                          '#preventing-unnecessarily-high-quality-setting-for-low-quality-jpegs'
+                    ],
+                ],
                 'display' => [
                     'function' => 'notEquals',
                     'args' => [
@@ -211,8 +230,15 @@ trait OptionsTrait
                 'help-text' =>
                     'This option allows you to get impressively better compression for lossless encoding, with ' .
                     'minimal impact on visual quality. The range is 0 (no preprocessing) to 100 (maximum ' .
-                    'preprocessing). Read more [here](https://github.com/rosell-dk/webp-convert/blob/master/docs' .
-                    '/v2.0/converting/introduction-for-converting.md#near-lossless).',
+                    'preprocessing).',
+                'links' => [
+                    [
+                      'Guide',
+                      'https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/' .
+                          'converting/introduction-for-converting.md' .
+                          '#near-lossless'
+                    ],
+                ],
                 'display' => [
                     'function' => 'notEquals',
                     'args' => [
@@ -256,8 +282,81 @@ trait OptionsTrait
                 'label' => 'Sharp YUV',
                 'help-text' =>
                     'Better RGB->YUV color conversion (sharper and more accurate) at the expense of a little extra ' .
-                    'conversion time. Read more [here](https://www.ctrl.blog/entry/webp-sharp-yuv.html).',
+                    'conversion time.',
+                'links' => [
+                    [
+                      'Ctrl.blog',
+                      'https://www.ctrl.blog/entry/webp-sharp-yuv.html'
+                    ],
+                ],
             ],
+            'auto-filter' => [
+                'component' => 'checkbox',
+                'label' => 'Auto-filter',
+                'help-text' =>
+                    'Turns auto-filter on. ' .
+                    'This algorithm will spend additional time optimizing the filtering strength to reach a well-' .
+                    'balanced quality. Unfortunately, it is extremely expensive in terms of computation. It takes ' .
+                    'about 5-10 times longer to do a conversion. A 1MB picture which perhaps typically takes about ' .
+                    '2 seconds to convert, will takes about 15 seconds to convert with auto-filter. ',
+            ],
+            'low-memory' => [
+                'component' => 'checkbox',
+                'label' => 'Low memory',
+                'help-text' =>
+                    'Reduce memory usage of lossy encoding at the cost of ~30% longer encoding time and marginally ' .
+                    'larger output size. Only effective when the *method* option is 3 or more. Read more in ' .
+                    '[the docs](https://developers.google.com/speed/webp/docs/cwebp)',
+                'display' => [
+                    'function' => 'and',
+                    'args' => [
+                        [
+                            'function' => 'notEquals',
+                            'args' => [
+                                [
+                                    'function' => 'state',
+                                    'args' => ['option', 'encoding']
+                                ],
+                                'lossless'
+                            ],
+                        ],
+                        [
+                            'function' => 'gt',
+                            'args' => [
+                                [
+                                    'function' => 'state',
+                                    'args' => ['option', 'method']
+                                ],
+                                2
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            'preset' => [
+                'component' => 'select',
+                'label' => 'Preset',
+                'options' => ['none', 'default', 'photo', 'picture', 'drawing', 'icon', 'text'],
+                'optionLabels' => [
+                    'none' => 'None',
+                    'default' => 'Default',
+                    'photo' => 'Photo',
+                    'picture' => 'Picture',
+                    'drawing' => 'Drawing',
+                    'icon' => 'Icon',
+                    'text' => 'Text',
+                ],
+                'help-text' =>
+                    'Using a preset will set many of the other options to suit a particular type of ' .
+                    'source material. It even overrides them. It does however not override the quality option. ' .
+                    '"none" means that no preset will be set',
+            ]
+            /*
+            ['preset', 'string', [
+                'default' => 'none',
+                'allowedValues' => ['none', 'default', 'photo', 'picture', 'drawing', 'icon', 'text']]
+            ],
+*/
               /*            {
               "id": "metadata",
               "type": "string",
