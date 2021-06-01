@@ -86,7 +86,7 @@ trait OptionsTrait
                     'If you choose "auto", webp-convert will ' .
                     'convert to both lossy and lossless and pick the smallest result',
                 'default' => 'auto',
-                'enum' => ['lossy', 'lossless', 'auto']
+                'enum' => ['auto', 'lossy', 'lossless']
             ]],
             ['quality', 'int', [
                 'title' => 'Quality (Lossy)',
@@ -137,6 +137,7 @@ trait OptionsTrait
                     'metadata. The rest can either strip all or keep all (they will keep all, unless the option ' .
                     'is set to *none*)',
                 'default' => 'none'
+                // TODO: set regex validation
             ]],
             ['method', 'int', [
                 'title' => 'Reduction effort (0-6)',
@@ -248,12 +249,6 @@ trait OptionsTrait
             ],
             'encoding' => [
                 'component' => 'select',
-                'options' => ['auto', 'lossy', 'lossless'],
-                'optionLabels' => [
-                    'auto' => 'Auto',
-                    'lossy' => 'Lossy',
-                    'lossless' => 'Lossless'
-                ],
                 'links' => [
                     [
                       'Guide',
@@ -277,6 +272,7 @@ trait OptionsTrait
             ],
             'auto-limit' => [
                 'component' => 'checkbox',
+                'advanced' => true,
                 'links' => [
                     [
                       'Guide',
@@ -320,19 +316,14 @@ trait OptionsTrait
             'metadata' => [
                 'component' => 'multi-select',
                 'options' => ['all', 'none', 'exif', 'icc', 'xmp'],
-                'optionLabels' => [
-                    'all' => 'All',
-                    'none' => 'None',
-                    'exif' => 'Exif',
-                    'icc' => 'ICC',
-                    'xmp' => 'XMP'
-                ]
             ],
             'method' => [
                 'component' => 'input',
+                'advanced' => true,
             ],
             'sharp-yuv' => [
                 'component' => 'checkbox',
+                'advanced' => true,
                 'links' => [
                     [
                       'Ctrl.blog',
@@ -342,9 +333,11 @@ trait OptionsTrait
             ],
             'auto-filter' => [
                 'component' => 'checkbox',
+                'advanced' => true,
             ],
             'low-memory' => [
                 'component' => 'checkbox',
+                'advanced' => true,
                 'display' => [
                     'function' => 'and',
                     'args' => [
@@ -373,6 +366,7 @@ trait OptionsTrait
             ],
             'preset' => [
                 'component' => 'select',
+                'advanced' => true,
                 'options' => ['none', 'default', 'photo', 'picture', 'drawing', 'icon', 'text'],
                 'optionLabels' => [
                     'none' => 'None',
