@@ -213,7 +213,7 @@ trait OptionsTrait
     {
         return [
             'alpha-quality' => [
-                'component' => 'input',
+                'component' => 'slider',
                 'links' => [
                     [
                       'Guide',
@@ -258,7 +258,7 @@ trait OptionsTrait
                 ],
             ],
             'quality' => [
-                'component' => 'input',
+                'component' => 'slider',
                 'display' => [
                     'function' => 'notEquals',
                     'args' => [
@@ -293,7 +293,7 @@ trait OptionsTrait
                 ],
             ],
             'near-lossless' => [
-                'component' => 'input',
+                'component' => 'slider',
                 'links' => [
                     [
                       'Guide',
@@ -318,7 +318,7 @@ trait OptionsTrait
                 'options' => ['all', 'none', 'exif', 'icc', 'xmp'],
             ],
             'method' => [
-                'component' => 'input',
+                'component' => 'slider',
                 'advanced' => true,
             ],
             'sharp-yuv' => [
