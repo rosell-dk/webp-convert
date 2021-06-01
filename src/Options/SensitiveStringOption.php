@@ -15,9 +15,9 @@ use WebPConvert\Options\Exceptions\InvalidOptionValueException;
 class SensitiveStringOption extends StringOption
 {
 
-    public function __construct($id, $defaultValue, $allowedValues = null)
+    public function __construct($id, $defaultValue, $enum = null)
     {
-        parent::__construct($id, $defaultValue, $allowedValues);
+        parent::__construct($id, $defaultValue, $enum);
     }
 
     public function check()

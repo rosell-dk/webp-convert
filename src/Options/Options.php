@@ -195,6 +195,7 @@ class Options
             }
         }
     }
+
     public function getDefinitions($deprecatedToo = false)
     {
         $defs = [];

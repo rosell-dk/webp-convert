@@ -25,8 +25,10 @@ class OptionFactory
         $option = null;
         switch ($optionType) {
             case 'int':
-                $minValue = (isset($def['min']) ? $def['min'] : null);
-                $maxValue = (isset($def['max']) ? $def['max'] : null);
+                $minValue = (isset($def['minimum']) ? $def['minimum'] : null);
+                $maxValue = (isset($def['maximum']) ? $def['maximum'] : null);
+                unset($def['minimum']);
+                unset($def['maximum']);
                 if (isset($def['allow-null']) && $def['allow-null']) {
                     $option = new IntegerOrNullOption($optionName, $def['default'], $minValue, $maxValue);
                 } else {
@@ -42,8 +44,8 @@ class OptionFactory
                 if ($optionName == 'metadata') {
                     $option = new MetadataOption($optionName, $def['default']);
                 } else {
-                    $allowedValues = (isset($def['allowedValues']) ? $def['allowedValues'] : null);
-                    $option = new StringOption($optionName, $def['default'], $allowedValues);
+                    $enum = (isset($def['enum']) ? $def['enum'] : null);
+                    $option = new StringOption($optionName, $def['default'], $enum);
                 }
                 break;
 
@@ -55,12 +57,14 @@ class OptionFactory
                 $option = new ArrayOption($optionName, $def['default']);
                 break;
         }
+        unset($def['defualt']);
 
         if (!is_null($option)) {
             if (isset($def['deprecated'])) {
                 $option->markDeprecated();
             }
         }
+        $option->setExtraSchemaDefs($def);
         return $option;
     }
 

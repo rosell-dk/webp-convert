@@ -14,7 +14,7 @@ use WebPConvert\Options\Exceptions\InvalidOptionValueException;
  */
 class IntegerOrNullOption extends IntegerOption
 {
-    protected $allowedValueTypes = ['int', 'null'];
+    protected $schemaType = ['integer', 'null'];
 
     public function __construct($id, $defaultValue, $minValue = null, $maxValue = null)
     {

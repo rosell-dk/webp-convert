@@ -29,8 +29,11 @@ class Option
     /** @var string  An option must supply a type id */
     protected $typeId;
 
-    /** @var array  Type constraints for the value */
-    protected $allowedValueTypes = [];
+    /** @var array  Type constraints for the value (JSON schema syntax) */
+    protected $schemaType = [];
+
+    /** @var array|null  Array of allowed values (JSON schema syntax) */
+    protected $enum = null; //https://json-schema.org/understanding-json-schema/reference/generic.html#enumerated-values
 
     /** @var boolean  Whether the option has been deprecated */
     protected $deprecated = false;
@@ -40,6 +43,10 @@ class Option
 
     /** @var array  UI Def */
     protected $ui;
+
+    /** @var array  Extra Schema Def (ie holding 'title', 'description' or other)*/
+    protected $extraSchemaDefs;
+
 
     /**
      * Constructor.
@@ -190,6 +197,12 @@ class Option
         $this->ui = $ui;
     }
 
+    public function setExtraSchemaDefs($def)
+    {
+        $this->extraSchemaDefs = $def;
+    }
+
+
     /**
      * Get ui definition for the option
      *
@@ -200,14 +213,28 @@ class Option
         return $this->ui;
     }
 
+    public function getSchema()
+    {
+        if (isset($this->extraSchemaDefs)) {
+            $schema = $this->extraSchemaDefs;
+        } else {
+            $schema = [];
+        }
+        $schema['type'] = $this->schemaType;
+        $schema['default'] = $this->defaultValue;
+        if (!is_null($this->enum)) {
+            $schema['enum'] = $this->enum;
+        }
+        return $schema;
+    }
+
+
     public function getDefinition()
     {
         $obj = [
-          'id' => $this->id,
-          'type' => $this->typeId,
-          'allowed-value-types' => $this->allowedValueTypes,
-          'default' => $this->defaultValue,
-          'ui' => $this->ui,
+            'id' => $this->id,
+            'schema' => $this->getSchema(),
+            'ui' => $this->ui,
         ];
         if ($this->deprecated) {
             $obj['deprecated'] = true;

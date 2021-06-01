@@ -16,7 +16,7 @@ class MetadataOption extends StringOption
 {
 
     protected $typeId = 'metadata';
-    protected $allowedValueTypes = ['string'];
+    protected $schemaType = ['string'];
 
     public function __construct($id, $defaultValue)
     {

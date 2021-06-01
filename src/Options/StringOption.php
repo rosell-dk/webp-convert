@@ -16,12 +16,12 @@ class StringOption extends Option
 {
 
     protected $typeId = 'string';
-    protected $allowedValues;
-    protected $allowedValueTypes = ['string'];
+    protected $enum;
+    protected $schemaType = ['string'];
 
-    public function __construct($id, $defaultValue, $allowedValues = null)
+    public function __construct($id, $defaultValue, $enum = null)
     {
-        $this->allowedValues = $allowedValues;
+        $this->enum = $enum;
         parent::__construct($id, $defaultValue);
     }
 
@@ -29,10 +29,10 @@ class StringOption extends Option
     {
         $this->checkType('string');
 
-        if (!is_null($this->allowedValues) && (!in_array($this->getValue(), $this->allowedValues))) {
+        if (!is_null($this->enum) && (!in_array($this->getValue(), $this->enum))) {
             throw new InvalidOptionValueException(
                 '"' . $this->id . '" option must be on of these values: ' .
-                '[' . implode(', ', $this->allowedValues) . ']. ' .
+                '[' . implode(', ', $this->enum) . ']. ' .
                 'It was however set to: "' . $this->getValue() . '"'
             );
         }
@@ -47,7 +47,7 @@ class StringOption extends Option
     {
         $obj = parent::getDefinition();
         $obj['sensitive'] = false;
-        $obj['options'] = $this->allowedValues;
+        $obj['options'] = $this->enum;
         return $obj;
     }
 }

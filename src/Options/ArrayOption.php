@@ -16,7 +16,7 @@ class ArrayOption extends Option
 {
 
     protected $typeId = 'array';
-    protected $allowedValueTypes = ['array'];
+    protected $schemaType = ['array'];
 
     public function check()
     {
