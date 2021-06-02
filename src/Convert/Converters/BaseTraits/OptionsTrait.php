@@ -295,12 +295,6 @@ trait OptionsTrait
         return [];
     }
 
-    public function getUniqueOptionsUI($imageType)
-    {
-        return [];
-    }
-
-
     /**
      *  Create options.
      *
@@ -526,7 +520,7 @@ trait OptionsTrait
     {
         $uniqueOptions = new Options();
         $uniqueOptions->addOptions(... $this->getUniqueOptions($imageType));
-        $uniqueOptions->setUI($this->getUniqueOptionsUI($imageType));
+        //$uniqueOptions->setUI($this->getUniqueOptionsUI($imageType));
         return $uniqueOptions->getDefinitions();
     }
 

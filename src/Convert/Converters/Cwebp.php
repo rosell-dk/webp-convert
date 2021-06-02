@@ -10,9 +10,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Helpers\BinaryDiscovery;
-use WebPConvert\Options\BooleanOption;
-use WebPConvert\Options\SensitiveStringOption;
-use WebPConvert\Options\StringOption;
+use WebPConvert\Options\OptionFactory;
 
 /**
  * Convert images to webp by calling cwebp binary.
@@ -39,88 +37,115 @@ class Cwebp extends AbstractConverter
      */
     public function getUniqueOptions($imageType)
     {
-        return [
-            new BooleanOption('try-cwebp', true),
-            new BooleanOption('try-common-system-paths', true),
-            new BooleanOption('try-discovering-cwebp', true),
-            new BooleanOption('try-supplied-binary-for-os', true),
-            new StringOption('command-line-options', ''),
-            new SensitiveStringOption('rel-path-to-precompiled-binaries', './Binaries'),
-            new StringOption('skip-these-precompiled-binaries', '')
-        ];
-    }
+      /*return [
+          new BooleanOption('try-cwebp', true),
+          new BooleanOption('try-common-system-paths', true),
+          new BooleanOption('try-discovering-cwebp', true),
+          new BooleanOption('try-supplied-binary-for-os', true),
+          new StringOption('command-line-options', ''),
+          new SensitiveStringOption('rel-path-to-precompiled-binaries', './Binaries'),
+          new StringOption('skip-these-precompiled-binaries', '')
+      ];*/
+        $binariesForOS = [];
+        if (isset(self::$suppliedBinariesInfo[PHP_OS])) {
+            foreach (self::$suppliedBinariesInfo[PHP_OS] as $i => list($file, $hash, $version)) {
+                $binariesForOS[] = $file;
+            }
+        }
 
-    /**
-    *  Get ui definitions for the unique options of this converter
-     *
-     *  @return  array  Hash of objects indexed by option id
-     */
-    public function getUIForUniqueOptions($imageType)
-    {
-        return [
-            'try-cwebp' => [
-              'type' => 'checkbox',
-              'label' => 'Try plain cwebp command',
-              'help-text' => 'If set, the converter will try executing cwebp with a plain "cwebp"' .
-                  ' command (without specifying a path).'
-            ],
-            /*
-            'try-common-system-paths' => '',
-            'try-discovering-cwebp' => '',
-            'try-supplied-binary-for-os' => '',
-            'command-line-options' => '',
-            'rel-path-to-precompiled-binaries' => '',
-            'skip-these-precompiled-binaries' => '',*/
-        ];
-    }
+        return OptionFactory::createOptions([
+            ['try-cwebp', 'boolean', [
+                'title' => 'Try plain cwebp command',
+                'description' =>
+                    'If set, the converter will try executing "cwebp -version". In case it succeeds, ' .
+                    'and the version is higher than those working cwebps found using other methods, ' .
+                    'the conversion will be done by executing this cwebp.',
+                'default' => true,
+                'ui' => [
+                    'component' => 'checkbox',
+                    'advanced' => true
+                ]
+            ]],
+            ['try-discovering-cwebp', 'boolean', [
+                'title' => 'Try discovering cwebp binary',
+                'description' =>
+                    'If set, the converter will try to discover installed cwebp binaries using a "which -a cwebp" ' .
+                    'command, or in case that fails, a "whereis -b cwebp" command. These commands will find ' .
+                    'cwebp binaries residing in PATH',
+                'default' => true,
+                'ui' => [
+                    'component' => 'checkbox',
+                    'advanced' => true
+                ]
+            ]],
+            ['try-common-system-paths', 'boolean', [
+                'title' => 'Try locating cwebp in common system paths',
+                'description' =>
+                    'If set, the converter will look for a cwebp binaries residing in common system locations ' .
+                    'such as "/usr/bin/cwebp". If such exist, it is assumed that they are valid cwebp binaries. ' .
+                    'A version check will be run on the binaries found (they are executed with the "-version" flag. ' .
+                    'The cwebp with the highest version found using this method and the other enabled methods will ' .
+                    'be used for the actual conversion.' .
+                    'Note: All methods for discovering cwebp binaries are per default enabled. You can save a few ' .
+                    'microseconds by disabling some, but it is probably not worth it, as your ' .
+                    'setup will then become less resilient to system changes.',
+                'default' => true,
+                'ui' => [
+                    'component' => 'checkbox',
+                    'advanced' => true
+                ]
+            ]],
+            ['try-supplied-binary-for-os', 'boolean', [
+                'title' => 'Try locating cwebp in common system paths',
+                'description' =>
+                    'If set, the converter will try use a precompiled cwebp binary that comes with webp-convert. ' .
+                    'But only if it has a higher version that those found by other methods. As the library knows ' .
+                    'the versions of its cwebps, no additional time is spent executing them with the "-version" ' .
+                    'parameter. The binaries are hash-checked before executed. ' .
+                    'The library btw. comes with several versions of precompiled cwebps because they have different ' .
+                    'dependencies - some works on some systems and others on others.',
+                'default' => true,
+                'ui' => [
+                    'component' => 'checkbox',
+                    'advanced' => true
+                ]
+            ]],
+            ['skip-these-precompiled-binaries', 'string', [
+              'title' => 'Skip these precompiled binaries',
+                  'description' =>
+                      '',
+                  'default' => '',
+                  'ui' => [
+                      'component' => 'multi-select',
+                      'advanced' => true,
+                      'options' => $binariesForOS
+                  ]
 
-    /**
-    *  Get help texts for the options for this converter
-     *
-     *  @return  array  Hash of helptexts indexed by option id
-     */
-    public function getHelpTextsForUniqueOptions($imageType)
-    {
-        return [
-            'try-cwebp' =>
-                'If set, the converter will try executing cwebp with a plain "cwebp" command (without specifying a ' .
-                'path).',
-            'try-common-system-paths' => '',
-            'try-discovering-cwebp' => '',
-            'try-supplied-binary-for-os' => '',
-            'command-line-options' => '',
-            'rel-path-to-precompiled-binaries' => '',
-            'skip-these-precompiled-binaries' => '',
-        ];
-    }
+            ]],
+            ['rel-path-to-precompiled-binaries', 'string', [
+              'title' => 'Rel path to precompiled binaries',
+                  'description' =>
+                      '',
+                  'default' => './Binaries',
+                  'ui' => [
+                      'component' => '',
+                      'advanced' => true,
+                  ],
+                  'sensitive' => true
+            ]],
+            ['command-line-options', 'string', [
+              'title' => 'Command line options',
+                  'description' =>
+                      '',
+                  'default' => '',
+                  'ui' => [
+                      'component' => 'input',
+                      'advanced' => true,
+                  ]
 
-    /**
-    *  Get help texts for the options for this converter
-     *
-     *  @return  array  Hash of helptexts indexed by option id
-     */
-    public function getOptionRules($imageType)
-    {
-        return [
-            'rel-path-to-precompiled-binaries' => [
-                'type' => 'equals',
-                'arg1' => [
-                    'type' => 'option-value',
-                    'option-id' => 'try-supplied-binary-for-os'
-                ],
-                'arg2' => true
-            ],
-            'skip-these-precompiled-binaries' => [
-                'type' => 'equals',
-                'arg1' => [
-                    'type' => 'option-value',
-                    'option-id' => 'try-supplied-binary-for-os'
-                ],
-                'arg2' => true
-            ],
-        ];
+            ]],
+        ]);
     }
-
 
 
     // OS-specific binaries included in this library, along with hashes

@@ -47,7 +47,9 @@ class StringOption extends Option
     {
         $obj = parent::getDefinition();
         $obj['sensitive'] = false;
-        $obj['options'] = $this->enum;
+        if (!is_null($this->enum)) {
+            $obj['options'] = $this->enum;
+        }
         return $obj;
     }
 }

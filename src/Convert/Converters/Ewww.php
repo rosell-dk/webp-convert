@@ -11,6 +11,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Inva
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Options\BooleanOption;
 use WebPConvert\Options\SensitiveStringOption;
+use WebPConvert\Options\OptionFactory;
 
 /**
  * Convert images to webp using ewww cloud service.
@@ -29,10 +30,32 @@ class Ewww extends AbstractConverter
 
     public function getUniqueOptions($imageType)
     {
-        return [
-            new SensitiveStringOption('api-key', ''),
-            new BooleanOption('check-key-status-before-converting', true)
-        ];
+        return OptionFactory::createOptions([
+            ['api-key', 'string', [
+                'title' => 'Ewww API key',
+                'description' => 'ewww API key. ' .
+                    'If you choose "auto", webp-convert will ' .
+                    'convert to both lossy and lossless and pick the smallest result',
+                'default' => '',
+                'sensitive' => true,
+                'ui' => [
+                    'component' => 'input',
+                ]
+            ]],
+            ['check-key-status-before-converting', 'boolean', [
+                'title' => 'Check key status before converting',
+                'description' =>
+                    'If enabled, the api key will be validated (relative inexpensive) before trying ' .
+                    'to convert. For automatic conversions, you should enable it. Otherwise you run the ' .
+                    'risk that the same files will be uploaded to ewww cloud service over and over again, ' .
+                    'in case the key has expired. For manually triggered conversions, you can safely disable ' .
+                    'the option.',
+                'default' => true,
+                'ui' => [
+                    'component' => 'checkbox',
+                ]
+            ]],
+        ]);
     }
 
     protected function getUnsupportedDefaultOptions()
