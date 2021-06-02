@@ -8,6 +8,7 @@ use WebPConvert\Options\IntegerOption;
 use WebPConvert\Options\IntegerOrNullOption;
 use WebPConvert\Options\MetadataOption;
 use WebPConvert\Options\StringOption;
+use WebPConvert\Options\SensitiveStringOption;
 use WebPConvert\Options\QualityOption;
 
 /**
@@ -45,7 +46,12 @@ class OptionFactory
                     $option = new MetadataOption($optionName, $def['default']);
                 } else {
                     $enum = (isset($def['enum']) ? $def['enum'] : null);
-                    $option = new StringOption($optionName, $def['default'], $enum);
+                    if (isset($def['sensitive']) && ($def['sensitive'] == true)) {
+                        unset($def['sensitive']);
+                        $option = new SensitiveStringOption($optionName, $def['default'], $enum);
+                    } else {
+                        $option = new StringOption($optionName, $def['default'], $enum);
+                    }
                 }
                 break;
 
@@ -57,11 +63,15 @@ class OptionFactory
                 $option = new ArrayOption($optionName, $def['default']);
                 break;
         }
-        unset($def['defualt']);
+        unset($def['default']);
 
         if (!is_null($option)) {
             if (isset($def['deprecated'])) {
                 $option->markDeprecated();
+            }
+            if (isset($def['ui'])) {
+                $option->setUI($def['ui']);
+                unset($def['ui']);
             }
         }
         $option->setExtraSchemaDefs($def);

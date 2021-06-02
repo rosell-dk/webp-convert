@@ -50,34 +50,17 @@ trait OptionsTrait
         $isPng = ($imageType == 'png');
 
         /*
-        $defaultQualityOption = new IntegerOption('default-quality', ($isPng ? 85 : 75), 0, 100);
-        $defaultQualityOption->markDeprecated();
-
-        $maxQualityOption = new IntegerOption('max-quality', 85, 0, 100);
-        $maxQualityOption->markDeprecated();
-
         return [
-            new IntegerOption('alpha-quality', 85, 0, 100),
-            new BooleanOption('auto-limit', true),
             //new IntegerOption('auto-limit-adjustment', 5, -100, 100),
-            new BooleanOption('auto-filter', false),
-            $defaultQualityOption,
-            new StringOption('encoding', 'auto', ['lossy', 'lossless', 'auto']),
-            new BooleanOption('low-memory', false),
             new BooleanOption('log-call-arguments', false),
-            $maxQualityOption,
-            new MetadataOption('metadata', 'none'),
-            new IntegerOption('method', 6, 0, 6),
-            new IntegerOption('near-lossless', 60, 0, 100),
-            new StringOption('preset', 'none', ['none', 'default', 'photo', 'picture', 'drawing', 'icon', 'text']),
-            new QualityOption('quality', ($isPng ? 85 : 75)),
-            new IntegerOrNullOption('size-in-percentage', null, 0, 100),
-            new BooleanOption('sharp-yuv', true),
             new BooleanOption('skip', false),
             new BooleanOption('use-nice', false),
             new ArrayOption('jpeg', []),
             new ArrayOption('png', [])
         ];*/
+
+        $introMd = 'https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/' .
+            'converting/introduction-for-converting.md';
 
         return OptionFactory::createOptions([
             ['encoding', 'string', [
@@ -86,17 +69,27 @@ trait OptionsTrait
                     'If you choose "auto", webp-convert will ' .
                     'convert to both lossy and lossless and pick the smallest result',
                 'default' => 'auto',
-                'enum' => ['auto', 'lossy', 'lossless']
+                'enum' => ['auto', 'lossy', 'lossless'],
+                'ui' => [
+                    'component' => 'select',
+                    'links' => [['Guide', $introMd . '#auto-selecting-between-losslesslossy-encoding']],
+                ]
             ]],
             ['quality', 'int', [
                 'title' => 'Quality (Lossy)',
                 'description' => 'Quality for lossy encoding. ',
                 'default' => ($isPng ? 85 : 75),
+                'default-png' => 85,
+                'default-jpeg' => 75,
                 //'minimum' => 0,
                 //'maximum' => 100,
                 "oneOf" => [
                     ["type" => "number", "minimum" => 0, 'maximum' => 100],
                     ["type" => "string", "enum" => ["auto"]]
+                ],
+                'ui' => [
+                    'component' => 'slider',
+                    'display' => "notEquals(state('option', 'encoding'), 'lossless')"
                 ]
             ]],
             ['auto-limit', 'boolean', [
@@ -104,7 +97,18 @@ trait OptionsTrait
                 'description' =>
                     'Enable this option to prevent an unnecessarily high quality setting for low ' .
                     'quality jpegs. You really should enable this.',
-                'default' => true
+                'default' => true,
+                'ui' => [
+                    'component' => 'checkbox',
+                    'advanced' => true,
+                    'links' => [
+                        [
+                            'Guide',
+                            $introMd . '#preventing-unnecessarily-high-quality-setting-for-low-quality-jpegs'
+                        ]
+                    ],
+                    'display' => "notEquals(state('option', 'encoding'), 'lossless')"
+                ]
             ]],
             ['alpha-quality', 'int', [
                 'title' => 'Alpha quality',
@@ -115,7 +119,14 @@ trait OptionsTrait
                     'has effect with lossy encoding, and of course only on images with transparency.',
                 'default' => 85,
                 'minimum' => 0,
-                'maximum' => 100
+                'maximum' => 100,
+                'ui' => [
+                    'component' => 'slider',
+                    'links' => [['Guide', $introMd . '#alpha-quality']],
+                    'display' => "and(' .
+                        notEquals(state('option','encoding'),'lossless'),' .
+                        notEquals(state('imageType'),'jpeg'))"
+                ]
             ]],
             ['near-lossless', 'int', [
                 'title' => '"Near lossless" quality',
@@ -125,7 +136,12 @@ trait OptionsTrait
                     'preprocessing).',
                 'default' => 60,
                 'minimum' => 0,
-                'maximum' => 100
+                'maximum' => 100,
+                'ui' => [
+                    'component' => 'slider',
+                    'links' => [['Guide', $introMd . '#near-lossless']],
+                    'display' => "notEquals(state('option', 'encoding'), 'lossy')"
+                ]
             ]],
             ['metadata', 'string', [
                 'title' => 'Metadata',
@@ -136,7 +152,11 @@ trait OptionsTrait
                     '(ie "exif,icc"). *gd* will always remove all metadata and *ffmpeg* will always keep all ' .
                     'metadata. The rest can either strip all or keep all (they will keep all, unless the option ' .
                     'is set to *none*)',
-                'default' => 'none'
+                'default' => 'none',
+                'ui' => [
+                    'component' => 'multi-select',
+                    'options' => ['all', 'none', 'exif', 'icc', 'xmp'],
+                ]
                 // TODO: set regex validation
             ]],
             ['method', 'int', [
@@ -147,14 +167,25 @@ trait OptionsTrait
                     'PS: The option corresponds to the "method" option in libwebp',
                 'default' => 6,
                 'minimum' => 0,
-                'maximum' => 6
+                'maximum' => 6,
+                'ui' => [
+                  'component' => 'slider',
+                  'advanced' => true,
+                ]
             ]],
             ['sharp-yuv', 'boolean', [
                 'title' => 'Sharp YUV',
                 'description' =>
                     'Better RGB->YUV color conversion (sharper and more accurate) at the expense of a little extra ' .
                     'conversion time.',
-                'default' => true
+                'default' => true,
+                'ui' => [
+                    'component' => 'checkbox',
+                    'advanced' => true,
+                    'links' => [
+                        ['Ctrl.blog', 'https://www.ctrl.blog/entry/webp-sharp-yuv.html'],
+                    ],
+                ]
             ]],
             ['auto-filter', 'boolean', [
                 'title' => 'Auto-filter',
@@ -164,7 +195,11 @@ trait OptionsTrait
                     'balanced quality. Unfortunately, it is extremely expensive in terms of computation. It takes ' .
                     'about 5-10 times longer to do a conversion. A 1MB picture which perhaps typically takes about ' .
                     '2 seconds to convert, will takes about 15 seconds to convert with auto-filter. ',
-                'default' => false
+                'default' => false,
+                'ui' => [
+                  'component' => 'checkbox',
+                  'advanced' => true,
+                ]
             ]],
             ['low-memory', 'boolean', [
                 'title' => 'Low memory',
@@ -172,7 +207,12 @@ trait OptionsTrait
                     'Reduce memory usage of lossy encoding at the cost of ~30% longer encoding time and marginally ' .
                     'larger output size. Only effective when the *method* option is 3 or more. Read more in ' .
                     '[the docs](https://developers.google.com/speed/webp/docs/cwebp)',
-                'default' => false
+                'default' => false,
+                'ui' => [
+                    'component' => 'checkbox',
+                    'advanced' => true,
+                    'display' => "and(notEquals(state('option','encoding'),'lossless'),gt(state('option','method'),2))"
+                ]
             ]],
             ['preset', 'string', [
                 'title' => 'Preset',
@@ -181,7 +221,11 @@ trait OptionsTrait
                     'source material. It even overrides them. It does however not override the quality option. ' .
                     '"none" means that no preset will be set',
                 'default' => 'none',
-                'enum' => ['none', 'default', 'photo', 'picture', 'drawing', 'icon', 'text']]
+                'enum' => ['none', 'default', 'photo', 'picture', 'drawing', 'icon', 'text']],
+                'ui' => [
+                    'component' => 'select',
+                    'advanced' => true,
+                ]
             ],
             ['size-in-percentage', 'int', ['default' => null, 'minimum' => 0, 'maximum' => 100, 'allow-null' => true]],
             ['skip', 'boolean', ['default' => false]],
@@ -203,181 +247,17 @@ trait OptionsTrait
     }
 
     /**
-     *  Get ui and extra schema definitions for the general options
+     *  Get ui definitions for the general options.
+     *
+     *  You can automatically build a gui with these (suggested) components
      *
      *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
      *
-     *  @return  array  Hash of objects indexed by option id
+     *  @return  array  Hash of ui definitions indexed by option id
      */
     public function getUIForGeneralOptions($imageType)
     {
         return [
-            'alpha-quality' => [
-                'component' => 'slider',
-                'links' => [
-                    [
-                      'Guide',
-                      'https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/' .
-                          'converting/introduction-for-converting.md#alpha-quality'
-                    ],
-                ],
-                'display' => [
-                    'function' => 'and',
-                    'args' => [
-                        [
-                            'function' => 'notEquals',
-                            'args' => [
-                                [
-                                    'function' => 'state',
-                                    'args' => ['option', 'encoding']
-                                ],
-                                'lossless'
-                            ]
-                        ],
-                        [
-                            'function' => 'notEquals',
-                            'args' => [
-                                [
-                                    'function' => 'state',
-                                    'args' => ['imageType']
-                                ],
-                                'jpeg'
-                            ]
-                        ]
-                    ]
-                ],
-            ],
-            'encoding' => [
-                'component' => 'select',
-                'links' => [
-                    [
-                      'Guide',
-                      'https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/' .
-                          'converting/introduction-for-converting.md#auto-selecting-between-losslesslossy-encoding'
-                    ],
-                ],
-            ],
-            'quality' => [
-                'component' => 'slider',
-                'display' => [
-                    'function' => 'notEquals',
-                    'args' => [
-                        [
-                            'function' => 'state',
-                            'args' => ['option', 'encoding']
-                        ],
-                        'lossless'
-                    ],
-                ],
-            ],
-            'auto-limit' => [
-                'component' => 'checkbox',
-                'advanced' => true,
-                'links' => [
-                    [
-                      'Guide',
-                      'https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/' .
-                          'converting/introduction-for-converting.md' .
-                          '#preventing-unnecessarily-high-quality-setting-for-low-quality-jpegs'
-                    ],
-                ],
-                'display' => [
-                    'function' => 'notEquals',
-                    'args' => [
-                        [
-                            'function' => 'state',
-                            'args' => ['option', 'encoding']
-                        ],
-                        'lossless'
-                    ],
-                ],
-            ],
-            'near-lossless' => [
-                'component' => 'slider',
-                'links' => [
-                    [
-                      'Guide',
-                      'https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/' .
-                          'converting/introduction-for-converting.md' .
-                          '#near-lossless'
-                    ],
-                ],
-                'display' => [
-                    'function' => 'notEquals',
-                    'args' => [
-                        [
-                            'function' => 'state',
-                            'args' => ['option', 'encoding']
-                        ],
-                        'lossy'
-                    ],
-                ],
-            ],
-            'metadata' => [
-                'component' => 'multi-select',
-                'options' => ['all', 'none', 'exif', 'icc', 'xmp'],
-            ],
-            'method' => [
-                'component' => 'slider',
-                'advanced' => true,
-            ],
-            'sharp-yuv' => [
-                'component' => 'checkbox',
-                'advanced' => true,
-                'links' => [
-                    [
-                      'Ctrl.blog',
-                      'https://www.ctrl.blog/entry/webp-sharp-yuv.html'
-                    ],
-                ],
-            ],
-            'auto-filter' => [
-                'component' => 'checkbox',
-                'advanced' => true,
-            ],
-            'low-memory' => [
-                'component' => 'checkbox',
-                'advanced' => true,
-                'display' => [
-                    'function' => 'and',
-                    'args' => [
-                        [
-                            'function' => 'notEquals',
-                            'args' => [
-                                [
-                                    'function' => 'state',
-                                    'args' => ['option', 'encoding']
-                                ],
-                                'lossless'
-                            ],
-                        ],
-                        [
-                            'function' => 'gt',
-                            'args' => [
-                                [
-                                    'function' => 'state',
-                                    'args' => ['option', 'method']
-                                ],
-                                2
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            'preset' => [
-                'component' => 'select',
-                'advanced' => true,
-                'options' => ['none', 'default', 'photo', 'picture', 'drawing', 'icon', 'text'],
-                'optionLabels' => [
-                    'none' => 'None',
-                    'default' => 'Default',
-                    'photo' => 'Photo',
-                    'picture' => 'Picture',
-                    'drawing' => 'Drawing',
-                    'icon' => 'Icon',
-                    'text' => 'Text',
-                ],
-            ]
             /*
             ['preset', 'string', [
                 'default' => 'none',
@@ -411,6 +291,11 @@ trait OptionsTrait
      *  @return  array  Array of options
      */
     public function getUniqueOptions($imageType)
+    {
+        return [];
+    }
+
+    public function getUniqueOptionsUI($imageType)
     {
         return [];
     }
@@ -641,6 +526,7 @@ trait OptionsTrait
     {
         $uniqueOptions = new Options();
         $uniqueOptions->addOptions(... $this->getUniqueOptions($imageType));
+        $uniqueOptions->setUI($this->getUniqueOptionsUI($imageType));
         return $uniqueOptions->getDefinitions();
     }
 
@@ -648,7 +534,7 @@ trait OptionsTrait
     {
         $generalOptions = new Options();
         $generalOptions->addOptions(... $this->getGeneralOptions($imageType));
-        $generalOptions->setUI($this->getUIForGeneralOptions($imageType));
+        //$generalOptions->setUI($this->getUIForGeneralOptions($imageType));
         return $generalOptions->getDefinitions();
     }
 
