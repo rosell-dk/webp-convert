@@ -4,6 +4,8 @@ This is a list of all options available for converting.
 
 Note that as the *stack* and *wpc* converters delegates the options to their containing converters, the options that they supports depend upon the converters they have been configured to use (and which of them that are operational)<br><br>
 
+## General options
+
 ### `alpha-quality`
 ```
 Type:         integer (0-100)
@@ -27,68 +29,6 @@ Default:      true
 Supported by: all
 ```
 Limits the quality to be no more than that of the jpeg. The option is only relevant when converting jpegs to lossy webp. To be functional, webp-convert needs to be able to detect the quality of the jpeg, which requires ImageMagick or GraphicsMagick. Read about the option in the [introduction](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#auto-quality). In 2.7.0, it will become possible to adjust the limit with a new option. I'm currently debating with myself how this should work. Your comments and opinions would be appreciated - [here](https://github.com/rosell-dk/webp-convert/issues/289)    
-
-### `cwebp-command-line-options`
-```
-Type:         string
-Default:      ''
-Supported by: cwebp
-```
-This allows you to set any parameter available for cwebp in the same way as you would do when executing *cwebp*. You could ie set it to "-sharpness 5 -mt -crop 10 10 40 40". Read more about all the available parameters in [the docs](https://developers.google.com/speed/webp/docs/cwebp).<br><br>
-
-### `cwebp-rel-path-to-precompiled-binaries`
-```
-Type:         string
-Default:      './Binaries'
-Supported by: cwebp
-```
-Allows you to change where to look for the precompiled binaries. While this may look as a risk, it is completely safe, as the binaries are hash-checked before being executed. The option is needed when you are using two-file version of webp-on-demand.
-
-### `cwebp-try-common-system-paths`
-```
-Type:         boolean
-Default:      true
-Supported by: cwebp
-```
-If set, the converter will try to look for cwebp in locations such as `/usr/bin/cwebp`. It is a limited list. It might find something that isn't found using `try-discovering-cwebp` if these common paths are not within PATH or neither `which` or `whereis` are available.
-
-### `cwebp-try-cwebp`
-```
-Type:         boolean
-Default:      true
-Supported by: cwebp
-```
-If set, the converter will try executing cwebp with a plain "cwebp" command (without specifying a path).
-
-### `try-discovering-cwebp`
-```
-Type:         boolean
-Default:      true
-Supported by: cwebp
-```
-If set, the converter will try to discover installed cwebp binaries using the `which -a cwebp` command, or in case that fails, the `whereis -b cwebp` command. These commands will find cwebp binaries residing in PATH. They might find cwebp binaries which are not found by enabling `cwebp-try-common-system-paths`
-
-
-### `cwebp-try-supplied-binary-for-os`
-```
-Type:         boolean
-Default:      true
-Supported by: cwebp
-```
-If set, the converter will try the precompiled cwebp binary that are located in `src/Convert/Converters/Binaries`, for the current OS. The binaries are hash-checked before executed.
-
-### `cwebp-skip-these-precompiled-binaries`
-```
-Type:         string
-Default:      ''
-Supported by: cwebp
-```
-The precompiled binaries from google have dependencies, and they are different. This means that some of them works  on some systems, others on others. For this reason, several precompiled binaries are shipped with the library - we want it to simply work on as many systems as possible. Of course, the binary with the highest version number is tried first. But if it doesn't work, time has been wasted running an executable that doesn't work, and validating the hash before running it. To avoid this, use this option to bypass precompiled binaries that you know doesn't work on your current system. You pass in the filenames (comma separated), ie "cwebp-120-linux-x86-64,cwebp-110-linux-x86-64". In order to see if time is wasted on a supplied binary, that doesn't work, check the conversion log. You can also get info about the filenames of the binaries in the conversion log. Instructions on viewing the conversion log are available [here](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#insights-to-the-process).
-Btw: If minimizing the overhead is a priority, there are alternatives to this option that speeds up conversion time more. It is the hash-check that is costly. Hash-checking is only done on the cwebps shipped with the library.
-
-Alternative 1: Disabling the "cwebp-try-supplied-binary-for-os" option thus avoids the rather expensive job of hash-checking the binary each time it is run. The cost of this is that you don't get the newest cwebp available (the ones shipped with the library will only be used when you don't have a newer one available).
-
-Alternative 2: If you set an environment variable called "WEBPCONVERT_CWEBP_PATH" (or define a "WEBPCONVERT_CWEBP_PATH" variable in PHP), cwebp will simply execute the binary found at that path and not examine other alternatives. Also, there will be no hash check either. Doing so however makes your system a little bit less secure - exactly because it bypasses the hash-checking. If some security whole allows an attacker to upload a binary, replacing the one set like this, an attacker would then have a way to have that binary executed. Here is how you define the variable in PHP: `define("WEBPCONVERT_CWEBP_PATH", "/path/to/working/cwebp/for/example/one/in/src/Convert/Converters/Binaries/dir");`. Also beware that by doing this, you will need to update your code in order to take advantage of future cwebp releases.
 
 ### `default-quality` (DEPRECATED)
 ```
@@ -251,6 +191,88 @@ $options = [
 ```
 <br>
 
+### `use-nice`
+```
+Type:          boolean
+Default:       false
+Supported by:  cwebp, graphicsmagick, imagemagick, ffmpeg
+```
+This option only applies to converters which are using exec() to execute a binary directly on the host. If *use-nice* is set, it will be examined if the [`nice`]( https://en.wikipedia.org/wiki/Nice_(Unix)) command is available on the host. If it is, the binary is executed using *nice*. This assigns low priority to the process and will save system resources - but result in slower conversion.<br><br>
+
+
+# Options unique for individual converters
+
+## cwebp options
+Options unique to the "cwebp" converter
+
+### `command-line-options`
+```
+Type:         string
+Default:      ''
+Supported by: cwebp
+```
+This allows you to set any parameter available for cwebp in the same way as you would do when executing *cwebp*. You could ie set it to "-sharpness 5 -mt -crop 10 10 40 40". Read more about all the available parameters in [the docs](https://developers.google.com/speed/webp/docs/cwebp).<br><br>
+
+### `rel-path-to-precompiled-binaries`
+```
+Type:         string
+Default:      './Binaries'
+Supported by: cwebp
+```
+Allows you to change where to look for the precompiled binaries. While this may look as a risk, it is completely safe, as the binaries are hash-checked before being executed. The option is needed when you are using two-file version of webp-on-demand.
+
+### `try-cwebp`
+```
+Type:         boolean
+Default:      true
+Supported by: cwebp
+```
+If set, the converter will try executing "cwebp -version". In case it succeeds, and the version is higher than those working cwebp's found using other methods, the conversion will be done by executing this cwebp.
+
+### `try-common-system-paths`
+```
+Type:         boolean
+Default:      true
+Supported by: cwebp
+```
+If set, the converter will look for a cwebp binaries residing in common system locations such as `/usr/bin/cwebp`. If such exist, it is assumed that they are valid cwebp binaries. A version check will be run on the binaries found (they are executed with the "-version" flag. The cwebp with the highest version found using this method and the other enabled methods will be used for the actual conversion.
+
+This method might find a cwebp binary something that isn't found using `try-discovering-cwebp` if these common paths are not within PATH or neither `which` or `whereis` are available.
+
+Note: All methods for discovering cwebp binaries are per default enabled. You can save a few microseconds by disabling all, but the one that discovers the cwebp binary with the highest version (check the conversion log to find out). However, it is probably not worth it, as your setup will then become less resilient to system changes.
+
+### `try-discovering-cwebp`
+```
+Type:         boolean
+Default:      true
+Supported by: cwebp
+```
+If set, the converter will try to discover installed cwebp binaries using the `which -a cwebp` command, or in case that fails, the `whereis -b cwebp` command. These commands will find cwebp binaries residing in PATH
+
+### `try-supplied-binary-for-os`
+```
+Type:         boolean
+Default:      true
+Supported by: cwebp
+```
+If set, the converter will try use a precompiled cwebp binary that comes with webp-convert. But only if it has a higher version that those found by other methods. As the library knows the versions of its cwebps, no additional time is spent executing them with the "-version" parameter. The binaries are hash-checked before executed. The library btw. comes with several versions of precompiled cwebps because they have different dependencies - some works on some systems and others on others.
+
+### `skip-these-precompiled-binaries`
+```
+Type:         string
+Default:      ''
+Supported by: cwebp
+```
+The precompiled binaries from google have dependencies, and they are different. This means that some of them works  on some systems, others on others. For this reason, several precompiled binaries are shipped with the library - we want it to simply work on as many systems as possible. Of course, the binary with the highest version number is tried first. But if it doesn't work, time has been wasted running an executable that doesn't work, and validating the hash before running it. To avoid this, use this option to bypass precompiled binaries that you know doesn't work on your current system. You pass in the filenames (comma separated), ie "cwebp-120-linux-x86-64,cwebp-110-linux-x86-64". In order to see if time is wasted on a supplied binary, that doesn't work, check the conversion log. You can also get info about the filenames of the binaries in the conversion log. Instructions on viewing the conversion log are available [here](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#insights-to-the-process).
+Btw: If minimizing the overhead is a priority, there are alternatives to this option that speeds up conversion time more. It is the hash-check that is costly. Hash-checking is only done on the cwebps shipped with the library.
+
+Alternative 1: Disabling the "cwebp-try-supplied-binary-for-os" option thus avoids the rather expensive job of hash-checking the binary each time it is run. The cost of this is that you don't get the newest cwebp available (the ones shipped with the library will only be used when you don't have a newer one available).
+
+Alternative 2: If you set an environment variable called "WEBPCONVERT_CWEBP_PATH" (or define a "WEBPCONVERT_CWEBP_PATH" variable in PHP), cwebp will simply execute the binary found at that path and not examine other alternatives. Also, there will be no hash check either. Doing so however makes your system a little bit less secure - exactly because it bypasses the hash-checking. If some security whole allows an attacker to upload a binary, replacing the one set like this, an attacker would then have a way to have that binary executed. Here is how you define the variable in PHP: `define("WEBPCONVERT_CWEBP_PATH", "/path/to/working/cwebp/for/example/one/in/src/Convert/Converters/Binaries/dir");`. Also beware that by doing this, you will need to update your code in order to take advantage of future cwebp releases.
+
+## stack options
+Options unique to the "stack" converter
+
 ### `stack-converters`
 ```
 Type:         array
@@ -316,13 +338,7 @@ Supported by:  stack
 ```
 Shuffle the converters in the stack. This can for example be used to balance load between several wpc instances in a substack, as illustrated [here](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/converters/stack.md)<br><br>
 
-### `use-nice`
-```
-Type:          boolean
-Default:       false
-Supported by:  cwebp, graphicsmagick, imagemagick, ffmpeg
-```
-This option only applies to converters which are using exec() to execute a binary directly on the host. If *use-nice* is set, it will be examined if the [`nice`]( https://en.wikipedia.org/wiki/Nice_(Unix)) command is available on the host. If it is, the binary is executed using *nice*. This assigns low priority to the process and will save system resources - but result in slower conversion.<br><br>
+## vips options
 
 ### `vips-smart-subsample` (DEPRECATED)
 ```
@@ -331,6 +347,9 @@ Default:       false
 Supported by:  vips
 ```
 This feature seemed not to be part of *libwebp* but intrinsic to vips. However, we were wrong - the feature is the same as 'sharp-yuv'. Use that instead.<br><br>
+
+
+## wcp options
 
 ### `wpc-api-key`
 ```
