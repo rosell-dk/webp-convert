@@ -123,9 +123,9 @@ trait OptionsTrait
                 'ui' => [
                     'component' => 'slider',
                     'links' => [['Guide', $introMd . '#alpha-quality']],
-                    'display' => "and(' .
-                        notEquals(state('option','encoding'),'lossless'),' .
-                        notEquals(state('imageType'),'jpeg'))"
+                    'display' => "and(" .
+                        "notEquals(state('option','encoding'),'lossless')," .
+                        "notEquals(state('imageType'),'jpeg'))"
                 ]
             ]],
             ['near-lossless', 'int', [
