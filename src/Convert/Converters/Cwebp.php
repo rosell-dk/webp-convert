@@ -37,15 +37,6 @@ class Cwebp extends AbstractConverter
      */
     public function getUniqueOptions($imageType)
     {
-      /*return [
-          new BooleanOption('try-cwebp', true),
-          new BooleanOption('try-common-system-paths', true),
-          new BooleanOption('try-discovering-cwebp', true),
-          new BooleanOption('try-supplied-binary-for-os', true),
-          new StringOption('command-line-options', ''),
-          new SensitiveStringOption('rel-path-to-precompiled-binaries', './Binaries'),
-          new StringOption('skip-these-precompiled-binaries', '')
-      ];*/
         $binariesForOS = [];
         if (isset(self::$suppliedBinariesInfo[PHP_OS])) {
             foreach (self::$suppliedBinariesInfo[PHP_OS] as $i => list($file, $hash, $version)) {
@@ -96,12 +87,12 @@ class Cwebp extends AbstractConverter
                 ]
             ]],
             ['try-supplied-binary-for-os', 'boolean', [
-                'title' => 'Try locating cwebp in common system paths',
+                'title' => 'Try precompiled cwebp binaries',
                 'description' =>
                     'If set, the converter will try use a precompiled cwebp binary that comes with webp-convert. ' .
                     'But only if it has a higher version that those found by other methods. As the library knows ' .
-                    'the versions of its cwebps, no additional time is spent executing them with the "-version" ' .
-                    'parameter. The binaries are hash-checked before executed. ' .
+                    'the versions of its bundled binaries, no additional time is spent executing them with the ' .
+                    '"-version" parameter. The binaries are hash-checked before executed. ' .
                     'The library btw. comes with several versions of precompiled cwebps because they have different ' .
                     'dependencies - some works on some systems and others on others.',
                 'default' => true,
@@ -118,7 +109,8 @@ class Cwebp extends AbstractConverter
                   'ui' => [
                       'component' => 'multi-select',
                       'advanced' => true,
-                      'options' => $binariesForOS
+                      'options' => $binariesForOS,
+                      'display' => "notEquals(state('option', 'try-supplied-binary-for-os'), false)"
                   ]
 
             ]],
@@ -130,6 +122,7 @@ class Cwebp extends AbstractConverter
                   'ui' => [
                       'component' => '',
                       'advanced' => true,
+                      'display' => "notEquals(state('option', 'try-supplied-binary-for-os'), false)"
                   ],
                   'sensitive' => true
             ]],
