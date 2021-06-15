@@ -89,7 +89,7 @@ trait OptionsTrait
                 ],
                 'ui' => [
                     'component' => 'slider',
-                    'display' => "notEquals(state('option', 'encoding'), 'lossless')"
+                    'display' => "option.encoding != 'lossless'"
                 ]
             ]],
             ['auto-limit', 'boolean', [
@@ -107,7 +107,7 @@ trait OptionsTrait
                             $introMd . '#preventing-unnecessarily-high-quality-setting-for-low-quality-jpegs'
                         ]
                     ],
-                    'display' => "notEquals(state('option', 'encoding'), 'lossless')"
+                    'display' => "option.encoding != 'lossless'"
                 ]
             ]],
             ['alpha-quality', 'int', [
@@ -123,9 +123,7 @@ trait OptionsTrait
                 'ui' => [
                     'component' => 'slider',
                     'links' => [['Guide', $introMd . '#alpha-quality']],
-                    'display' => "and(" .
-                        "notEquals(state('option','encoding'),'lossless')," .
-                        "notEquals(state('imageType'),'jpeg'))"
+                    'display' => "(option.encoding != 'lossless') && (imageType!='jpeg')"
                 ]
             ]],
             ['near-lossless', 'int', [
@@ -140,7 +138,7 @@ trait OptionsTrait
                 'ui' => [
                     'component' => 'slider',
                     'links' => [['Guide', $introMd . '#near-lossless']],
-                    'display' => "notEquals(state('option', 'encoding'), 'lossy')"
+                    'display' => "option.encoding != 'lossy'"
                 ]
             ]],
             ['metadata', 'string', [
@@ -211,7 +209,7 @@ trait OptionsTrait
                 'ui' => [
                     'component' => 'checkbox',
                     'advanced' => true,
-                    'display' => "and(notEquals(state('option','encoding'),'lossless'),gt(state('option','method'),2))"
+                    'display' => "(option.encoding != 'lossless') && (option.method>2)"
                 ]
             ]],
             ['preset', 'string', [

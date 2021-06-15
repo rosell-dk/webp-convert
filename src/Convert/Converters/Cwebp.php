@@ -122,7 +122,7 @@ class Cwebp extends AbstractConverter
                   'ui' => [
                       'component' => '',
                       'advanced' => true,
-                      'display' => "notEquals(state('option', 'try-supplied-binary-for-os'), false)"
+                      'display' => "option['try-supplied-binary-for-os'] == true"
                   ],
                   'sensitive' => true
             ]],
