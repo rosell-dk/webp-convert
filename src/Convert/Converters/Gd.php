@@ -134,13 +134,10 @@ class Gd extends AbstractConverter
                 $transparent = imagecolorallocatealpha($dst, 255, 255, 255, 127);
 
                 if ($transparent !== false) {
-
                     //simpler than flood fill
                     if (imagefilledrectangle($dst, 0, 0, imagesx($image), imagesy($image), $transparent) !== false) {
-
                         //restore default blending
                         if (imagealphablending($dst, true) !== false) {
-
                             if (imagecopy($dst, $image, 0, 0, 0, 0, imagesx($image), imagesy($image)) !== false) {
                                 $success = true;
                             }
@@ -176,7 +173,9 @@ class Gd extends AbstractConverter
         if (function_exists('imagepalettetotruecolor')) {
             return imagepalettetotruecolor($image);
         } else {
-            $this->logLn('imagepalettetotruecolor() is not available on this system - using custom implementation instead');
+            $this->logLn(
+                'imagepalettetotruecolor() is not available on this system - using custom implementation instead'
+            );
             return $this->makeTrueColorUsingWorkaround($image);
         }
     }
