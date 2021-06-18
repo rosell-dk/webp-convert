@@ -126,35 +126,35 @@ class Gd extends AbstractConverter
                 return false;
             }
 
+            $success = false;
+
             //prevent blending with default black
-            if (imagealphablending($dst, false) === false) {
-                return false;
+            if (imagealphablending($dst, false) !== false) {
+                //change the RGB values if you need, but leave alpha at 127
+                $transparent = imagecolorallocatealpha($dst, 255, 255, 255, 127);
+
+                if ($transparent !== false) {
+
+                    //simpler than flood fill
+                    if (imagefilledrectangle($dst, 0, 0, imagesx($image), imagesy($image), $transparent) !== false) {
+
+                        //restore default blending
+                        if (imagealphablending($dst, true) !== false) {
+
+                            if (imagecopy($dst, $image, 0, 0, 0, 0, imagesx($image), imagesy($image)) !== false) {
+                                $success = true;
+                            }
+                        };
+                    }
+                }
             }
-
-            //change the RGB values if you need, but leave alpha at 127
-            $transparent = imagecolorallocatealpha($dst, 255, 255, 255, 127);
-
-            if ($transparent === false) {
-                return false;
+            if ($success) {
+                imagedestroy($image);
+                $image = $dst;
+            } else {
+                imagedestroy($dst);
             }
-
-            //simpler than flood fill
-            if (imagefilledrectangle($dst, 0, 0, imagesx($image), imagesy($image), $transparent) === false) {
-                return false;
-            }
-
-            //restore default blending
-            if (imagealphablending($dst, true) === false) {
-                return false;
-            };
-
-            if (imagecopy($dst, $image, 0, 0, 0, 0, imagesx($image), imagesy($image)) === false) {
-                return false;
-            }
-            imagedestroy($image);
-
-            $image = $dst;
-            return true;
+            return $success;
         } else {
             // The necessary methods for converting color palette are not avalaible
             return false;
@@ -176,7 +176,7 @@ class Gd extends AbstractConverter
         if (function_exists('imagepalettetotruecolor')) {
             return imagepalettetotruecolor($image);
         } else {
-            // imagepalettetotruecolor() is not available on this system. Using custom implementation instead
+            $this->logLn('imagepalettetotruecolor() is not available on this system - using custom implementation instead');
             return $this->makeTrueColorUsingWorkaround($image);
         }
     }
