@@ -434,8 +434,8 @@ class Gd extends AbstractConverter
     // takes care of preparing stuff before calling doConvert, and validating after.
     protected function doActualConvert()
     {
-
-        $this->logLn('GD Version: ' . gd_info()["GD Version"]);
+        $versionString = gd_info()["GD Version"];
+        $this->logLn('GD Version: ' . $versionString);
 
         // Btw: Check out processWebp here:
         // https://github.com/Intervention/image/blob/master/src/Intervention/Image/Gd/Encoder.php
@@ -448,6 +448,23 @@ class Gd extends AbstractConverter
 
 
         if ($this->getMimeTypeOfSource() == 'image/png') {
+            if (function_exists('version_compare')) {
+                if (version_compare($versionString, "2.1.1", "<=")) {
+                    $this->logLn(
+                        'BEWARE: Your version of Gd looses the alpha chanel when converting to webp.' .
+                        'You should upgrade Gd, use another converter or stop converting PNGs. ' .
+                        'See: https://github.com/rosell-dk/webp-convert/issues/238'
+                    );
+                } elseif (version_compare($versionString, "2.2.4", "<=")) {
+                    $this->logLn(
+                        'BEWARE: Older versions of Gd looses the alpha chanel when converting to webp.' .
+                        'We have not tested if transparency fails on your (rather old) version of Gd. ' .
+                        'Please let us know. ' .
+                        'See: https://github.com/rosell-dk/webp-convert/issues/238'
+                    );
+                }
+            }
+
             // Try to set alpha blending
             $this->trySettingAlphaBlending($image);
         }
