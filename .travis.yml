@@ -64,7 +64,7 @@ matrix:
       - COMPOSER_TEST_SCRIPT="test"
 
     - name: "PHP 7.4, Xenial - With upload coverage"
-      php: 7.2
+      php: 7.4
       dist: xenial
       env:
       - UPLOADCOVERAGE=1
@@ -75,7 +75,7 @@ matrix:
       - INSTALLIMAGICK=1
       - IMAGEMAGICK_VERSION="7.0.8-43"
       - PHPUNIT_VERSION="^8.0"
-      - COMPOSER_TEST_SCRIPT="test-41"
+      - COMPOSER_TEST_SCRIPT="test"
 
     - name: "PHP 7.2, Xenial"
       php: 7.2
