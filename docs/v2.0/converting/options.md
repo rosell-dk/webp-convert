@@ -121,7 +121,7 @@ Type:          integer (0-100)
 Default:       60
 Supported by:  cwebp, vips
 ```
-This option allows you to get impressively better compression for lossless encoding, with minimal impact on visual quality. The result is still lossless (lossless encoding). What libwebp does is that it preprocesses the image before encoding it, in order to make it better suited for compression. The range is 0 (no preprocessing) to 100 (maximum preprocessing). A good compromise would be around 60. The option is ignored when encoding is set to lossy. Read more [here](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#near-lossless).<br><br>
+This option allows you to get impressively better compression for lossless encoding, with minimal impact on visual quality. The result is still lossless (lossless encoding). What libwebp does is that it preprocesses the image before encoding it, in order to make it better suited for compression. The range is 0 (maximum preprocessing) to 100 (no preprocessing). A good compromise would be around 60. The option is ignored when encoding is set to lossy. Read more [here](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/introduction-for-converting.md#near-lossless).<br><br>
 
 ### `png`
 ```
