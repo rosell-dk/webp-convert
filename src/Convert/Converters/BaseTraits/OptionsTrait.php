@@ -130,7 +130,7 @@ trait OptionsTrait
                 'title' => '"Near lossless" quality',
                 'description' =>
                     'This option allows you to get impressively better compression for lossless encoding, with ' .
-                    'minimal impact on visual quality. The range is 0 (no preprocessing) to 100 (maximum ' .
+                    'minimal impact on visual quality. The range is 0 (maximum preprocessing) to 100 (no ' .
                     'preprocessing).',
                 'default' => 60,
                 'minimum' => 0,
