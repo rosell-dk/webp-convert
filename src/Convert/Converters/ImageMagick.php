@@ -7,6 +7,8 @@ use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
+use WebPConvert\Helpers\BinaryDiscovery;
+use WebPConvert\Options\OptionFactory;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -30,6 +32,31 @@ class ImageMagick extends AbstractConverter
         ];
     }
 
+    /**
+     *  Get the options unique for this converter
+     *
+     * @return  array  Array of options
+     */
+    public function getUniqueOptions($imageType)
+    {
+        return OptionFactory::createOptions([
+            ['try-common-system-paths', 'boolean', [
+                'title' => 'Try locating ImageMagick in common system paths',
+                'description' =>
+                    'If set, the converter will look for a ImageMagick binaries residing in common system locations ' .
+                    'such as "/usr/bin/convert". If such exist, it is assumed that they are valid ImageMagick binaries. ' .
+                    'Note: All methods for discovering ImageMagick binaries are per default enabled. You can save a few ' .
+                    'microseconds by disabling some, but it is probably not worth it, as your ' .
+                    'setup will then become less resilient to system changes.',
+                'default' => true,
+                'ui' => [
+                    'component' => 'checkbox',
+                    'advanced' => true
+                ]
+            ]],
+        ]);
+    }
+
     // To futher improve this converter, I could check out:
     // https://github.com/Orbitale/ImageMagickPHP
 
@@ -41,6 +68,14 @@ class ImageMagick extends AbstractConverter
         if (!empty(getenv('WEBPCONVERT_IMAGEMAGICK_PATH'))) {
             return getenv('WEBPCONVERT_IMAGEMAGICK_PATH');
         }
+
+        if ($this->options['try-common-system-paths']) {
+            $binaries = BinaryDiscovery::discoverInCommonSystemPaths('convert');
+            if (!empty($binaries)) {
+                return $binaries[0];
+            }
+        }
+
         return 'convert';
     }
 
