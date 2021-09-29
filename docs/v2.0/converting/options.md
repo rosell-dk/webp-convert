@@ -371,8 +371,8 @@ Note: You can alternatively set the api url through the *WPC_API_URL* environmen
 
 ### `wpc-api-version`
 ```
-Type:          integer (0 - 1)
-Default:       0
+Type:          integer (0 - 1 - 2)
+Default:       2
 Supported by:  wpc
 ```
 <br>
