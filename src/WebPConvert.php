@@ -6,6 +6,7 @@ namespace WebPConvert;
 use WebPConvert\Convert\Converters\Stack;
 //use WebPConvert\Serve\ServeExistingOrHandOver;
 use WebPConvert\Convert\ConverterFactory;
+use WebPConvert\Options\OptionFactory;
 use WebPConvert\Serve\ServeConvertedWebP;
 use WebPConvert\Serve\ServeConvertedWebPWithErrorHandling;
 
@@ -124,6 +125,26 @@ class WebPConvert
             $generalOptionHash[$option['id']] = &$option;
         }
         //$result['general'] = $generalOptionIds;
+        array_unshift($result['general'], OptionFactory::createOption('converter', 'string', [
+                'title' => 'Converter',
+                'description' => 'Conversion method',
+                'description' => "Cwebp and vips are best. " .
+                    'the *magick are nearly as good, but only recent versions supports near-lossless. ' .
+                    'gd is poor, as it does not support any webp options. ' .
+                    'For full discussion, check the guide',
+                'default' => 'cwebp', // TODO: set to best working
+                'enum' => $converterIds,
+                'ui' => [
+                    'component' => 'select',
+                    'links' => [
+                        [
+                          'Guide',
+                          'https://github.com/rosell-dk/webp-convert/blob/master/docs/v1.3/converting/converters.md'
+                        ]
+                    ],
+                ]
+            ])->getDefinition());
+
 
         //getUIForGeneralOptions
         //$generalOption->addOptions(... $this->getGeneralOptions($imageType));
