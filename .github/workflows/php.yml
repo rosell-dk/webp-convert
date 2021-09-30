@@ -1,0 +1,169 @@
+name: PHP
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  php80:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.0'
+        extensions: exif, mbstring, fileinfo, gd
+
+    - name: Setup problem matchers for PHP
+      run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+
+    - name: Setup problem matchers for PHPUnit
+      run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+    - name: Validate composer.json and composer.lock
+      run: composer validate --strict
+
+    #- name: Downgrade PHP unit to a version that supports PHP 7.4
+    #  run: composer require "phpunit/phpunit:^8.0" --dev
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v2
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php80-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php80-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Run test suite
+      run: composer run-script test
+
+  php74andcodecov:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '7.4'
+        extensions: exif, mbstring, fileinfo, gd
+
+    - name: Setup problem matchers for PHP
+      run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+
+    - name: Setup problem matchers for PHPUnit
+      run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+    - name: Validate composer.json and composer.lock
+      run: composer validate --strict
+
+    - name: Downgrade PHP unit to a version that supports PHP 7.4
+      run: composer require "phpunit/phpunit:^8.0" --dev
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v2
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php74-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php74-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Run test suite
+      run: composer run-script test
+
+    - name: Upload Scrutinizer coverage
+      uses: sudo-bot/action-scrutinizer@latest
+      with:
+        cli-args: "--format=php-clover build/logs/coverage.clover"
+
+  php71:
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '7.1'
+        extensions: exif, mbstring, fileinfo, gd
+
+    - name: Setup problem matchers for PHP
+      run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+
+    - name: Setup problem matchers for PHPUnit
+      run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+    - name: Validate composer.json and composer.lock
+      run: composer validate --strict
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v2
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php71-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php71-
+
+    - name: Downgrade PHP unit to a version that supports PHP 7.1
+      run: composer require "phpunit/phpunit:^7.0" --dev
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Run test suite
+      run: composer run-script test
+
+  php56:
+    runs-on: ubuntu-16.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '5.6'
+        extensions: exif, mbstring, fileinfo, gd
+
+    - name: Setup problem matchers for PHP
+      run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+
+    - name: Setup problem matchers for PHPUnit
+      run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+    - name: Validate composer.json and composer.lock
+      run: composer validate --strict
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v2
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php56-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php56-
+
+    - name: Downgrade PHP unit to a version that supports PHP 5.6
+      run: composer require "phpunit/phpunit:5.7.27" --dev
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Run test suite
+      run: composer run-script test
