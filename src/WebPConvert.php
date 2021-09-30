@@ -145,8 +145,6 @@ class WebPConvert
             //$optionDefinitions = $c->getOptionDefinitions($imageType, $returnGeneral, $returnGeneralSupport);
             $optionDefinitions = $c->getUniqueOptionDefinitions($imageType);
             $result[$converterId] = $optionDefinitions;
-
-
         }
         return $result;
     }
