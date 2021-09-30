@@ -503,6 +503,11 @@ trait OptionsTrait
         return [];
     }
 
+    public function getUnsupportedGeneralOptions()
+    {
+        return $this->getUnsupportedDefaultOptions();
+    }
+
     /**
         *  Get unique option definitions.
         *
@@ -522,6 +527,16 @@ trait OptionsTrait
         return $uniqueOptions->getDefinitions();
     }
 
+    /**
+     *  Get general option definitions.
+     *
+     *  Gets definitions of all general options (not just the ones supported by current converter)
+     *  For UI's, as a way to automatically adjust their setting screens.
+     *
+     *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
+     *
+     *  @return  array  Array of options definitions - ready to be json encoded, or whatever
+     */
     public function getGeneralOptionDefinitions($imageType = 'png')
     {
         $generalOptions = new Options();

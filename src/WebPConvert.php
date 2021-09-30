@@ -106,21 +106,47 @@ class WebPConvert
         $returnGeneralSupport = true
     ) {
 
-        $ids = self::getConverterIds();
+        // TODO: Return converter too - even though it is no a "real" option
+
+        $converterIds = self::getConverterIds();
         $result = [];
 
         $ewww = ConverterFactory::makeConverter('ewww', '', '');
 
+        //$result['general'] = $ewww->getGeneralOptionDefinitions();
         $result['general'] = $ewww->getGeneralOptionDefinitions();
+        $generalOptionHash = [];
+        $generalOptionIds = [];
+        foreach ($result['general'] as &$option) {
+            $generalOptionIds[] = $option['id'];
+            //$option['supportedBy'] = $converterIds;   // we will remove the unsupported below
+            $option['unsupportedBy'] = [];
+            $generalOptionHash[$option['id']] = &$option;
+        }
+        //$result['general'] = $generalOptionIds;
+
         //getUIForGeneralOptions
         //$generalOption->addOptions(... $this->getGeneralOptions($imageType));
 
-        foreach ($ids as $id) {
-            $c = ConverterFactory::makeConverter($id, '', '');
+        $supportedBy = [];
+
+        foreach ($converterIds as $converterId) {
+            $c = ConverterFactory::makeConverter($converterId, '', '');
+
+            //$supports = $generalOptionIds;
+            foreach ($c->getUnsupportedGeneralOptions() as $optionId) {
+                //$result['general']
+                //if ()$support[]
+                //unsupportedBy
+                $generalOptionHash[$optionId]['unsupportedBy'][] = $converterId;
+            }
+
+
             //$optionDefinitions = $c->getOptionDefinitions($imageType, $returnGeneral, $returnGeneralSupport);
             $optionDefinitions = $c->getUniqueOptionDefinitions($imageType);
+            $result[$converterId] = $optionDefinitions;
 
-            $result[$id] = $optionDefinitions;
+
         }
         return $result;
     }
