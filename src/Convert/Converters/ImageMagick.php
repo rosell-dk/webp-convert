@@ -44,10 +44,8 @@ class ImageMagick extends AbstractConverter
                 'title' => 'Try locating ImageMagick in common system paths',
                 'description' =>
                     'If set, the converter will look for a ImageMagick binaries residing in common system locations ' .
-                    'such as "/usr/bin/convert". If such exist, it is assumed that they are valid ImageMagick binaries. ' .
-                    'Note: All methods for discovering ImageMagick binaries are per default enabled. You can save a few ' .
-                    'microseconds by disabling some, but it is probably not worth it, as your ' .
-                    'setup will then become less resilient to system changes.',
+                    'such as "/usr/bin/convert". ' .
+                    'If such exist, it is assumed that they are valid ImageMagick binaries. ',
                 'default' => true,
                 'ui' => [
                     'component' => 'checkbox',
