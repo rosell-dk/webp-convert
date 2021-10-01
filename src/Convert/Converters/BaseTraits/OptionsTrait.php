@@ -131,7 +131,7 @@ trait OptionsTrait
                 'description' =>
                     'This option allows you to get impressively better compression for lossless encoding, with ' .
                     'minimal impact on visual quality. The range is 0 (maximum preprocessing) to 100 (no ' .
-                    'preprocessing).',
+                    'preprocessing). Read the guide for more info.',
                 'default' => 60,
                 'minimum' => 0,
                 'maximum' => 100,

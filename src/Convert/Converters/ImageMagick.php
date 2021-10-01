@@ -194,8 +194,7 @@ class ImageMagick extends AbstractConverter
             $commandArguments[] = '-define webp:use-sharp-yuv=true';
         }
 
-        // Unfortunately, near-lossless does not seem to be supported.
-        // it does have a "preprocessing" option, which may be doing something similar
+        // TODO: Imagick now supports near-lossless !
 
         $commandArguments[] = '-define webp:method=' . $options['method'];
 
