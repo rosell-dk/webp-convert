@@ -27,7 +27,6 @@ class ImageMagick extends AbstractConverter
     protected function getUnsupportedDefaultOptions()
     {
         return [
-            'near-lossless',
             'size-in-percentage',
         ];
     }
@@ -138,9 +137,10 @@ class ImageMagick extends AbstractConverter
     /**
      * Build command line options
      *
+     * @param  string $versionNumber. Ie "6.9.10-23"
      * @return string
      */
-    private function createCommandLineOptions()
+    private function createCommandLineOptions($versionNumber = 'unknown')
     {
         // PS: Available webp options for imagemagick are documented here:
         // https://imagemagick.org/script/webp.php
@@ -194,6 +194,12 @@ class ImageMagick extends AbstractConverter
             $commandArguments[] = '-define webp:use-sharp-yuv=true';
         }
 
+        if (version_compare($versionNumber, '7.0.10-54', '>=')) {
+            $commandArguments[] = '-define webp:near-lossless=' . escapeshellarg($options['near-lossless']);
+        } else {
+            $this->logLn('Note: near-lossless is not supported in your version of ImageMagick. ImageMagic >= 7.0.10-54 is required', 'italic');
+        }
+
         // TODO: Imagick now supports near-lossless !
 
         $commandArguments[] = '-define webp:method=' . $options['method'];
@@ -206,9 +212,16 @@ class ImageMagick extends AbstractConverter
 
     protected function doActualConvert()
     {
-        $this->logLn($this->getVersion());
+        $version = $this->getVersion();
 
-        $command = $this->getPath() . ' ' . $this->createCommandLineOptions() . ' 2>&1';
+        $this->logLn($version);
+
+        preg_match('#\d+\.\d+\.\d+[\d\.\-]+#', $version, $matches);
+        $versionNumber = (isset($matches[0]) ? $matches[0] : 'unknown');
+
+        $this->logLn('Extracted version number: ' . $versionNumber);
+
+        $command = $this->getPath() . ' ' . $this->createCommandLineOptions($versionNumber) . ' 2>&1';
 
         $useNice = (($this->options['use-nice']) && self::hasNiceSupport()) ? true : false;
         if ($useNice) {

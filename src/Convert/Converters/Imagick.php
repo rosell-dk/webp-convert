@@ -24,7 +24,6 @@ class Imagick extends AbstractConverter
     protected function getUnsupportedDefaultOptions()
     {
         return [
-            'near-lossless',
             'size-in-percentage',
             'use-nice'
         ];
@@ -106,6 +105,13 @@ class Imagick extends AbstractConverter
         // This might throw - we let it!
         $im = new \Imagick($this->source);
 
+        $version = \Imagick::getVersion();
+        $this->logLn('Version: ' . $version['versionString']);
+
+        preg_match('#\d+\.\d+\.\d+[\d\.\-]+#', $version['versionString'], $matches);
+        $versionNumber = (isset($matches[0]) ? $matches[0] : 'unknown');
+        $this->logLn('Extracted version number: ' . $versionNumber);
+
         //$im = new \Imagick();
         //$im->pingImage($this->source);
         //$im->readImage($this->source);
@@ -134,12 +140,22 @@ class Imagick extends AbstractConverter
         $im->setOption('webp:low-memory', $options['low-memory'] ? 'true' : 'false');
         $im->setOption('webp:alpha-quality', $options['alpha-quality']);
 
+        if (version_compare($versionNumber, '7.0.10-54', '>=')) {
+            $im->setOption('webp:near-lossless', $options['near-lossless']);
+        } else {
+            $this->logLn('Note: near-lossless is not supported in your version of ImageMagick. ImageMagic >= 7.0.10-54 is required', 'italic');
+        }
+
         if ($options['auto-filter'] === true) {
             $im->setOption('webp:auto-filter', 'true');
         }
 
         if ($options['sharp-yuv'] === true) {
             $im->setOption('webp:use-sharp-yuv', 'true');
+        }
+
+        if ($options['near-lossless'] != 100) {
+            $im->setOption('webp:near-lossless', $options['near-lossless']);
         }
 
         if ($options['metadata'] == 'none') {
