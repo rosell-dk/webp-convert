@@ -142,8 +142,9 @@ class ImageMagick extends AbstractConverter
      */
     private function createCommandLineOptions($versionNumber = 'unknown')
     {
-        // PS: Available webp options for imagemagick are documented here:
-        // https://imagemagick.org/script/webp.php
+        // Available webp options for imagemagick are documented here:
+        // - https://imagemagick.org/script/webp.php
+        // - https://github.com/ImageMagick/ImageMagick/blob/main/coders/webp.c
 
         // We should perhaps implement low-memory. Its already in cwebp, it
         // could perhaps be promoted to a general option

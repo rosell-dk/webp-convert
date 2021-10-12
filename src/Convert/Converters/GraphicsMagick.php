@@ -93,9 +93,8 @@ class GraphicsMagick extends AbstractConverter
      */
     private function createCommandLineOptions()
     {
-        // I cannot find any documentation on available webp options for graphicsmagick :(
-        // Checking for new supported options is currently done by searching for "webp" in the
-        // news page: http://www.graphicsmagick.org/NEWS.html
+        // For available webp options, check out:
+        // https://github.com/kstep/graphicsmagick/blob/master/coders/webp.c
 
         $commandArguments = [];
 
