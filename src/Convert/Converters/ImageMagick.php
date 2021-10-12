@@ -199,7 +199,11 @@ class ImageMagick extends AbstractConverter
         if (version_compare($versionNumber, '7.0.10-54', '>=')) {
             $commandArguments[] = '-define webp:near-lossless=' . escapeshellarg($options['near-lossless']);
         } else {
-            $this->logLn('Note: near-lossless is not supported in your version of ImageMagick. ImageMagic >= 7.0.10-54 is required', 'italic');
+            $this->logLn(
+                'Note: near-lossless is not supported in your version of ImageMagick. ' .
+                    'ImageMagic >= 7.0.10-54 is required',
+                'italic'
+            );
         }
 
         $commandArguments[] = '-define webp:method=' . $options['method'];
