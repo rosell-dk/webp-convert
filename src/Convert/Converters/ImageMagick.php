@@ -161,51 +161,35 @@ class ImageMagick extends AbstractConverter
         $options = $this->options;
 
         if (!is_null($options['preset'])) {
-            if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #300
-                if ($options['preset'] != 'none') {
-                    $imageHint = $options['preset'];
-                    switch ($imageHint) {
-                        case 'drawing':
-                        case 'icon':
-                        case 'text':
-                            $imageHint = 'graph';
-                            $this->logLn(
-                                'The "preset" value was mapped to "graph" because imagemagick does not support "drawing",' .
-                                ' "icon" and "text", but grouped these into one option: "graph".'
-                            );
-                    }
-                    $commandArguments[] = '-define webp:image-hint=' . escapeshellarg($imageHint);
+            // "image-hint" is at least available from 6.9.4-0 (I can't see further back)
+            if ($options['preset'] != 'none') {
+                $imageHint = $options['preset'];
+                switch ($imageHint) {
+                    case 'drawing':
+                    case 'icon':
+                    case 'text':
+                        $imageHint = 'graph';
+                        $this->logLn(
+                            'The "preset" value was mapped to "graph" because imagemagick does not support "drawing",' .
+                            ' "icon" and "text", but grouped these into one option: "graph".'
+                        );
                 }
-            } else {
-              $this->logLn(
-                  'Note: "preset" option (which is called "image-hint" in imagemagick) is not supported in your version of ImageMagick. ' .
-                      'ImageMagic >= 7.0.1-0 is required',
-                  'italic'
-              );
+                $commandArguments[] = '-define webp:image-hint=' . escapeshellarg($imageHint);
             }
         }
 
         if ($options['encoding'] == 'lossless') {
-            if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #302
-                $commandArguments[] = '-define webp:lossless=true';
-            } else {
-                $commandArguments[] = '-define webp:lossless=1';
-            }
+            // lossless is at least available from 6.9.4-0 (I can't see further back)
+            $commandArguments[] = '-define webp:lossless=true';
         }
 
         if ($options['low-memory']) {
-            if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #300
-                $commandArguments[] = '-define webp:low-memory=true';
-            } else {
-              $this->logLn(
-                  'Note: "low-memory" option is not supported in your version of ImageMagick. ' .
-                      'ImageMagic >= 7.0.1-0 is required',
-                  'italic'
-              );
-            }
+            // low-memory is at least available from 6.9.4-0 (I can't see further back)
+            $commandArguments[] = '-define webp:low-memory=true';
         }
 
         if ($options['auto-filter'] === true) {
+            // auto-filter is at least available from 6.9.4-0 (I can't see further back)
             $commandArguments[] = '-define webp:auto-filter=true';
         }
 
@@ -214,15 +198,8 @@ class ImageMagick extends AbstractConverter
         }
 
         if ($options['alpha-quality'] !== 100) {
-            if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #300
-                $commandArguments[] = '-define webp:alpha-quality=' . strval($options['alpha-quality']);
-            } else {
-              $this->logLn(
-                  'Note: "alpha-quality" option is not supported in your version of ImageMagick. ' .
-                      'ImageMagic >= 7.0.1-0 is required',
-                  'italic'
-              );
-            }
+            // alpha-quality is at least available from 6.9.4-0 (I can't see further back)
+            $commandArguments[] = '-define webp:alpha-quality=' . strval($options['alpha-quality']);
         }
 
         if ($options['sharp-yuv'] === true) {
@@ -249,15 +226,8 @@ class ImageMagick extends AbstractConverter
             }
         }
 
-        if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #300
-            $commandArguments[] = '-define webp:method=' . $options['method'];
-        } else {
-            $this->logLn(
-                'Note: "method" option is not supported in your version of ImageMagick. ' .
-                    'ImageMagic >= 7.0.1-0 is required',
-                'italic'
-            );
-        }
+        // "method" is at least available from 6.9.4-0 (I can't see further back)
+        $commandArguments[] = '-define webp:method=' . $options['method'];
 
         $commandArguments[] = escapeshellarg($this->source);
         $commandArguments[] = escapeshellarg('webp:' . $this->destination);
