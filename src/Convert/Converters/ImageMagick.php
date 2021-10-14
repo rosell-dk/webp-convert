@@ -161,19 +161,27 @@ class ImageMagick extends AbstractConverter
         $options = $this->options;
 
         if (!is_null($options['preset'])) {
-            if ($options['preset'] != 'none') {
-                $imageHint = $options['preset'];
-                switch ($imageHint) {
-                    case 'drawing':
-                    case 'icon':
-                    case 'text':
-                        $imageHint = 'graph';
-                        $this->logLn(
-                            'The "preset" value was mapped to "graph" because imagemagick does not support "drawing",' .
-                            ' "icon" and "text", but grouped these into one option: "graph".'
-                        );
+            if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #300
+                if ($options['preset'] != 'none') {
+                    $imageHint = $options['preset'];
+                    switch ($imageHint) {
+                        case 'drawing':
+                        case 'icon':
+                        case 'text':
+                            $imageHint = 'graph';
+                            $this->logLn(
+                                'The "preset" value was mapped to "graph" because imagemagick does not support "drawing",' .
+                                ' "icon" and "text", but grouped these into one option: "graph".'
+                            );
+                    }
+                    $commandArguments[] = '-define webp:image-hint=' . escapeshellarg($imageHint);
                 }
-                $commandArguments[] = '-define webp:image-hint=' . escapeshellarg($imageHint);
+            } else {
+              $this->logLn(
+                  'Note: "preset" option (which is called "image-hint" in imagemagick) is not supported in your version of ImageMagick. ' .
+                      'ImageMagic >= 7.0.1-0 is required',
+                  'italic'
+              );
             }
         }
         if ($options['encoding'] == 'lossless') {
