@@ -205,7 +205,15 @@ class ImageMagick extends AbstractConverter
             $commandArguments[] = '-strip';
         }
         if ($options['alpha-quality'] !== 100) {
-            $commandArguments[] = '-define webp:alpha-quality=' . strval($options['alpha-quality']);
+            if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #300
+                $commandArguments[] = '-define webp:alpha-quality=' . strval($options['alpha-quality']);
+            } else {
+              $this->logLn(
+                  'Note: "alpha-quality" option is not supported in your version of ImageMagick. ' .
+                      'ImageMagic >= 7.0.1-0 is required',
+                  'italic'
+              );
+            }
         }
         if ($options['sharp-yuv'] === true) {
             if (version_compare($versionNumber, '7.0.8-26', '>=')) {
@@ -231,7 +239,15 @@ class ImageMagick extends AbstractConverter
             }
         }
 
-        $commandArguments[] = '-define webp:method=' . $options['method'];
+        if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #300
+            $commandArguments[] = '-define webp:method=' . $options['method'];
+        } else {
+            $this->logLn(
+                'Note: "method" option is not supported in your version of ImageMagick. ' .
+                    'ImageMagic >= 7.0.1-0 is required',
+                'italic'
+            );
+        }
 
         $commandArguments[] = escapeshellarg($this->source);
         $commandArguments[] = escapeshellarg('webp:' . $this->destination);
