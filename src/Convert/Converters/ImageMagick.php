@@ -180,7 +180,15 @@ class ImageMagick extends AbstractConverter
             $commandArguments[] = '-define webp:lossless=true';
         }
         if ($options['low-memory']) {
-            $commandArguments[] = '-define webp:low-memory=true';
+            if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #300
+                $commandArguments[] = '-define webp:low-memory=true';
+            } else {
+              $this->logLn(
+                  'Note: low-memory is not supported in your version of ImageMagick. ' .
+                      'ImageMagic >= 7.0.1-0 is required',
+                  'italic'
+              );
+            }
         }
         if ($options['auto-filter'] === true) {
             if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #300
