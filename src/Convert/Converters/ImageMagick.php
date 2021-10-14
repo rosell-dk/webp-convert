@@ -183,7 +183,11 @@ class ImageMagick extends AbstractConverter
             $commandArguments[] = '-define webp:low-memory=true';
         }
         if ($options['auto-filter'] === true) {
-            $commandArguments[] = '-define webp:auto-filter=true';
+            if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #300
+                $commandArguments[] = '-define webp:auto-filter=true';
+            } else {
+                $commandArguments[] = '-define webp:autofilter=1';
+            }
         }
         if ($options['metadata'] == 'none') {
             $commandArguments[] = '-strip';
@@ -203,9 +207,8 @@ class ImageMagick extends AbstractConverter
             }
         }
 
-        // added in #299
         if ($options['near-lossless'] != 100) {
-            if (version_compare($versionNumber, '7.0.10-54', '>=')) {
+            if (version_compare($versionNumber, '7.0.10-54', '>=')) { // #299
                 $commandArguments[] = '-define webp:near-lossless=' . escapeshellarg($options['near-lossless']);
             } else {
                 $this->logLn(
