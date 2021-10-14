@@ -192,7 +192,15 @@ class ImageMagick extends AbstractConverter
             $commandArguments[] = '-define webp:alpha-quality=' . strval($options['alpha-quality']);
         }
         if ($options['sharp-yuv'] === true) {
-            $commandArguments[] = '-define webp:use-sharp-yuv=true';
+            if (version_compare($versionNumber, '7.0.8-26', '>=')) {
+                $commandArguments[] = '-define webp:use-sharp-yuv=true';
+            } else {
+                $this->logLn(
+                    'Note: sharp-yuv is not supported in your version of ImageMagick. ' .
+                        'ImageMagic >= 7.0.8-26 is required',
+                    'italic'
+                );
+            }
         }
 
         // added in #299
