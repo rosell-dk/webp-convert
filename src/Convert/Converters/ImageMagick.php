@@ -188,7 +188,7 @@ class ImageMagick extends AbstractConverter
                 $commandArguments[] = '-define webp:low-memory=true';
             } else {
               $this->logLn(
-                  'Note: low-memory is not supported in your version of ImageMagick. ' .
+                  'Note: "low-memory" option is not supported in your version of ImageMagick. ' .
                       'ImageMagic >= 7.0.1-0 is required',
                   'italic'
               );
@@ -220,7 +220,7 @@ class ImageMagick extends AbstractConverter
                 $commandArguments[] = '-define webp:use-sharp-yuv=true';
             } else {
                 $this->logLn(
-                    'Note: sharp-yuv is not supported in your version of ImageMagick. ' .
+                    'Note: "sharp-yuv" option is not supported in your version of ImageMagick. ' .
                         'ImageMagic >= 7.0.8-26 is required',
                     'italic'
                 );
@@ -232,7 +232,7 @@ class ImageMagick extends AbstractConverter
                 $commandArguments[] = '-define webp:near-lossless=' . escapeshellarg($options['near-lossless']);
             } else {
                 $this->logLn(
-                    'Note: near-lossless is not supported in your version of ImageMagick. ' .
+                    'Note: "near-lossless" option is not supported in your version of ImageMagick. ' .
                         'ImageMagic >= 7.0.10-54 is required',
                     'italic'
                 );
