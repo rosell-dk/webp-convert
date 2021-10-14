@@ -177,7 +177,11 @@ class ImageMagick extends AbstractConverter
             }
         }
         if ($options['encoding'] == 'lossless') {
-            $commandArguments[] = '-define webp:lossless=true';
+            if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #302
+                $commandArguments[] = '-define webp:lossless=true';
+            } else {
+                $commandArguments[] = '-define webp:lossless=1';
+            }
         }
         if ($options['low-memory']) {
             if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #300
@@ -191,7 +195,7 @@ class ImageMagick extends AbstractConverter
             }
         }
         if ($options['auto-filter'] === true) {
-            if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #300
+            if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #301
                 $commandArguments[] = '-define webp:auto-filter=true';
             } else {
                 $commandArguments[] = '-define webp:autofilter=1';
