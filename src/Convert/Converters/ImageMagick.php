@@ -184,6 +184,7 @@ class ImageMagick extends AbstractConverter
               );
             }
         }
+
         if ($options['encoding'] == 'lossless') {
             if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #302
                 $commandArguments[] = '-define webp:lossless=true';
@@ -191,6 +192,7 @@ class ImageMagick extends AbstractConverter
                 $commandArguments[] = '-define webp:lossless=1';
             }
         }
+
         if ($options['low-memory']) {
             if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #300
                 $commandArguments[] = '-define webp:low-memory=true';
@@ -202,16 +204,15 @@ class ImageMagick extends AbstractConverter
               );
             }
         }
+
         if ($options['auto-filter'] === true) {
-            if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #301
-                $commandArguments[] = '-define webp:auto-filter=true';
-            } else {
-                $commandArguments[] = '-define webp:autofilter=1';
-            }
+            $commandArguments[] = '-define webp:auto-filter=true';
         }
+
         if ($options['metadata'] == 'none') {
             $commandArguments[] = '-strip';
         }
+
         if ($options['alpha-quality'] !== 100) {
             if (version_compare($versionNumber, '7.0.1-0', '>=')) { // #300
                 $commandArguments[] = '-define webp:alpha-quality=' . strval($options['alpha-quality']);
@@ -223,6 +224,7 @@ class ImageMagick extends AbstractConverter
               );
             }
         }
+
         if ($options['sharp-yuv'] === true) {
             if (version_compare($versionNumber, '7.0.8-26', '>=')) {
                 $commandArguments[] = '-define webp:use-sharp-yuv=true';
