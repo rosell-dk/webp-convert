@@ -104,17 +104,20 @@ class Imagick extends AbstractConverter
 
         // This might throw - we let it!
         $im = new \Imagick($this->source);
-
-        $version = \Imagick::getVersion();
-        $this->logLn('Version: ' . $version['versionString']);
-
-        preg_match('#\d+\.\d+\.\d+[\d\.\-]+#', $version['versionString'], $matches);
-        $versionNumber = (isset($matches[0]) ? $matches[0] : 'unknown');
-        $this->logLn('Extracted version number: ' . $versionNumber);
-
         //$im = new \Imagick();
         //$im->pingImage($this->source);
         //$im->readImage($this->source);
+
+        $version = \Imagick::getVersion();
+        $this->logLn('ImageMagic API version (full): ' . $version['versionString']);
+
+        preg_match('#\d+\.\d+\.\d+[\d\.\-]+#', $version['versionString'], $matches);
+        $versionNumber = (isset($matches[0]) ? $matches[0] : 'unknown');
+        $this->logLn('ImageMagic API version (just the number): ' . $versionNumber);
+
+        // Note: good enough for info, but not entirely reliable - see #304
+        $extVersion = (defined('\Imagick::IMAGICK_EXTVER') ? \Imagick::IMAGICK_EXTVER : phpversion('imagick'));
+        $this->logLn('Imagic extension version: ' . $extVersion);
 
         $im->setImageFormat('WEBP');
 
@@ -157,7 +160,15 @@ class Imagick extends AbstractConverter
         }
 
         if ($options['sharp-yuv'] === true) {
-            $im->setOption('webp:use-sharp-yuv', 'true');
+            if (version_compare($versionNumber, '7.0.8-26', '>=')) {
+                $im->setOption('webp:use-sharp-yuv', 'true');
+            } else {
+              $this->logLn(
+                  'Note: "sharp-yuv" option is not supported in your version of ImageMagick. ' .
+                      'ImageMagic >= 7.0.8-26 is required',
+                  'italic'
+              );
+            }
         }
 
         if ($options['metadata'] == 'none') {
