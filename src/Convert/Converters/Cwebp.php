@@ -565,7 +565,7 @@ class Cwebp extends AbstractConverter
     /**
      * Detect the version of a cwebp binary.
      *
-     * @param $binaary  string  The binary to detect version for (path to cwebp or simply "cwebp")
+     * @param string $binary  The binary to detect version for (path to cwebp or simply "cwebp")
      *
      * @return  string|int  Version string (ie "1.0.2") OR return code, in case of failure
      */
@@ -608,7 +608,7 @@ class Cwebp extends AbstractConverter
     /**
      * Check versions for an array of binaries.
      *
-     * @param   array  array of binaries to detect the version of
+     * @param  array  $binaries  array of binaries to detect the version of
      *
      * @return  array  the "detected" key holds working binaries and their version numbers, the
      *                  the "failed" key holds failed binaries and their error codes.
