@@ -139,17 +139,19 @@ Bread on the table don't come for free, even though this library does, and alway
 - Max Kreminsky ($65)
 - Steven Sullivan ($51)
 
+## New in 2.7.0:
+- ImageMagick now supports the "near-lossless" option (provided Imagick >= 7.0.10-54) [#299](https://github.com/rosell-dk/webp-convert/issues/299)
+- Added "try-common-system-paths" option for ImageMagick (default: true). So ImageMagick will now peek for "convert" in common system paths [#293](https://github.com/rosell-dk/webp-convert/issues/293)
+- Fixed memory leak in Gd on very old versions of PHP [#264](https://github.com/rosell-dk/webp-convert/issues/264)
+- And more (view closed issues [here](https://github.com/rosell-dk/webp-convert/milestone/24?closed=1)
+
 ## New in 2.6.0:
 - Introduced [auto-limit](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#auto-limit) option which replaces setting "quality" to "auto" [#281](https://github.com/rosell-dk/webp-convert/issues/281)
 - Added "sharp-yuv" option and made it default on. [Its great](https://www.ctrl.blog/entry/webp-sharp-yuv.html), use it! Works in most converters (works in cwebp, vips, imagemagick, graphicsmagick, imagick and gmagick) [#267](https://github.com/rosell-dk/webp-convert/issues/267), [#280](https://github.com/rosell-dk/webp-convert/issues/280), [#284](https://github.com/rosell-dk/webp-convert/issues/284)
 - Bumped cwebp binaries to 1.2.0 [#273](https://github.com/rosell-dk/webp-convert/issues/273)
 - vips now supports "method" option and "preset" option.
 - graphicsmagick now supports "auto-filter" potion
-- vips, imagick, imagemagick, graphicsmagick and gmagick now supports "preset" option [#275(https://github.com/rosell-dk/webp-convert/issues/275)
+- vips, imagick, imagemagick, graphicsmagick and gmagick now supports "preset" option [#275](https://github.com/rosell-dk/webp-convert/issues/275)
 - cwebp now only validates hash of supplied precompiled binaries when necessary. This cuts down conversion time. [#287](https://github.com/rosell-dk/webp-convert/issues/287)
 - Added [new option](https://github.com/rosell-dk/webp-convert/blob/master/docs/v2.0/converting/options.md#cwebp-skip-these-precompiled-binaries) to cwebp for skipping precompiled binaries that are known not to work on current system. This will cut down on conversion time. [#288](https://github.com/rosell-dk/webp-convert/issues/288)
 - And more (view closed issues [here](https://github.com/rosell-dk/webp-convert/milestone/22?closed=1))
-
-
-I'm checking out github ci. It is still in queue...
-[![Build Status](https://img.shields.io/github/workflow/status/rosell-dk/webp-convert/PHP?style=flat-square)](https://github.com/rosell-dk/webp-convert/actions/workflows/php.yml)
