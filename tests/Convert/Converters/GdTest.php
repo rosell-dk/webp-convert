@@ -141,9 +141,10 @@ class GdTest extends TestCase
         }
 
         // It is operating and image should be ok.
-        // - so it should be able to create image resource
+        // - so it should be able to create image resource (or, for PHP 8, an \GdImage object)
         $image = $gdExposer->createImageResource();
-        $this->assertEquals(gettype($image), 'resource');
+        $isResourceOrObject = ((gettype($image) == 'resource') || (gettype($image) == 'object'));
+        $this->assertTrue($isResourceOrObject, 'Expected createImageResource to return a resource or an object but got:' . gettype($image));
 
 /*
         // Try the workaround method.
@@ -174,7 +175,9 @@ class GdTest extends TestCase
         // It is operating and image should be ok.
         // - so it should be able to create image resource
         $image = $gdExposer->createImageResource();
-        $this->assertEquals(gettype($image), 'resource');
+        $isResourceOrObject = ((gettype($image) == 'resource') || (gettype($image) == 'object'));
+        $this->assertTrue($isResourceOrObject, 'Expected createImageResource to return a resource or an object but got:' . gettype($image));
+
         $this->assertFalse(imageistruecolor($image), 'image is already true color');
         $gdExposer->tryToMakeTrueColorIfNot($image);
         $this->assertTrue(imageistruecolor($image), 'image is not true color after trying to make it');
