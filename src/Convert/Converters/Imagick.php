@@ -163,11 +163,11 @@ class Imagick extends AbstractConverter
             if (version_compare($versionNumber, '7.0.8-26', '>=')) {
                 $im->setOption('webp:use-sharp-yuv', 'true');
             } else {
-              $this->logLn(
-                  'Note: "sharp-yuv" option is not supported in your version of ImageMagick. ' .
+                $this->logLn(
+                    'Note: "sharp-yuv" option is not supported in your version of ImageMagick. ' .
                       'ImageMagic >= 7.0.8-26 is required',
-                  'italic'
-              );
+                    'italic'
+                );
             }
         }
 
