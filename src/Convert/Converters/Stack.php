@@ -12,6 +12,7 @@ use WebPConvert\Options\BooleanOption;
 use WebPConvert\Options\ArrayOption;
 use WebPConvert\Options\GhostOption;
 use WebPConvert\Options\SensitiveArrayOption;
+use WebPConvert\Options\OptionFactory;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -48,13 +49,63 @@ class Stack extends AbstractConverter
 
     public function getUniqueOptions($imageType)
     {
+        return OptionFactory::createOptions([
+            ['converters', 'array', [
+                'title' => 'Converters',
+                'description' => 'Converters to try, ordered by priority.',
+                'default' => self::getAvailableConverters(),
+                'ui' => [
+                    'component' => 'multi-select',
+                    'options' => self::getAvailableConverters(),
+                    'advanced' => true
+                ]
+            ]],
+            ['converter-options', 'array', [
+                'title' => 'Converter options',
+                'description' =>
+                    'Extra options for specific converters.',
+                'default' => [],
+                'sensitive' => true,
+                'ui' => null
+            ]],
+            ['preferred-converters', 'array', [
+                'title' => 'Preferred converters',
+                'description' =>
+                    'With this option you can move specified converters to the top of the stack. ' .
+                    'The converters are specified by id.',
+                'default' => [],
+                'ui' => null
+            ]],
+            ['extra-converters', 'array', [
+                'title' => 'Extra converters',
+                'description' =>
+                    'Add extra converters to the bottom of the stack',
+                'default' => [],
+                'sensitive' => true,
+                'ui' => null
+            ]],
+            ['shuffle', 'boolean', [
+                'title' => 'Shuffle',
+                'description' =>
+                    'Shuffles the converter order on each conversion. ' .
+                    'Can for example be used to spread out requests on multiple cloud converters',
+                'default' => false,
+                'ui' => [
+                    'component' => 'checkbox',
+                    'advanced' => true
+                ]
+            ]],
+        ]);
+
+
+/*
         return [
             new SensitiveArrayOption('converters', self::getAvailableConverters()),
             new SensitiveArrayOption('converter-options', []),
             new BooleanOption('shuffle', false),
             new ArrayOption('preferred-converters', []),
             new SensitiveArrayOption('extra-converters', [])
-        ];
+        ];*/
     }
 
     /**

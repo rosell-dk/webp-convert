@@ -101,17 +101,11 @@ class WebPConvert
      *
      *  @return  array  Array of options definitions - ready to be json encoded, or whatever
      */
-     /*
-     Commented out, as it is not ready for release yet
-
-
     public static function getConverterOptionDefinitions(
         $imageType = 'png',
         $returnGeneral = true,
         $returnGeneralSupport = true
     ) {
-
-        // TODO: Return converter too - even though it is no a "real" option
 
         $converterIds = self::getConverterIds();
         $result = [];
@@ -136,7 +130,7 @@ class WebPConvert
                     'the *magick are nearly as good, but only recent versions supports near-lossless. ' .
                     'gd is poor, as it does not support any webp options. ' .
                     'For full discussion, check the guide',
-                'default' => 'cwebp', // TODO: set to best working
+                'default' => 'stack',
                 'enum' => $converterIds,
                 'ui' => [
                     'component' => 'select',
@@ -154,6 +148,7 @@ class WebPConvert
         //$generalOption->addOptions(... $this->getGeneralOptions($imageType));
 
         $supportedBy = [];
+        $uniqueOptions  = [];
 
         foreach ($converterIds as $converterId) {
             $c = ConverterFactory::makeConverter($converterId, '', '');
@@ -169,8 +164,9 @@ class WebPConvert
 
             //$optionDefinitions = $c->getOptionDefinitions($imageType, $returnGeneral, $returnGeneralSupport);
             $optionDefinitions = $c->getUniqueOptionDefinitions($imageType);
-            $result[$converterId] = $optionDefinitions;
+            $uniqueOptions[$converterId] = $optionDefinitions;
         }
+        $result['unique'] = $uniqueOptions;
         return $result;
-    }*/
+    }
 }

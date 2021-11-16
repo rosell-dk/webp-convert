@@ -110,7 +110,7 @@ class Cwebp extends AbstractConverter
                       'component' => 'multi-select',
                       'advanced' => true,
                       'options' => $binariesForOS,
-                      'display' => "notEquals(state('option', 'try-supplied-binary-for-os'), false)"
+                      'display' => "option['cwebp-try-supplied-binary-for-os'] == true"
                   ]
 
             ]],
@@ -122,7 +122,7 @@ class Cwebp extends AbstractConverter
                   'ui' => [
                       'component' => '',
                       'advanced' => true,
-                      'display' => "option['try-supplied-binary-for-os'] == true"
+                      'display' => "option['cwebp-try-supplied-binary-for-os'] == true"
                   ],
                   'sensitive' => true
             ]],
