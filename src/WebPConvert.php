@@ -94,18 +94,10 @@ class WebPConvert
      *
      *  Added in order to give GUI's a way to automatically adjust their setting screens.
      *
-     *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
-     *  @param   bool     $returnGeneral              Whether the general setting definitions should be returned
-     *  @param   bool     $returnGeneralSupport       Whether the ids of supported/unsupported general options
-     *                                                should be returned
-     *
      *  @return  array  Array of options definitions - ready to be json encoded, or whatever
      */
-    public static function getConverterOptionDefinitions(
-        $imageType = 'png',
-        $returnGeneral = true,
-        $returnGeneralSupport = true
-    ) {
+    public static function getConverterOptionDefinitions()
+    {
 
         $converterIds = self::getConverterIds();
         $result = [];
@@ -143,27 +135,18 @@ class WebPConvert
                 ]
             ])->getDefinition());
 
-
-        //getUIForGeneralOptions
-        //$generalOption->addOptions(... $this->getGeneralOptions($imageType));
-
         $supportedBy = [];
         $uniqueOptions  = [];
 
         foreach ($converterIds as $converterId) {
             $c = ConverterFactory::makeConverter($converterId, '', '');
 
-            //$supports = $generalOptionIds;
             foreach ($c->getUnsupportedGeneralOptions() as $optionId) {
-                //$result['general']
-                //if ()$support[]
                 //unsupportedBy
                 $generalOptionHash[$optionId]['unsupportedBy'][] = $converterId;
             }
 
-
-            //$optionDefinitions = $c->getOptionDefinitions($imageType, $returnGeneral, $returnGeneralSupport);
-            $optionDefinitions = $c->getUniqueOptionDefinitions($imageType);
+            $optionDefinitions = $c->getUniqueOptionDefinitions('any');
             $uniqueOptions[$converterId] = $optionDefinitions;
         }
         $result['unique'] = $uniqueOptions;

@@ -13,6 +13,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Inva
 use WebPConvert\Options\BooleanOption;
 use WebPConvert\Options\IntegerOption;
 use WebPConvert\Options\SensitiveStringOption;
+use WebPConvert\Options\OptionFactory;
 
 /**
  * Convert images to webp using Wpc (a cloud converter based on WebP Convert).
@@ -34,14 +35,61 @@ class Wpc extends AbstractConverter
 
     public function getUniqueOptions($imageType)
     {
-        return [
-            new SensitiveStringOption('api-key', ''),   /* for communicating with wpc api v.1+ */
-            new SensitiveStringOption('secret', ''),    /* for communicating with wpc api v.0 */
+        return OptionFactory::createOptions([
+            ['api-key', 'string', [
+               'title' => 'API key',
+               'description' => '',
+               'default' => '',
+               'sensitive' => true,
+               'ui' => [
+                   'component' => 'input',
+                   'advanced' => false,
+                   'display' => "option['wpc-api-version'] != 0"
+               ]
+            ]],
+            ['secret', 'string', [
+               'title' => 'Secret',
+               'description' => 'URL to connect to',
+               'default' => '',
+               'sensitive' => true,
+               'ui' => [
+                   'component' => 'input',
+                   'advanced' => false,
+                   'display' => "option['wpc-api-version'] == 0"
+               ]
+            ]],
+            ['api-version', 'int', [
+               'title' => 'API version',
+               'description' => '',
+               'default' => 2,
+               'minimum' => 0,
+               'maximum' => 2,
+               'ui' => [
+                   'component' => 'select',
+                   'advanced' => false,
+                   'options' => ['0', '1', '2'],
+               ]
+            ]],
+            ['crypt-api-key-in-transfer', 'boolean', [
+               'title' => 'Crypt API key in transfer',
+               'description' => '',
+               'default' => false,
+               'ui' => [
+                   'component' => 'checkbox',
+                   'advanced' => true,
+                   'display' => "option['wpc-api-version'] >= 1"
+               ]
+            ]],
+        ]);
+
+        /*return [
+            new SensitiveStringOption('api-key', ''),
+            new SensitiveStringOption('secret', ''),
             new SensitiveStringOption('api-url', ''),
-            new SensitiveStringOption('url', ''),       /* DO NOT USE. Only here to keep the protection */
+            new SensitiveStringOption('url', ''),       // DO NOT USE. Only here to keep the protection
             new IntegerOption('api-version', 2, 0, 2),
-            new BooleanOption('crypt-api-key-in-transfer', false)  /* new in api v.1 */
-        ];
+            new BooleanOption('crypt-api-key-in-transfer', false)  // new in api v.1
+        ];*/
     }
 
     public function supportsLossless()
