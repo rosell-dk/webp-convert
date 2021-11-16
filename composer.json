@@ -57,7 +57,7 @@
   ],
   "require": {
       "php": "^5.6 | ^7.0 | ^8.0",
-      "rosell-dk/image-mime-type-guesser": "^0.3"
+      "rosell-dk/image-mime-type-guesser": "^0.4.0"
   },
   "suggest": {
       "ext-gd": "to use GD extension for converting. Note: Gd must be compiled with webp support",
