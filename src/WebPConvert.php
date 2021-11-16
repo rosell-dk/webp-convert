@@ -125,8 +125,8 @@ class WebPConvert
         //$result['general'] = $generalOptionIds;
         array_unshift($result['general'], OptionFactory::createOption('converter', 'string', [
                 'title' => 'Converter',
-                'description' => 'Conversion method',
-                'description' => "Cwebp and vips are best. " .
+                'description' => 'Conversion method. ' .
+                    "Cwebp and vips are best. " .
                     'the *magick are nearly as good, but only recent versions supports near-lossless. ' .
                     'gd is poor, as it does not support any webp options. ' .
                     'For full discussion, check the guide',
