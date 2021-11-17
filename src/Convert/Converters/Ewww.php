@@ -39,7 +39,7 @@ class Ewww extends AbstractConverter
                 'default' => '',
                 'sensitive' => true,
                 'ui' => [
-                    'component' => 'input',
+                    'component' => 'password',
                 ]
             ]],
             ['check-key-status-before-converting', 'boolean', [
