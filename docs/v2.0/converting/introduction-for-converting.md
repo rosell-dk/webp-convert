@@ -108,17 +108,6 @@ The following low quality (q=50) jpeg weighs 54 kb. If this is converted to webp
 
 ![A low quality jpeg](https://raw.githubusercontent.com/rosell-dk/webp-convert/master/docs/v2.0/converting/architecture-q50-w600.jpg)
 
-**Q:** What do you get if you convert an excessively high quality jpeg into an excessively high quality webp?\
-**A:** An excessively big file
-
-The size of a webp file grows enormously with the quality setting. For the web however, a quality above 75 is rarely needed. For this reason the library has a per default sets the quality to 75 for jpegs.
-
-So, how much can be gained? A lot!
-The following excessively high quality jpeg (q=100) weighs 146 kb. Converting it to webp with quality=100 results in a 99kb image. Converting it to quality=85 results in a 40kb image.
-
-![A (too) high quality jpeg](https://raw.githubusercontent.com/rosell-dk/webp-convert/master/docs/v2.0/converting/mouse-q100.jpg)
-
-
 ### Auto selecting between lossless/lossy encoding
 WebP files can be encoded using either *lossless* or *lossy* encoding. The JPEG format is lossy and the PNG is lossless. However, this does not mean that you necessarily get the best conversion by always encoding JPEG to lossy and PNG to lossless. With JPEGs it is often the case, as they are usually pictures and pictures usually best encoded as lossy. With PNG it is however a different story, as you often can get a better compression using lossy encoding, also when using high quality level of say 85, which should be enough for the web.
 
@@ -152,6 +141,17 @@ You can read more about the alpha-quality option [here](https://developers.googl
 
 ### Sharp YUV
 libwebp has an overlooked option which improves accuracy for RGB to YUV mapping at the price for longer conversion time. You can control it with the new 'sharp-yuv' option (introduced in webp-convert 2.6.0). Read an appraisal of the option [here](https://www.ctrl.blog/entry/webp-sharp-yuv.html).
+
+### Tip: don't set quality too high...
+**Q:** What do you get if you convert an excessively high quality jpeg into an excessively high quality webp?\
+**A:** An excessively big file
+
+The size of a webp file grows enormously with the quality setting. For the web however, a quality above 75 is rarely needed. For this reason the library has a per default sets the quality to 75 for jpegs.
+
+So, how much can be gained? A lot!
+The following excessively high quality jpeg (q=100) weighs 146 kb. Converting it to webp with quality=100 results in a 99kb image. Converting it to quality=85 results in a 40kb image.
+
+![A (too) high quality jpeg](https://raw.githubusercontent.com/rosell-dk/webp-convert/master/docs/v2.0/converting/mouse-q100.jpg)
 
 ### PNG og JPEG-specific options.
 
