@@ -197,8 +197,8 @@ trait OptionsTrait
                     '2 seconds to convert, will takes about 15 seconds to convert with auto-filter. ',
                 'default' => false,
                 'ui' => [
-                  'component' => 'checkbox',
-                  'advanced' => true,
+                    'component' => 'checkbox',
+                    'advanced' => true,
                 ]
             ]],
             ['low-memory', 'boolean', [
@@ -221,12 +221,12 @@ trait OptionsTrait
                     'source material. It even overrides them. It does however not override the quality option. ' .
                     '"none" means that no preset will be set',
                 'default' => 'none',
-                'enum' => ['none', 'default', 'photo', 'picture', 'drawing', 'icon', 'text']],
+                'enum' => ['none', 'default', 'photo', 'picture', 'drawing', 'icon', 'text'],
                 'ui' => [
                     'component' => 'select',
                     'advanced' => true,
                 ]
-            ],
+            ]],
             ['size-in-percentage', 'int', ['default' => null, 'minimum' => 0, 'maximum' => 100, 'allow-null' => true]],
             ['skip', 'boolean', ['default' => false]],
             ['log-call-arguments', 'boolean', ['default' => false]],
@@ -459,7 +459,11 @@ trait OptionsTrait
             } else {
                 if (($option instanceof GhostOption) || in_array($id, $unsupported)) {
                 } else {
-                    $implicit[] = $option;
+                    if (!$option->isDeprecated()) {
+                        if ($id != 'skip') {
+                            $implicit[] = $option;
+                        }
+                    }
                 }
             }
         }
