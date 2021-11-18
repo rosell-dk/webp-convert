@@ -170,10 +170,10 @@ class WebPConvert
             $optionDefinitions = $c->getUniqueOptionDefinitions('any');
 
             if ($filterOutOptionsWithoutUI) {
-              $optionDefinitions = array_filter($optionDefinitions, function ($value) {
-                  return !is_null($value['ui']);
-              });
-              $optionDefinitions = array_values($optionDefinitions); // re-index
+                $optionDefinitions = array_filter($optionDefinitions, function ($value) {
+                    return !is_null($value['ui']);
+                });
+                $optionDefinitions = array_values($optionDefinitions); // re-index
             }
 
             $uniqueOptions[$converterId] = $optionDefinitions;
