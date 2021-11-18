@@ -43,7 +43,7 @@ class WebPConvert
     {
         if (isset($options['converter'])) {
             $c = ConverterFactory::makeConverter($options['converter'], $source, $destination, $options = [], $logger);
-            $c->doConvert();            
+            $c->doConvert();
         } else {
             Stack::convert($source, $destination, $options, $logger);
         }
