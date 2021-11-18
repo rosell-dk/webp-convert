@@ -77,7 +77,7 @@ trait OptionsTrait
             ]],
             ['quality', 'int', [
                 'title' => 'Quality (Lossy)',
-                'description' => 'Quality for lossy encoding. ',
+                'description' => 'Quality for lossy encoding. In case you enable "auto-limit", you can consider this property a maximum quality.',
                 'default' => ($isPng ? 85 : 75),
                 'default-png' => 85,
                 'default-jpeg' => 75,
