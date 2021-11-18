@@ -41,7 +41,12 @@ class WebPConvert
      */
     public static function convert($source, $destination, $options = [], $logger = null)
     {
-        Stack::convert($source, $destination, $options, $logger);
+        if (isset($options['converter'])) {
+            $c = ConverterFactory::makeConverter($options['converter'], $source, $destination, $options = [], $logger);
+            $c->doConvert();            
+        } else {
+            Stack::convert($source, $destination, $options, $logger);
+        }
     }
 
     /**
