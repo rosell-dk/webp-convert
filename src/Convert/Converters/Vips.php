@@ -246,7 +246,7 @@ class Vips extends AbstractConverter
             }
 
             if ($nameOfPropertyNotFound != '') {
-                $msg = 'Your version of vipslib does not support the "' . $nameOfPropertyNotFound . '" property';
+                $msg = '** Note: Your version of vipslib does not support the "' . $nameOfPropertyNotFound . '" property';
 
                 switch ($nameOfPropertyNotFound) {
                     case 'alpha_q':
@@ -265,7 +265,7 @@ class Vips extends AbstractConverter
                         $msg .= ' (It was introduced in vips 8.4)';
                         break;
                 }
-                $msg .= '. The option is ignored.';
+                $msg .= '. The option is ignored.**';
 
 
                 $this->logLn($msg);
