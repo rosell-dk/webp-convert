@@ -101,7 +101,7 @@ class WebPConvert
      *
      * Added in order to give GUI's a way to automatically adjust their setting screens.
      *
-     * @param bool filterOutOptionsWithoutUI
+     * @param bool $filterOutOptionsWithoutUI
      *
      * @return  array  Array of options definitions - ready to be json encoded, or whatever
      */
