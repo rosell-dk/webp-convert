@@ -42,7 +42,9 @@ class WebPConvert
     public static function convert($source, $destination, $options = [], $logger = null)
     {
         if (isset($options['converter'])) {
-            $c = ConverterFactory::makeConverter($options['converter'], $source, $destination, $options, $logger);
+            $converter = $options['converter'];
+            unset($options['converter']);
+            $c = ConverterFactory::makeConverter($converter, $source, $destination, $options, $logger);
             $c->doConvert();
         } else {
             Stack::convert($source, $destination, $options, $logger);
@@ -95,13 +97,15 @@ class WebPConvert
     }
 
     /**
-     *  Get option definitions for all converters
+     * Get option definitions for all converters
      *
-     *  Added in order to give GUI's a way to automatically adjust their setting screens.
+     * Added in order to give GUI's a way to automatically adjust their setting screens.
      *
-     *  @return  array  Array of options definitions - ready to be json encoded, or whatever
+     * @param bool filterOutOptionsWithoutUI
+     *
+     * @return  array  Array of options definitions - ready to be json encoded, or whatever
      */
-    public static function getConverterOptionDefinitions()
+    public static function getConverterOptionDefinitions($filterOutOptionsWithoutUI = true)
     {
 
         $converterIds = self::getConverterIds();
@@ -110,7 +114,19 @@ class WebPConvert
         $ewww = ConverterFactory::makeConverter('ewww', '', '');
 
         //$result['general'] = $ewww->getGeneralOptionDefinitions();
-        $result['general'] = $ewww->getGeneralOptionDefinitions();
+        //$result['general'] = $ewww->getGeneralOptionDefinitions();
+        $general = $ewww->getGeneralOptionDefinitions();
+
+        // remove those without ui
+        if ($filterOutOptionsWithoutUI) {
+            $general = array_filter($general, function ($value) {
+                return !is_null($value['ui']);
+            });
+            $general = array_values($general); // re-index
+        }
+
+        $result['general'] = $general;
+
         $generalOptionHash = [];
         $generalOptionIds = [];
         foreach ($result['general'] as &$option) {
@@ -152,6 +168,14 @@ class WebPConvert
             }
 
             $optionDefinitions = $c->getUniqueOptionDefinitions('any');
+
+            if ($filterOutOptionsWithoutUI) {
+              $optionDefinitions = array_filter($optionDefinitions, function ($value) {
+                  return !is_null($value['ui']);
+              });
+              $optionDefinitions = array_values($optionDefinitions); // re-index
+            }
+
             $uniqueOptions[$converterId] = $optionDefinitions;
         }
         $result['unique'] = $uniqueOptions;
