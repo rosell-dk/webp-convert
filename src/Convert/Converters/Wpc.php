@@ -44,7 +44,7 @@ class Wpc extends AbstractConverter
                'ui' => [
                    'component' => 'password',
                    'advanced' => false,
-                   'display' => "option['wpc-api-version'] != 0"
+                   'display' => "option('wpc-api-version') != 0"
                ]
             ]],
             ['secret', 'string', [
@@ -55,7 +55,7 @@ class Wpc extends AbstractConverter
                'ui' => [
                    'component' => 'password',
                    'advanced' => false,
-                   'display' => "option['wpc-api-version'] == 0"
+                   'display' => "option('wpc-api-version') == 0"
                ]
             ]],
             ['api-url', 'string', [
@@ -87,7 +87,7 @@ class Wpc extends AbstractConverter
                'ui' => [
                    'component' => 'checkbox',
                    'advanced' => true,
-                   'display' => "option['wpc-api-version'] >= 1"
+                   'display' => "option('wpc-api-version') >= 1"
                ]
             ]],
         ]);
