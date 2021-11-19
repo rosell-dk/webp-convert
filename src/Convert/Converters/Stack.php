@@ -53,6 +53,7 @@ class Stack extends AbstractConverter
                 'title' => 'Converters',
                 'description' => 'Converters to try, ordered by priority.',
                 'default' => self::getAvailableConverters(),
+                'sensitive' => true,
                 'ui' => [
                     'component' => 'multi-select',
                     'options' => self::getAvailableConverters(),

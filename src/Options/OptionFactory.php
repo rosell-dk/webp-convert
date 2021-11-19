@@ -60,7 +60,11 @@ class OptionFactory
                 break;
 
             case 'array':
-                $option = new ArrayOption($optionName, $def['default']);
+                if (isset($def['sensitive']) && ($def['sensitive'] == true)) {
+                    $option = new SensitiveArrayOption($optionName, $def['default']);
+                } else {
+                    $option = new ArrayOption($optionName, $def['default']);
+                }
                 break;
         }
         unset($def['default']);
