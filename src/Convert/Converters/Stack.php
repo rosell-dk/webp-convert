@@ -234,7 +234,7 @@ class Stack extends AbstractConverter
             $beginTime = microtime(true);
 
             $this->ln();
-            $this->logLn('Trying: ' . $converterId, 'italic');
+            $this->logLn($converterId . ' converter ignited', 'bold');
 
             $converter = ConverterFactory::makeConverter(
                 $converterId,

@@ -393,78 +393,73 @@ trait OptionsTrait
         $this->logLn('');
         $this->logLn('Options:');
         $this->logLn('------------');
-        $this->logLn(
-            'The following options have been set explicitly. ' .
-            'Note: it is the resulting options after merging down the "jpeg" and "png" options and any ' .
-            'converter-prefixed options.'
-        );
-        $this->logLn('- source: ' . $this->source);
-        $this->logLn('- destination: ' . $this->destination);
 
         $unsupported = $this->getUnsupportedDefaultOptions();
-        //$this->logLn('Unsupported:' . print_r($this->getUnsupportedDefaultOptions(), true));
-        $ignored = [];
-        $implicit = [];
+        $received = [];
+        $implicitlySet = [];
         foreach ($this->options2->getOptionsMap() as $id => $option) {
-            if (($id == 'png') || ($id == 'jpeg')) {
+            if (in_array($id, [
+                'png', 'jpeg', '_skip_input_check', '_suppress_success_message', 'skip', 'log_call_arguments'
+            ])) {
                 continue;
             }
             if ($option->isValueExplicitlySet()) {
-                if (($option instanceof GhostOption) || in_array($id, $unsupported)) {
-                    //$this->log(' (note: this option is ignored by this converter)');
-                    if (($id != '_skip_input_check') && ($id != '_suppress_success_message')) {
-                        $ignored[] = $option;
-                    }
-                } else {
-                    $this->log('- ' . $id . ': ');
-                    $this->log($option->getValueForPrint());
-                    $this->logLn('');
-                }
+                $received[] = $option;
             } else {
                 if (($option instanceof GhostOption) || in_array($id, $unsupported)) {
+                    //$received[] = $option;
                 } else {
                     if (!$option->isDeprecated()) {
-                        if ($id != 'skip') {
-                            $implicit[] = $option;
-                        }
+                        $implicitlySet[] = $option;
                     }
                 }
             }
         }
 
-        if (count($implicit) > 0) {
+        if (count($received) > 0) {
+            foreach ($received as $option) {
+                $this->log('- ' . $option->getId() . ': ');
+                if ($option instanceof GhostOption) {
+                    $this->log('  (unknown to ' . $this->getConverterId() . ')', 'bold');
+                    $this->logLn('');
+                    continue;
+                }
+                $this->log($option->getValueForPrint());
+                if ($option->isDeprecated()) {
+                    $this->log(' (deprecated)', 'bold');
+                }
+                if (in_array($option->getId(), $unsupported)) {
+                    if ($this instanceof Stack) {
+                        //$this->log('  *(passed on)*');
+                    } else {
+                        $this->log(' (unsupported by ' . $this->getConverterId() . ')', 'bold');
+                    }
+                }
+                $this->logLn('');
+            }
             $this->logLn('');
             $this->logLn(
-                'The following options have not been explicitly set, so using the following defaults:'
+                'Note that these are the resulting options after merging down the "jpeg" and "png" options and any ' .
+                'converter-prefixed options'
             );
-            foreach ($implicit as $option) {
+        }
+
+        if (count($implicitlySet) > 0) {
+            $this->logLn('');
+            $this->logLn('Defaults:');
+            $this->logLn('------------');
+            $this->logLn(
+                'The following options was not set, so using the following defaults:'
+            );
+            foreach ($implicitlySet as $option) {
                 $this->log('- ' . $option->getId() . ': ');
                 $this->log($option->getValueForPrint());
+                /*if ($option instanceof GhostOption) {
+                    $this->log('  **(ghost)**');
+                }*/
                 $this->logLn('');
             }
         }
-        if (count($ignored) > 0) {
-            $this->logLn('');
-            if ($this instanceof Stack) {
-                $this->logLn(
-                    'The following options were supplied and are passed on to the converters in the stack:'
-                );
-                foreach ($ignored as $option) {
-                    $this->log('- ' . $option->getId() . ': ');
-                    $this->log($option->getValueForPrint());
-                    $this->logLn('');
-                }
-            } else {
-                $this->logLn(
-                    'The following options were supplied but are ignored because they are not supported by this ' .
-                        'converter:'
-                );
-                foreach ($ignored as $option) {
-                    $this->logLn('- ' . $option->getId());
-                }
-            }
-        }
-        $this->logLn('------------');
     }
 
     // to be overridden by converters
@@ -569,41 +564,4 @@ trait OptionsTrait
         }
         return $supportedGeneralIds;
     }
-
-       /**
-        *  Get option definitions.
-        *
-        *  Added in order to give GUI's a way to automatically adjust their setting screens.
-        *
-        *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
-        *  @param   bool     $returnGeneral              Whether the general setting definitions should be returned
-        *  @param   bool     $returnGeneralSupport       Whether the ids of supported/unsupported general options
-        *                                                should be returned
-        *
-        *  @return  array  Array of options definitions - ready to be json encoded, or whatever
-        */
-        /*
-    public function getOptionDefinitions($imageType = 'png', $returnGeneral = true, $returnGeneralSupport = true)
-    {
-        $result = [
-            'unique' => $this->getUniqueOptionDefinitions($imageType),
-        ];
-        if ($returnGeneral) {
-            $result['general'] = $this->getSupportedGeneralOptionDefinitions($imageType);
-        }
-        if ($returnGeneralSupport) {
-            $result['supported-general'] = $this->getSupportedGeneralOptionIds();
-            $result['unsupported-general'] = $this->getUnsupportedDefaultOptions();
-        }
-        return $result;
-    }*/
-/*
-    public static function getUniqueOptions($imageType = 'png')
-    {
-        $options = new Options();
-//        $options->addOptions(... self::getGeneralOptions($imageType));
-//        $options->addOptions(... self::getUniqueOptions($imageType));
-
-        return $options->getDefinitions();
-    }*/
 }

@@ -120,14 +120,19 @@ abstract class AbstractConverter
         $this->setProvidedOptions($options);
 
         if (!isset($this->options['_skip_input_check'])) {
-            $this->log('WebP Convert 2.7.0', 'italic');
-            $this->logLn(' ignited.');
-            $this->logLn('- PHP version: ' . phpversion());
+            $this->logLn('WebP Convert 2.7.0 ignited', 'bold');
+            $this->logLn('PHP version: ' . phpversion());
             if (isset($_SERVER['SERVER_SOFTWARE'])) {
-                $this->logLn('- Server software: ' . $_SERVER['SERVER_SOFTWARE']);
+                $this->logLn('Server software: ' . $_SERVER['SERVER_SOFTWARE']);
             }
             $this->logLn('');
-            $this->logLn(self::getConverterDisplayName() . ' converter ignited');
+            if (isset($this->options['log-call-arguments']) && $this->options['log-call-arguments']) {
+                $this->logLn('source: ' . $this->source);
+                $this->logLn('destination: ' . $this->destination);
+                $this->logLn('');
+            }
+
+            $this->logLn(self::getConverterDisplayName() . ' converter ignited', 'bold');
         }
     }
 
