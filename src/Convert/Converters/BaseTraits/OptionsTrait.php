@@ -314,6 +314,7 @@ trait OptionsTrait
         foreach ($this->providedOptions as $optionKey => $optionValue) {
             if (substr($optionKey, 0, $strLen + 1) == ($converterId . '-')) {
                 $this->providedOptions[substr($optionKey, $strLen + 1)] = $optionValue;
+                unset($this->providedOptions[$optionKey]);
             }
         }
 
