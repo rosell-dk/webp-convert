@@ -25,7 +25,6 @@ class Gmagick extends AbstractConverter
         return [
             'near-lossless',
             'size-in-percentage',
-            'use-nice'
         ];
     }
 

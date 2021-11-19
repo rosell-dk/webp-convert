@@ -34,7 +34,6 @@ class Gd extends AbstractConverter
             'preset',
             'sharp-yuv',
             'size-in-percentage',
-            'use-nice'
         ];
     }
 

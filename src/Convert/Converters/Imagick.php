@@ -25,7 +25,6 @@ class Imagick extends AbstractConverter
     {
         return [
             'size-in-percentage',
-            'use-nice'
         ];
     }
 

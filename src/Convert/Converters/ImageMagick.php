@@ -39,6 +39,7 @@ class ImageMagick extends AbstractConverter
     public function getUniqueOptions($imageType)
     {
         return OptionFactory::createOptions([
+            self::niceOption(),
             ['try-common-system-paths', 'boolean', [
                 'title' => 'Try locating ImageMagick in common system paths',
                 'description' =>
@@ -248,9 +249,8 @@ class ImageMagick extends AbstractConverter
 
         $command = $this->getPath() . ' ' . $this->createCommandLineOptions($versionNumber) . ' 2>&1';
 
-        $useNice = (($this->options['use-nice']) && self::hasNiceSupport()) ? true : false;
+        $useNice = ($this->options['use-nice'] && $this->checkNiceSupport());
         if ($useNice) {
-            $this->logLn('using nice');
             $command = 'nice ' . $command;
         }
         $this->logLn('Executing command: ' . $command);

@@ -16,6 +16,7 @@ trait ExecTrait
 
     abstract protected function logLn($msg, $style = '');
 
+
     /**
      * Helper function for examining if "nice" command is available
      *
@@ -38,6 +39,35 @@ trait ExecTrait
             return false;
         }
         return false; // to satisfy phpstan
+    }
+
+    protected function checkNiceSupport()
+    {
+        $ok = self::hasNiceSupport();
+        if ($ok) {
+            $this->logLn('Tested "nice" command - it works :)');
+        } else {
+            $this->logLn(
+                '**No "nice" support. To save a few ms, you can disable the "use-nice" option.**'
+            );
+        }
+        return $ok;
+    }
+
+    protected static function niceOption()
+    {
+        return ['use-nice', 'boolean', [
+            'title' => 'Use nice',
+            'description' =>
+                'If *use-nice* is set, it will be examined if the *nice* command is available. ' .
+                'If it is, the binary is executed using *nice*. This assigns low priority to the process and ' .
+                'will save system resources - but result in slower conversion.',
+            'default' => true,
+            'ui' => [
+                'component' => 'checkbox',
+                'advanced' => true
+            ]
+        ]];
     }
 
     /**

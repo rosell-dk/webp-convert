@@ -7,6 +7,7 @@ use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
+use WebPConvert\Options\OptionFactory;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -27,15 +28,24 @@ class FFMpeg extends AbstractConverter
         return [
             'alpha-quality',
             'auto-filter',
-            'encoding',
             'low-memory',
             'metadata',
             'near-lossless',
-            'preset',
             'sharp-yuv',
             'size-in-percentage',
-            'use-nice'
         ];
+    }
+
+    /**
+     * Get the options unique for this converter
+     *
+     * @return  array  Array of options
+     */
+    public function getUniqueOptions($imageType)
+    {
+        return OptionFactory::createOptions([
+            self::niceOption()
+        ]);
     }
 
     private function getPath()
@@ -143,9 +153,8 @@ class FFMpeg extends AbstractConverter
 
         $command = $this->getPath() . ' ' . $this->createCommandLineOptions() . ' 2>&1';
 
-        $useNice = (($this->options['use-nice']) && self::hasNiceSupport()) ? true : false;
+        $useNice = ($this->options['use-nice'] && $this->checkNiceSupport());
         if ($useNice) {
-            $this->logLn('using nice');
             $command = 'nice ' . $command;
         }
         $this->logLn('Executing command: ' . $command);

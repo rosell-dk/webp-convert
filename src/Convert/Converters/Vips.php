@@ -27,7 +27,6 @@ class Vips extends AbstractConverter
         return [
             'auto-filter',
             'size-in-percentage',
-            'use-nice'
         ];
     }
 

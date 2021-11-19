@@ -45,6 +45,7 @@ class Cwebp extends AbstractConverter
         }
 
         return OptionFactory::createOptions([
+            self::niceOption(),
             ['try-cwebp', 'boolean', [
                 'title' => 'Try plain cwebp command',
                 'description' =>
@@ -938,7 +939,8 @@ class Cwebp extends AbstractConverter
             'Starting conversion, using the first of these. If that should fail, ' .
             'the next will be tried and so on.'
         );
-        $useNice = (($this->options['use-nice']) && self::hasNiceSupport());
+        $useNice = ($this->options['use-nice'] && $this->checkNiceSupport());
+
         $success = false;
         foreach ($binaryVersions as $binary => $version) {
             if (isset($suppliedBinariesHash[$binary])) {

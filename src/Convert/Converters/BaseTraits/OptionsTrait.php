@@ -231,7 +231,7 @@ trait OptionsTrait
             ['skip', 'boolean', ['default' => false]],
             ['log-call-arguments', 'boolean', ['default' => false]],
             // TODO: use-nice should not be a "general" option
-            ['use-nice', 'boolean', ['default' => false]],
+            //['use-nice', 'boolean', ['default' => false]],
             ['jpeg', 'array', ['default' => []]],
             ['png', 'array', ['default' => []]],
 
