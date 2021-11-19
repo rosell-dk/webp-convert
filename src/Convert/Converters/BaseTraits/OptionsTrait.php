@@ -247,43 +247,6 @@ trait OptionsTrait
     }
 
     /**
-     *  Get ui definitions for the general options.
-     *
-     *  You can automatically build a gui with these (suggested) components
-     *
-     *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
-     *
-     *  @return  array  Hash of ui definitions indexed by option id
-     */
-    public function getUIForGeneralOptions($imageType)
-    {
-        return [
-            /*
-            ['preset', 'string', [
-                'default' => 'none',
-                'enum' => ['none', 'default', 'photo', 'picture', 'drawing', 'icon', 'text']]
-            ],
-*/
-              /*            {
-              "id": "metadata",
-              "type": "string",
-              "default": 'exif',
-              "ui": {
-                "component": "multi-select",
-                "label": "Metadata",
-                "options": ['all', 'none', 'exif', 'icc', 'xmp'],
-                "optionLabels": {
-                  'all': 'All',
-                  'none': 'None',
-                  'exif': 'Exif',
-                  'icc': 'ICC',
-                  'xmp': 'XMP'
-                }
-              },*/
-        ];
-    }
-
-    /**
      *  Get the unique options for a converter
      *
      *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
@@ -515,40 +478,55 @@ trait OptionsTrait
     }
 
     /**
-        *  Get unique option definitions.
-        *
-        *  Gets definitions of the converters "unique" options (that is, those options that
-        *  are not general). It was added in order to give GUI's a way to automatically adjust
-        *  their setting screens.
-        *
-        *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
-        *
-        *  @return  array  Array of options definitions - ready to be json encoded, or whatever
-        */
-    public function getUniqueOptionDefinitions($imageType = 'png')
+      * Get unique option definitions.
+      *
+      * Gets definitions of the converters "unique" options (that is, those options that
+      * are not general). It was added in order to give GUI's a way to automatically adjust
+      * their setting screens.
+      *
+      * @param  bool  $filterOutOptionsWithoutUI  If options without UI defined should be filtered out
+      * @param  string   $imageType   (png | jpeg)   The image type - determines the defaults
+      *
+      * @return array  Array of options definitions - ready to be json encoded, or whatever
+      */
+    public function getUniqueOptionDefinitions($filterOutOptionsWithoutUI = true, $imageType = 'jpeg')
     {
         $uniqueOptions = new Options();
         $uniqueOptions->addOptions(... $this->getUniqueOptions($imageType));
-        //$uniqueOptions->setUI($this->getUniqueOptionsUI($imageType));
-        return $uniqueOptions->getDefinitions();
+        $optionDefinitions = $uniqueOptions->getDefinitions();
+        if ($filterOutOptionsWithoutUI) {
+            $optionDefinitions = array_filter($optionDefinitions, function ($value) {
+                return !is_null($value['ui']);
+            });
+            $optionDefinitions = array_values($optionDefinitions); // re-index
+        }
+        return $optionDefinitions;
     }
 
     /**
-     *  Get general option definitions.
+     * Get general option definitions.
      *
-     *  Gets definitions of all general options (not just the ones supported by current converter)
-     *  For UI's, as a way to automatically adjust their setting screens.
+     * Gets definitions of all general options (not just the ones supported by current converter)
+     * For UI's, as a way to automatically adjust their setting screens.
      *
-     *  @param   string   $imageType   (png | jpeg)   The image type - determines the defaults
+     * @param  bool  $filterOutOptionsWithoutUI  If options without UI defined should be filtered out
+     * @param  string   $imageType   (png | jpeg)   The image type - determines the defaults
      *
-     *  @return  array  Array of options definitions - ready to be json encoded, or whatever
+     * @return  array  Array of options definitions - ready to be json encoded, or whatever
      */
-    public function getGeneralOptionDefinitions($imageType = 'png')
+    public function getGeneralOptionDefinitions($filterOutOptionsWithoutUI = true, $imageType = 'jpeg')
     {
         $generalOptions = new Options();
         $generalOptions->addOptions(... $this->getGeneralOptions($imageType));
         //$generalOptions->setUI($this->getUIForGeneralOptions($imageType));
-        return $generalOptions->getDefinitions();
+        $optionDefinitions = $generalOptions->getDefinitions();
+        if ($filterOutOptionsWithoutUI) {
+            $optionDefinitions = array_filter($optionDefinitions, function ($value) {
+                return !is_null($value['ui']);
+            });
+            $optionDefinitions = array_values($optionDefinitions); // re-index
+        }
+        return $optionDefinitions;
     }
 
     public function getSupportedGeneralOptions($imageType = 'png')
@@ -603,6 +581,7 @@ trait OptionsTrait
         *
         *  @return  array  Array of options definitions - ready to be json encoded, or whatever
         */
+        /*
     public function getOptionDefinitions($imageType = 'png', $returnGeneral = true, $returnGeneralSupport = true)
     {
         $result = [
@@ -616,7 +595,7 @@ trait OptionsTrait
             $result['unsupported-general'] = $this->getUnsupportedDefaultOptions();
         }
         return $result;
-    }
+    }*/
 /*
     public static function getUniqueOptions($imageType = 'png')
     {

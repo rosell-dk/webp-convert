@@ -101,37 +101,22 @@ class WebPConvert
      *
      * Added in order to give GUI's a way to automatically adjust their setting screens.
      *
-     * @param bool $filterOutOptionsWithoutUI
+     * @param bool $filterOutOptionsWithoutUI  If options without UI defined should be filtered out
      *
      * @return  array  Array of options definitions - ready to be json encoded, or whatever
      */
     public static function getConverterOptionDefinitions($filterOutOptionsWithoutUI = true)
     {
-
         $converterIds = self::getConverterIds();
         $result = [];
 
         $ewww = ConverterFactory::makeConverter('ewww', '', '');
-
-        //$result['general'] = $ewww->getGeneralOptionDefinitions();
-        //$result['general'] = $ewww->getGeneralOptionDefinitions();
-        $general = $ewww->getGeneralOptionDefinitions();
-
-        // remove those without ui
-        if ($filterOutOptionsWithoutUI) {
-            $general = array_filter($general, function ($value) {
-                return !is_null($value['ui']);
-            });
-            $general = array_values($general); // re-index
-        }
-
-        $result['general'] = $general;
+        $result['general'] = $ewww->getGeneralOptionDefinitions($filterOutOptionsWithoutUI);
 
         $generalOptionHash = [];
         $generalOptionIds = [];
         foreach ($result['general'] as &$option) {
             $generalOptionIds[] = $option['id'];
-            //$option['supportedBy'] = $converterIds;   // we will remove the unsupported below
             $option['unsupportedBy'] = [];
             $generalOptionHash[$option['id']] = &$option;
         }
@@ -161,21 +146,10 @@ class WebPConvert
 
         foreach ($converterIds as $converterId) {
             $c = ConverterFactory::makeConverter($converterId, '', '');
-
             foreach ($c->getUnsupportedGeneralOptions() as $optionId) {
-                //unsupportedBy
                 $generalOptionHash[$optionId]['unsupportedBy'][] = $converterId;
             }
-
-            $optionDefinitions = $c->getUniqueOptionDefinitions('any');
-
-            if ($filterOutOptionsWithoutUI) {
-                $optionDefinitions = array_filter($optionDefinitions, function ($value) {
-                    return !is_null($value['ui']);
-                });
-                $optionDefinitions = array_values($optionDefinitions); // re-index
-            }
-
+            $optionDefinitions = $c->getUniqueOptionDefinitions($filterOutOptionsWithoutUI);
             $uniqueOptions[$converterId] = $optionDefinitions;
         }
         $result['unique'] = $uniqueOptions;
