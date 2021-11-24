@@ -104,6 +104,7 @@ class WebPConvert
      * @param bool $filterOutOptionsWithoutUI  If options without UI defined should be filtered out
      *
      * @return  array  Array of options definitions - ready to be json encoded, or whatever
+     * @since 2.8.0
      */
     public static function getConverterOptionDefinitions($filterOutOptionsWithoutUI = true)
     {

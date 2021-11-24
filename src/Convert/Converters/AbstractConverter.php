@@ -120,7 +120,7 @@ abstract class AbstractConverter
         $this->setProvidedOptions($options);
 
         if (!isset($this->options['_skip_input_check'])) {
-            $this->logLn('WebP Convert 2.7.0 ignited', 'bold');
+            $this->logLn('WebP Convert 2.8.0 ignited', 'bold');
             $this->logLn('PHP version: ' . phpversion());
             if (isset($_SERVER['SERVER_SOFTWARE'])) {
                 $this->logLn('Server software: ' . $_SERVER['SERVER_SOFTWARE']);
