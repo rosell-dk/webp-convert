@@ -98,7 +98,15 @@ trait OptionsTrait
                 'title' => 'Auto-limit',
                 'description' =>
                     'Enable this option to prevent an unnecessarily high quality setting for low ' .
-                    'quality jpegs. You really should enable this.',
+                    'quality jpegs. It works by adjusting quality setting down to the quality of the jpeg. ' .
+                    'Converting ie a jpeg with quality:50 to ie quality:80 does not get you better quality ' .
+                    'than converting it to quality:80, but it does get you a much bigger file - so you ' .
+                    'really should enable this option.' . "\n\n" .
+                    'The option is ignored for PNG and never adjusts quality up. ' . "\n\n" .
+                    'The feature requires Imagick, ImageMagick or Gmagick in order to detect the quality of ' .
+                    'the jpeg. ' . "\n\n" .
+                    'PS: The "auto-limit" option is relative new. However, before this option, you could achieve the same by setting ' .
+                    'quality to "auto" and specifying a "max-quality" and a "default-quality". These are deprecated now, but still works.',
                 'default' => true,
                 'ui' => [
                     'component' => 'checkbox',
