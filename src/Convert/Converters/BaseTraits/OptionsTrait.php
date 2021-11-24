@@ -105,14 +105,9 @@ trait OptionsTrait
                     'The option is ignored for PNG and never adjusts quality up. ' . "\n\n" .
                     'The feature requires Imagick, ImageMagick or Gmagick in order to detect the quality of ' .
                     'the jpeg. ' . "\n\n" .
-<<<<<<< HEAD
                     'PS: The "auto-limit" option is relative new. However, before this option, you could achieve ' .
                     'the same by setting quality to "auto" and specifying a "max-quality" and a "default-quality". ' .
                     'These are deprecated now, but still works.',
-=======
-                    'PS: The "auto-limit" option is relative new. However, before this option, you could achieve the same by setting ' .
-                    'quality to "auto" and specifying a "max-quality" and a "default-quality". These are deprecated now, but still works.',
->>>>>>> 9948271496eaf1a2a5f173ebfb6774af3d5436fc
                 'default' => true,
                 'ui' => [
                     'component' => 'checkbox',
