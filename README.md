@@ -140,7 +140,7 @@ Bread on the table don't come for free, even though this library does, and alway
 - Steven Sullivan ($51)
 
 ## New in 2.8.0:
-- Converter options are now accessible along with suggested UI and helptexts. This allows one to auto-generate a frontend based on conversion options. The feature is already in use in the [webp-convert file manager](https://github.com/rosell-dk/webp-convert-filemanager), which is used in WebP Express.
+- Converter option definitions are now accessible along with suggested UI and helptexts. This allows one to auto-generate a frontend based on conversion options. The feature is already in use in the [webp-convert file manager](https://github.com/rosell-dk/webp-convert-filemanager), which is used in WebP Express.
 - The part of the log that displays the options are made more readable. It also now warns about deprecated options.
 - Bumped image-mime-type guesser library to 0.4. This version is able to dectect more mime types by sniffing the first couple of bytes.
 - And more (view closed issues [here](https://github.com/rosell-dk/webp-convert/milestone/23?closed=1)
