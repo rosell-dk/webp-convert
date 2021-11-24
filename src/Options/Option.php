@@ -77,6 +77,16 @@ class Option
     }
 
     /**
+     * Get Id.
+     *
+     * @param string $id  The id of the option
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
+
+    /**
      * Get default value.
      *
      * @return  mixed  The default value for the option

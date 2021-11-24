@@ -488,7 +488,12 @@ trait OptionsTrait
     public function getUniqueOptionDefinitions($filterOutOptionsWithoutUI = true, $imageType = 'jpeg')
     {
         $uniqueOptions = new Options();
-        $uniqueOptions->addOptions(... $this->getUniqueOptions($imageType));
+        //$uniqueOptions->addOptions(... $this->getUniqueOptions($imageType));
+        foreach ($this->getUniqueOptions($imageType) as $uoption) {
+            $uoption->setId(self::getConverterId() . '-' . $uoption->getId());
+            $uniqueOptions->addOption($uoption);
+        }
+
         $optionDefinitions = $uniqueOptions->getDefinitions();
         if ($filterOutOptionsWithoutUI) {
             $optionDefinitions = array_filter($optionDefinitions, function ($value) {
