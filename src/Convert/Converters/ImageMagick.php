@@ -9,6 +9,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Syst
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Helpers\BinaryDiscovery;
 use WebPConvert\Options\OptionFactory;
+use ExecWithFallback\ExecWithFallback;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -79,7 +80,7 @@ class ImageMagick extends AbstractConverter
 
     private function getVersion()
     {
-        exec($this->getPath() . ' -version 2>&1', $output, $returnCode);
+        ExecWithFallback::exec($this->getPath() . ' -version 2>&1', $output, $returnCode);
         if (($returnCode == 0) && isset($output[0])) {
             return $output[0];
         } else {
@@ -89,14 +90,14 @@ class ImageMagick extends AbstractConverter
 
     public function isInstalled()
     {
-        exec($this->getPath() . ' -version 2>&1', $output, $returnCode);
+        ExecWithFallback::exec($this->getPath() . ' -version 2>&1', $output, $returnCode);
         return ($returnCode == 0);
     }
 
     // Check if webp delegate is installed
     public function isWebPDelegateInstalled()
     {
-        exec($this->getPath() . ' -list delegate 2>&1', $output, $returnCode);
+        ExecWithFallback::exec($this->getPath() . ' -list delegate 2>&1', $output, $returnCode);
         foreach ($output as $line) {
             if (preg_match('#webp\\s*=#i', $line)) {
                 return true;
@@ -104,7 +105,7 @@ class ImageMagick extends AbstractConverter
         }
 
         // try other command
-        exec($this->getPath() . ' -list configure 2>&1', $output, $returnCode);
+        ExecWithFallback::exec($this->getPath() . ' -list configure 2>&1', $output, $returnCode);
         foreach ($output as $line) {
             if (preg_match('#DELEGATE.*webp#i', $line)) {
                 return true;
@@ -254,7 +255,7 @@ class ImageMagick extends AbstractConverter
             $command = 'nice ' . $command;
         }
         $this->logLn('Executing command: ' . $command);
-        exec($command, $output, $returnCode);
+        ExecWithFallback::exec($command, $output, $returnCode);
 
         $this->logExecOutput($output);
         if ($returnCode == 0) {

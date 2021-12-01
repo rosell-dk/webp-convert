@@ -2,6 +2,8 @@
 
 namespace WebPConvert\Helpers;
 
+use ExecWithFallback\ExecWithFallback;
+
 /**
  * A fileExist function free of deception
  *
@@ -79,14 +81,14 @@ class FileExists
      */
     public static function fileExistsUsingExec($path)
     {
-        if (!function_exists('exec')) {
+        if (!ExecWithFallback::anyAvailable()) {
             throw new \Exception(
-                'cannot determine if file exists using exec() - the function is unavailable'
+                'cannot determine if file exists using exec() or similar - the function is unavailable'
             );
         }
 
         // Lets try to find out by executing "ls path/to/cwebp"
-        exec('ls ' . $path, $output, $returnCode);
+        ExecWithFallback::exec('ls ' . $path, $output, $returnCode);
         if (($returnCode == 0) && (isset($output[0]))) {
             return true;
         }
@@ -110,6 +112,8 @@ class FileExists
             try {
                 $result = self::fileExistsUsingExec($path);
             } catch (\Exception $e) {
+                throw new \Exception('Cannot determine if file exists or not');
+            } catch (\Throwable $e) {
                 throw new \Exception('Cannot determine if file exists or not');
             }
         }

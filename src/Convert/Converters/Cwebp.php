@@ -11,6 +11,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Helpers\BinaryDiscovery;
 use WebPConvert\Options\OptionFactory;
+use ExecWithFallback\ExecWithFallback;
 
 /**
  * Convert images to webp by calling cwebp binary.
@@ -248,7 +249,7 @@ class Cwebp extends AbstractConverter
         $startExecuteBinaryTime = self::startTimer();
         ;
         $this->logLn($command);
-        exec($command, $output, $returnCode);
+        ExecWithFallback::exec($command, $output, $returnCode);
         $this->logExecOutput($output);
         $this->logTimeSpent($startExecuteBinaryTime, 'Executing cwebp binary took: ');
         $this->logLn('');
@@ -555,7 +556,7 @@ class Cwebp extends AbstractConverter
 
     private function who()
     {
-        exec('whoami 2>&1', $whoOutput, $whoReturnCode);
+        ExecWithFallback::exec('whoami 2>&1', $whoOutput, $whoReturnCode);
         if (($whoReturnCode == 0) && (isset($whoOutput[0]))) {
             return 'user: "' . $whoOutput[0] . '"';
         } else {
@@ -574,7 +575,7 @@ class Cwebp extends AbstractConverter
     {
         $command = $binary . ' -version 2>&1';
         $this->log('- Executing: ' . $command);
-        exec($command, $output, $returnCode);
+        ExecWithFallback::exec($command, $output, $returnCode);
 
         if ($returnCode == 0) {
             if (isset($output[0])) {

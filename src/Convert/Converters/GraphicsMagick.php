@@ -8,6 +8,7 @@ use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Options\OptionFactory;
+use ExecWithFallback\ExecWithFallback;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -56,13 +57,13 @@ class GraphicsMagick extends AbstractConverter
 
     public function isInstalled()
     {
-        exec($this->getPath() . ' -version 2>&1', $output, $returnCode);
+        ExecWithFallback::exec($this->getPath() . ' -version 2>&1', $output, $returnCode);
         return ($returnCode == 0);
     }
 
     public function getVersion()
     {
-        exec($this->getPath() . ' -version 2>&1', $output, $returnCode);
+        ExecWithFallback::exec($this->getPath() . ' -version 2>&1', $output, $returnCode);
         if (($returnCode == 0) && isset($output[0])) {
             return preg_replace('#http.*#', '', $output[0]);
         }
@@ -72,7 +73,7 @@ class GraphicsMagick extends AbstractConverter
     // Check if webp delegate is installed
     public function isWebPDelegateInstalled()
     {
-        exec($this->getPath() . ' -version 2>&1', $output, $returnCode);
+        ExecWithFallback::exec($this->getPath() . ' -version 2>&1', $output, $returnCode);
         foreach ($output as $line) {
             if (preg_match('#WebP.*yes#i', $line)) {
                 return true;
@@ -197,7 +198,7 @@ class GraphicsMagick extends AbstractConverter
             $command = 'nice ' . $command;
         }
         $this->logLn('Executing command: ' . $command);
-        exec($command, $output, $returnCode);
+        ExecWithFallback::exec($command, $output, $returnCode);
 
         $this->logExecOutput($output);
         if ($returnCode == 0) {
@@ -213,7 +214,7 @@ class GraphicsMagick extends AbstractConverter
             $this->logLn('command:' . $command);
             $this->logLn('return code:' . $returnCode);
             $this->logLn('output:' . print_r(implode("\n", $output), true));
-            throw new SystemRequirementsNotMetException('The exec call failed');
+            throw new SystemRequirementsNotMetException('The exec() call failed');
         }
     }
 }

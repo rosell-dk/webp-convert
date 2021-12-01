@@ -3,9 +3,10 @@
 namespace WebPConvert\Convert\Converters\ConverterTraits;
 
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
+use ExecWithFallback\ExecWithFallback;
 
 /**
- * Trait for converters that uses exec()
+ * Trait for converters that uses exec() or similar
  *
  * @package    WebPConvert
  * @author     Bjørn Rosell <it@rosell.dk>
@@ -24,7 +25,7 @@ trait ExecTrait
      */
     protected static function hasNiceSupport()
     {
-        exec("nice 2>&1", $niceOutput);
+        ExecWithFallback::exec("nice 2>&1", $niceOutput);
 
         if (is_array($niceOutput) && isset($niceOutput[0])) {
             if (preg_match('/usage/', $niceOutput[0]) || (preg_match('/^\d+$/', $niceOutput[0]))) {
@@ -90,15 +91,17 @@ trait ExecTrait
     }
 
     /**
-     * Check basic operationality of exec converters (that the "exec" function is available)
+     * Check basic operationality of exec converters (that the "exec" or similar function is available)
      *
      * @throws  WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException
      * @return  void
      */
     public function checkOperationalityExecTrait()
     {
-        if (!function_exists('exec')) {
-            throw new SystemRequirementsNotMetException('exec() is not enabled.');
+        if (!ExecWithFallback::anyAvailable()) {
+            throw new SystemRequirementsNotMetException(
+                'exec() is not enabled (nor is alternative methods, such as proc_open())'
+            );
         }
     }
 }

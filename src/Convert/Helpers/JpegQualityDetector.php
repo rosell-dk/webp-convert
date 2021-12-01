@@ -2,6 +2,8 @@
 
 namespace WebPConvert\Convert\Helpers;
 
+use ExecWithFallback\ExecWithFallback;
+
 /**
  * Try to detect quality of a jpeg image using various tools.
  *
@@ -68,9 +70,13 @@ class JpegQualityDetector
      */
     private static function detectQualityOfJpgUsingImageMagick($filename)
     {
-        if (function_exists('exec')) {
+        if (ExecWithFallback::anyAvailable()) {
             // Try Imagick using exec, and routing stderr to stdout (the "2>$1" magic)
-            exec("identify -format '%Q' " . escapeshellarg($filename) . " 2>&1", $output, $returnCode);
+            ExecWithFallback::exec(
+                "identify -format '%Q' " . escapeshellarg($filename) . " 2>&1",
+                $output,
+                $returnCode
+            );
             //echo 'out:' . print_r($output, true);
             if ((intval($returnCode) == 0) && (is_array($output)) && (count($output) == 1)) {
                 return intval($output[0]);
@@ -93,9 +99,13 @@ class JpegQualityDetector
      */
     private static function detectQualityOfJpgUsingGraphicsMagick($filename)
     {
-        if (function_exists('exec')) {
+        if (ExecWithFallback::anyAvailable()) {
             // Try GraphicsMagick
-            exec("gm identify -format '%Q' " . escapeshellarg($filename) . " 2>&1", $output, $returnCode);
+            ExecWithFallback::exec(
+                "gm identify -format '%Q' " . escapeshellarg($filename) . " 2>&1",
+                $output,
+                $returnCode
+            );
             if ((intval($returnCode) == 0) && (is_array($output)) && (count($output) == 1)) {
                 $quality = intval($output[0]);
 

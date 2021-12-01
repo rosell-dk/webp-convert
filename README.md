@@ -125,11 +125,12 @@ Bread on the table don't come for free, even though this library does, and alway
 - [Mathieu Gollain-Dupont](https://www.linkedin.com/in/mathieu-gollain-dupont-9938a4a/)
 - Ruben Solvang
 
-*Persons who contributed with coffee within the last 30 days:*
-
-- Anon
-- Eder Ribeiro
-- Christian
+*Persons who recently contributed with [ko-fi](https://ko-fi.com/rosell) - Thanks!*
+* 20 Nov: Ben J
+* 13 Nov: @sween
+* 9 Nov: @utrenkner
+* 26 Oct: Anonymous
+* 29 Aug: Pawa Tecnologia
 
 *Persons who contributed with extra generously amounts of coffee / lifetime backing (>50$) - thanks!:*
 
@@ -138,6 +139,9 @@ Bread on the table don't come for free, even though this library does, and alway
 - Tammy Lee ($90)
 - Max Kreminsky ($65)
 - Steven Sullivan ($51)
+
+## Upcoming in 2.9.0:
+- When exec() is unavailable, alternatives are now tried (emulations with proc_open(), passthru() etc). Using [this library](https://github.com/rosell-dk/exec-with-fallback) to do it.
 
 ## New in 2.8.0:
 - Converter option definitions are now accessible along with suggested UI and helptexts. This allows one to auto-generate a frontend based on conversion options. The feature is already in use in the [webp-convert file manager](https://github.com/rosell-dk/webp-convert-filemanager), which is used in WebP Express. New method: `WebPConvert::getConverterOptionDefinitions()`

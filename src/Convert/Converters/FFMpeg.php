@@ -8,6 +8,7 @@ use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Options\OptionFactory;
+use ExecWithFallback\ExecWithFallback;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -61,14 +62,14 @@ class FFMpeg extends AbstractConverter
 
     public function isInstalled()
     {
-        exec($this->getPath() . ' -version 2>&1', $output, $returnCode);
+        ExecWithFallback::exec($this->getPath() . ' -version 2>&1', $output, $returnCode);
         return ($returnCode == 0);
     }
 
     // Check if webp delegate is installed
     public function isWebPDelegateInstalled()
     {
-        exec($this->getPath() . ' -version 2>&1', $output, $returnCode);
+        ExecWithFallback::exec($this->getPath() . ' -version 2>&1', $output, $returnCode);
         foreach ($output as $line) {
             if (preg_match('# --enable-libwebp#i', $line)) {
                 return true;
@@ -158,7 +159,7 @@ class FFMpeg extends AbstractConverter
             $command = 'nice ' . $command;
         }
         $this->logLn('Executing command: ' . $command);
-        exec($command, $output, $returnCode);
+        ExecWithFallback::exec($command, $output, $returnCode);
 
         $this->logExecOutput($output);
         if ($returnCode == 0) {
@@ -171,7 +172,7 @@ class FFMpeg extends AbstractConverter
             throw new SystemRequirementsNotMetException('ffmpeg is not installed');
         }
         if ($returnCode != 0) {
-            throw new SystemRequirementsNotMetException('The exec call failed');
+            throw new SystemRequirementsNotMetException('The exec() call failed');
         }
     }
 }
