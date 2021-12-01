@@ -10,7 +10,7 @@ jobs:
   php80:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         os: [ubuntu-20.04, ubuntu-18.04, windows-2022, windows-2019, windows-2016, macos-11, macos-10.15]
         php: [8.0]
@@ -52,7 +52,7 @@ jobs:
   php71:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         os: [ubuntu-18.04, windows-2022, windows-2019, windows-2016, macos-11, macos-10.15]
         php: [7.1]
@@ -92,6 +92,55 @@ jobs:
 
     - name: Run test suite
       run: composer run-script test
+
+
+  with_disabled_functions:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-18.04]
+        php: [7.1]
+        disabled_functions: ["exec", "exec,proc_open,passthru,shell_exec,proc_open,popen"]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php }}
+        extensions: exif, mbstring, fileinfo, gd
+        ini-values: disable_functions="${{ matrix.disabled_functions }}"
+
+    - name: Setup problem matchers for PHP
+      run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+
+    - name: Setup problem matchers for PHPUnit
+      run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+    - name: Validate composer.json and composer.lock
+      run: composer validate --strict
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v2
+      with:
+        path: vendor
+        key: ${{ runner.os }}-disabledfunctions-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-disabledfunctions-
+
+    - name: Downgrade PHP unit to a version that supports PHP 7.1
+      run: composer require "phpunit/phpunit:^7.0" --dev
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Run test suite
+      run: composer run-script test
+
+
 
   codecov:
     runs-on: ubuntu-20.04
