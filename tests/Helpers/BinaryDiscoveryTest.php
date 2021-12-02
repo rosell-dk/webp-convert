@@ -18,7 +18,8 @@ class BinaryDiscoveryTest extends TestCase
      */
     public function testDiscoverInCommonSystemPaths()
     {
-        BinaryDiscovery::discoverInCommonSystemPaths('cwebp');
+        $paths = BinaryDiscovery::discoverInCommonSystemPaths('cwebp');
+        $this->assertSame('array', gettype($paths));
     }
 
     /**
@@ -26,7 +27,8 @@ class BinaryDiscoveryTest extends TestCase
      */
     public function testDiscoverInstalledBinaries()
     {
-        BinaryDiscovery::discoverInstalledBinaries('cwebp');
+        $paths = BinaryDiscovery::discoverInstalledBinaries('cwebp');
+        $this->assertSame('array', gettype($paths));
     }
 
 

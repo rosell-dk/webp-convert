@@ -54,18 +54,16 @@ class WPCTest extends CompatibleTestCase
 
         try {
             Wpc::convert($source, $source . '.webp', $options, $bufferLogger);
-
-            $test->addToAssertionCount(1);
         } catch (ConversionFailedException $e) {
 
             // we accept this failure that seems to happen when WPC gets stressed:
             if (strpos($e->getMessage(), 'unable to open image') !== false) {
-                return;
+                return true;
             }
 
             // we also accept this failure that also seems to happen when WPC gets stressed:
             if (strpos($e->getMessage(), 'We got nothing back') !== false) {
-                return;
+                return true;
             }
 
             if ($e->getMessage() == 'Error saving file. Check file permissions') {
@@ -76,6 +74,7 @@ class WPCTest extends CompatibleTestCase
 
             throw $e;
         }
+        return true;
     }
 
     public function testApi0()
@@ -92,7 +91,7 @@ class WPCTest extends CompatibleTestCase
             'lossless' => true,
         ];
 
-        self::tryThis($this, $source, $options);
+        $this->assertTrue(self::tryThis($this, $source, $options));
 
 
     }
@@ -110,7 +109,7 @@ class WPCTest extends CompatibleTestCase
             'lossless' => true,
         ];
 
-        self::tryThis($this, $source, $options);
+        $this->assertTrue(self::tryThis($this, $source, $options));
     }
 
     public function testWrongSecretButRightUrl()
@@ -127,7 +126,7 @@ class WPCTest extends CompatibleTestCase
         ];
 
         $this->expectException(InvalidApiKeyException::class);
-        self::tryThis($this, $source, $options);
+        $this->assertTrue(self::tryThis($this, $source, $options));
     }
 
     public function testBadURL()

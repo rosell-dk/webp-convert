@@ -21,10 +21,11 @@ class StackTest extends TestCase
         return self::getImageFolder() . '/' . $image;
     }
 
+    /*
     public function testConvert()
     {
         //ConverterTestHelper::runAllConvertTests($this, 'Stack');
-    }
+    }*/
 
     public function testConverterNotFound()
     {

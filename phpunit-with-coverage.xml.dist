@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd" backupGlobals="false" backupStaticAttributes="false" colors="true" convertErrorsToExceptions="true" convertNoticesToExceptions="true" convertWarningsToExceptions="false" processIsolation="false" stopOnFailure="false" bootstrap="vendor/autoload.php">
+  <coverage>
+    <include>
+      <directory suffix=".php">src/</directory>
+    </include>
+    <exclude>
+      <directory>./vendor</directory>
+      <directory>./tests</directory>
+    </exclude>
+    <report>
+      <clover outputFile="coverage.clover"/>
+      <html outputDirectory="build/coverage"/>
+      <text outputFile="build/coverage.txt"/>
+    </report>
+  </coverage>
   <testsuites>
     <testsuite name="WebPConvert Test Suite">
       <directory>./tests/</directory>

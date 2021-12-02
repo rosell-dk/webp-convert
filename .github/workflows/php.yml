@@ -101,7 +101,8 @@ jobs:
       matrix:
         os: [ubuntu-18.04]
         php: [7.1]
-        disabled_functions: ["exec", "exec,proc_open,passthru,shell_exec,proc_open,popen"]
+        # unfortunately, proc_open is needed by phpunit, so we cannot disable proc_open
+        disabled_functions: ["exec", "exec,proc_open,passthru,shell_exec,popen"]
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -179,7 +180,7 @@ jobs:
       run: composer install --prefer-dist --no-progress
 
     - name: Run test suite
-      run: composer run-script test
+      run: composer run-script test-with-coverage
 
     - name: Upload Scrutinizer coverage
       uses: sudo-bot/action-scrutinizer@latest

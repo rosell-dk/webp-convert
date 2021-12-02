@@ -24,6 +24,49 @@ class ServeFileTest extends TestCase
         return $this->getImageFolder() . '/' . $image;
     }
 
+
+    /**
+     *  Call to serve and return result or exception
+     *
+     *  The method takes care of closing output buffer in case of exception
+     *
+     *  @return array  First item: the output, second item: Exception, if thrown
+     */
+    public static function callServe($filename, $mime, $options)
+    {
+        ob_start();
+        try {
+            ServeFile::serve($filename, $mime, $options);
+        } catch (\Exception $e) {
+           return [ob_get_clean(), $e];
+        } catch (\Throwable $e) {
+           return [ob_get_clean(), $e];
+        }
+        return [ob_get_clean(), null];
+    }
+
+    /**
+     *  Call to serve and return result or exception
+     *
+     *  The method takes care of closing output buffer in case of exception
+     *
+     *  @return string  the output
+     */
+    public static function callServeWithThrow($filename, $mime, $options)
+    {
+        ob_start();
+        try {
+            ServeFile::serve($filename, $mime, $options);
+        } catch (\Exception $e) {
+            ob_get_clean();
+            throw($e);
+        } catch (\Throwable $e) {
+            ob_get_clean();
+            throw($e);
+        }
+        return ob_get_clean();
+    }
+
     public function testServeDefaultOptions()
     {
         MockedHeader::reset();
@@ -31,9 +74,7 @@ class ServeFileTest extends TestCase
         $filename = self::getImagePath('plaintext-with-jpg-extension.jpg');
         $this->assertTrue(file_exists($filename));
 
-        ob_start();
-        ServeFile::serve($filename, 'image/webp', []);
-        $result = ob_get_clean();
+        $result = self::callServeWithThrow($filename, 'image/webp', []);
 
         // Test that content of file was send to output
         $this->assertEquals("text\n", $result);
@@ -71,9 +112,7 @@ class ServeFileTest extends TestCase
             ]
         ];
 
-        ob_start();
-        ServeFile::serve($filename, 'image/webp', $options);
-        $result = ob_get_clean();
+        $result = self::callServeWithThrow($filename, 'image/webp', $options);
 
         $this->assertTrue(MockedHeader::hasHeader('Vary: Accept'));
 
@@ -101,9 +140,7 @@ class ServeFileTest extends TestCase
             'cache-control-header' => 'private, max-age=100',
         ];
 
-        ob_start();
-        ServeFile::serve($filename, 'image/webp', $options);
-        $result = ob_get_clean();
+        $result = self::callServeWithThrow($filename, 'image/webp', $options);
 
         // Test that content of file was send to output
         $this->assertEquals("text\n", $result);
@@ -143,9 +180,7 @@ class ServeFileTest extends TestCase
             'cache-control-header' => 'private, max-age=100',
         ];
 
-        ob_start();
-        ServeFile::serve($filename, 'image/webp', $options);
-        $result = ob_get_clean();
+        $result = self::callServeWithThrow($filename, 'image/webp', $options);
         $this->assertTrue(MockedHeader::hasHeader('Cache-Control: private, max-age=100'));
         $this->assertTrue(MockedHeader::hasHeaderContaining('Expires:'));
     }
@@ -161,31 +196,30 @@ class ServeFileTest extends TestCase
             ],
             'cache-control-header' => 'private',
         ];
-        ob_start();
-        ServeFile::serve($filename, 'image/webp', $options);
-        $result = ob_get_clean();
+        $result = self::callServeWithThrow($filename, 'image/webp', $options);
+
         $this->assertTrue(MockedHeader::hasHeader('Cache-Control: private'));
 
         // When there is no max-age, there should neither be any Expires
         $this->assertFalse(MockedHeader::hasHeaderContaining('Expires:'));
     }
 
+
     public function testServeNonexistantFile()
     {
-        MockedHeader::reset();
+        //MockedHeader::reset();
 
         $filename = __DIR__ . '/i-dont-exist-no';
         $this->assertFalse(file_exists($filename));
 
-        $this->expectException(TargetNotFoundException::class);
-
-        ob_start();
-        ServeFile::serve($filename, 'image/webp', []);
-        $result = ob_get_clean();
-
-        $this->assertEquals("", $result);
-
-        $this->assertTrue(MockedHeader::hasHeader('X-WebP-Convert-Error: Could not read file'));
+        //$this->expectException(TargetNotFoundException::class);
+        list($result, $e) = self::callServe($filename, 'image/webp', []);
+        $this->assertSame(
+            'WebPConvert\Exceptions\InvalidInput\TargetNotFoundException',
+            get_class($e)
+        );
+        $this->assertSame('', $result);
+        //$this->assertTrue(MockedHeader::hasHeader('X-WebP-Convert-Error: Could not read file'));
     }
 
 }

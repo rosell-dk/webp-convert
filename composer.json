@@ -11,10 +11,11 @@
       "@composer validate --no-check-all --strict",
       "@phpstan-global"
     ],
-    "test": "phpunit --coverage-text",
-    "test-41": "phpunit --coverage-text --configuration 'phpunit-41.xml.dist'",
     "phpunit": "phpunit --coverage-text",
-    "test-no-cov": "phpunit --no-coverage",
+    "test": "phpunit --no-coverage",
+    "test-41": "phpunit --no-coverage --configuration 'phpunit-41.xml.dist'",
+    "test-with-coverage": "phpunit --coverage-text",
+    "test-41-with-coverage": "phpunit --coverage-text --configuration 'phpunit-41.xml.dist'",
     "cs-fix-all": [
       "php-cs-fixer fix src"
     ],

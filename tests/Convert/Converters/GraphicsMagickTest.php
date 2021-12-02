@@ -36,14 +36,20 @@ class GraphicsMagickTest extends TestCase
         ConverterTestHelper::runAllConvertTests($this, 'GraphicsMagick');
     }
 
+    /**
+     * Try converting.
+     * It is ok if converter is not operational.
+     * It is not ok if converter thinks it is operational, but fails
+     *
+     * @return $ok
+     * @throws ConversionFailedException if convert throws it
+     */
     private static function tryThis($test, $source, $options)
     {
         $bufferLogger = new BufferLogger();
 
         try {
             GraphicsMagick::convert($source, $source . '.webp', $options, $bufferLogger);
-
-            $test->addToAssertionCount(1);
         } catch (ConversionFailedException $e) {
 
             //$bufferLogger->getText()
@@ -53,6 +59,7 @@ class GraphicsMagickTest extends TestCase
             // this is ok.
             return;
         }
+        return true;
     }
 
     public function testWithNice() {
@@ -61,7 +68,7 @@ class GraphicsMagickTest extends TestCase
             'use-nice' => true,
             'lossless' => true,
         ];
-        self::tryThis($this, $source, $options);
+        $this->assertTrue(self::tryThis($this, $source, $options));
     }
 
 }

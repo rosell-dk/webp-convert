@@ -32,23 +32,31 @@ class FFMpegTest extends TestCase
         ConverterTestHelper::runAllConvertTests($this, 'FFMpeg');
     }
 
+    /**
+     * Try converting.
+     * It is ok if converter is not operational.
+     * It is not ok if converter thinks it is operational, but fails
+     *
+     * @return $ok
+     * @throws ConversionFailedException if convert throws it
+     */
     private static function tryThis($test, $source, $options)
     {
         $bufferLogger = new BufferLogger();
 
         try {
             FFMpeg::convert($source, $source . '.webp', $options, $bufferLogger);
-
-            $test->addToAssertionCount(1);
         } catch (ConversionFailedException $e) {
+            // this is not ok
 
             //$bufferLogger->getText()
             throw $e;
         } catch (ConverterNotOperationalException $e) {
             // (SystemRequirementsNotMetException is also a ConverterNotOperationalException)
             // this is ok.
-            return;
+            return true;
         }
+        return true;
     }
 
     public function testWithNice() {
@@ -57,7 +65,7 @@ class FFMpegTest extends TestCase
             'use-nice' => true,
             'encoding' => 'lossless',
         ];
-        self::tryThis($this, $source, $options);
+        $this->assertTrue(self::tryThis($this, $source, $options));
     }
 
 }

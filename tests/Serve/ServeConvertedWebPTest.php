@@ -33,6 +33,71 @@ class ServeConvertedWebPTest extends CompatibleTestCase
         return $this->getImageFolder() . '/' . $image;
     }
 
+
+    /**
+     *  Call to serve and return result or exception
+     *
+     *  The method takes care of closing output buffer in case of exception
+     *
+     *  @return array  First item: the output, second item: Exception, if thrown
+     */
+    public static function callServe($filename, $destination, $options)
+    {
+        ob_start();
+        try {
+            ServeConvertedWebP::serve($filename, $destination, $options);
+        } catch (\Exception $e) {
+           return [ob_get_clean(), $e];
+        } catch (\Throwable $e) {
+           return [ob_get_clean(), $e];
+        }
+        return [ob_get_clean(), null];
+    }
+
+    /**
+     *  Call to serve and return result or exception
+     *
+     *  The method takes care of closing output buffer in case of exception
+     *
+     *  @return string  the output
+     */
+    public static function callServeWithThrow($filename, $destination, $options)
+    {
+        ob_start();
+        try {
+            ServeConvertedWebP::serve($filename, $destination, $options);
+        } catch (\Exception $e) {
+            ob_get_clean();
+            throw($e);
+        } catch (\Throwable $e) {
+            ob_get_clean();
+            throw($e);
+        }
+        return ob_get_clean();
+    }
+
+    /**
+     *  Call to serve and return result or exception
+     *
+     *  The method takes care of closing output buffer in case of exception
+     *
+     *  @return string  the output
+     */
+    public static function callServeOriginalWithThrow($filename, $options)
+    {
+        ob_start();
+        try {
+            ServeConvertedWebP::serveOriginal($filename, $options);
+        } catch (\Exception $e) {
+            ob_get_clean();
+            throw($e);
+        } catch (\Throwable $e) {
+            ob_get_clean();
+            throw($e);
+        }
+        return ob_get_clean();
+    }
+
     /**
      * @covers ::serveOriginal
      */
@@ -43,7 +108,6 @@ class ServeConvertedWebPTest extends CompatibleTestCase
 
         $destination = $source . '.webp';
 
-        ob_start();
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
@@ -53,8 +117,7 @@ class ServeConvertedWebPTest extends CompatibleTestCase
                 ]
             ]
         ];
-        ServeConvertedWebP::serveOriginal($source, $options);
-        $result = ob_get_clean();
+        $result = self::callServeOriginalWithThrow($source, $options);
 
         // Test that headers were set as expected
         //$this->assertTrue(MockedHeader::hasHeaderContaining('X-WebP-Convert-Action:'));
@@ -79,7 +142,6 @@ class ServeConvertedWebPTest extends CompatibleTestCase
         $contentType = ImageMimeTypeGuesser::lenientGuess($source);
         $this->assertSame(false, $contentType);
 
-        ob_start();
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
@@ -89,8 +151,7 @@ class ServeConvertedWebPTest extends CompatibleTestCase
                 ]
             ]
         ];
-        ServeConvertedWebP::serveOriginal($source, []);
-        $result = ob_get_clean();
+        $result = self::callServeOriginalWithThrow($source, []);
         $this->assertEquals('', $result);
     }
 
@@ -107,7 +168,6 @@ class ServeConvertedWebPTest extends CompatibleTestCase
         $contentType = ImageMimeTypeGuesser::lenientGuess($source);
         $this->assertSame(null, $contentType);
 
-        ob_start();
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
@@ -117,8 +177,7 @@ class ServeConvertedWebPTest extends CompatibleTestCase
                 ]
             ]
         ];
-        ServeConvertedWebP::serveOriginal($source, $options);
-        $result = ob_get_clean();
+        $result = self::callServeOriginalWithThrow($source, $options);
         $this->assertEquals('', $result);
     }
 
@@ -132,7 +191,6 @@ class ServeConvertedWebPTest extends CompatibleTestCase
 
         $destination = $source . '.webp';
 
-        ob_start();
         $options = [
             //'serve-original' => true,
             'reconvert' => true,
@@ -142,8 +200,7 @@ class ServeConvertedWebPTest extends CompatibleTestCase
                 ]
             ]
         ];
-        ServeConvertedWebP::serve($source, $destination, $options);
-        $result = ob_get_clean();
+        $result = self::callServeWithThrow($source, $destination, $options);
 
         // Test that headers were set as expected
         //$this->assertTrue(MockedHeader::hasHeaderContaining('X-WebP-Convert-Action:'));
@@ -164,7 +221,6 @@ class ServeConvertedWebPTest extends CompatibleTestCase
 
         $destination = $source . '.webp';
 
-        ob_start();
         $options = [
             'serve-original' => true,
             //'reconvert' => true,
@@ -174,8 +230,7 @@ class ServeConvertedWebPTest extends CompatibleTestCase
                 ]
             ]
         ];
-        ServeConvertedWebP::serve($source, $destination, $options);
-        $result = ob_get_clean();
+        $result = self::callServeWithThrow($source, $destination, $options);
 
         // Test that headers were set as expected
         //$this->assertTrue(MockedHeader::hasHeaderContaining('X-WebP-Convert-Action:'));
@@ -200,7 +255,6 @@ class ServeConvertedWebPTest extends CompatibleTestCase
         file_put_contents($destination, '1234');
         $this->assertTrue(file_exists($destination));
 
-        ob_start();
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
@@ -210,8 +264,8 @@ class ServeConvertedWebPTest extends CompatibleTestCase
                 ]
             ]
         ];
-        ServeConvertedWebP::serve($source, $destination, $options);
-        $result = ob_get_clean();
+        $result = self::callServeWithThrow($source, $destination, $options);
+
 
         // Check that destination is output (it has the content "1234")
         $this->assertEquals('1234', $result);
@@ -229,7 +283,6 @@ class ServeConvertedWebPTest extends CompatibleTestCase
     {
         $this->expectException(InvalidInputException::class);
 
-        ob_start();
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
@@ -242,8 +295,7 @@ class ServeConvertedWebPTest extends CompatibleTestCase
 
         $source = '';
         $this->assertEmpty($source);
-        ServeConvertedWebP::serve($source, $this->getImagePath('test.png.webp'), $options);
-        $result = ob_get_clean();
+        $result = self::callServeWithThrow($source, $this->getImagePath('test.png.webp'), $options);
     }
 
     /**
@@ -258,7 +310,6 @@ class ServeConvertedWebPTest extends CompatibleTestCase
 
         $destination = '';
 
-        ob_start();
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
@@ -268,8 +319,7 @@ class ServeConvertedWebPTest extends CompatibleTestCase
                 ]
             ]
         ];
-        ServeConvertedWebP::serve($source, $destination, $options);
-        $result = ob_get_clean();
+        $result = self::callServeWithThrow($source, $destination, $options);
     }
 
     /**
@@ -284,7 +334,6 @@ class ServeConvertedWebPTest extends CompatibleTestCase
 
         $destination = '';
 
-        ob_start();
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
@@ -294,8 +343,7 @@ class ServeConvertedWebPTest extends CompatibleTestCase
                 ]
             ]
         ];
-        ServeConvertedWebP::serve($source, $destination, $options);
-        $result = ob_get_clean();
+        $result = self::callServeWithThrow($source, $destination, $options);
     }
 
     /**
@@ -307,7 +355,6 @@ class ServeConvertedWebPTest extends CompatibleTestCase
         $this->assertTrue(file_exists($source));
         $destination = $source . '.webp';
 
-        ob_start();
         $options = [
             //'serve-original' => true,
             //'reconvert' => true,
@@ -318,8 +365,7 @@ class ServeConvertedWebPTest extends CompatibleTestCase
                 ]
             ]
         ];
-        ServeConvertedWebP::serve($source, $destination, $options);
-        $result = ob_get_clean();
+        $result = self::callServeWithThrow($source, $destination, $options);
 
         // Check that output looks like a report
         $this->assertTrue(strpos($result, 'source:') !== false, 'The following does not contain "source:":' . $result);
@@ -340,7 +386,6 @@ class ServeConvertedWebPTest extends CompatibleTestCase
         $this->assertTrue(file_exists($source));
         $this->assertTrue(file_exists($source . '.webp'));
 
-        ob_start();
         $options = [
             'convert' => [
                 'converters' => [
@@ -348,8 +393,7 @@ class ServeConvertedWebPTest extends CompatibleTestCase
                 ]
             ]
         ];
-        ServeConvertedWebP::serve($source, $source . '.webp', $options);
-        $result = ob_get_clean();
+        $result = self::callServeWithThrow($source, $source . '.webp', $options);
 
         // the source file contains "text", so the next assert asserts that source was served
         $this->assertMatchesRegularExpression2('#text#', $result);
@@ -370,7 +414,6 @@ class ServeConvertedWebPTest extends CompatibleTestCase
         // check that it worked
         $this->assertLessThan(filemtime($source), filemtime($destination));
 
-        ob_start();
         $options = [
             'convert' => [
                 'converters' => [
@@ -378,8 +421,7 @@ class ServeConvertedWebPTest extends CompatibleTestCase
                 ]
             ]
         ];
-        ServeConvertedWebP::serve($source, $source . '.webp', $options);
-        $result = ob_get_clean();
+        $result = self::callServeWithThrow($source, $source . '.webp', $options);
 
         unlink($destination);
 
@@ -399,7 +441,6 @@ class ServeConvertedWebPTest extends CompatibleTestCase
         $destination = $source . '.webp';
         @unlink($destination);
 
-        ob_start();
         $options = [
             'convert' => [
                 'converters' => [
@@ -407,8 +448,7 @@ class ServeConvertedWebPTest extends CompatibleTestCase
                 ]
             ]
         ];
-        ServeConvertedWebP::serve($source, $source . '.webp', $options);
-        $result = ob_get_clean();
+        $result = self::callServeWithThrow($source, $source . '.webp', $options);
 
         // Our success-converter always creates fake webps with the content:
         // "we-pretend-this-is-a-valid-webp!".
