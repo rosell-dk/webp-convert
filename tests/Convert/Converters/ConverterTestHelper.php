@@ -9,6 +9,7 @@
 
 namespace WebPConvert\Tests\Convert\Converters;
 
+use WebPConvert\Convert\ConverterFactory;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\UnhandledException;
@@ -155,6 +156,7 @@ class ConverterTestHelper
         } catch (ConverterNotOperationalException $e) {
             // Converter not operational, and that is ok!
             // (ie if system requirements are not met, or the quota of a cloud converter is used up)
+
         } catch (UnhandledException $e) {
             // Handle the UnhandledException specially, so we can display the original error
             $prevEx = $e->getPrevious();
@@ -175,8 +177,24 @@ class ConverterTestHelper
         }
     }
 
+    public static function warnIfNotOperational($converterClassName)
+    {
+        $converter = ConverterFactory::makeConverterFromClassname(
+            'WebPConvert\\Convert\\Converters\\' . $converterClassName,
+            $source = self::getImagePath('test.jpg'),
+            $destination = self::getImagePath('test.jpg.webp')
+        );
+        try {
+            $converter->checkOperationality();
+        } catch (\Exception $e) {
+            echo "\n" . 'NOTICE: ' . $converterClassName . ' is not operational: ' . $e->getMessage() . "\n";
+        }
+    }
+
     public static function runAllConvertTests($testCase, $converterClassName, $converterOptions = [])
     {
+        self::warnIfNotOperational($converterClassName);
+
         $converterOptions['encoding'] = 'auto';
         self::testConvert('test.jpg', $testCase, $converterClassName, $converterOptions);
         self::testConvert('test.png', $testCase, $converterClassName, $converterOptions);

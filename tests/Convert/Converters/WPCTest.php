@@ -80,9 +80,9 @@ class WPCTest extends CompatibleTestCase
     public function testApi0()
     {
         if (empty(getenv('WEBPCONVERT_WPC_API_URL_API0'))) {
+            echo "\n" . 'NOTICE: WPC is not tested with api-version=0. To test this, you must set environment varibles WEBPCONVERT_WPC_API_URL_API0 and WEBPCONVERT_WPC_API_KEY' . "\n";
             return;
         }
-
 
         $source = $this->getImagePath('test.png');
         $options = [
@@ -99,6 +99,7 @@ class WPCTest extends CompatibleTestCase
     public function testApi1()
     {
         if (empty(getenv('WEBPCONVERT_WPC_API_URL'))) {
+            echo "\n" . 'NOTICE: WPC is not tested. To test this, you must set environment varibles WEBPCONVERT_WPC_API_URL_API and WEBPCONVERT_WPC_API_KEY' . "\n";
             return;
         }
 
