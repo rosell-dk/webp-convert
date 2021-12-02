@@ -86,16 +86,19 @@ class CwebpTest extends CompatibleTestCase
         $this->assertMatchesRegularExpression2('#-q \\d+#', $commandLineOptions);
 
         // -sharpness '5'
-        $this->assertMatchesRegularExpression2('#-sharpness \'5\'#', $commandLineOptions);
+        $this->assertMatchesRegularExpression2('#-sharpness [\'"]5[\'"]#', $commandLineOptions);
 
         // Extra command line option with multiple values. Each are escapeshellarg'ed
-        $this->assertMatchesRegularExpression2('#-crop \'10\' \'10\' \'40\' \'40\'#', $commandLineOptions);
+        $this->assertMatchesRegularExpression2(
+            '#-crop [\'"]10[\'"] [\'"]10[\'"] [\'"]40[\'"] [\'"]40[\'"]#', 
+            $commandLineOptions
+        );
 
         // Command line option (flag)
         $this->assertMatchesRegularExpression2('#-low_memory#', $commandLineOptions);
 
         // -sharpness '5'
-        $this->assertMatchesRegularExpression2('#-sharpness \'5\'#', $commandLineOptions);
+        $this->assertMatchesRegularExpression2('#-sharpness [\'"]5[\'"]#', $commandLineOptions);
     }
 
     /**
@@ -118,7 +121,7 @@ class CwebpTest extends CompatibleTestCase
         $commandLineOptions = $cwebpExposer->createCommandLineOptions();
 
         // Preset
-        // Note that escapeshellarg uses doublequotes on Windows 
+        // Note that escapeshellarg uses doublequotes on Windows
         $this->assertMatchesRegularExpression2("#-preset ['\"]picture['\"]#", $commandLineOptions);
 
         // Size

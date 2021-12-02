@@ -79,7 +79,7 @@ class ServeFileTest extends TestCase
         // Test that content of file was send to output
         $isWindows = preg_match('/^win/i', PHP_OS);
         if ($isWindows) {
-            $this->assertEquals("text\n\r", $result);
+            $this->assertEquals("text\r\n", $result);
         } else {
             $this->assertEquals("text\n", $result);
 
@@ -151,7 +151,7 @@ class ServeFileTest extends TestCase
         // Test that content of file was send to output
         $isWindows = preg_match('/^win/i', PHP_OS);
         if ($isWindows) {
-            $this->assertEquals("text\n\r", $result);
+            $this->assertEquals("text\r\n", $result);
         } else {
             $this->assertEquals("text\n", $result);
         }
@@ -161,7 +161,6 @@ class ServeFileTest extends TestCase
 
         $headers = MockedHeader::getHeaders();
         $this->assertEquals(0, MockedHeader::getNumHeaders());
-
 
         // TODO:The following fails on travis. WHY???
         //$this->assertFalse(MockedHeader::hasHeader('Content-Type: image/webp'));
