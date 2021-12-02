@@ -216,16 +216,35 @@ class GdTest extends TestCase
         // Assert that I am right!
         ob_start();
 
-        // suppress the warning,
-        // which is:
+        // In most cases the following triggers a warning:
         // Warning: imagewebp(): Palette image not supported by webp in /var/www/wc/wc0/webp-convert/tests/Convert/Converters/GdTest.php on line 215
-        @imagewebp($image, null, 80);
+        //
+        // However, in Windows-2022 (PHP 8), it throws.
+        // Error: PHP Fatal error:  Paletter image not supported by webp in D:\a\webp-convert\webp-convert\tests\Convert\Converters\GdTest.php on line 222
+
+        try {
+            @imagewebp($image, null, 80);
+        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+        }
         $output = ob_get_clean();
+
+        // The failure results in no output:
         $this->assertEquals($output, '');
 
         // similary, we should get an exception when calling tryConverting ('Gd failed: imagewebp() returned empty string')
-        $this->expectException(ConversionFailedException::class);
-        $gdExposer->tryConverting($image);
+        //$this->expectException(ConversionFailedException::class);
+        $gotExpectedException = false;
+        try {
+            $gdExposer->tryConverting($image);
+        } catch (ConversionFailedException $e) {
+            $gotExpectedException = true;
+        }
+        $this->assertTrue(
+            $gotExpectedException,
+            'did not get expected exception when converting palette image with Gd, ' .
+            'bypassing the code that converts to true color'
+        );
 
         //$gdExposer->tryToMakeTrueColorIfNot($image);
 
