@@ -80,7 +80,7 @@ class CwebpTest extends CompatibleTestCase
         $this->assertMatchesRegularExpression2('#-m 3#', $commandLineOptions);
 
         // There must be an output option, and it must be quoted
-        $this->assertMatchesRegularExpression2('#-o \'#', $commandLineOptions);
+        $this->assertMatchesRegularExpression2('#-o [\'"]#', $commandLineOptions);
 
         // There must be a quality option, and it must be digits
         $this->assertMatchesRegularExpression2('#-q \\d+#', $commandLineOptions);
@@ -118,7 +118,8 @@ class CwebpTest extends CompatibleTestCase
         $commandLineOptions = $cwebpExposer->createCommandLineOptions();
 
         // Preset
-        $this->assertMatchesRegularExpression2("#-preset 'picture'#", $commandLineOptions);
+        // Note that escapeshellarg uses doublequotes on Windows 
+        $this->assertMatchesRegularExpression2("#-preset ['\"]picture['\"]#", $commandLineOptions);
 
         // Size
         $fileSizeInBytes = floor($options['size-in-percentage']/100 * filesize($source));

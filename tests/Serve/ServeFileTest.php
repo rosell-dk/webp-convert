@@ -77,7 +77,13 @@ class ServeFileTest extends TestCase
         $result = self::callServeWithThrow($filename, 'image/webp', []);
 
         // Test that content of file was send to output
-        $this->assertEquals("text\n", $result);
+        $isWindows = preg_match('/^win/i', PHP_OS);
+        if ($isWindows) {
+            $this->assertEquals("text\n\r", $result);
+        } else {
+            $this->assertEquals("text\n", $result);
+
+        }
 
         $headers = MockedHeader::getHeaders();
         $this->assertGreaterThanOrEqual(1, MockedHeader::getNumHeaders());
@@ -143,7 +149,12 @@ class ServeFileTest extends TestCase
         $result = self::callServeWithThrow($filename, 'image/webp', $options);
 
         // Test that content of file was send to output
-        $this->assertEquals("text\n", $result);
+        $isWindows = preg_match('/^win/i', PHP_OS);
+        if ($isWindows) {
+            $this->assertEquals("text\n\r", $result);
+        } else {
+            $this->assertEquals("text\n", $result);
+        }
 
         // Test that headers were set as expected
         // We actually expect that none are added.
