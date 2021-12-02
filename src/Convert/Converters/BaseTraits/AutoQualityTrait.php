@@ -101,6 +101,7 @@ trait AutoQualityTrait
         becomes: quality: 80, auto-limit: false
         */
         $q = $options['quality'];
+        $useDeprecatedDefaultQuality = false;
         if ($q == 'auto') {
             $q = $options['quality'] = $options['max-quality'];
             $this->logLn(
@@ -120,6 +121,7 @@ trait AutoQualityTrait
                     '*PS: "auto-limit" is set to false, as it was set explicitly to false in the options."*'
                 );
             }
+            $useDeprecatedDefaultQuality = true;
         }
 
         if ($options['auto-limit']) {
@@ -130,11 +132,21 @@ trait AutoQualityTrait
                 );
                 $q = JpegQualityDetector::detectQualityOfJpg($source);
                 if (is_null($q)) {
-                    $q = $options['quality'];
                     $this->/** @scrutinizer ignore-call */logLn(
                         'Quality of source image could not be established (Imagick or GraphicsMagick is required). ' .
-                        'Sorry, no auto-limit functionality for you. Using supplied quality (' . $q . ').'
+                        'Sorry, no auto-limit functionality for you. '
                     );
+                    if ($useDeprecatedDefaultQuality) {
+                        $q = $options['default-quality'];
+                        $this->/** @scrutinizer ignore-call */logLn(
+                            'Using default-quality (' . $q . ').'
+                        );
+                    } else {
+                        $q = $options['quality'];
+                        $this->/** @scrutinizer ignore-call */logLn(
+                            'Using supplied quality (' . $q . ').'
+                        );
+                    }
 
                     $this->qualityCouldNotBeDetected = true;
                 } else {

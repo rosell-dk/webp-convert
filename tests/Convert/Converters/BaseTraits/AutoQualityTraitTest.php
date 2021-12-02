@@ -104,7 +104,7 @@ class AutoQualityTraitTest extends TestCase
             self::getImagePath('small-q61.jpg'),
             self::getImagePath('small-q61.jpg.webp'),
             [
-                'max-quality' => 60,
+                'max-quality' => 80,
                 'quality' => 'auto',
                 'default-quality' => 61,
             ]
