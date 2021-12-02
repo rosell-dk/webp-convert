@@ -81,8 +81,8 @@ class WPCTest extends CompatibleTestCase
     {
         if (empty(getenv('WEBPCONVERT_WPC_API_URL'))) {
             echo "\n" . 'NOTICE: WPC is not operational. It needs api-key and api-url. ';
-            echo 'You can set this up by setting environment varibles WEBPCONVERT_WPC_API_URL_API and WEBPCONVERT_WPC_API_KEY. '
-            echo 'To also test old api=0, use WEBPCONVERT_WPC_API_URL_API0.'
+            echo 'You can set this up by setting environment varibles WEBPCONVERT_WPC_API_URL_API and WEBPCONVERT_WPC_API_KEY. ';
+            echo 'To also test old api=0, use WEBPCONVERT_WPC_API_URL_API0.';
             echo "\n";
         } else {
             if (empty(getenv('WEBPCONVERT_WPC_API_URL_API0'))) {
