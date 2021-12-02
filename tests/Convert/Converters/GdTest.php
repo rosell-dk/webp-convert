@@ -205,8 +205,7 @@ class GdTest extends TestCase
     {
         echo 'OS: ' . PHP_OS;
         $gdExposer = $this->createGdExposer('not-true-color.png');
-/*
-        $gdExposer = $this->createGdExposer('not-true-color.png');
+
         self::resetPretending();
 
         // The next requires imagewebp...
@@ -215,7 +214,7 @@ class GdTest extends TestCase
         }
 
         $image = $gdExposer->createImageResource();
-
+/*
         // This image is not true color.
         // Trying to convert it fails (empty string is generated)
         // Assert that I am right!
