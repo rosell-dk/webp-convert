@@ -46,6 +46,7 @@ class JpegQualityDetector
             } catch (\Exception $e) {
                 // Well well, it just didn't work out.
                 // - But perhaps next method will work...
+            } catch (\Throwable $e) {
             }
         }
         return null;
@@ -72,14 +73,20 @@ class JpegQualityDetector
     {
         if (ExecWithFallback::anyAvailable()) {
             // Try Imagick using exec, and routing stderr to stdout (the "2>$1" magic)
-            ExecWithFallback::exec(
-                "identify -format '%Q' " . escapeshellarg($filename) . " 2>&1",
-                $output,
-                $returnCode
-            );
-            //echo 'out:' . print_r($output, true);
-            if ((intval($returnCode) == 0) && (is_array($output)) && (count($output) == 1)) {
-                return intval($output[0]);
+
+            try {
+                ExecWithFallback::exec(
+                    "identify -format '%Q' " . escapeshellarg($filename) . " 2>&1",
+                    $output,
+                    $returnCode
+                );
+                //echo 'out:' . print_r($output, true);
+                if ((intval($returnCode) == 0) && (is_array($output)) && (count($output) == 1)) {
+                    return intval($output[0]);
+                }
+            } catch (\Exception $e) {
+                // its ok, there are other fish in the sea
+            } catch (\Throwable $e) {
             }
         }
         return null;
@@ -101,22 +108,28 @@ class JpegQualityDetector
     {
         if (ExecWithFallback::anyAvailable()) {
             // Try GraphicsMagick
-            ExecWithFallback::exec(
-                "gm identify -format '%Q' " . escapeshellarg($filename) . " 2>&1",
-                $output,
-                $returnCode
-            );
-            if ((intval($returnCode) == 0) && (is_array($output)) && (count($output) == 1)) {
-                $quality = intval($output[0]);
+            try {
 
-                // It seems that graphicsmagick is (currently) never able to detect the quality!
-                // - and always returns 75 as a fallback
-                // We shall therefore treat 75 as a failure to detect. (#209)
-                if ($quality == 75) {
-                    return null;
+                ExecWithFallback::exec(
+                    "gm identify -format '%Q' " . escapeshellarg($filename) . " 2>&1",
+                    $output,
+                    $returnCode
+                );
+                if ((intval($returnCode) == 0) && (is_array($output)) && (count($output) == 1)) {
+                    $quality = intval($output[0]);
+
+                    // It seems that graphicsmagick is (currently) never able to detect the quality!
+                    // - and always returns 75 as a fallback
+                    // We shall therefore treat 75 as a failure to detect. (#209)
+                    if ($quality == 75) {
+                        return null;
+                    }
+                    return $quality;
                 }
-                return $quality;
+            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
             }
+
         }
         return null;
     }
