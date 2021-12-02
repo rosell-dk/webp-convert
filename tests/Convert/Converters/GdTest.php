@@ -224,7 +224,7 @@ class GdTest extends TestCase
         // Error: PHP Fatal error:  Paletter image not supported by webp in D:\a\webp-convert\webp-convert\tests\Convert\Converters\GdTest.php on line 222
 
         $isWindows = preg_match('/^win/i', PHP_OS);
-echo 'OS: ' . PHP_OS;
+        echo 'OS: ' . PHP_OS;
         if (!$isWindows || false) {
             ob_start();
 
