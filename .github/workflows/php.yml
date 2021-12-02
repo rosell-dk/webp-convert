@@ -11,6 +11,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       WEBPCONVERT_EWWW_API_KEY: ${{ secrets.WEBPCONVERT_EWWW_API_KEY }}
+      WEBPCONVERT_WPC_API_URL: ${{ secrets.WEBPCONVERT_WPC_API_URL }}
+      WEBPCONVERT_WPC_API_KEY: ${{ secrets.WEBPCONVERT_WPC_API_KEY }}
+      WEBPCONVERT_WPC_API_URL_API0: ${{ secrets.WEBPCONVERT_WPC_API_URL_API0 }}
     strategy:
       fail-fast: true
       matrix:
