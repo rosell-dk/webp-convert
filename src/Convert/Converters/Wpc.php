@@ -220,7 +220,7 @@ class Wpc extends AbstractConverter
                     );
                 }
             }
-        } elseif ($apiVersion >= 1) {
+        } else {
             if ($options['crypt-api-key-in-transfer']) {
                 if (!function_exists('crypt')) {
                     throw new ConverterNotOperationalException(
