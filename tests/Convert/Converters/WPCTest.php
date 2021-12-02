@@ -79,8 +79,17 @@ class WPCTest extends CompatibleTestCase
 
     public function testApi0()
     {
+        if (empty(getenv('WEBPCONVERT_WPC_API_URL'))) {
+            echo "\n" . 'NOTICE: WPC is not operational. It needs api-key and api-url. ';
+            echo 'You can set this up by setting environment varibles WEBPCONVERT_WPC_API_URL_API and WEBPCONVERT_WPC_API_KEY. '
+            echo 'To also test old api=0, use WEBPCONVERT_WPC_API_URL_API0.'
+            echo "\n";
+        } else {
+            if (empty(getenv('WEBPCONVERT_WPC_API_URL_API0'))) {
+                echo "\n" . 'NOTICE: WPC is not tested with api-version=0. To test this, you must set environment varibles WEBPCONVERT_WPC_API_URL_API0 and WEBPCONVERT_WPC_API_KEY' . "\n";
+            }
+        }
         if (empty(getenv('WEBPCONVERT_WPC_API_URL_API0'))) {
-            echo "\n" . 'NOTICE: WPC is not tested with api-version=0. To test this, you must set environment varibles WEBPCONVERT_WPC_API_URL_API0 and WEBPCONVERT_WPC_API_KEY' . "\n";
             $this->addToAssertionCount(1);
             return;
         }
@@ -100,7 +109,6 @@ class WPCTest extends CompatibleTestCase
     public function testApi1()
     {
         if (empty(getenv('WEBPCONVERT_WPC_API_URL'))) {
-            echo "\n" . 'NOTICE: WPC is not tested. To test this, you must set environment varibles WEBPCONVERT_WPC_API_URL_API and WEBPCONVERT_WPC_API_KEY' . "\n";
             $this->addToAssertionCount(1);
             return;
         }
@@ -118,6 +126,7 @@ class WPCTest extends CompatibleTestCase
     public function testApi2()
     {
         if (empty(getenv('WEBPCONVERT_WPC_API_URL'))) {
+            $this->addToAssertionCount(1);
             return;
         }
 
