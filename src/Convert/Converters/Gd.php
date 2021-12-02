@@ -56,6 +56,21 @@ class Gd extends AbstractConverter
                 'Gd has been compiled without webp support.'
             );
         }
+
+        if (!function_exists('imagepalettetotruecolor')) {
+            if (!self::functionsExist([
+                'imagecreatetruecolor', 'imagealphablending', 'imagecolorallocatealpha',
+                'imagefilledrectangle', 'imagecopy', 'imagedestroy', 'imagesx', 'imagesy'
+            ])) {
+                throw new SystemRequirementsNotMetException(
+                    'Gd cannot convert palette color images to RGB. ' .
+                    'Even though it would be possible to convert RGB images to webp with Gd, ' .
+                    'we refuse to do it. A partial working converter causes more trouble than ' .
+                    'a non-working. To make this converter work, you need the imagepalettetotruecolor() ' .
+                    'function to be enabled on your system.'
+                );
+            }
+        }
     }
 
     /**
@@ -217,17 +232,20 @@ class Gd extends AbstractConverter
      * Try to make image resource true color if it is not already.
      *
      * @param  resource|\GdImage  $image  The image to work on
-     * @return void
+     * @return boolean|null   True if it is now true color. False if it is NOT true color. null, if we cannot tell
      */
     protected function tryToMakeTrueColorIfNot(&$image)
     {
+        $whatIsItNow = null;
         $mustMakeTrueColor = false;
         if (function_exists('imageistruecolor')) {
             if (imageistruecolor($image)) {
                 $this->logLn('image is true color');
+                return true;
             } else {
                 $this->logLn('image is not true color');
                 $mustMakeTrueColor = true;
+                $whatIsItNow = false;
             }
         } else {
             $this->logLn('It can not be determined if image is true color');
@@ -237,13 +255,15 @@ class Gd extends AbstractConverter
         if ($mustMakeTrueColor) {
             $this->logLn('converting color palette to true color');
             $success = $this->makeTrueColor($image);
-            if (!$success) {
+            if ($success) {
+                return true;
+            } else {
                 $this->logLn(
-                    'Warning: FAILED converting color palette to true color. ' .
-                    'Continuing, but this does NOT look good.'
+                    'FAILED converting color palette to true color. '
                 );
             }
         }
+        return $whatIsItNow;
     }
 
     /**
@@ -330,10 +350,12 @@ class Gd extends AbstractConverter
         ob_start();
 
         // Adding this try/catch is perhaps not neccessary.
-        // I'm not certain that the error handler takes care of Fatal Throwable errors.
+        // I'm not certain that the error handler takes care of Throwable errors.
         // and - sorry - was to lazy to find out right now. So for now: better safe than sorry. #320
         $error = null;
         try {
+            // Beware: This call can throw FATAL on windows (cannot be catched)
+            // This for example happens on palette images
             $success = imagewebp($image, null, $q);
         } catch (\Exception $e) {
             $error = $e;
@@ -457,8 +479,27 @@ class Gd extends AbstractConverter
         $image = $this->createImageResource();
 
         // Try to convert color palette if it is not true color
-        $this->tryToMakeTrueColorIfNot($image);
+        $isItTrueColorNow = $this->tryToMakeTrueColorIfNot($image);
+        if ($isItTrueColorNow === false) {
+            // our tests shows that converting palette fails on all systems,
+            throw new ConversionFailedException(
+                'Cannot convert image because it is a palette image and the palette image cannot ' .
+                'be converted to RGB (which is required). To convert to RGB, we would need ' .
+                'imagepalettetotruecolor(), which is not available on your system. ' .
+                'Our workaround does not have the neccasary functions for converting to RGB either.'
+            );
+        }
+        if (is_null($isItTrueColorNow)) {
+            $isWindows = preg_match('/^win/i', PHP_OS);
+            if ($isWindows) {
+                throw new ConversionFailedException(
+                    'Cannot convert image because it appears to be a palette image and the palette image ' .
+                    'cannot be converted to RGB, as you do not have imagepalettetotruecolor() enabled. ' .
+                    'Converting palette on Windows causes FATAL error. So we abort now'
+                );
 
+            }
+        }
 
         if ($this->getMimeTypeOfSource() == 'image/png') {
             if (function_exists('version_compare')) {
