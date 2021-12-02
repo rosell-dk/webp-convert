@@ -77,7 +77,7 @@ class Wpc extends AbstractConverter
                'ui' => [
                    'component' => 'select',
                    'advanced' => false,
-                   'options' => ['0', '1', '2'],
+                   'options' => [0, 1, 2],
                ]
             ]],
             ['crypt-api-key-in-transfer', 'boolean', [
