@@ -77,6 +77,12 @@ class WPCTest extends CompatibleTestCase
         return true;
     }
 
+    public function testWarnIfNotOperational()
+    {
+        ConverterTestHelper::warnIfNotOperational('Wpc');
+        $this->addToAssertionCount(1);
+    }
+
     public function testApi0()
     {
         if (empty(getenv('WEBPCONVERT_WPC_API_URL'))) {
