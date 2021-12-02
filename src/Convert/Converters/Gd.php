@@ -329,9 +329,23 @@ class Gd extends AbstractConverter
 
         ob_start();
 
-        //$success = imagewebp($image, $this->destination, $q);
-        $success = imagewebp($image, null, $q);
-
+        // Adding this try/catch is perhaps not neccessary.
+        // I'm not certain that the error handler takes care of Fatal Throwable errors.
+        // and - sorry - was to lazy to find out right now. So for now: better safe than sorry. #320
+        $error = null;
+        try {
+            $success = imagewebp($image, null, $q);
+        } catch (\Exception $e) {
+            $error = $e;
+        } catch (\Throwable $e) {
+            $error = $e;
+        }
+        if (!is_null($error)) {
+            restore_error_handler();
+            ob_end_clean();
+            $this->destroyAndRemove($image);
+            throw $error;
+        }
         if (!$success) {
             $this->destroyAndRemove($image);
             ob_end_clean();
