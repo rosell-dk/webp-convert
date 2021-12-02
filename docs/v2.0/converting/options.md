@@ -383,6 +383,7 @@ Type:          integer (0 - 1 - 2)
 Default:       2
 Supported by:  wpc
 ```
+PS: In many releases, you had to set this to 1 even though you were running on 2. This will be fixed in 2.9.0
 <br>
 
 ### `wpc-crypt-api-key-in-transfer`
