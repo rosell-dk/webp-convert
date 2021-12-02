@@ -70,7 +70,7 @@ class Wpc extends AbstractConverter
             ]],
             ['api-version', 'int', [
                'title' => 'API version',
-               'description' => '',
+               'description' => 'Refers to the major version of Wpc. It is probably 2, as it is a long time since 2.0 was released',
                'default' => 2,
                'minimum' => 0,
                'maximum' => 2,
@@ -300,7 +300,7 @@ class Wpc extends AbstractConverter
 
         if ($apiVersion == 0) {
             $postData['hash'] = md5(md5_file($this->source) . $apiKey);
-        } elseif ($apiVersion == 1) {
+        } else {
             //$this->logLn('api key: ' . $apiKey);
 
             if ($options['crypt-api-key-in-transfer']) {
