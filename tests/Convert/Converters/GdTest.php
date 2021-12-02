@@ -224,23 +224,23 @@ class GdTest extends TestCase
         //
         // However, in Windows-2022 (PHP 8), it throws A FATAL!
         // Error: PHP Fatal error:  Paletter image not supported by webp in D:\a\webp-convert\webp-convert\tests\Convert\Converters\GdTest.php on line 222
+        //
+        // And its worse and Mac (PHP 7.1 and 7.3, not 7.4 and 8.0)
+        // It just halts execution - see ##322
 
         $isWindows = preg_match('/^win/i', PHP_OS);
         $isMacDarwin = preg_match('/^darwin/i', PHP_OS);
 
-        if (!$isWindows) {
+        if (!$isWindows && !$isMacDarwin) {
             ob_start();
 
             try {
-              echo 'about to call imagewebp';
                 @imagewebp($image, null, 80);
-                echo 'it went ok';
             } catch (\Exception $e) {
             } catch (\Throwable $e) {
             }
-            echo 'here!';
             $output = ob_get_clean();
-/*
+
             // The failure results in no output:
             $this->assertEquals($output, '');
 
@@ -257,7 +257,7 @@ class GdTest extends TestCase
                 'did not get expected exception when converting palette image with Gd, ' .
                 'bypassing the code that converts to true color'
             );
-*/
+
         }
 
           //$gdExposer->tryToMakeTrueColorIfNot($image);
