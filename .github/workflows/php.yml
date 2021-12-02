@@ -9,6 +9,11 @@ on:
 jobs:
   php80:
     runs-on: ${{ matrix.os }}
+    env:
+      WEBPCONVERT_EWWW_API_KEY: {{ secrets.WEBPCONVERT_EWWW_API_KEY }}
+      WEBPCONVERT_WPC_API_URL: {{ secrets.WEBPCONVERT_WPC_API_URL }}
+      WEBPCONVERT_WPC_API_KEY: {{ secrets.WEBPCONVERT_WPC_API_KEY }}
+      WEBPCONVERT_WPC_API_URL_API0: {{ secrets.WEBPCONVERT_WPC_API_URL_API0 }}
     strategy:
       fail-fast: true
       matrix:
@@ -51,6 +56,11 @@ jobs:
 
   php71:
     runs-on: ${{ matrix.os }}
+    env:
+      WEBPCONVERT_EWWW_API_KEY: {{ secrets.WEBPCONVERT_EWWW_API_KEY }}
+      WEBPCONVERT_WPC_API_URL: {{ secrets.WEBPCONVERT_WPC_API_URL }}
+      WEBPCONVERT_WPC_API_KEY: {{ secrets.WEBPCONVERT_WPC_API_KEY }}
+      WEBPCONVERT_WPC_API_URL_API0: {{ secrets.WEBPCONVERT_WPC_API_URL_API0 }}
     strategy:
       fail-fast: true
       matrix:
@@ -96,6 +106,11 @@ jobs:
 
   with_disabled_functions:
     runs-on: ${{ matrix.os }}
+    env:
+      WEBPCONVERT_EWWW_API_KEY: {{ secrets.WEBPCONVERT_EWWW_API_KEY }}
+      WEBPCONVERT_WPC_API_URL: {{ secrets.WEBPCONVERT_WPC_API_URL }}
+      WEBPCONVERT_WPC_API_KEY: {{ secrets.WEBPCONVERT_WPC_API_KEY }}
+      WEBPCONVERT_WPC_API_URL_API0: {{ secrets.WEBPCONVERT_WPC_API_URL_API0 }}
     strategy:
       fail-fast: true
       matrix:
@@ -145,6 +160,11 @@ jobs:
 
   codecov:
     runs-on: ubuntu-20.04
+    env:
+      WEBPCONVERT_EWWW_API_KEY: {{ secrets.WEBPCONVERT_EWWW_API_KEY }}
+      WEBPCONVERT_WPC_API_URL: {{ secrets.WEBPCONVERT_WPC_API_URL }}
+      WEBPCONVERT_WPC_API_KEY: {{ secrets.WEBPCONVERT_WPC_API_KEY }}
+      WEBPCONVERT_WPC_API_URL_API0: {{ secrets.WEBPCONVERT_WPC_API_URL_API0 }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
