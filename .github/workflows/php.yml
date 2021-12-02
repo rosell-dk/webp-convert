@@ -10,7 +10,7 @@ jobs:
   php80:
     runs-on: ${{ matrix.os }}
     env:
-      TEST: TEST
+      WEBPCONVERT_EWWW_API_KEY: ${{ secrets.WEBPCONVERT_EWWW_API_KEY }}
     strategy:
       fail-fast: true
       matrix:
