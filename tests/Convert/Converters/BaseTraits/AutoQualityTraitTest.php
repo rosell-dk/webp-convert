@@ -113,10 +113,10 @@ class AutoQualityTraitTest extends TestCase
         //$this->assertTrue(file_exists(self::$imgDir . '/small-q61.jpg'));
         //$this->assertEquals('image/jpeg', $converter->getMimeTypeOfSource());
 
-        $this->assertSame(60, $converter->getCalculatedQuality());
+        $this->assertSame(61, $converter->getCalculatedQuality());
 
         // Test that it is still the same (testing caching)
-        $this->assertSame(60, $converter->getCalculatedQuality());
+        $this->assertSame(61, $converter->getCalculatedQuality());
     }
 
     public function testAutoQualityMaxQualityOnNonJpeg()
@@ -184,7 +184,7 @@ class AutoQualityTraitTest extends TestCase
         // Test that it is still the same (testing caching)
         $this->assertTrue($converter->isQualityDetectionRequiredButFailing());
 
-        $this->assertSame(70, $converter->getCalculatedQuality());
+        $this->assertSame(60, $converter->getCalculatedQuality());
     }
 
 }
