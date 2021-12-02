@@ -13,6 +13,21 @@ class GdTest extends TestCase
 {
 
 
+      public static function getImageFolder()
+      {
+          return realpath(__DIR__ . '/../../images');
+      }
+
+      public static function getImagePath($image)
+      {
+          return self::getImageFolder() . '/' . $image;
+      }
+
+      public function testConvert()
+      {
+          ConverterTestHelper::runAllConvertTests($this, 'Gd');
+      }
+
 }
 
 require_once('pretend.inc');
