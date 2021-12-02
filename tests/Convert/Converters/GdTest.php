@@ -28,6 +28,38 @@ class GdTest extends TestCase
           ConverterTestHelper::runAllConvertTests($this, 'Gd');
       }
 
+      private function createGd($src)
+      {
+          $source = self::getImagePath($src);
+          $this->assertTrue(file_exists($source), 'source does not exist:' . $source);
+
+          return new Gd($source, $source . '.webp');
+      }
+
+      private function createGdExposer($src)
+      {
+          $gd = $this->createGd($src);
+          return new GdExposer($gd);
+      }
+
+      private static function resetPretending()
+      {
+          reset_pretending();
+      }
+
+      // pretend imagewebp is missing
+      public function testNotOperational1()
+      {
+          global $pretend;
+
+          $gd = $this->createGd('test.png');
+          self::resetPretending();
+
+          $pretend['functionsNotExisting'] = ['imagewebp'];
+          $this->expectException(SystemRequirementsNotMetException::class);
+          $gd->checkOperationality();
+      }
+
 }
 
 require_once('pretend.inc');
