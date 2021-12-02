@@ -491,11 +491,14 @@ class Gd extends AbstractConverter
         }
         if (is_null($isItTrueColorNow)) {
             $isWindows = preg_match('/^win/i', PHP_OS);
-            if ($isWindows) {
+            $isMacDarwin = preg_match('/^darwin/i', PHP_OS); // actually no problem in PHP 7.4 and 8.0
+            if ($isWindows || $isMacDarwin) {
                 throw new ConversionFailedException(
                     'Cannot convert image because it appears to be a palette image and the palette image ' .
                     'cannot be converted to RGB, as you do not have imagepalettetotruecolor() enabled. ' .
-                    'Converting palette on Windows causes FATAL error. So we abort now'
+                    'Converting palette on ' .
+                    ($isWindows ? 'Windows causes FATAL error' : 'Mac causes halt' .
+                    'So we abort now'
                 );
 
             }
