@@ -57,7 +57,7 @@ class GraphicsMagickTest extends TestCase
         } catch (ConverterNotOperationalException $e) {
             // (SystemRequirementsNotMetException is also a ConverterNotOperationalException)
             // this is ok.
-            return;
+            return true;
         }
         return true;
     }
