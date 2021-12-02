@@ -323,7 +323,7 @@ abstract class AbstractConverter
                 }
             }
             throw $e;
-        } catch (\Error $e) {
+        } catch (\Throwable $e) {
             $className = get_class($e);
             $classNameParts = explode("\\", $className);
             $shortClassName = array_pop($classNameParts);
