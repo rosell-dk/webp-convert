@@ -8,7 +8,7 @@ on:
 
 jobs:
   php80:
-    runs-on: ${{ matrix.os }}      
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
       matrix:
@@ -102,7 +102,7 @@ jobs:
         os: [ubuntu-18.04]
         php: [7.1]
         # unfortunately, proc_open is needed by phpunit, so we cannot disable proc_open
-        disabled_functions: ["exec", "exec,proc_open,passthru,shell_exec,popen"]
+        disabled_functions: ["exec", "exec,passthru,shell_exec,popen"]
     steps:
     - name: Checkout
       uses: actions/checkout@v2
