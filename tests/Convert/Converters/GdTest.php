@@ -214,7 +214,7 @@ class GdTest extends TestCase
         }
 
         $image = $gdExposer->createImageResource();
-/*
+
         // This image is not true color.
         // Trying to convert it fails (empty string is generated)
         // Assert that I am right!
@@ -226,16 +226,21 @@ class GdTest extends TestCase
         // Error: PHP Fatal error:  Paletter image not supported by webp in D:\a\webp-convert\webp-convert\tests\Convert\Converters\GdTest.php on line 222
 
         $isWindows = preg_match('/^win/i', PHP_OS);
-        if (!$isWindows || false) {
+        $isMacDarwin = preg_match('/^darwin/i', PHP_OS);
+
+        if (!$isWindows) {
             ob_start();
 
             try {
+              echo 'about to call imagewebp';
                 @imagewebp($image, null, 80);
+                echo 'it went ok';
             } catch (\Exception $e) {
             } catch (\Throwable $e) {
             }
+            echo 'here!';
             $output = ob_get_clean();
-
+/*
             // The failure results in no output:
             $this->assertEquals($output, '');
 
@@ -252,8 +257,8 @@ class GdTest extends TestCase
                 'did not get expected exception when converting palette image with Gd, ' .
                 'bypassing the code that converts to true color'
             );
-
-        }*/
+*/
+        }
 
           //$gdExposer->tryToMakeTrueColorIfNot($image);
 
