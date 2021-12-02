@@ -9,6 +9,8 @@ on:
 jobs:
   php80:
     runs-on: ${{ matrix.os }}
+    env:
+      TEST: TEST
     strategy:
       fail-fast: true
       matrix:
