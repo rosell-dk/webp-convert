@@ -81,6 +81,7 @@ class WPCTest extends CompatibleTestCase
     {
         if (empty(getenv('WEBPCONVERT_WPC_API_URL_API0'))) {
             echo "\n" . 'NOTICE: WPC is not tested with api-version=0. To test this, you must set environment varibles WEBPCONVERT_WPC_API_URL_API0 and WEBPCONVERT_WPC_API_KEY' . "\n";
+            $this->addToAssertionCount(1);
             return;
         }
 
@@ -100,12 +101,29 @@ class WPCTest extends CompatibleTestCase
     {
         if (empty(getenv('WEBPCONVERT_WPC_API_URL'))) {
             echo "\n" . 'NOTICE: WPC is not tested. To test this, you must set environment varibles WEBPCONVERT_WPC_API_URL_API and WEBPCONVERT_WPC_API_KEY' . "\n";
+            $this->addToAssertionCount(1);
             return;
         }
 
         $source = $this->getImagePath('test.png');
         $options = [
             'api-version' => 1,
+            'crypt-api-key-in-transfer' => true,
+            'lossless' => true,
+        ];
+
+        $this->assertTrue(self::tryThis($this, $source, $options));
+    }
+
+    public function testApi2()
+    {
+        if (empty(getenv('WEBPCONVERT_WPC_API_URL'))) {
+            return;
+        }
+
+        $source = $this->getImagePath('test.png');
+        $options = [
+            'api-version' => 2,
             'crypt-api-key-in-transfer' => true,
             'lossless' => true,
         ];
