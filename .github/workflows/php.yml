@@ -100,6 +100,52 @@ jobs:
     - name: Run test suite
       run: composer run-script test
 
+  php73:
+    runs-on: ${{ matrix.os }}
+    env:
+      WEBPCONVERT_EWWW_API_KEY: ${{ secrets.WEBPCONVERT_EWWW_API_KEY }}
+      WEBPCONVERT_WPC_API_URL: ${{ secrets.WEBPCONVERT_WPC_API_URL }}
+      WEBPCONVERT_WPC_API_KEY: ${{ secrets.WEBPCONVERT_WPC_API_KEY }}
+      WEBPCONVERT_WPC_API_URL_API0: ${{ secrets.WEBPCONVERT_WPC_API_URL_API0 }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-18.04, windows-2022, windows-2019, windows-2016, macos-11, macos-10.15]
+        php: [7.3]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php }}
+        extensions: exif, mbstring, fileinfo, gd
+
+    - name: Setup problem matchers for PHP
+      run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+
+    - name: Setup problem matchers for PHPUnit
+      run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+    - name: Validate composer.json and composer.lock
+      run: composer validate --strict
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v2
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php73-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php73-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Run test suite
+      run: composer run-script test
+
 
   php71:
     runs-on: ${{ matrix.os }}
