@@ -497,7 +497,7 @@ class Gd extends AbstractConverter
                     'Cannot convert image because it appears to be a palette image and the palette image ' .
                     'cannot be converted to RGB, as you do not have imagepalettetotruecolor() enabled. ' .
                     'Converting palette on ' .
-                    ($isWindows ? 'Windows causes FATAL error' : 'Mac causes halt' .
+                    ($isWindows ? 'Windows causes FATAL error' : 'Mac causes halt') .
                     'So we abort now'
                 );
 
