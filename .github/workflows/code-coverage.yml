@@ -19,10 +19,10 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Setup vips
-      run: |
-        chmod +x ./.github/install-vips.sh
-        ./.github/install-vips.sh
+#    - name: Setup vips
+#      run: |
+#        chmod +x ./.github/install-vips.sh
+#        ./.github/install-vips.sh
 
     - name: Setup ffmpeg
       uses: FedericoCarboni/setup-ffmpeg@v1
@@ -31,7 +31,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.0'
-        extensions: exif, mbstring, fileinfo, gd
+        extensions: exif, mbstring, fileinfo, gd, vips
 
     - name: Setup problem matchers for PHP
       run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
