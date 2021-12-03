@@ -31,7 +31,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.0'
-        extensions: exif, mbstring, fileinfo, gd, vips
+        extensions: exif, mbstring, fileinfo, gd, vips, gmagick
 
     - name: Setup problem matchers for PHP
       run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
@@ -60,4 +60,4 @@ jobs:
     - name: Upload Scrutinizer coverage
       uses: sudo-bot/action-scrutinizer@latest
       with:
-        cli-args: "--format=php-clover build/logs/coverage.clover"
+        cli-args: "--format=php-clover build/coverage.clover"
