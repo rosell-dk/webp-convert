@@ -38,9 +38,6 @@ jobs:
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
 
-    - name: Downgrade PHP unit to a version that supports PHP 7.4
-      run: composer require "phpunit/phpunit:^8.0" --dev
-
     - name: Cache Composer packages
       id: composer-cache
       uses: actions/cache@v2
