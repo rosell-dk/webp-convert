@@ -109,7 +109,6 @@ class JpegQualityDetector
         if (ExecWithFallback::anyAvailable()) {
             // Try GraphicsMagick
             try {
-
                 ExecWithFallback::exec(
                     "gm identify -format '%Q' " . escapeshellarg($filename) . " 2>&1",
                     $output,
@@ -129,7 +128,6 @@ class JpegQualityDetector
             } catch (\Exception $e) {
             } catch (\Throwable $e) {
             }
-
         }
         return null;
     }

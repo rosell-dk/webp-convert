@@ -502,7 +502,6 @@ class Gd extends AbstractConverter
                     ($isWindows ? 'Windows causes FATAL error' : 'Mac causes halt') .
                     'So we abort now'
                 );
-
             }
         }
 
