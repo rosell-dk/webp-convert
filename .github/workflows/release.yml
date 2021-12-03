@@ -21,11 +21,14 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: Setup ffmpeg
+      uses: FedericoCarboni/setup-ffmpeg@v1
+
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php }}
-        extensions: exif, mbstring, fileinfo, gd
+        extensions: exif, mbstring, fileinfo, gd, vips
 
     - name: Setup problem matchers for PHP
       run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
@@ -64,11 +67,14 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: Setup ffmpeg
+      uses: FedericoCarboni/setup-ffmpeg@v1
+
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php }}
-        extensions: exif, mbstring, fileinfo, gd
+        extensions: exif, mbstring, fileinfo, gd, vips
 
     - name: Setup problem matchers for PHP
       run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
@@ -107,11 +113,14 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: Setup ffmpeg
+      uses: FedericoCarboni/setup-ffmpeg@v1
+
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php }}
-        extensions: exif, mbstring, fileinfo, gd
+        extensions: exif, mbstring, fileinfo, gd, vips
 
     - name: Setup problem matchers for PHP
       run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
@@ -151,11 +160,14 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: Setup ffmpeg
+      uses: FedericoCarboni/setup-ffmpeg@v1
+
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php }}
-        extensions: exif, mbstring, fileinfo, gd
+        extensions: exif, mbstring, fileinfo, gd, vips
 
     - name: Setup problem matchers for PHP
       run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
@@ -200,11 +212,14 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: Setup ffmpeg
+      uses: FedericoCarboni/setup-ffmpeg@v1
+
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php }}
-        extensions: exif, mbstring, fileinfo, gd
+        extensions: exif, mbstring, fileinfo, gd, vips
         ini-values: disable_functions="${{ matrix.disabled_functions }}"
 
     - name: Setup problem matchers for PHP
@@ -247,11 +262,14 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: Setup ffmpeg
+      uses: FedericoCarboni/setup-ffmpeg@v1
+
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.0'
-        extensions: exif, mbstring, fileinfo, gd
+        extensions: exif, mbstring, fileinfo, gd, vips
 
     - name: Setup problem matchers for PHP
       run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
