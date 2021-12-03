@@ -353,6 +353,8 @@ class Gd extends AbstractConverter
         // I'm not certain that the error handler takes care of Throwable errors.
         // and - sorry - was to lazy to find out right now. So for now: better safe than sorry. #320
         $error = null;
+        $success = false;
+        
         try {
             // Beware: This call can throw FATAL on windows (cannot be catched)
             // This for example happens on palette images
