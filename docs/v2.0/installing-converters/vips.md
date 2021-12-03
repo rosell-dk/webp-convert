@@ -21,3 +21,15 @@ extension=vips
 (or `extension=vips.so` if you are in older PHP)
 
 The vips extension is btw [also on github](https://github.com/libvips/php-vips-ext):
+
+
+## GitHub actions workflow
+As easy as adding "vips" to the extensions for `setup-php@v2`:
+
+```yaml
+- name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.0'
+        extensions: vips
+```
