@@ -1,4 +1,4 @@
-name: Large testsuite (run before releases)
+name: Large testsuite (run manually before releases)
 
 on: workflow_dispatch
 
