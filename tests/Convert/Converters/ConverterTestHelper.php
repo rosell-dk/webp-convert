@@ -186,7 +186,7 @@ class ConverterTestHelper
         );
         try {
             $converter->checkOperationality();
-            echo "\n" . $converterClassName . ' is operational.' . "\n";
+            //echo "\n" . $converterClassName . ' is operational.' . "\n";
         } catch (\Exception $e) {
             echo "\n" . 'NOTICE: ' . $converterClassName . ' is not operational: ' . $e->getMessage() . "\n";
         }
