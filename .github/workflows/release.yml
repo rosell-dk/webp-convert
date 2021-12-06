@@ -19,6 +19,8 @@ jobs:
 
     - name: Setup ffmpeg
       uses: FedericoCarboni/setup-ffmpeg@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -65,6 +67,8 @@ jobs:
 
     - name: Setup ffmpeg
       uses: FedericoCarboni/setup-ffmpeg@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -111,6 +115,8 @@ jobs:
 
     - name: Setup ffmpeg
       uses: FedericoCarboni/setup-ffmpeg@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -158,6 +164,8 @@ jobs:
 
     - name: Setup ffmpeg
       uses: FedericoCarboni/setup-ffmpeg@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -210,6 +218,8 @@ jobs:
 
     - name: Setup ffmpeg
       uses: FedericoCarboni/setup-ffmpeg@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -260,6 +270,8 @@ jobs:
 
     - name: Setup ffmpeg
       uses: FedericoCarboni/setup-ffmpeg@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
