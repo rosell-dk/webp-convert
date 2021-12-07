@@ -3,7 +3,7 @@ name: Large testsuite (run manually before releases)
 on: workflow_dispatch
 
 jobs:
-  php80:
+  php81:
     runs-on: ${{ matrix.os }}
     env:
       WEBPCONVERT_EWWW_API_KEY: ${{ secrets.WEBPCONVERT_EWWW_API_KEY }}
@@ -11,6 +11,55 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-20.04, ubuntu-18.04, windows-2022, windows-2019, windows-2016, macos-11, macos-10.15]
+        php: [8.1]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup ffmpeg
+      uses: FedericoCarboni/setup-ffmpeg@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php }}
+        extensions: exif, mbstring, fileinfo, gd, vips, imagick, gmagick
+
+    - name: Setup problem matchers for PHP
+      run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+
+    - name: Setup problem matchers for PHPUnit
+      run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+    - name: Validate composer.json and composer.lock
+      run: composer validate --strict
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v2
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php81-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php81-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Run test suite
+      run: composer run-script test
+
+  php80:
+    runs-on: ${{ matrix.os }}
+    env:
+      WEBPCONVERT_EWWW_API_KEY: ${{ secrets.WEBPCONVERT_EWWW_API_KEY }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [windows-2022, macos-11]
         php: [8.0]
 
     steps:
