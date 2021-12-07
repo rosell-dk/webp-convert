@@ -30,7 +30,7 @@ jobs:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.0'
+        php-version: '8.1'
         # Note: Currently, gmagick and imagick are mutually exclusive.
         # It seems they are installed in the order indicated in "extensions" and the latter cancels the former
         extensions: exif, mbstring, fileinfo, gd, vips, gmagick, imagick
