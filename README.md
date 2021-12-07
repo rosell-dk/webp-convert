@@ -140,7 +140,7 @@ Bread on the table don't come for free, even though this library does, and alway
 - Max Kreminsky ($65)
 - Steven Sullivan ($51)
 
-## Upcoming in 2.9.0:
+## New in 2.9.0 (released 7 dec 2021, on my daughters 10 years birthday!)
 - When exec() is unavailable, alternatives are now tried (emulations with proc_open(), passthru() etc). Using [this library](https://github.com/rosell-dk/exec-with-fallback) to do it.
 
 ## New in 2.8.0:
