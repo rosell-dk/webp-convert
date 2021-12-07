@@ -142,6 +142,9 @@ Bread on the table don't come for free, even though this library does, and alway
 
 ## New in 2.9.0 (released 7 dec 2021, on my daughters 10 years birthday!)
 - When exec() is unavailable, alternatives are now tried (emulations with proc_open(), passthru() etc). Using [this library](https://github.com/rosell-dk/exec-with-fallback) to do it.
+- Gd is now marked as not operational when the needed functions for converting palette images to RGB is missing. Rationale: A half-working converter causes more trouble than one that is marked as not operational
+- Improved CI tests. It is now tested on Windows, Mac and with deactivated functions (such as when exec() is disabled)
+- And more (view closed issues [here](https://github.com/rosell-dk/webp-convert/milestone/25?closed=1)
 
 ## New in 2.8.0:
 - Converter option definitions are now accessible along with suggested UI and helptexts. This allows one to auto-generate a frontend based on conversion options. The feature is already in use in the [webp-convert file manager](https://github.com/rosell-dk/webp-convert-filemanager), which is used in WebP Express. New method: `WebPConvert::getConverterOptionDefinitions()`
