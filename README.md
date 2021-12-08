@@ -126,11 +126,11 @@ Bread on the table don't come for free, even though this library does, and alway
 - Ruben Solvang
 
 *Persons who recently contributed with [ko-fi](https://ko-fi.com/rosell) - Thanks!*
+* 3 Dec: Dallas
+* 29 Nov: tadesco.org
 * 20 Nov: Ben J
 * 13 Nov: @sween
 * 9 Nov: @utrenkner
-* 26 Oct: Anonymous
-* 29 Aug: Pawa Tecnologia
 
 *Persons who contributed with extra generously amounts of coffee / lifetime backing (>50$) - thanks!:*
 
