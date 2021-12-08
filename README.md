@@ -5,7 +5,7 @@
 [![Build Status](https://img.shields.io/github/workflow/status/rosell-dk/webp-convert/PHP?logo=GitHub)](https://github.com/rosell-dk/webp-convert/actions/workflows/php.yml)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://github.com/rosell-dk/webp-convert/blob/master/LICENSE)
 [![Monthly Downloads](http://poser.pugx.org/rosell-dk/webp-convert/d/monthly)](https://packagist.org/packages/rosell-dk/webp-convert)
-[![Dependents](http://poser.pugx.org/rosell-dk/webp-convert/dependents)](https://packagist.org/packages/rosell-dk/webp-convert)
+[![Dependents](http://poser.pugx.org/rosell-dk/webp-convert/dependents)](https://packagist.org/packages/rosell-dk/webp-convert/dependents?order_by=downloads)
 
 *Convert JPEG & PNG to WebP with PHP*
 
