@@ -134,7 +134,8 @@ class ServeConvertedWebPTest extends CompatibleTestCase
      */
     public function testServeOriginalNotAnImage()
     {
-        $this->expectException(InvalidImageTypeException::class);
+        //$this->expectException(InvalidImageTypeException::class);
+        $this->expectException(ServeFailedException::class);
 
         $source =$this->getImagePath('text.txt');
         $this->assertTrue(file_exists($source), 'source file does not exist');
@@ -160,7 +161,8 @@ class ServeConvertedWebPTest extends CompatibleTestCase
      */
     public function testServeOriginalNotAnImage2()
     {
-        $this->expectException(InvalidImageTypeException::class);
+        //$this->expectException(InvalidImageTypeException::class);
+        $this->expectException(ServeFailedException::class);        
 
         $source = $this->getImagePath('text');
         $this->assertTrue(file_exists($source), 'source file does not exist');
