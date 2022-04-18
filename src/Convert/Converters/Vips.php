@@ -208,9 +208,9 @@ class Vips extends AbstractConverter
     }
 
     /**
-     * Convert with vips extension.
+     * Save as webp, using vips extension.
      *
-     * Tries to create image resource and save it as webp using the calculated options.
+     * Tries to save image resource as webp, using the supplied options.
      * Vips fails when a parameter is not supported, but we detect this and unset that parameter and try again
      * (recursively call itself until there is no more of these kind of errors).
      *
@@ -279,11 +279,11 @@ class Vips extends AbstractConverter
     }
 
     /**
-     * Convert with vips extension.
+     * Convert, using vips extension.
      *
      * Tries to create image resource and save it as webp using the calculated options.
-     * Vips fails when a parameter is not supported, but we detect this and unset that parameter and try again
-     * (repeat until success).
+     * PS: The Vips "webpsave" call fails when a parameter is not supported, but our webpsave() method
+     * detect this and unset that parameter and try again (repeat until success).
      *
      * @throws  ConversionFailedException  if conversion fails.
      */
