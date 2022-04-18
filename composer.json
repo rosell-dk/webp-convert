@@ -12,7 +12,7 @@
       "@phpstan-global"
     ],
     "phpunit": "phpunit --coverage-text",
-    "test": "phpunit --no-coverage",
+    "test": "phpunit --coverage-text=build/coverage.txt --coverage-clover=build/coverage.clover --coverage-html=build/coverage --whitelist=src tests",
     "test-41": "phpunit --no-coverage --configuration 'phpunit-41.xml.dist'",
     "test-with-coverage": "phpunit --coverage-text --configuration 'phpunit-with-coverage.xml.dist'",
     "test-41-with-coverage": "phpunit --coverage-text --configuration 'phpunit-41.xml.dist'",
@@ -70,7 +70,8 @@
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^2.11",
     "phpunit/phpunit": "^9.3",
-    "squizlabs/php_codesniffer": "3.*"
+    "squizlabs/php_codesniffer": "3.*",
+    "phpstan/phpstan": "^1.5"
   },
   "config": {
     "sort-packages": true

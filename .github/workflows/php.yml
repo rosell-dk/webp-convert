@@ -2,53 +2,125 @@ name: build
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
-  workflow_dispatch:
-    branches: [ master ]
+    branches: [ main ]
+
+permissions:
+  contents: read
 
 jobs:
-  php80:
+  build:
+
     runs-on: ${{ matrix.os }}
     env:
       WEBPCONVERT_EWWW_API_KEY: ${{ secrets.WEBPCONVERT_EWWW_API_KEY }}
+
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-latest]
         php: [8.1]
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+
+    - name: Determine which version of xdebug to use
+      run: |
+        # Set XDEBUG to "xdebug2" for PHP 7.2-7.4, but to "xdebug" for
+        if grep -oP '^7.[234]' <<< "$PHP" > /dev/null; then XDEBUG=xdebug2; else XDEBUG=xdebug; fi
+
+        # Store XDEBUG in github env, so we can access it later through env.XDEBUG
+        echo "XDEBUG=$XDEBUG" >> $GITHUB_ENV
+
+        echo "Result: ${{ env.XDEBUG }}"
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php }}
+        coverage: ${{ env.XDEBUG }}
         extensions: exif, mbstring, fileinfo, gd
 
-    - name: Setup problem matchers for PHP
-      run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
-
-    - name: Setup problem matchers for PHPUnit
-      run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
-
-    - name: Validate composer.json and composer.lock
+    - name: Validate composer.json
       run: composer validate --strict
+
+    - name: Composer alterations for PHP 7.2
+      if: matrix.php == '7.2'
+      run: |
+        echo "Downgrading phpunit to ^8.0, which is the highest version that supports PHP 7.2"
+        composer require "phpunit/phpunit:^8.0" --dev --no-update
+
+    - name: Composer alterations for PHP 7.1
+      if: matrix.php == '7.1'
+      run: |
+        echo "Removing phpstan, as it does not work on PHP 7.1"
+        composer remove phpstan/phpstan --dev --no-update
+
+        echo "Downgrading phpunit to ^7.0, which is the highest version that supports PHP 7.1"
+        composer require "phpunit/phpunit:^7.0" --dev --no-update
+
+    - name: Composer alterations for PHP 7.0
+      if: matrix.php == '7.0'
+      run: |
+        echo "Remove phpstan, as it does not work on PHP 7.0"
+        composer remove phpstan/phpstan --dev --no-update
+
+        echo "Downgrading phpunit to ^6.0, which is the highest version that supports PHP 7.0"
+        composer require "phpunit/phpunit:^6.0" --dev --no-update
+
+    # Create composer.lock, which is going to be used in the cache key, and for install
+    - name: Create composer.lock for cache key (this is a library, so composer.lock is not part of repo)
+      run: composer update --no-install
 
     - name: Cache Composer packages
       id: composer-cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: vendor
-        key: ${{ runner.os }}-php80-${{ hashFiles('**/composer.lock') }}
+        key: ${{ runner.os }}-php-${{ matrix.php }}-${{ hashFiles('**/composer.lock') }}
         restore-keys: |
-          ${{ runner.os }}-php80-
+          ${{ runner.os }}-php-${{ matrix.php }}-${{ hashFiles('**/composer.lock') }}
+          ${{ runner.os }}-php-${{ matrix.php }}
+          ${{ runner.os }}-php-
 
-    - name: Install dependencies
+    - name: Composer install
       run: composer install --prefer-dist --no-progress
 
-    - name: Run test suite
+    - name: Run phpunit (test cases)
       run: composer run-script test
+
+    #- name: Run phpstan on PHP>=7.2 (to check php syntax)
+    #  if: (matrix.php != '7.0') && (matrix.php != '7.1') && (matrix.php != '7.2')
+    #  run: composer run-script phpstan
+
+    - name: run phpcs (to check coding style)
+      run: composer run-script phpcs-all
+
+    - name: Create coverage badge json
+      run: |
+        # Extract total coverage
+        COVERAGE=$(grep -oP -m 1 'Lines:\s*\K[0-9.%]+' build/coverage.txt)
+
+        # Set COLOR based on COVERAGE
+        # 0-49%: red, 50%-69%: orange, 70%-80%: yellow, 90%-100%: brightgreen
+        if grep -oP '(^9\d.)|(^100.)' <<< "$COVERAGE" > /dev/null; then COLOR=brightgreen; elif grep -oP '[87]\d.' <<< "$COVERAGE" > /dev/null; then COLOR=yellow; elif grep -oP '[65]\d.' <<< "$COVERAGE" > /dev/null; then COLOR=orange; else COLOR=red; fi;
+
+        # Generate bagde json
+        echo \{\"schemaVersion\":1,\"label\":\"coverage\",\"message\":\"$COVERAGE\",\"color\":\"$COLOR\"\} | tee build/coverage-badge.json
+
+        # PS: If we needed COVERAGE elsewhere, we could store in ENV like this:
+        # echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
+
+    - name: Install SSH Key (for deployment of code coverage)
+      uses: shimataro/ssh-key-action@v2
+      with:
+        key: ${{ secrets.DEPLOY_KEY }}
+        known_hosts: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+
+    - name: Upload code coverage report
+      run: |
+        sh -c "rsync -rtog --chown :www-data $GITHUB_WORKSPACE/build/ $DEPLOY_DESTINATION --delete"
+      env:
+        DEPLOY_DESTINATION: ${{ secrets.DEPLOY_DESTINATION }}
