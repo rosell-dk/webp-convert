@@ -8,10 +8,6 @@ use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConversionSkippedException;
-use WebPConvert\Options\BooleanOption;
-use WebPConvert\Options\ArrayOption;
-use WebPConvert\Options\GhostOption;
-use WebPConvert\Options\SensitiveArrayOption;
 use WebPConvert\Options\OptionFactory;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
