@@ -2,14 +2,14 @@
 
 namespace WebPConvert\Convert\Converters;
 
+use ExecWithFallback\ExecWithFallback;
+use LocateBinaries\LocateBinaries;
 use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
-use WebPConvert\Helpers\BinaryDiscovery;
 use WebPConvert\Options\OptionFactory;
-use ExecWithFallback\ExecWithFallback;
 
 //use WebPConvert\Convert\Exceptions\ConversionFailed\InvalidInput\TargetNotFoundException;
 
@@ -69,7 +69,7 @@ class ImageMagick extends AbstractConverter
         }
 
         if ($this->options['try-common-system-paths']) {
-            $binaries = BinaryDiscovery::discoverInCommonSystemPaths('convert');
+            $binaries = LocateBinaries::locateInCommonSystemPaths('convert');
             if (!empty($binaries)) {
                 return $binaries[0];
             }

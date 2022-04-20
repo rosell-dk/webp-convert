@@ -2,6 +2,9 @@
 
 namespace WebPConvert\Convert\Converters;
 
+use ExecWithFallback\ExecWithFallback;
+use LocateBinaries\LocateBinaries;
+
 use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Converters\BaseTraits\WarningLoggerTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
@@ -9,9 +12,7 @@ use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\SystemRequirementsNotMetException;
 use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperationalException;
-use WebPConvert\Helpers\BinaryDiscovery;
 use WebPConvert\Options\OptionFactory;
-use ExecWithFallback\ExecWithFallback;
 
 /**
  * Convert images to webp by calling cwebp binary.
@@ -746,7 +747,7 @@ class Cwebp extends AbstractConverter
         $startTime = self::startTimer();
         $this->logDiscoverAction('try-discovering-cwebp', 'using "which -a cwebp" command.');
         if ($this->options['try-discovering-cwebp']) {
-            $moreBinaries = BinaryDiscovery::discoverInstalledBinaries('cwebp');
+            $moreBinaries = LocateBinaries::locateInstalledBinaries('cwebp');
             $this->logBinariesFound($moreBinaries, $startTime);
             $binaries = array_merge($binaries, $moreBinaries);
         }
@@ -755,7 +756,7 @@ class Cwebp extends AbstractConverter
         $startTime = self::startTimer();
         $this->logDiscoverAction('try-common-system-paths', 'by peeking in common system paths');
         if ($this->options['try-common-system-paths']) {
-            $moreBinaries = BinaryDiscovery::discoverInCommonSystemPaths('cwebp');
+            $moreBinaries = LocateBinaries::locateInCommonSystemPaths('cwebp');
             $this->logBinariesFound($moreBinaries, $startTime);
             $binaries = array_merge($binaries, $moreBinaries);
         }
