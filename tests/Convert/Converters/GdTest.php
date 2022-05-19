@@ -227,11 +227,14 @@ class GdTest extends TestCase
         //
         // And its worse and Mac (PHP 7.1 and 7.3, not 7.4 and 8.0)
         // It just halts execution - see ##322
+        //
+        // In Ubuntu, PHP 8.1 it throws fatal too. I think this behaviour starts from PHP 8.0.0.
 
         $isWindows = preg_match('/^win/i', PHP_OS);
         $isMacDarwin = preg_match('/^darwin/i', PHP_OS);
+        $isPHP8orAbove = (version_compare(PHP_VERSION, '8.0.0') >= 0);
 
-        if (!$isWindows && !$isMacDarwin) {
+        if (!$isWindows && !$isMacDarwin && !$isPHP8orAbove) {
             ob_start();
 
             try {
