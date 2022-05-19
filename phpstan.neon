@@ -28,4 +28,4 @@ parameters:
         -
             message: '#Dead catch - Exception is never thrown in the try block.#'
             path: %currentWorkingDirectory%/src/Convert/Converters/Ewww.php
-        - '#initCurl() has invalid return type CurlHandle.#'
+        - '#initCurl\(\) has invalid return type CurlHandle.#'
