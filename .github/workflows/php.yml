@@ -26,6 +26,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
+    - name: Setup ffmpeg
+      uses: FedericoCarboni/setup-ffmpeg@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Determine which version of xdebug to use
       run: |
         # Set XDEBUG to "xdebug2" for PHP 7.2-7.4, but to "xdebug" for
@@ -41,7 +46,7 @@ jobs:
       with:
         php-version: ${{ matrix.php }}
         coverage: ${{ env.XDEBUG }}
-        extensions: exif, mbstring, fileinfo, gd
+        extensions: exif, mbstring, fileinfo, gd, vips, imagick, gmagick
 
     - name: Validate composer.json
       run: composer validate --strict
