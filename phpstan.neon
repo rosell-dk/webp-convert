@@ -22,9 +22,10 @@ parameters:
         - '#.+invalid typehint type GdImage#'
         - '#.+invalid type GdImage#'
         - '#.+never returns GdImage so it can be removed from the return typehint.#'
-        - '#.+never returns GdImage so it can be removed from the return typehint.#'
         - '#Method WebPConvert\\Convert\\Converters\\Gd::createImageResource\(\) never returns resource so it can be removed from the return typehint.#'
         - '#Method WebPConvert\\Convert\\Converters\\Gd::createImageResource\(\) never returns resource so it can be removed from the return type.#'
+        - '#Method WebPConvert\\Convert\\Converters\\Gd::createImageResource\(\) has invalid return type GdImage.#'
+        - '#Method WebPConvert\\Convert\\Converters\\Gd::createImageResource\(\) never returns GdImage so it can be removed from the return type.#'
         -
             message: '#Dead catch - Exception is never thrown in the try block.#'
             path: %currentWorkingDirectory%/src/Convert/Converters/Ewww.php
