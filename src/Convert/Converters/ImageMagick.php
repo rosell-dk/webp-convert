@@ -4,6 +4,7 @@ namespace WebPConvert\Convert\Converters;
 
 use ExecWithFallback\ExecWithFallback;
 use LocateBinaries\LocateBinaries;
+
 use WebPConvert\Convert\Converters\AbstractConverter;
 use WebPConvert\Convert\Converters\ConverterTraits\ExecTrait;
 use WebPConvert\Convert\Converters\ConverterTraits\EncodingAutoTrait;
