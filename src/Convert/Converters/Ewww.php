@@ -346,7 +346,11 @@ class Ewww extends AbstractConverter
             if ($responseObj->error == 'invalid') {
                 return 'invalid';
             } else {
-                throw new \Exception('Ewww returned unexpected error: ' . $response);
+                if ($responseObj->error == 'bye invalid') {
+                    return 'invalid';
+                } else {
+                    throw new \Exception('Ewww returned unexpected error: ' . $response);
+                }
             }
         }
         if (!isset($responseObj->status)) {
