@@ -23,7 +23,8 @@ jobs:
         #os: [windows-2022, macos-11]
         #os: [windows-2022]
         #os: [macos-11]
-        os: [ubuntu-18.04]
+        #os: [ubuntu-18.04]
+        os: [ubuntu-18.04,windows-2022, macos-11]
         php: [7.4]
 
     steps:
@@ -104,8 +105,10 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-18.04,windows-2022, windows-2019, macos-11]
-        php: [8.1, 7.1]
+        #os: [ubuntu-18.04,windows-2022, windows-2019, macos-11]
+        #php: [8.1, 7.1]
+        os: [ubuntu-18.04]
+        php: [8.1]
         # unfortunately, proc_open is needed by phpunit, so we cannot disable proc_open
         disabled_functions: ["exec", "exec,passthru,shell_exec,popen"]
     steps:
