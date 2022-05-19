@@ -44,7 +44,7 @@ class Option
     /** @var array  UI Def */
     protected $ui;
 
-    /** @var array  Extra Schema Def (ie holding 'title', 'description' or other)*/
+    /** @var array|null  Extra Schema Def (ie holding 'title', 'description' or other)*/
     protected $extraSchemaDefs;
 
 

@@ -24,3 +24,8 @@ parameters:
         - '#.+never returns GdImage so it can be removed from the return typehint.#'
         - '#.+never returns GdImage so it can be removed from the return typehint.#'
         - '#Method WebPConvert\\Convert\\Converters\\Gd::createImageResource\(\) never returns resource so it can be removed from the return typehint.#'
+        - '#Method WebPConvert\\Convert\\Converters\\Gd::createImageResource\(\) never returns resource so it can be removed from the return type.#'
+        -
+            message: '#Dead catch - Exception is never thrown in the try block.#'
+            path: %currentWorkingDirectory%/src/Convert/Converters/Ewww.php
+        - '#initCurl() has invalid return type CurlHandle.#'

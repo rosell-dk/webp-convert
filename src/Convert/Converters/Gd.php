@@ -241,7 +241,7 @@ class Gd extends AbstractConverter
         if (function_exists('imageistruecolor')) {
             if (imageistruecolor($image)) {
                 $this->logLn('image is true color');
-                return true;
+                $whatIsItNow = true;
             } else {
                 $this->logLn('image is not true color');
                 $mustMakeTrueColor = true;
@@ -354,7 +354,7 @@ class Gd extends AbstractConverter
         // and - sorry - was to lazy to find out right now. So for now: better safe than sorry. #320
         $error = null;
         $success = false;
-        
+
         try {
             // Beware: This call can throw FATAL on windows (cannot be catched)
             // This for example happens on palette images

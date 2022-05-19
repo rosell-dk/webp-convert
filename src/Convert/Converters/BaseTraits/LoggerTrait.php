@@ -15,7 +15,7 @@ namespace WebPConvert\Convert\Converters\BaseTraits;
 trait LoggerTrait
 {
 
-    /** @var \WebPConvert\Loggers\BaseLogger  The logger (or null if not set) */
+    /** @var \WebPConvert\Loggers\BaseLogger|null  The logger (or null if not set) */
     protected $logger;
 
     /**
