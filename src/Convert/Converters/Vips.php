@@ -77,9 +77,9 @@ class Vips extends AbstractConverter
         }
 
 
-        /** @scrutinizer ignore-call */ vips_error_buffer(); // clear error buffer
-        $result = /** @scrutinizer ignore-call */ vips_call('webpsave', null);
-        if ($result == -1) {
+        vips_error_buffer(); // clear error buffer
+        $result = vips_call('webpsave', null);
+        if ($result === -1) {
             $message = vips_error_buffer();
             if (strpos($message, 'VipsOperation: class "webpsave" not found') === 0) {
                 throw new SystemRequirementsNotMetException(
