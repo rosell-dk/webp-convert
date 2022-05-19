@@ -16,6 +16,7 @@
     "test-41": "phpunit --no-coverage --configuration 'phpunit-41.xml.dist'",
     "test-with-coverage": "phpunit --coverage-text --configuration 'phpunit-with-coverage.xml.dist'",
     "test-41-with-coverage": "phpunit --coverage-text --configuration 'phpunit-41.xml.dist'",
+    "test-no-cov": "phpunit --no-coverage tests",
     "cs-fix-all": [
       "php-cs-fixer fix src"
     ],

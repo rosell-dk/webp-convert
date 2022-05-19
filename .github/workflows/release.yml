@@ -123,29 +123,49 @@ jobs:
         extensions: exif, mbstring, fileinfo, gd, vips, imagick, gmagick
         ini-values: disable_functions="${{ matrix.disabled_functions }}"
 
-    - name: Setup problem matchers for PHP
-      run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
-
-    - name: Setup problem matchers for PHPUnit
-      run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
-
-    - name: Validate composer.json and composer.lock
+    - name: Validate composer.json
       run: composer validate --strict
+
+    - name: Remove PHP stan
+      run: |
+        echo "Removing phpstan, as we have PHP stan test in other tests
+        composer remove phpstan/phpstan --dev --no-update
+
+    - name: Composer alterations for PHP 7.2
+      if: matrix.php == '7.2'
+      run: |
+        echo "Downgrading phpunit to ^8.0, which is the highest version that supports PHP 7.2"
+        composer require "phpunit/phpunit:^8.0" --dev --no-update
+
+    - name: Composer alterations for PHP 7.1
+      if: matrix.php == '7.1'
+      run: |
+        echo "Downgrading phpunit to ^7.0, which is the highest version that supports PHP 7.1"
+        composer require "phpunit/phpunit:^7.0" --dev --no-update
+
+    - name: Composer alterations for PHP 7.0
+      if: matrix.php == '7.0'
+      run: |
+        echo "Downgrading phpunit to ^6.0, which is the highest version that supports PHP 7.0"
+        composer require "phpunit/phpunit:^6.0" --dev --no-update
+
+    # Create composer.lock, which is going to be used in the cache key
+    - name: Create composer.lock for cache key (this is a library, so composer.lock is not part of repo)
+      run: composer update --no-install
 
     - name: Cache Composer packages
       id: composer-cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: vendor
-        key: ${{ runner.os }}-disabledfunctions-${{ hashFiles('**/composer.lock') }}
+        key: ${{ runner.os }}-php-disabled-functions-${{ matrix.php }}-${{ hashFiles('**/composer.lock') }}
         restore-keys: |
-          ${{ runner.os }}-disabledfunctions-
+          ${{ runner.os }}-php-disabled-functions-${{ matrix.php }}-${{ hashFiles('**/composer.lock') }}
+          ${{ runner.os }}-php-disabled-functions-${{ matrix.php }}
+          ${{ runner.os }}-php-disabled-functions-
 
-    - name: Downgrade PHP unit to a version that supports PHP 7.1
-      run: composer require "phpunit/phpunit:^7.0" --dev
-
-    - name: Install dependencies
+    - name: Composer install
       run: composer install --prefer-dist --no-progress
 
-    - name: Run test suite
-      run: composer run-script test
+    - name: Run phpunit (test cases)
+      run: composer run-script test-no-cov
