@@ -128,7 +128,7 @@ jobs:
 
     - name: Remove PHP stan
       run: |
-        echo "Removing phpstan, as we have PHP stan test in other tests
+        echo "Removing phpstan, as we have PHP stan test in other tests"
         composer remove phpstan/phpstan --dev --no-update
 
     - name: Composer alterations for PHP 7.2
