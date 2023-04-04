@@ -323,7 +323,7 @@ class Gd extends AbstractConverter
     {
         imagedestroy($image);
         if (file_exists($this->destination)) {
-            unlink($this->destination);
+            @unlink($this->destination);
         }
     }
 

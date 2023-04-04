@@ -69,12 +69,12 @@ trait EncodingAutoTrait
 
         if (filesize($destinationLossless) > filesize($destinationLossy)) {
             $this->logLn('Picking lossy');
-            unlink($destinationLossless);
-            rename($destinationLossy, $destination);
+            @unlink($destinationLossless);
+            @rename($destinationLossy, $destination);
         } else {
             $this->logLn('Picking lossless');
-            unlink($destinationLossy);
-            rename($destinationLossless, $destination);
+            @unlink($destinationLossy);
+            @rename($destinationLossless, $destination);
         }
         $this->setDestination($destination);
         $this->setOption('encoding', 'auto');
