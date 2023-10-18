@@ -30,3 +30,7 @@ parameters:
             message: '#Dead catch - Exception is never thrown in the try block.#'
             path: %currentWorkingDirectory%/src/Convert/Converters/Ewww.php
         - '#initCurl\(\) has invalid return type CurlHandle.#'
+        - 
+            message: '#Unreachable statement - code above always terminates.#'
+            path: %currentWorkingDirectory%/src/Convert/Helpers/PhpIniSizes.php
+        - '#WebPConvert\\Convert\\Converters\\Cwebp::composeMeaningfullErrorMessageNoVersionsWorking\(\) is unused.#'
