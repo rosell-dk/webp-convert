@@ -9,7 +9,7 @@
       "@test",
       "@phpcs-all",
       "@composer validate --no-check-all --strict",
-      "@phpstan-global"
+      "@phpstan"
     ],
     "phpunit": "phpunit --coverage-text",
     "test": "phpunit --coverage-text=build/coverage.txt --coverage-clover=build/coverage.clover --coverage-html=build/coverage --whitelist=src tests",
@@ -66,14 +66,14 @@
   "suggest": {
       "ext-gd": "to use GD extension for converting. Note: Gd must be compiled with webp support",
       "ext-imagick": "to use Imagick extension for converting. Note: Gd must be compiled with webp support",
-      "ext-vips": "to use Vips extension for converting.",
-      "php-stan/php-stan": "Suggested for dev, in order to analyse code before committing"
+      "ext-vips": "to use Vips extension for converting."
   },
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^2.11",
     "phpunit/phpunit": "^9.3",
     "squizlabs/php_codesniffer": "3.*",
-    "phpstan/phpstan": "^1.5"
+    "phpstan/phpstan": "^1.10"
+
   },
   "config": {
     "sort-packages": true
