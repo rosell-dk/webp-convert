@@ -2,8 +2,6 @@ name: PHP 8.2
 
 on:
   workflow_dispatch:
-  schedule: # Run monthly
-    - cron: "14 3 1 * *"
 
 permissions:
   contents: read
