@@ -1,4 +1,4 @@
-name: Big test (trigger manually before releasing)
+name: Giant test
 
 on: workflow_dispatch
 
@@ -11,48 +11,31 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       WEBPCONVERT_EWWW_API_KEY: ${{ secrets.WEBPCONVERT_EWWW_API_KEY }}
-      #WEBPCONVERT_WPC_API_URL: ${{ secrets.WEBPCONVERT_WPC_API_URL }}
-      #WEBPCONVERT_WPC_API_KEY: ${{ secrets.WEBPCONVERT_WPC_API_KEY }}
-      #WEBPCONVERT_WPC_API_URL_API0: ${{ secrets.WEBPCONVERT_WPC_API_URL_API0 }}
 
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest, ubuntu-20.04, ubuntu-18.04, windows-2022, windows-2019, macos-11, macos-10.15]
-        php: [8.1, 8.0, 7.4, 7.3, 7.2, 7.1, 7.0]
-        #php: [8.1, 7.0]
-        #os: [windows-2022, macos-11]
-        #os: [windows-2022, windows-2019]
-        #os: [macos-11]
-        os: [macos-11, macos-10.15]
-        #os: [ubuntu-18.04]
-        #os: [ubuntu-18.04]
-        #os: [ubuntu-latest]
-        #os: [ubuntu-18.04,windows-2022, macos-11]
-        #php: [8.1]
+        os: [ubuntu-22.04, ubuntu-20.04, windows-2022, windows-2019, macos-13, macos-12]
+        php: [8.2, 8.1, 8.0, 7.4, 7.3, 7.2, 7.1, 7.0, 5.6]
+        #os: [windows-2022]
+        #php: [7.1]
+        exclude:  # phpunit is malfunctioning on Windows / PHP 5.6, so disable those tests
+            - os: windows-2019
+              php: 5.6
+            - os: windows-2022
+              php: 5.6
 
-        # For some reason PHP 7.0 testing fails on Windows, so we exclude
-        exclude:
-          - os: windows-2019
-            php: 7.0
-          - os: windows-2022
-            php: 7.0
 
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-
-    - name: Setup ffmpeg
-      uses: FedericoCarboni/setup-ffmpeg@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php }}
         coverage: none
-        extensions: exif, mbstring, fileinfo, gd, vips, imagick, gmagick
+        extensions: exif, mbstring, fileinfo, gd
 
     - name: Validate composer.json
       run: composer validate --strict
@@ -81,6 +64,15 @@ jobs:
         echo "Downgrading phpunit to ^6.0, which is the highest version that supports PHP 7.0"
         composer require "phpunit/phpunit:^6.0" --dev --no-update
 
+    - name: Composer alterations for PHP 5.6
+      if: matrix.php == '5.6'
+      run: |
+        echo "Remove phpstan, as it does not work on PHP 5.6"
+        composer remove phpstan/phpstan --dev --no-update
+
+        echo "Downgrading phpunit to ^5.0, which is the highest version that supports PHP 5.6"
+        composer require "phpunit/phpunit:^5.0" --dev --no-update
+
     # Create composer.lock, which is going to be used in the cache key
     - name: Create composer.lock for cache key (this is a library, so composer.lock is not part of repo)
       run: composer update --no-install
@@ -103,84 +95,8 @@ jobs:
       run: composer run-script test-no-cov
 
     - name: Run phpstan on PHP>=7.2 (to check php syntax)
-      if: (matrix.php != '7.0') && (matrix.php != '7.1') && (matrix.php != '7.2')
+      if: (matrix.php != '5.6') && (matrix.php != '7.0') && (matrix.php != '7.1') && (matrix.php != '7.2')
       run: composer run-script phpstan
 
     - name: run phpcs (to check coding style)
       run: composer run-script phpcs-all
-
-  with_disabled_functions:
-    runs-on: ${{ matrix.os }}
-    env:
-      WEBPCONVERT_EWWW_API_KEY: ${{ secrets.WEBPCONVERT_EWWW_API_KEY }}
-    strategy:
-      fail-fast: true
-      matrix:
-        #os: [ubuntu-18.04,windows-2022, windows-2019, macos-11]
-        #php: [8.1, 7.1]
-        os: [ubuntu-18.04]
-        php: [8.1]
-        # unfortunately, proc_open is needed by phpunit, so we cannot disable proc_open
-        disabled_functions: ["exec", "exec,passthru,shell_exec,popen"]
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-
-    - name: Setup ffmpeg
-      uses: FedericoCarboni/setup-ffmpeg@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: ${{ matrix.php }}
-        extensions: exif, mbstring, fileinfo, gd, vips, imagick, gmagick
-        ini-values: disable_functions="${{ matrix.disabled_functions }}"
-
-    - name: Validate composer.json
-      run: composer validate --strict
-
-    - name: Remove PHP stan
-      run: |
-        echo "Removing phpstan, as we have PHP stan test in other tests"
-        composer remove phpstan/phpstan --dev --no-update
-
-    - name: Composer alterations for PHP 7.2
-      if: matrix.php == '7.2'
-      run: |
-        echo "Downgrading phpunit to ^8.0, which is the highest version that supports PHP 7.2"
-        composer require "phpunit/phpunit:^8.0" --dev --no-update
-
-    - name: Composer alterations for PHP 7.1
-      if: matrix.php == '7.1'
-      run: |
-        echo "Downgrading phpunit to ^7.0, which is the highest version that supports PHP 7.1"
-        composer require "phpunit/phpunit:^7.0" --dev --no-update
-
-    - name: Composer alterations for PHP 7.0
-      if: matrix.php == '7.0'
-      run: |
-        echo "Downgrading phpunit to ^6.0, which is the highest version that supports PHP 7.0"
-        composer require "phpunit/phpunit:^6.0" --dev --no-update
-
-    # Create composer.lock, which is going to be used in the cache key
-    - name: Create composer.lock for cache key (this is a library, so composer.lock is not part of repo)
-      run: composer update --no-install
-
-    - name: Cache Composer packages
-      id: composer-cache
-      uses: actions/cache@v3
-      with:
-        path: vendor
-        key: ${{ runner.os }}-php-disabled-functions-${{ matrix.php }}-${{ hashFiles('**/composer.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-php-disabled-functions-${{ matrix.php }}-${{ hashFiles('**/composer.lock') }}
-          ${{ runner.os }}-php-disabled-functions-${{ matrix.php }}
-          ${{ runner.os }}-php-disabled-functions-
-
-    - name: Composer install
-      run: composer install --prefer-dist --no-progress
-
-    - name: Run phpunit (test cases)
-      run: composer run-script test-no-cov

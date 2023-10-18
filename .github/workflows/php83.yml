@@ -1,0 +1,48 @@
+name: PHP 8.3
+
+on:
+  workflow_dispatch:
+  schedule: # Run monthly
+    - cron: "14 3 1 * *"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+    env:
+      WEBPCONVERT_EWWW_API_KEY: ${{ secrets.WEBPCONVERT_EWWW_API_KEY }}
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-22.04, ubuntu-20.04, windows-2022, windows-2019, macos-13, macos-12]
+        php: [8.3]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php }}
+        coverage: none
+        extensions: exif, mbstring, fileinfo, gd, vips, imagick, gmagick
+
+    - name: Validate composer.json
+      run: composer validate --strict
+
+    - name: Composer install
+      run: composer install --prefer-dist --no-progress
+
+    - name: Run phpunit (test cases)
+      run: composer run-script test
+
+    - name: Run phpstan
+      run: composer run-script phpstan
+
+    - name: run phpcs (to check coding style)
+      run: composer run-script phpcs-all

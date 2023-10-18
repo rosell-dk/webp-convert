@@ -1,11 +1,12 @@
 name: Code Coverage
 
-on: workflow_dispatch
+on:
+  workflow_dispatch
 
 jobs:
 
   codecov:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       WEBPCONVERT_EWWW_API_KEY: ${{ secrets.WEBPCONVERT_EWWW_API_KEY }}
       WEBPCONVERT_WPC_API_URL: ${{ secrets.WEBPCONVERT_WPC_API_URL }}
@@ -26,7 +27,7 @@ jobs:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.1'
+        php-version: '8.2'
         # Note: Currently, gmagick and imagick are mutually exclusive.
         # It seems they are installed in the order indicated in "extensions" and the latter cancels the former
         extensions: exif, mbstring, fileinfo, gd, vips, gmagick, imagick
