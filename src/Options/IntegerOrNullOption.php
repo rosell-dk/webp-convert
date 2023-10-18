@@ -36,7 +36,7 @@ class IntegerOrNullOption extends IntegerOption
 
     public function getValueForPrint()
     {
-        if (gettype($this->getValue()) == NULL) {
+        if (gettype($this->getValue()) == null) {
             return 'null (not set)';
         }
         return parent::getValueForPrint();
