@@ -1,7 +1,7 @@
 # WebP Convert
 
 [![Latest Stable Version](https://img.shields.io/packagist/v/rosell-dk/webp-convert.svg)](https://packagist.org/packages/rosell-dk/webp-convert)
-[![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%205.6-8892BF.svg)](https://php.net)
+[![Minimum PHP Version](https://img.shields.io/packagist/dependency-v/rosell-dk/webp-convert/php.svg)](https://php.net)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/rosell-dk/webp-convert/ci.yml?logo=GitHub&style=flat-square)](https://github.com/rosell-dk/webp-convert/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/endpoint?url=https://little-b.it/webp-convert/code-coverage/coverage-badge.json)](http://little-b.it/webp-convert/code-coverage/coverage/index.html)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://github.com/rosell-dk/webp-convert/blob/master/LICENSE)
