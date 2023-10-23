@@ -70,7 +70,7 @@ trait DestinationPreparationTrait
         // No harm in doing that for non-Windows systems either.
         if (file_put_contents($destination, 'dummy') !== false) {
             // all is well, after all
-            unlink($destination);
+            @unlink($destination);
             return;
         }
 
@@ -91,7 +91,7 @@ trait DestinationPreparationTrait
         if (file_exists($destination)) {
             // A file already exists in this folder...
             // We delete it, to make way for a new webp
-            if (!unlink($destination)) {
+            if (!@unlink($destination)) {
                 throw new CreateDestinationFileException(
                     'Existing file cannot be removed: ' . basename($destination)
                 );
