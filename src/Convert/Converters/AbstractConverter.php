@@ -260,7 +260,7 @@ abstract class AbstractConverter
         if (!@file_exists($destination)) {
             throw new ConversionFailedException('Destination file is not there: ' . $destination);
         } elseif (@filesize($destination) === 0) {
-            unlink($destination);
+            @unlink($destination);
             throw new ConversionFailedException('Destination file was completely empty');
         } else {
             if (!isset($this->options['_suppress_success_message'])) {
