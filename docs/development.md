@@ -29,8 +29,8 @@ This also runs tests on the builds.
 
 Individual test files can be executed like this:
 ```
-composer phpunit tests/Convert/Converters/WPCTest
-composer phpunit tests/Serve/ServeConvertedTest
+composer phpunit tests/Convert/Converters/WPCTest.php
+composer phpunit tests/Serve/ServeConvertedTest.php
 ```
 
 
