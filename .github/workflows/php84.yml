@@ -41,8 +41,9 @@ jobs:
     - name: Run phpunit (test cases)
       run: composer run-script test
 
-    - name: Run phpstan
-      run: composer run-script phpstan
+    # Disabled phpstan run, as phpstan currently doesn't work in PHP8.4 (phpstan 1.10.66 does not work)
+    #- name: Run phpstan
+    #  run: composer run-script phpstan
 
     - name: run phpcs (to check coding style)
       run: composer run-script phpcs-all

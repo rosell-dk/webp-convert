@@ -34,4 +34,3 @@ parameters:
             message: '#Unreachable statement - code above always terminates.#'
             path: %currentWorkingDirectory%/src/Convert/Helpers/PhpIniSizes.php
         - '#WebPConvert\\Convert\\Converters\\Cwebp::composeMeaningfullErrorMessageNoVersionsWorking\(\) is unused.#'
-        - '#Implicitly marking parameter [^\\s]+ as nullable is deprecated, the explicit nullable type must be used instead in phar#'
