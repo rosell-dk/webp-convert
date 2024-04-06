@@ -195,7 +195,8 @@ class Ewww extends AbstractConverter
         // Messages has a http content type of ie 'text/html; charset=UTF-8
         // Images has application/octet-stream.
         // So verify that we got an image back.
-        if (curl_getinfo($ch, CURLINFO_CONTENT_TYPE) != 'application/octet-stream') {
+        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        if (($contentType != 'application/octet-stream') && ($contentType != 'image/webp')) {
             //echo curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
             curl_close($ch);
 
@@ -226,6 +227,8 @@ class Ewww extends AbstractConverter
             throw new ConversionFailedException(
                 'ewww api did not return an image. It could be that the key is invalid. Response: '
                 . $response
+                . ". Content type: "
+                . curl_getinfo($ch, CURLINFO_CONTENT_TYPE)
             );
         }
 
@@ -282,7 +285,9 @@ class Ewww extends AbstractConverter
         if (curl_errno($ch)) {
             return 'curl error' . curl_error($ch);
         }
-        if (curl_getinfo($ch, CURLINFO_CONTENT_TYPE) != 'application/octet-stream') {
+        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        if (($contentType != 'application/octet-stream') && ($contentType != 'image/webp')) {
+
             curl_close($ch);
 
             /* May return this: {"error":"invalid","t":"exceeded"} */
