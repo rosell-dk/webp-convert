@@ -287,7 +287,6 @@ class Ewww extends AbstractConverter
         }
         $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
         if (($contentType != 'application/octet-stream') && ($contentType != 'image/webp')) {
-
             curl_close($ch);
 
             /* May return this: {"error":"invalid","t":"exceeded"} */
