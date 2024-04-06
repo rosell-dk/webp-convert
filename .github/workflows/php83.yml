@@ -3,7 +3,7 @@ name: PHP 8.3
 on:
   workflow_dispatch:
   schedule: # Run monthly
-    - cron: "14 3 1 * *"
+    - cron: "14 3 10 * *"
 
 permissions:
   contents: read
