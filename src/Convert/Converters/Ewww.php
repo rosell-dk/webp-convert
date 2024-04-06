@@ -347,7 +347,7 @@ class Ewww extends AbstractConverter
         }
         $responseObj = json_decode($response);
         if (isset($responseObj->error)) {
-            if ($responseObj->error == 'invalid') {
+            if (($responseObj->error == 'invalid') || ($responseObj->error == 'bye invalid')) {
                 return 'invalid';
             } else {
                 if ($responseObj->error == 'bye invalid') {
