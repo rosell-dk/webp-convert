@@ -79,7 +79,6 @@ trait WarningLoggerTrait
         $errorTypes = [
             E_WARNING =>             "Warning",
             E_NOTICE =>              "Notice",
-            E_STRICT =>              "Strict Notice",
             E_DEPRECATED =>          "Deprecated",
             E_USER_DEPRECATED =>     "User Deprecated",
 
@@ -95,6 +94,10 @@ trait WarningLoggerTrait
             in that case, remember to add them to this array
             */
         ];
+
+        if (PHP_VERSION_ID < 70400) {
+            $errorTypes[E_STRICT] = "Strict Notice";
+        }
 
         if (isset($errorTypes[$errno])) {
             $errType = $errorTypes[$errno];
