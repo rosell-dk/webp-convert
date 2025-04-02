@@ -233,36 +233,40 @@ abstract class AbstractConverter
 
         $this->activateWarningLogger();
 
-        $this->checkOptions();
+        try {
+            $this->checkOptions();
 
-        // Prepare destination folder
-        $this->createWritableDestinationFolder();
-        $this->removeExistingDestinationIfExists();
+            // Prepare destination folder
+            $this->createWritableDestinationFolder();
+            $this->removeExistingDestinationIfExists();
 
-        if (!isset($this->options['_skip_input_check'])) {
-            // Check that a file can be written to destination
-            $this->checkDestinationWritable();
-        }
+            if (!isset($this->options['_skip_input_check'])) {
+                // Check that a file can be written to destination
+                $this->checkDestinationWritable();
+            }
 
-        $this->checkOperationality();
-        $this->checkConvertability();
+            $this->checkOperationality();
+            $this->checkConvertability();
 
-        if ($this->options['log-call-arguments']) {
-            $this->logOptions();
-            $this->logLn('');
-        }
+            if ($this->options['log-call-arguments']) {
+                $this->logOptions();
+                $this->logLn('');
+            }
 
-        $this->runActualConvert();
+            $this->runActualConvert();
 
-        $source = $this->source;
-        $destination = $this->destination;
+            $source = $this->source;
+            $destination = $this->destination;
 
-        if (!@file_exists($destination)) {
-            throw new ConversionFailedException('Destination file is not there: ' . $destination);
-        } elseif (@filesize($destination) === 0) {
-            @unlink($destination);
-            throw new ConversionFailedException('Destination file was completely empty');
-        } else {
+            if (!@file_exists($destination)) {
+                throw new ConversionFailedException('Destination file is not there: ' . $destination);
+            }
+
+            if (@filesize($destination) === 0) {
+                @unlink($destination);
+                throw new ConversionFailedException('Destination file was completely empty');
+            }
+
             if (!isset($this->options['_suppress_success_message'])) {
                 $this->ln();
                 $this->log('Converted image in ' . round((microtime(true) - $beginTime) * 1000) . ' ms');
@@ -273,9 +277,9 @@ abstract class AbstractConverter
                     $this->logReduction($source, $destination);
                 }
             }
+        } finally {
+            $this->deactivateWarningLogger();
         }
-
-        $this->deactivateWarningLogger();
     }
 
     //private function logEx
