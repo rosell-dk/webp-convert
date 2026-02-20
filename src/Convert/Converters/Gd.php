@@ -160,10 +160,10 @@ class Gd extends AbstractConverter
                 }
             }
             if ($success) {
-                imagedestroy($image);
+                $this->destroyImage($image);
                 $image = $dst;
             } else {
-                imagedestroy($dst);
+                $this->destroyImage($dst);
             }
             return $success;
         } else {
@@ -321,7 +321,7 @@ class Gd extends AbstractConverter
      */
     protected function destroyAndRemove($image)
     {
-        imagedestroy($image);
+        $this->destroyImage($image);
         if (file_exists($this->destination)) {
             @unlink($this->destination);
         }
@@ -531,6 +531,22 @@ class Gd extends AbstractConverter
         $this->tryConverting($image);
 
         // End of story
-        imagedestroy($image);
+        $this->destroyImage($image);
+    }
+
+    /**
+     * Safely destroy GD image resource.
+     *
+     * imagedestroy() has no effect since PHP 8.0 and is deprecated in PHP 8.5.
+     * This wrapper avoids deprecation warnings while keeping backward compatibility.
+     *
+     * @param resource|\GdImage|null $image
+     * @return void
+     */
+    private function destroyImage($image)
+    {
+        if (PHP_VERSION_ID < 80000 && is_resource($image)) {
+            imagedestroy($image);
+        }
     }
 }
