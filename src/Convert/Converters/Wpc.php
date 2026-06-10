@@ -94,7 +94,19 @@ class Wpc extends AbstractConverter
                    'display' => "option('wpc-api-version') >= 1"
                ]
             ]],
-        ]);
+            ['require-public-ip', 'boolean', [
+              'title' => 'Require public IP',
+              'description' =>
+                 'If enabled, private IPs will be rejected. A DNS lookup is performed to ' .
+                 'get the IP, in order to settle if its public. So it brings some overhead, ' .
+                 'although it is small compared to an image conversion',
+              'default' => false,
+              'ui' => [
+                  'component' => 'checkbox',
+                  'advanced' => true,
+              ]
+           ]],
+       ]);
 
         /*return [
             new SensitiveStringOption('api-key', ''),
@@ -178,6 +190,75 @@ class Wpc extends AbstractConverter
         return '';
     }
 
+    private static function isPublicIp(string $ip): bool
+    {
+        return filter_var(
+            $ip,
+            FILTER_VALIDATE_IP,
+            FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+        ) !== false;
+    }
+
+    private static function urlToIps(string $url): array
+    {
+        $host = parse_url($url, PHP_URL_HOST);
+
+        if (!$host) {
+            return [];
+        }
+
+        // URL already contains an IP
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            return [$host];
+        }
+
+        $records = dns_get_record($host, DNS_A | DNS_AAAA);
+
+        if ($records === false) {
+            return [];
+        }
+
+        $ips = [];
+
+        foreach ($records as $record) {
+            if (isset($record['ip'])) {
+                $ips[] = $record['ip'];
+            }
+
+            if (isset($record['ipv6'])) {
+                $ips[] = $record['ipv6'];
+            }
+        }
+
+        return array_unique($ips);
+    }
+
+    private static function checkIfUrlIsPublicIp(string $url): bool
+    {
+        $host = parse_url($url, PHP_URL_HOST);
+
+        if ($host === false || $host === null) {
+            return false;
+        }
+    
+        if (strcasecmp($host, 'localhost') === 0) {
+            return false;
+        }
+
+        $ips = self::urlToIps($url);
+    
+        if (empty($ips)) {
+            return false;
+        }
+    
+        foreach ($ips as $ip) {
+            if (!self::isPublicIp($ip)) {
+                return false;
+            }
+        }
+    
+        return true;
+    }
 
     /**
      * Check operationality of Wpc converter.
@@ -187,7 +268,6 @@ class Wpc extends AbstractConverter
      */
     public function checkOperationality()
     {
-
         $options = $this->options;
 
         $apiVersion = $options['api-version'];
@@ -203,6 +283,24 @@ class Wpc extends AbstractConverter
                 'Missing URL. You must install Webp Convert Cloud Service on a server, ' .
                 'or the WebP Express plugin for Wordpress - and supply the url.'
             );
+        }
+
+        $parts = parse_url($this->getApiUrl());
+        if (
+          !isset($parts['scheme']) ||
+          !in_array(strtolower($parts['scheme']), ['http', 'https'], true)
+        ) {
+          throw new ConverterNotOperationalException(
+              'API URL must use HTTP or HTTPS'
+          );
+        }
+
+        if ($options['require-public-ip']) {
+          if (!self::checkIfUrlIsPublicIp($this->getApiUrl())) {
+            throw new ConverterNotOperationalException(
+                'API URL must be public IP (as WPC has been configured to disallow private IPs)'
+            );
+          }  
         }
 
         if ($apiVersion == 0) {
@@ -323,6 +421,9 @@ class Wpc extends AbstractConverter
     protected function doActualConvert()
     {
         $ch = self::initCurl();
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 
         //$this->logLn('api url: ' . $this->getApiUrl());
 
