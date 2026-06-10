@@ -64,6 +64,14 @@ trait CurlTrait
     {
         // Get curl handle
         $ch = \curl_init();
+
+        if (defined('CURLOPT_PROTOCOLS_STR')) {
+            curl_setopt($ch, CURLOPT_PROTOCOLS_STR, 'http,https');
+            curl_setopt($ch, CURLOPT_REDIR_PROTOCOLS_STR, 'http,https');
+        } else {
+            curl_setopt($ch, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
+            curl_setopt($ch, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
+        }
         if ($ch === false) {
             throw new SystemRequirementsNotMetException('Could not initialise cURL.');
         }
