@@ -77,4 +77,19 @@ trait CurlTrait
         }
         return $ch;
     }
+
+    /**
+     * Close curl.
+     *
+     * Before PHP 8.0, we need to call curl_close
+     * After PHP 8.0, PHP is smart enough to destroy the object by itself
+     *
+     * @param resource|\CurlHandle $curlHandle
+     */
+    protected static function closeCurl($curlHandle)
+    {
+        if (PHP_VERSION_ID < 80000) {
+            curl_close($curlHandle);
+        }
+    }
 }

@@ -240,23 +240,23 @@ class Wpc extends AbstractConverter
         if ($host === false || $host === null) {
             return false;
         }
-    
+
         if (strcasecmp($host, 'localhost') === 0) {
             return false;
         }
 
         $ips = self::urlToIps($url);
-    
+
         if (empty($ips)) {
             return false;
         }
-    
+
         foreach ($ips as $ip) {
             if (!self::isPublicIp($ip)) {
                 return false;
             }
         }
-    
+
         return true;
     }
 
@@ -426,7 +426,6 @@ class Wpc extends AbstractConverter
             CURLOPT_URL => $this->getApiUrl(),
             CURLOPT_POST => 1,
             CURLOPT_POSTFIELDS => $this->createPostData(),
-            CURLOPT_BINARYTRANSFER => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER => false,
             CURLOPT_SSL_VERIFYPEER => false
@@ -442,7 +441,7 @@ class Wpc extends AbstractConverter
         // Check if we got a 404
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         if ($httpCode == 404) {
-            curl_close($ch);
+            self::closeCurl($ch);
             throw new ConversionFailedException(
                 'WPC was not found at the specified URL - we got a 404 response.'
             );
@@ -461,7 +460,7 @@ class Wpc extends AbstractConverter
         // Images has application/octet-stream.
         // Verify that we got an image back.
         if (curl_getinfo($ch, CURLINFO_CONTENT_TYPE) != 'application/octet-stream') {
-            curl_close($ch);
+            self::closeCurl($ch);
 
             if (substr($response, 0, 1) == '{') {
                 $responseObj = json_decode($response, true);
@@ -502,7 +501,7 @@ class Wpc extends AbstractConverter
         }
 
         $success = file_put_contents($this->destination, $response);
-        curl_close($ch);
+        self::closeCurl($ch);
 
         if (!$success) {
             throw new ConversionFailedException('Error saving file. Check file permissions');
