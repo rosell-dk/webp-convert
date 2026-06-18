@@ -20,8 +20,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-22.04, windows-2022]
-        php: [7.4]
+        os: [ubuntu-26.04, windows-2025]
+        php: [7.4, 8.5]
         exclude:  # phpunit is malfunctioning on Windows / PHP 5.6 and 7.2, so disable those tests
             - os: windows-2022
               php: 5.6
