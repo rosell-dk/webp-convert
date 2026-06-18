@@ -401,3 +401,14 @@ Default:       ''
 Supported by:  wpc
 ```
 Note: This option is only relevant for api version 0.
+
+### `require-public-ip`
+```
+Type:          boolean
+Default:       false
+Supported by:  wpc
+```
+If enabled, private IPs will be rejected (such as 127.0.0.1 or localhost). 
+A DNS lookup is performed to get the IP, in order to settle if its public. So enabling this option brings some overhead,
+although it is small compared to an image conversion.
+You should enable if non-trusted people can set wpc-api-url
