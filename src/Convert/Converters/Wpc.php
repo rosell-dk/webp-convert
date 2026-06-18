@@ -105,8 +105,8 @@ class Wpc extends AbstractConverter
                   'component' => 'checkbox',
                   'advanced' => true,
               ]
-           ]],
-       ]);
+            ]],
+        ]);
 
         /*return [
             new SensitiveStringOption('api-key', ''),
@@ -286,21 +286,16 @@ class Wpc extends AbstractConverter
         }
 
         $parts = parse_url($this->getApiUrl());
-        if (
-          !isset($parts['scheme']) ||
-          !in_array(strtolower($parts['scheme']), ['http', 'https'], true)
-        ) {
-          throw new ConverterNotOperationalException(
-              'API URL must use HTTP or HTTPS'
-          );
+        if (!isset($parts['scheme']) || !in_array(strtolower($parts['scheme']), ['http', 'https'], true)) {
+            throw new ConverterNotOperationalException('API URL must use HTTP or HTTPS');
         }
 
         if ($options['require-public-ip']) {
-          if (!self::checkIfUrlIsPublicIp($this->getApiUrl())) {
-            throw new ConverterNotOperationalException(
-                'API URL must be public IP (as WPC has been configured to disallow private IPs)'
-            );
-          }  
+            if (!self::checkIfUrlIsPublicIp($this->getApiUrl())) {
+                throw new ConverterNotOperationalException(
+                    'API URL must be public IP (as WPC has been configured to disallow private IPs)'
+                );
+            }
         }
 
         if ($apiVersion == 0) {
