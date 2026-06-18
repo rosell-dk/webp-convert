@@ -177,7 +177,6 @@ class Ewww extends AbstractConverter
                 'Accept: image/*'
             ],
             CURLOPT_POSTFIELDS => $postData,
-            CURLOPT_BINARYTRANSFER => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER => false,
             CURLOPT_SSL_VERIFYPEER => false
@@ -198,7 +197,7 @@ class Ewww extends AbstractConverter
         $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
         if (($contentType != 'application/octet-stream') && ($contentType != 'image/webp')) {
             //echo curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-            curl_close($ch);
+            self::closeCurl($ch);
 
             /*
             For bogus or expired key it returns:  {"error":"invalid","t":"exceeded"}
@@ -274,7 +273,6 @@ class Ewww extends AbstractConverter
                 'quality' => 60,
                 'metadata' => 0
             ],
-            CURLOPT_BINARYTRANSFER => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER => false,
             CURLOPT_SSL_VERIFYPEER => false
@@ -287,7 +285,7 @@ class Ewww extends AbstractConverter
         }
         $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
         if (($contentType != 'application/octet-stream') && ($contentType != 'image/webp')) {
-            curl_close($ch);
+            self::closeCurl($ch);
 
             /* May return this: {"error":"invalid","t":"exceeded"} */
             $responseObj = json_decode($response);
@@ -335,7 +333,7 @@ class Ewww extends AbstractConverter
         if (curl_errno($ch)) {
             throw new \Exception(curl_error($ch));
         }
-        curl_close($ch);
+        self::closeCurl($ch);
 
         // Possible responses:
         // “great” = verification successful
