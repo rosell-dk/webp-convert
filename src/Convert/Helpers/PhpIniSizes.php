@@ -62,7 +62,7 @@ class PhpIniSizes
     public static function getIniBytes($iniVarName)
     {
         $iniVarValue = ini_get($iniVarName);
-        if (($iniVarValue == '') || $iniVarValue === false) {
+        if (($iniVarValue === false) || ($iniVarValue === '')) {
             return false;
         }
         return self::parseShortHandSize($iniVarValue);

@@ -1,5 +1,6 @@
 parameters:
     reportUnmatchedIgnoredErrors: false
+    treatPhpDocTypesAsCertain: false
     ignoreErrors:
         - '#Instantiated class Imagick not found.#'
         - '#Instantiated class Gmagick not found.#'
@@ -34,3 +35,4 @@ parameters:
             message: '#Unreachable statement - code above always terminates.#'
             path: %currentWorkingDirectory%/src/Convert/Helpers/PhpIniSizes.php
         - '#WebPConvert\\Convert\\Converters\\Cwebp::composeMeaningfullErrorMessageNoVersionsWorking\(\) is unused.#'
+        - '#Constant CURLOPT_.* not found.#'
