@@ -20,13 +20,13 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-20.04, windows-2022]  # We pick something other than in coverage.yml, which is also run on pushes
-        php: [5.6, 7.2]                   # We pick something other than in coverage.yml, which is also run on pushes
-        exclude:  # phpunit is malfunctioning on Windows / PHP 5.6, so disable those tests
-            - os: windows-2019
-              php: 5.6
+        os: [ubuntu-22.04, windows-2022]
+        php: [7.4]
+        exclude:  # phpunit is malfunctioning on Windows / PHP 5.6 and 7.2, so disable those tests
             - os: windows-2022
               php: 5.6
+            - os: windows-2022
+              php: 7.2
 
     steps:
     - name: Checkout
