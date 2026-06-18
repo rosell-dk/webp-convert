@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-22.04, ubuntu-20.04, windows-2022, windows-2019, macos-13, macos-12]
+        os: [ubuntu-26.04, ubuntu-24.04, windows-2025, windows-2022, macos-26, macos-14]
         php: [8.4]
 
     steps:
@@ -41,9 +41,8 @@ jobs:
     - name: Run phpunit (test cases)
       run: composer run-script test
 
-    # Disabled phpstan run, as phpstan currently doesn't work in PHP8.4 (phpstan 1.10.66 does not work)
-    #- name: Run phpstan
-    #  run: composer run-script phpstan
+    - name: Run phpstan
+      run: composer run-script phpstan
 
     - name: run phpcs (to check coding style)
       run: composer run-script phpcs-all
