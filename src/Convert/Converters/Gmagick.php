@@ -80,6 +80,13 @@ class Gmagick extends AbstractConverter
                     );
                 }
                 break;
+            case 'image/gif':
+                if (!in_array('GIF', $im->queryFormats())) {
+                    throw new SystemRequirementsNotMetException(
+                        'Gmagick has been compiled without GIF support and can therefore not convert this GIF image.'
+                    );
+                }
+                break;
         }
     }
 
