@@ -96,6 +96,15 @@ class Gd extends AbstractConverter
                         'Gd has been compiled without Jpeg support and can therefore not convert this jpeg image.'
                     );
                 }
+                break;
+
+            case 'image/gif':
+                if (!function_exists('imagecreatefromgif')) {
+                    throw new SystemRequirementsNotMetException(
+                        'Gd has been compiled without GIF support and can therefore not convert this gif image.'
+                    );
+                }
+                break;
         }
     }
 
@@ -220,6 +229,15 @@ class Gd extends AbstractConverter
                 if ($image === false) {
                     throw new ConversionFailedException(
                         'Gd failed when trying to load/create image (imagecreatefromjpeg() failed)'
+                    );
+                }
+                return $image;
+
+            case 'image/gif':
+                $image = imagecreatefromgif($this->source);
+                if ($image === false) {
+                    throw new ConversionFailedException(
+                        'Gd failed when trying to load/create image (imagecreatefromgif() failed)'
                     );
                 }
                 return $image;

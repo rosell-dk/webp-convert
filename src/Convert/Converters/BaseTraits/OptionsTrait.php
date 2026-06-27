@@ -317,6 +317,13 @@ trait OptionsTrait
             }
         }
 
+        if (isset($this->providedOptions['gif'])) {
+            if ($this->getMimeTypeOfSource() == 'image/gif') {
+                $this->providedOptions = array_merge($this->providedOptions, $this->providedOptions['gif']);
+                unset($this->providedOptions['gif']);
+            }
+        }
+
         // merge down converter-prefixed options
         $converterId = self::getConverterId();
         $strLen = strlen($converterId);
