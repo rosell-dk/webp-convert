@@ -16,6 +16,7 @@ use WebPConvert\Convert\Exceptions\ConversionFailed\ConverterNotOperational\Inva
 use WebPConvert\Loggers\BufferLogger;
 
 use WebPConvert\Tests\CompatibleTestCase;
+use WebPConvert\Tests\Convert\Exposers\WpcExposer;
 
 use PHPUnit\Framework\TestCase;
 
@@ -222,6 +223,55 @@ class WPCTest extends CompatibleTestCase
 
             $this->assertMatchesRegularExpression2('#We did not receive an image#', $e->getMessage());
         }
+    }
+
+    public function testPublicIpCheck()
+    {
+        $wpcExposer = new WpcExposer(Wpc::createInstance(
+            $this->getImagePath('test.png'),
+            $this->getImagePath('test.webp')
+        ));
+
+        // Urls that hold an IP require no lookup, so they can be checked without touching dns
+        $this->assertEquals(['203.0.113.10'], $wpcExposer->getPublicIpsOfUrl('https://203.0.113.10/wpc.php'));
+        $this->assertEquals([], $wpcExposer->getPublicIpsOfUrl('https://127.0.0.1/wpc.php'));
+        $this->assertEquals([], $wpcExposer->getPublicIpsOfUrl('https://192.168.0.1/wpc.php'));
+        $this->assertEquals([], $wpcExposer->getPublicIpsOfUrl('https://localhost/wpc.php'));
+    }
+
+    public function testDnsPinning()
+    {
+        $wpcExposer = new WpcExposer(Wpc::createInstance(
+            $this->getImagePath('test.png'),
+            $this->getImagePath('test.webp')
+        ));
+
+        // The host is pinned to the checked IPs, on the port that the request will use
+        $this->assertEquals(
+            ['example.com:443:203.0.113.10'],
+            $wpcExposer->createResolveOption('https://example.com/wpc.php', ['203.0.113.10'])
+        );
+        $this->assertEquals(
+            ['example.com:80:203.0.113.10'],
+            $wpcExposer->createResolveOption('http://example.com/wpc.php', ['203.0.113.10'])
+        );
+        $this->assertEquals(
+            ['example.com:8080:203.0.113.10'],
+            $wpcExposer->createResolveOption('https://example.com:8080/wpc.php', ['203.0.113.10'])
+        );
+
+        // All the checked IPs are pinned, so curl can move on to the next, if one is unreachable
+        $this->assertEquals(
+            ['example.com:443:203.0.113.10,2001:db8::1'],
+            $wpcExposer->createResolveOption('https://example.com/wpc.php', ['203.0.113.10', '2001:db8::1'])
+        );
+
+        // There is nothing to pin, when there are no IPs, or when the url requires no lookup
+        $this->assertEquals([], $wpcExposer->createResolveOption('https://example.com/wpc.php', []));
+        $this->assertEquals(
+            [],
+            $wpcExposer->createResolveOption('https://203.0.113.10/wpc.php', ['203.0.113.10'])
+        );
     }
 
 

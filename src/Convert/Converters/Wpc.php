@@ -28,6 +28,15 @@ class Wpc extends AbstractConverter
     use CurlTrait;
     use EncodingAutoTrait;
 
+    /**
+     * IPs that the api url resolved to, back when it was validated in ::checkOperationality()
+     *
+     * Only used when the "require-public-ip" option is enabled.
+     *
+     * @var string[]
+     */
+    private $publicIpsOfApiUrl = [];
+
     protected function getUnsupportedDefaultOptions()
     {
         return [];
@@ -233,31 +242,74 @@ class Wpc extends AbstractConverter
         return array_unique($ips);
     }
 
-    private static function checkIfUrlIsPublicIp(string $url): bool
+    /**
+     * Get the IPs that an url resolves to - but only if they are all public.
+     *
+     * @param  string  $url
+     *
+     * @return string[]  the IPs of the url, or an empty array, if the url does not
+     *                   exclusively resolve to public IPs
+     */
+    private static function getPublicIpsOfUrl(string $url): array
     {
         $host = parse_url($url, PHP_URL_HOST);
 
         if ($host === false || $host === null) {
-            return false;
+            return [];
         }
 
         if (strcasecmp($host, 'localhost') === 0) {
-            return false;
+            return [];
         }
 
         $ips = self::urlToIps($url);
 
         if (empty($ips)) {
-            return false;
+            return [];
         }
 
         foreach ($ips as $ip) {
             if (!self::isPublicIp($ip)) {
-                return false;
+                return [];
             }
         }
 
-        return true;
+        return $ips;
+    }
+
+    /**
+     * Create a CURLOPT_RESOLVE option, which pins the host of an url to a set of IPs.
+     *
+     * @param  string    $url  the url that the IPs were looked up from
+     * @param  string[]  $ips  the IPs to pin the host of the url to
+     *
+     * @return string[]  value for CURLOPT_RESOLVE - or an empty array, when there is nothing
+     *                   to pin (no IPs supplied, or an url that needs no lookup)
+     */
+    private static function createResolveOption(string $url, array $ips): array
+    {
+        if (empty($ips)) {
+            return [];
+        }
+
+        $parts = parse_url($url);
+
+        if (!isset($parts['scheme']) || !isset($parts['host'])) {
+            return [];
+        }
+
+        // An url that already holds an IP is not looked up, so there is nothing to pin
+        if (filter_var($parts['host'], FILTER_VALIDATE_IP) !== false) {
+            return [];
+        }
+
+        if (isset($parts['port'])) {
+            $port = $parts['port'];
+        } else {
+            $port = (strtolower($parts['scheme']) === 'https' ? 443 : 80);
+        }
+
+        return [$parts['host'] . ':' . $port . ':' . implode(',', $ips)];
     }
 
     /**
@@ -291,7 +343,9 @@ class Wpc extends AbstractConverter
         }
 
         if ($options['require-public-ip']) {
-            if (!self::checkIfUrlIsPublicIp($this->getApiUrl())) {
+            $this->publicIpsOfApiUrl = self::getPublicIpsOfUrl($this->getApiUrl());
+
+            if (empty($this->publicIpsOfApiUrl)) {
                 throw new ConverterNotOperationalException(
                     'API URL must be public IP (as WPC has been configured to disallow private IPs)'
                 );
@@ -419,6 +473,18 @@ class Wpc extends AbstractConverter
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+        if ($this->options['require-public-ip']) {
+            // Connect to the IPs that ::checkOperationality() validated, rather than looking the
+            // host up again. A second lookup can return a private IP, even though the first did
+            // not (dns rebinding). The url is passed on unchanged, so the Host header and the
+            // TLS SNI are unaffected.
+            $resolve = self::createResolveOption($this->getApiUrl(), $this->publicIpsOfApiUrl);
+
+            if (!empty($resolve)) {
+                curl_setopt($ch, CURLOPT_RESOLVE, $resolve);
+            }
+        }
 
         //$this->logLn('api url: ' . $this->getApiUrl());
 
