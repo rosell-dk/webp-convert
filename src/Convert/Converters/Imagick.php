@@ -80,6 +80,13 @@ class Imagick extends AbstractConverter
                     );
                 }
                 break;
+            case 'image/gif':
+                if (!in_array('GIF', $im->queryFormats('GIF'))) {
+                    throw new SystemRequirementsNotMetException(
+                        'Imagick has been compiled without GIF support and can therefore not convert this GIF image.'
+                    );
+                }
+                break;
         }
     }
 
