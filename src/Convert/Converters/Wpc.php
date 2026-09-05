@@ -343,6 +343,14 @@ class Wpc extends AbstractConverter
         }
 
         if ($options['require-public-ip']) {
+            if (!defined('CURLOPT_RESOLVE')) {
+                throw new ConverterNotOperationalException(
+                    'Configured to require a public IP. ' .
+                    'That requires pinning the connection to the checked IP, ' .
+                    'which is not available on your current setup (it needs libcurl 7.21.3).'
+                );
+            }
+
             $this->publicIpsOfApiUrl = self::getPublicIpsOfUrl($this->getApiUrl());
 
             if (empty($this->publicIpsOfApiUrl)) {
@@ -475,11 +483,23 @@ class Wpc extends AbstractConverter
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 
         if ($this->options['require-public-ip']) {
+            $ips = $this->publicIpsOfApiUrl;
+
+            // Pinning several IPs in one CURLOPT_RESOLVE entry requires libcurl 7.59.0. Older
+            // versions cannot parse such an entry and silently skip it, which would leave the
+            // request unpinned - so on those, pin the first checked IP only. dns_get_record()
+            // answers one query per record type, A before AAAA, so that is an IPv4 whenever the
+            // host has one.
+            $curlVersion = curl_version();
+            if (!isset($curlVersion['version']) || version_compare($curlVersion['version'], '7.59.0', '<')) {
+                $ips = array_slice($ips, 0, 1);
+            }
+
             // Connect to the IPs that ::checkOperationality() validated, rather than looking the
             // host up again. A second lookup can return a private IP, even though the first did
             // not (dns rebinding). The url is passed on unchanged, so the Host header and the
             // TLS SNI are unaffected.
-            $resolve = self::createResolveOption($this->getApiUrl(), $this->publicIpsOfApiUrl);
+            $resolve = self::createResolveOption($this->getApiUrl(), $ips);
 
             if (!empty($resolve)) {
                 curl_setopt($ch, CURLOPT_RESOLVE, $resolve);

@@ -274,6 +274,31 @@ class WPCTest extends CompatibleTestCase
         );
     }
 
+    public function testPinningRequiresResolveOption()
+    {
+        $wpc = Wpc::createInstance(
+            $this->getImagePath('test.png'),
+            $this->getImagePath('test.webp'),
+            [
+                // An url that holds an IP requires no lookup, so this needs no dns
+                'api-url' => 'https://203.0.113.10/wpc.php',
+                'require-public-ip' => true,
+            ]
+        );
+
+        // Without CURLOPT_RESOLVE there is no way to pin, so the converter must report itself as
+        // not operational, rather than sending an unpinned request
+        if (!defined('CURLOPT_RESOLVE')) {
+            $this->expectException(ConverterNotOperationalException::class);
+            $wpc->checkOperationality();
+            return;
+        }
+
+        // Here it is available, so the option must not stand in the way
+        $wpc->checkOperationality();
+        $this->addToAssertionCount(1);
+    }
+
 
 /*
     HMM.. Apparently wpc can't handle much stress.
