@@ -28,6 +28,15 @@ class Wpc extends AbstractConverter
     use CurlTrait;
     use EncodingAutoTrait;
 
+    /**
+     * IPs that the api url resolved to, back when it was validated in ::checkOperationality()
+     *
+     * Only used when the "require-public-ip" option is enabled.
+     *
+     * @var string[]
+     */
+    private $publicIpsOfApiUrl = [];
+
     protected function getUnsupportedDefaultOptions()
     {
         return [];
@@ -233,31 +242,77 @@ class Wpc extends AbstractConverter
         return array_unique($ips);
     }
 
-    private static function checkIfUrlIsPublicIp(string $url): bool
+    /**
+     * Get the IPs that an url resolves to - but only if they are all public.
+     *
+     * @param  string  $url
+     *
+     * @return string[]  the IPs of the url, or an empty array, if the url does not
+     *                   exclusively resolve to public IPs
+     */
+    private static function getPublicIpsOfUrl(string $url): array
     {
         $host = parse_url($url, PHP_URL_HOST);
 
         if ($host === false || $host === null) {
-            return false;
+            return [];
         }
 
         if (strcasecmp($host, 'localhost') === 0) {
-            return false;
+            return [];
         }
 
         $ips = self::urlToIps($url);
 
         if (empty($ips)) {
-            return false;
+            return [];
         }
 
         foreach ($ips as $ip) {
             if (!self::isPublicIp($ip)) {
-                return false;
+                return [];
             }
         }
 
-        return true;
+        return $ips;
+    }
+
+    /**
+     * Create a CURLOPT_RESOLVE option, which pins the host of an url to a set of IPs.
+     *
+     * @param  string    $url  the url that the IPs were looked up from
+     * @param  string[]  $ips  the IPs to pin the host of the url to
+     *
+     * @return string[]  value for CURLOPT_RESOLVE - or an empty array, when there is nothing
+     *                   to pin (no IPs supplied, or an url that needs no lookup)
+     */
+    private static function createResolveOption(string $url, array $ips): array
+    {
+        if (empty($ips)) {
+            return [];
+        }
+
+        $parts = parse_url($url);
+
+        if (!isset($parts['scheme']) || !isset($parts['host'])) {
+            return [];
+        }
+
+        // An url that already holds an IP is not looked up, so there is nothing to pin
+        if (filter_var($parts['host'], FILTER_VALIDATE_IP) !== false) {
+            return [];
+        }
+
+        if (isset($parts['port'])) {
+            $port = $parts['port'];
+        } else {
+            $port = (strtolower($parts['scheme']) === 'https' ? 443 : 80);
+        }
+
+        // IPv6 addresses are written bare, not within [brackets]. libcurl accepts both, but the
+        // brackets are only accepted from 7.57.0, and an entry it cannot parse is skipped, which
+        // would leave the request unpinned on the older versions that we do support here.
+        return [$parts['host'] . ':' . $port . ':' . implode(',', $ips)];
     }
 
     /**
@@ -291,7 +346,17 @@ class Wpc extends AbstractConverter
         }
 
         if ($options['require-public-ip']) {
-            if (!self::checkIfUrlIsPublicIp($this->getApiUrl())) {
+            if (!defined('CURLOPT_RESOLVE')) {
+                throw new ConverterNotOperationalException(
+                    'Configured to require a public IP. ' .
+                    'That requires pinning the connection to the checked IP, ' .
+                    'which is not available on your current setup (it needs libcurl 7.21.3).'
+                );
+            }
+
+            $this->publicIpsOfApiUrl = self::getPublicIpsOfUrl($this->getApiUrl());
+
+            if (empty($this->publicIpsOfApiUrl)) {
                 throw new ConverterNotOperationalException(
                     'API URL must be public IP (as WPC has been configured to disallow private IPs)'
                 );
@@ -419,6 +484,36 @@ class Wpc extends AbstractConverter
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+        if ($this->options['require-public-ip']) {
+            // A proxy resolves the host itself and connects on our behalf, so the request would
+            // not go to a checked IP at all, and the pinning below would have no effect. libcurl
+            // takes a proxy from the environment (http_proxy and friends) unless it is told not
+            // to, and an empty string is how it is told not to.
+            curl_setopt($ch, CURLOPT_PROXY, '');
+
+            $ips = $this->publicIpsOfApiUrl;
+
+            // Pinning several IPs in one CURLOPT_RESOLVE entry requires libcurl 7.59.0. Older
+            // versions cannot parse such an entry and silently skip it, which would leave the
+            // request unpinned - so on those, pin the first checked IP only. dns_get_record()
+            // answers one query per record type, A before AAAA, so that is an IPv4 whenever the
+            // host has one.
+            $curlVersion = curl_version();
+            if (!isset($curlVersion['version']) || version_compare($curlVersion['version'], '7.59.0', '<')) {
+                $ips = array_slice($ips, 0, 1);
+            }
+
+            // Connect to the IPs that ::checkOperationality() validated, rather than looking the
+            // host up again. A second lookup can return a private IP, even though the first did
+            // not (dns rebinding). The url is passed on unchanged, so the Host header and the
+            // TLS SNI are unaffected.
+            $resolve = self::createResolveOption($this->getApiUrl(), $ips);
+
+            if (!empty($resolve)) {
+                curl_setopt($ch, CURLOPT_RESOLVE, $resolve);
+            }
+        }
 
         //$this->logLn('api url: ' . $this->getApiUrl());
 
