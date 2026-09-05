@@ -309,6 +309,9 @@ class Wpc extends AbstractConverter
             $port = (strtolower($parts['scheme']) === 'https' ? 443 : 80);
         }
 
+        // IPv6 addresses are written bare, not within [brackets]. libcurl accepts both, but the
+        // brackets are only accepted from 7.57.0, and an entry it cannot parse is skipped, which
+        // would leave the request unpinned on the older versions that we do support here.
         return [$parts['host'] . ':' . $port . ':' . implode(',', $ips)];
     }
 
@@ -483,6 +486,12 @@ class Wpc extends AbstractConverter
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 
         if ($this->options['require-public-ip']) {
+            // A proxy resolves the host itself and connects on our behalf, so the request would
+            // not go to a checked IP at all, and the pinning below would have no effect. libcurl
+            // takes a proxy from the environment (http_proxy and friends) unless it is told not
+            // to, and an empty string is how it is told not to.
+            curl_setopt($ch, CURLOPT_PROXY, '');
+
             $ips = $this->publicIpsOfApiUrl;
 
             // Pinning several IPs in one CURLOPT_RESOLVE entry requires libcurl 7.59.0. Older

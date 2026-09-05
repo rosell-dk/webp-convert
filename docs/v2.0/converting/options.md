@@ -416,3 +416,7 @@ The IPs from that lookup are also pinned for the request, so it cannot end up on
 second lookup returns. That pinning needs libcurl 7.21.3, and below that, the converter reports itself
 as not operational, rather than sending the request unpinned. libcurl 7.21.3 - 7.58.x can only pin one
 IP, so on those, only the first of the found IPs is pinned. From libcurl 7.59.0, all of them are.
+Note that the request bypasses any proxy set in the environment (*http_proxy* and friends). A proxy
+resolves the host itself and connects on our behalf, so with a proxy in between, the request would not
+go to a checked IP at all. Where a proxy is the only route out, the conversion therefore fails, rather
+than the request being sent past the check.
