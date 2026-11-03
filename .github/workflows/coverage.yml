@@ -60,3 +60,8 @@ jobs:
       uses: sudo-bot/action-scrutinizer@latest
       with:
         cli-args: "--format=php-clover build/coverage.clover"
+
+    - name: Deploy coverage report
+      run: npx wrangler@4 deploy
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

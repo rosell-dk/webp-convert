@@ -1,0 +1,8 @@
+{
+  "name": "webp-convert-coverage-report",
+  "account_id": "f67ffeb6637f4ca2957b5d91405b43ef",
+  "compatibility_date": "2026-11-02",
+  "assets": {
+    "directory": "./build"
+  }
+}
