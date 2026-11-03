@@ -65,6 +65,21 @@ jobs:
       with:
         cli-args: "--format=php-clover build/coverage.clover"
 
+    - name: Create coverage badge json
+      run: |
+        # Extract total coverage
+        COVERAGE=$(grep -oP -m 1 'Lines:\s*\K[0-9.%]+' build/coverage.txt)
+
+        # Set COLOR based on COVERAGE
+        # 0-49%: red, 50%-69%: orange, 70%-80%: yellow, 90%-100%: brightgreen
+        if grep -oP '(^9\d.)|(^100.)' <<< "$COVERAGE" > /dev/null; then COLOR=brightgreen; elif grep -oP '[87]\d.' <<< "$COVERAGE" > /dev/null; then COLOR=yellow; elif grep -oP '[65]\d.' <<< "$COVERAGE" > /dev/null; then COLOR=orange; else COLOR=red; fi;
+
+        # Generate bagde json
+        echo \{\"schemaVersion\":1,\"label\":\"coverage\",\"message\":\"$COVERAGE\",\"color\":\"$COLOR\"\} | tee build/coverage-badge.json
+
+        # PS: If we needed COVERAGE elsewhere, we could store in ENV like this:
+        # echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
+
     - name: Deploy coverage report
       run: npx wrangler@4 deploy
       env:
