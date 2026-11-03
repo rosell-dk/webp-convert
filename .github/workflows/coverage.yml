@@ -2,6 +2,10 @@ name: Code Coverage
 
 on:
   workflow_dispatch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
 
@@ -14,7 +18,7 @@ jobs:
       WEBPCONVERT_WPC_API_URL_API0: ${{ secrets.WEBPCONVERT_WPC_API_URL_API0 }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v7
 
 #    - name: Setup vips
 #      run: |
@@ -27,7 +31,7 @@ jobs:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.2'
+        php-version: '8.4'
         # Note: Currently, gmagick and imagick are mutually exclusive.
         # It seems they are installed in the order indicated in "extensions" and the latter cancels the former
         extensions: exif, mbstring, fileinfo, gd, vips, gmagick, imagick
@@ -43,7 +47,7 @@ jobs:
 
     - name: Cache Composer packages
       id: composer-cache
-      uses: actions/cache@v2
+      uses: actions/cache@v5
       with:
         path: vendor
         key: ${{ runner.os }}-codecov-${{ hashFiles('**/composer.lock') }}
