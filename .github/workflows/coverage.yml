@@ -9,7 +9,7 @@ on:
 jobs:
 
   codecov:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     env:
       WEBPCONVERT_EWWW_API_KEY: ${{ secrets.WEBPCONVERT_EWWW_API_KEY }}
       WEBPCONVERT_WPC_API_URL: ${{ secrets.WEBPCONVERT_WPC_API_URL }}
@@ -59,10 +59,11 @@ jobs:
     - name: Run test suite
       run: composer run-script test-with-coverage
 
-    - name: Upload Scrutinizer coverage
-      uses: sudo-bot/action-scrutinizer@latest
-      with:
-        cli-args: "--format=php-clover build/coverage.clover"
+    # Disabled, as it currently fails
+    #- name: Upload Scrutinizer coverage
+    #  uses: sudo-bot/action-scrutinizer@latest
+    #  with:
+    #    cli-args: "--format=php-clover build/coverage.clover"
 
     - name: Create coverage badge json
       run: |
